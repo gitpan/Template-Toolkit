@@ -7,6 +7,7 @@ WriteMakefile(
     'VERSION_FROM' => 'lib/Template.pm',
     'EXE_FILES'    => [ 'bin/tpage', 'bin/ttree' ],
     'PMLIBDIRS'    => [ 'lib' ], 
+    'PREREQ_PM'    => { 'AppConfig' => 1.52 },
     'dist'         => {
 	'COMPRESS' => 'gzip',
 	'SUFFIX'   => 'gz',

@@ -275,6 +275,7 @@ of its case.  Reserved words are:
     BLOCK, END, THROW, CATCH, ERROR, RETURN, STOP, PERL
 
 e.g.
+
     [% include = 10 %]   # error - 'INCLUDE' a reserved word
 
 The CASE option forces all directive keywords to be expressed in UPPER
@@ -296,9 +297,10 @@ preclude the use of a variables by any of those names.
 
 =head2 VARIABLE NAMESPACES (HASHES)
 
-The period character, '.', is used to denote separate "namespaces" for 
-variables.  A namespace is simply a variable that contains a reference to 
-a hash array of more variables.
+The period character, '.', is used to construct compound ("dotted")
+variables .  Each element denotes a separate variable "namespace"
+which is simply a variable that contains a reference to a hash array
+of more variables.
 
     my $data = {
   	'home' => 'http://www.myserver.com/homepage.html',
@@ -324,7 +326,7 @@ Example:
 
 Output:
 
-    <a href="http://www.myserver.com/homepage.html"</a>
+    <a href="http://www.myserver.com/homepage.html">Home</a>
     <a href="prevpage.html">Previous Page</a>
     <a href="nextpage.html">Next Page</a>
 
@@ -388,6 +390,13 @@ but it's not necessary.
        }
     %]
 
+The 'keys' and 'values' methods may be applied to any hash to return 
+lists of the hash keys and values.
+
+    [% FOREACH field = product.keys %]
+       [% field %]
+    [% END %]
+
 You can copy all the members of a hash into the top level variable namespace
 with the IMPORT directive.
 
@@ -433,7 +442,7 @@ variable name where necessary.
     [% foo  = 'Foo'  %]               # literal value 'Foo'
     [% bar  =  foo   %]               # value of variable 'foo'
     [% cost = '$100' %]               # literal value '$100'
-    [% item = "$foo: ${price}.00" %]  # value "bar: $100.00"
+    [% item = "$bar: ${cost}.00" %]   # value "Foo: $100.00"
 
 Multiple variables may be assigned in the same directive and are 
 evaluated in the order specified.  Thus, the above could have been 
@@ -442,7 +451,7 @@ written:
     [% foo  = 'Foo'
        bar  = foo
        cost = '$100'
-       item = "$foo: ${price}.00"
+       item = "$bar: ${cost}.00"
     %]
 
 =head2 VARIABLE LISTS
@@ -457,6 +466,11 @@ those described above.  Commas between elements are optional.
     [% foo    = 'Foo'
        mylist = [ foo, 'Bar', "$foo Baz" ]
     %]
+
+You can also create simple numerical sequences using the familiar '..'
+operator:
+
+    [% n = [ 1 .. 4 ] %]    # 'n' is [ 1, 2, 3, 4 ] 
 
 The FOREACH directive will iterate through a list created as above, or
 perhaps provided as a pre-defined variable passed to the process() method.
@@ -488,7 +502,7 @@ Example:
     [% FOREACH s = stuff %]
        * [% s %]
     [% END %]
-  
+
 Output:
 
     Things:
@@ -519,8 +533,36 @@ imported.
        [% name %]
     [% END %]
 
+Note that this particular usage creates a localised variable context
+to prevent the imported hash keys from overwriting any existing
+variables.  The imported definitions and any other variables defined
+in such a FOREACH loop will be lost at the end of the loop, when the 
+previous context and variable value are restored.
+
 The [% BREAK %] directive can be used to prematurely exit a FOREACH
 loop.
+
+    [% FOREACH user = userlist %]
+       [% user.name %]
+       [% BREAK IF some.condition %]
+    [% END %]
+
+The 'size' and 'max' values can be examined for a list to determine
+the number of elements and maximum index (size - 1).  The 'sort'
+method returns a sorted list of the elements in the list.
+
+    [% list = [ 'tom', 'dick', 'harry' ] %]
+    [% list.size %] names:
+    [% FOREACH name = list.sort %]
+       * [% name %]
+    [% END %]
+
+Output:
+
+    3 names:
+      * dick
+      * harry
+      * tom
 
 =head2 VARIABLES BOUND TO USER CODE
 
@@ -558,7 +600,7 @@ to the code:
 	'foo'   => 'Mr. Foo',
 	'bar'   => 'Mr. Bar',
 	'qux'   => 'Qux',
-	'join'  => sub { my $joint = shift; join($joint, @); },
+	'join'  => sub { my $joint = shift; join($joint, @_); },
     }
 
     $template->process('myfile', $data)
@@ -572,6 +614,26 @@ Output:
 
     Mr. Foo + Mr. Bar + Mr. Baz + Mr Qux
 
+Named parameters may also be specified.  These are automatically collected
+into a single hash array which is passed by reference as the B<last> 
+parameter to the sub-routine.  Note how '=>' is synonymous for '='.
+
+    [% whatever(foo, bar, name = 'John Doe', id = 'jdoe') %]
+       # calls whatever('Mr. Foo', 'Mr. Bar', 
+			{ name => 'John Doe', id => 'jdoe' });
+
+    [% whatever(name => 'John Doe', id => 'jdoe') %]
+       # calls whatever({ name => 'John Doe', id=>'jdoe' });
+
+    [% whatever(10, name='John Doe', 20, id='jdoe') %]
+       # calls whatever(10, 20, { name => 'John Doe', id=>'jdoe' });
+
+The last example demonstrates the re-ordering of parameters. For the sake
+of clarity, it is recommended that you specify named parameters at the 
+end of the list.
+
+    [% whatever(10, 20, name='John Doe', id='jdoe') %]
+
 Parenthesised parameters may be added to I<any> element of a variable,
 not just those that are bound to code or object methods.  At present,
 parameters will be ignored if the variable isn't "callable" but are 
@@ -581,42 +643,28 @@ variable, rather than just arguments passed to a function.
     [% r = 'Romeo' %]
     [% r(100, 99, s, t, v) %]     # still just prints "Romeo"
 
-User code should return a value for the 'variable' to which it is bound.
-On error, undef can be returned which will trigger an "undef" exception to 
-be automatically raised (see below)
+User code should return a value for the 'variable' to which it is
+bound.  An undefined value will be silently converted to an empty
+string or the DEBUG option can be enabled to cause an 'undef'
+exception to be raised.  The code may also return a second value
+indicating the status.  A status of 0 (STATUS_OK) means everything
+went OK, regardless of whatever value was returned, defined or not.
 
-    sub do_magic {
-        # blah blah blah
-        return undef if $something_went_wrong;
-        # more stuff..
-        return $some_value;
-    }
-
-An alternative approach which gives more flexibility is for the code 
-to return a second value indicating the status.  A status of 0 (STATUS_OK)
-means everything went OK, regardless of whatever value was returned,
-defined or not.  In this case an undefined value would simply be converted
-to an empty string ''.  In other words, no output or error would be 
-generated.
-
-    use Template qw( :status );
-    my $DEBUG = 0;
-  
-    sub debug {
-  	return (undef, STATUS_OK) unless $DEBUG;
-  	# blah blah blah
-  	return $some_debug_text;
+    sub get_something {
+	# ...
+	# $value may be undefined, but not an error condition...
+  	return ($value, STATUS_OK);
     }
 
 The status code can also be STATUS_STOP (immediate stop) or
 STATUS_RETURN (stop the current template only and return to the caller
-or point of INCLUDE).  The final option is for the status to be an
-exception object.  This is an instance of the Template::Exception
-class which can be created by calling the new() construcot.  The first
-parameter defines the 'type' of error which may have a corresponding
-CATCH handler defined.  The second parameter should be a string
-containing the details of the error.
-  
+or point of INCLUDE).  The final option is to return a status
+containing a reference to a newly instantiated Template::Exception
+object.  class which can be created by calling the new() constructor.
+This is a simple object containing an identifier representing the error
+type (e.g. 'file', 'undef', 'my_own_error_type') and a 'info' field
+containing specific information.
+
 The CATCH option and CATCH block directive allow you to define custom
 handling, or template blocks to be processed when different kinds of 
 exception occur, including any user-defined types such as in this 
@@ -706,7 +754,7 @@ code references, above.
 
 =head2 VARIABLE EVALUATION
 
-A 'dotted' variable may contain any number of separate elements.  Each
+A compound 'dotted' variable may contain any number of separate elements.  Each
 element may evaluate to one of the above variable types and the processor
 will then correctly use this value to evaluate the rest of the variable.
 
@@ -780,7 +828,7 @@ for the existence of a parameter and return a general access facility,
 such as the object mentioned in the previous example, if one is not
 provided.
 
-    package myorg;
+    package MyObj;
   
     sub user {
   	my ($self, $uid) = @_;
@@ -804,15 +852,16 @@ such lists.
     [% END %]
 
 For more powerful list iteration, a Template::Iterator object can be
-defined and/or returned for use in a FOREACH directive.  The following 
-pseudo-code example illustrates the principal.  Here, the 'userlist'
-method first determines a list of valid user ID's and then creates an
-iterator to step through them.  On each iteration, the ACTION for
-the iterator is called, which in this case is a closure to retrieve
-each record from the database.
+created and returned for use in a FOREACH directive.  The following
+pseudo-code example illustrates how a database iterator might perform.
+The 'userlist' method first determines a list of valid user ID's from
+a database table and then creates an iterator to step through them in
+sequence.  On each iteration, the ACTION for the iterator is called,
+which in this case is a closure which calls the user($uid) method to
+retrieve the complete user record from the database.  Thus, we avoid
+the overhead of loading and storing every complete user record,
+retrieving it only as and when required.
 
-    package myorg;
-  
     sub user {
   	my ($self, $uid) = @_;
   	return $self->query("SELECT * FROM user WHERE (uid='$uid')");
@@ -834,11 +883,29 @@ iterators is automatic and nothing needs to change in the template:
        Name: [% user.name %]  EMail: [% user.email %]
     [% END %]
 
-Underlying code, algorithms and heuristics may be as simple or as
-complex as required to perform the task in hand.  However, the
-specific details of the implementation are hidden away in the 
-"back-end", providing only a simple, clear and consistent interface 
-for use in template documents.
+A reference to the iterator is always available within the FOREACH 
+block via the 'loop' variable.  An iterator is automatically created 
+by the FOREACH directive if a regular list is specified.  The iterator
+provides a number of methods for testing the state of the loop:
+first() and last() return true if the iterator is on the first
+or last iteration of the loop; size() and max() return the number of 
+elements and maximum index (size - 1) for the list; and number() and 
+index() return the current iteration offset from 1 and 0 respectively 
+(i.e. number() runs from 1 to size(), index() runs from 0 to max())
+
+    [% FOREACH user = myorg.userlist %]
+       [% INCLUDE utab_header IF loop.first() %]
+       <tr> 
+         <td>[% loop.number %]</td> <td>[% user.name %]</td>
+       </tr>
+       [% "</table>" IF loop.last() %]
+    [% END %]
+
+    [% BLOCK utab_header %]
+    <table>
+    <th>Number</th> <th>Name</th>
+    [% END %]
+
 
 =head2 CONDITIONAL BLOCKS
 
@@ -983,10 +1050,11 @@ Output:
     <head><title>Cat in the Hat</title></head>
     <body bgcolor="#aabbcc">
 
-These variables, along with any others that might be created or used
-within the I<included> template remain local to it.  Changes made to them
-don't affect the variables in the I<including> template, even though they 
-may have inherited values from them.
+These variables, along with any other B<non-compound> variables that
+might be created or used within the I<included> template remain local
+to it.  Changes made to them don't affect the variables in the
+I<including> template, even though they may have inherited values from
+them.
 
     [% name = 'foo' %] 
     [% INCLUDE change_name %]
@@ -1003,11 +1071,77 @@ Output:
     Changing 'foo' to 'bar'
     Name is still 'foo'
 
-The PROCESS directive is similar to INCLUDE in all respects except
-that it B<does not> perform this localisation of variables.  Changes
-made to variables in the sub-template, and indeed any variable
-definitions specified in the directive, will update those variables in
-the including template.
+Dotted compound variables behave slightly differently.  The
+localisation process (known as "cloning the stash" but you won't be
+tested on that) only copies top-level variables.  Any namespaces
+already defined will be accessible within a localised context, but the
+sub-namespace variables to which they refer will not be localised.  In
+implementation terms, the references to hashes are copied, but the
+copies refer to the same hash.  In more general terms, you can think
+of a dotted variable as referring to the appropriate global variable
+if (and only if) the top-level namespace (i.e. the first element of
+the compound variable) is already defined.
+
+    [% user = { name = 'John Doe' } %]
+    [% INCLUDE change_name %]
+    Name is: [% user.name %]
+
+change_name:
+
+    [% user.name = 'Jack Herer' %]
+
+Output:
+
+    Name is: Jack Herer
+
+A namespace that isn't already defined will be created automatically
+when used.  This B<does> remain local to the context of the current
+template.  The following example demonstrates the kind of "unexpected"
+behaviour that you might encounter if you find yourself trying to set a 
+variable in a namespace that doesn't already exist.
+
+    [% INCLUDE change_name %]   
+    User: [% user.name %]           # not defined
+
+change_name:
+
+    [% user.name = 'Tom Thumb' %]
+
+In the F<change_name> template, the 'user' variable is undefined so a 
+namespace hash is created in the local context with a 'name' member set
+to 'Tom Thumb'.  At the end of processing F<change_name>, the local
+variables, including the 'user' namespace are deleted.  This is also the
+case if an existing non-namespace variable exists.  A local namespace
+will be created masking the previously defined value but only for the 
+processing lifetime of that template.
+
+    [% user = 'Tom Thumb' %]
+    [% INCLUDE change_name %] 
+    User: [% user %]           # prints "Tom Thumb"
+
+change_name:
+
+    # create a local 'user' namespace, masking 'Tom Thumb'
+    [% user.name = 'Jack Herer' %]
+
+If you find yourself setting global variables from within INCLUDE'd
+templates then you might want to use the pre-defined 'global'
+namespace.  This is always pre-defined and globally accessible to
+every template.
+
+    [% INCLUDE global_change_name %]
+    [% global.sysname %]       # prints "Badger"
+
+global_change_name:
+
+    [% global.sysname = 'Badger' %]
+
+Alternately, you might find the PROCESS directive to be more
+appropriate.  The PROCESS directive is similar to INCLUDE in all
+respects except that it B<does not> perform any localisation of
+variables.  Changes made to variables in the sub-template, and indeed
+any variable definitions specified in the directive, will affect the
+including template.  What you see is what you get.
 
     [% name = 'foo'
        age  = 100
@@ -1058,6 +1192,12 @@ definition resides in he same file.
 
     [% BLOCK tmpblk %] This is OK [% END %]
 
+Note that both PROCESS and INCLUDE will raise a 'file' exception if an 
+attempt is made to recurse into the same template file (e.g. by calling
+[% INCLUDE myself %] from within the template 'myself').  The RECURSION
+option can be enabled to permit recursion for some special cases.  It is 
+assumed that you know what you're doing if you take this step.
+
 =head2 PLUGIN OBJECTS AND LIBRARIES
 
 The USE directive can be used to load and initialise "plugin" extension 
@@ -1080,20 +1220,31 @@ template Context object is always passed as the first parameter.
     [% USE MyPlugin('foo', 123) %]
        ==> Template::Plugin::MyPlugin->new($context, 'foo', 123);
 
+Named parameters may also be specified.  These are collated into a
+hash which is passed by reference as the last parameter to the
+constructor, as per the general template code calling interface
+described earlier.
+
+    [% USE Chat('guestroom', max=50, lines=20, features='none') %]
+       ==> Template::Plugin::Chat->new($context, 'guestroom', 
+		{ max => 50, lines => 20, features => 'none' } );
+
 The plugin may represent any data type; a simple variable, hash, list or
 code reference, but in the general case it will be an object reference.
 Methods can be called on the object (or the relevant members of the
 specific data type) in the usual way:
 
-    [% USE MyPlugin %]
-    [% MyPlugin.does_this %]
-    [% MyPlugin.does_that %]
+    [% USE Chat('guestroom') %]
+    Cheezy Chat Room: [% Chat.roomname %]
+    [% FOREACH line = Chat.messages %]
+       [% line.author %]: [% line.text %]
+    [% END %]
 
 An alternative name may be provided for the plugin by which it can be 
 referenced:
 
-    [% USE magic = MyPlugin %]
-    [% magic.supernova('Big Bang') %]
+    [% USE guest = Chat('guestroom') %]
+    Cheezy Chat Room: [% guest.roomname %]
 
 You can use this approach to create multiple plugin objects with
 different configurations.  This example shows how the 'format' plugin
@@ -1111,11 +1262,19 @@ Output:
     <b>This is bold</b>
     <i>This is italic</i>
 
-The CGI plugin simply creates and returns an instance of Lincoln Stein's
-CGI.pm module.
+Another very simple example is the CGI plugin which simply creates and
+returns an instance of Lincoln Stein's CGI.pm module.
 
     [% USE CGI %]
     [% name = CGI.param('username') %]
+
+Simon Matthews E<lt>sam@knowledgepool.comE<gt> has written a DBI
+plugin which provides an interfaces to the DBI module.
+
+    [% USE DBI('driver:dbase:etc') %]     # TODO: need to check this
+    [% FOREACH user = DBI.query('SELECT * FROM users') %]
+       [% user.id %] [% user.name %] [% user.etc.etc %]
+    [% END %]
 
 =head2 POST-PROCESSING FILTERS
 
@@ -1390,5 +1549,6 @@ with other 'side-effect' directives.  e.g.
     [% THROW badpasswd "$user.id has a dumb password ($user.passwd)"
   	 FOREACH user = naughty_user_list
     %]
+
 
 

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: import.t,v 1.4 1999/08/10 11:09:14 abw Exp $
+# $Id: import.t,v 1.5 1999/09/09 17:02:01 abw Exp $
 # 
 #========================================================================
 
@@ -53,7 +53,7 @@ __DATA__
 %]
 $user.id:  $user.name <$user.email>
 Name: $name
-[% IMPORT user %]
+[% IMPORT = user %]
 Name: $name
 
 -- expect --

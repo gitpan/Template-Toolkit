@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: throw.t,v 1.2 1999/08/10 11:09:19 abw Exp $
+# $Id: throw.t,v 1.3 1999/09/09 17:02:02 abw Exp $
 #
 #========================================================================
 
@@ -41,6 +41,7 @@ my $tproc = Template->new({
     },
     INTERPOLATE => 1,
     POST_CHOMP  => 1,
+    DEBUG       => 1,
 });
 
 test_expect(\*DATA, $tproc, callsign());

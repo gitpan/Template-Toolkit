@@ -2,37 +2,36 @@
 =head1 OVERVIEW 
 
 The Template Toolkit is a collection of Perl modules which
-collectively implement fast, powerful and generic template
+collectively implement a fast, powerful and generic template
 processing system.  In this context, a template is a text document
 which contains embedded processing "directives".  These instruct the
 template processor to perform certain actions such as; inserting the
-value of a variable, processing and including another template file or
-user-defined block, testing some condition and generating output of
-one kind or another accordingly, iterating through a set of values,
+value of a variable; processing and including another template file or
+user-defined block; testing some condition and generating output of
+one kind or another accordingly; iterating through a set of values;
 and so on.  Anything not marked as a template directive is treated as
 plain text and gets passed through unaltered.  By default, directives
 look something like this:
 
    [% INCLUDE header %]
 
-The "mini-language" that the toolkit uses (ATML - A Template Markup
-Language?) is designed to be clear, concise, regular in structure and
-simple in syntax.  It is a specialised language which boasts many
-powerful features for constructing dynamic content but it is I<not> a
-general purpose programming language.  Instead, it supports a plugin
-interface which allows separate modules of application specific code
-to be written in the language of choice and then loaded, used and
-re-used as required.  "Language of choice" can be read as "Perl" in
-this case, through which you have access to C, C++, and (speaking
-tentatively) Java.
+The "mini-language" that the toolkit uses is designed to be clear,
+concise, regular in structure and simple in syntax.  It is a
+specialised language which boasts many powerful features for
+constructing dynamic content but it is I<not> a general purpose
+programming language.  Instead, it supports a plugin interface which
+allows separate modules of application specific code to be written in
+the language of choice (i.e. Perl, C, C++, etc) and then loaded, used
+and re-used as required.  
 
-In other words, it helps to promote the separation of application code
-(the I<implementation>) from the user interface (the I<presentation>).
-It tries to keep templates clutter-free, concentrating on what the
-document looks like, not how the various items of content are
-stored, retrieved or calculated.  From the perspective of a web
-designer, for example, they're just bits of text that get inserted
-into different parts of the page.
+This gives you the facility to add any programmable functionality you
+require but without having to write the code directly into the
+document.  In other words, it promotes the separation of application
+code (the I<implementation>) from the user interface (the
+I<presentation>).  It tries to keep templates clutter-free,
+concentrating on what the document looks like, and hides the
+implementation specific details of how the various items of content
+are stored, retrieved or calculated.
 
 Development and subsequent maintenance become easier and less error
 prone when the "back-end" is separated from the "front-end".  You (or
@@ -44,40 +43,56 @@ create any Perl code required to required to generate the dynamic
 parts of the content, perhaps by using CPAN modules, one of the
 existing Template Toolkit "plugins" or by re-using some code you've
 previously written for another web "application" running on your site.
+
 The important thing is that the code is developed I<separately> from
-the template documents.  It doesn't matter if you put every function
-in a separate file or every bit of application code into one big module.
-Just tell the Template Toolkit where to find the code and leave it to
-handle the rest.
+the template documents.  This is a key feature of the Template Toolkit
+with the emphasis being on moving code I<out> of documents, rather than
+moving it I<in>.  It doesn't matter if you put every function in a
+separate file or every bit of application code into one big module -
+just tell the Template Toolkit where to find the code and leave it to
+handle the rest.  The new functionality is then available without
+distraction or discourse in any and all of your template documents.
 
-The new functionality is then available without distraction or
-discourse in any and all of your template documents.  In other words,
-the code is portable between templates.  This is true if you're using
-the Template Toolkit to generate static pages off-line, or dynamic
-pages on-line via CGI script or Apache/mod_perl handler - it's all the
-same as far as the Template Toolkit is concerned.  And because the way
-it I<looks> isn't encoded with what it I<does>, you can change the way
-it looks, or the specific implementation of how it does whatever it
-does, without affecting the other.
+This isn't the only way to do it.  There are times when the "best
+solution" in terms of getting the job done quickly and efficiently is
+to simply embed Perl code directly into the document.  In those cases,
+Mark-Jason Dominus' Text::Template module, available from CPAN, comes
+highly recommended.  In many ways, this is like CGI scripting in 
+reverse.  Instead of embedding HTML within the Perl script, you 
+are embeddding Perl within the HTML document.
 
-There are many benefits.  You can write a single web application with
-a dozen different sets of templates to represent alternate user
-interfaces.  These represent many "views" on the same underlying
-"model" and may differ in layout or design style, contain text only or
-go hard on the graphics, contain HTML frames or not, show "novice" or
-"expert" functionality, allow per-user customisation, present an
-internationalised or interface localised to other written languages or
-cultures, and so on.  On the other side of the same coin, you can
-change your underlying code to implement a faster algorithm or more
-efficient storage method, but you don't have to change the template
-files because the output doesn't change.  They still get their
-"content" from the same "place" and don't need to concern themselves
-with what happens inside each black box.  Implementation details
-matter greatly when you're writing programs, but they're rarely
-important when you're gluing bits of text together to build pages.
-Page design and layout is a lot easier when you don't have Perl code
-strewn throughout the document.  Writing code is a lot easier when 
-you don't have HTML strewn throught the program.
+The Template Toolkit promotes the separation of the two in attempt to
+create a more structured approach to constructing dynamic content.
+There's a slight "startup" cost to using this approach because, like
+life in general, it often takes a little longer to get yourself
+properly organised.  The payoff comes in terms of scalability and
+subsequent ease of re-use - the more you add, the more you benefit
+from having structure.  That's not to say that you can't use it in
+many interesting ways with just a single document, but if you only
+have a single document to worry about then the chances are that you
+haven't got a lot to worry about.
+
+So rather than emphasing the raw programming power embeddable within
+any I<single document>, it focuses on tools and techniques to help
+better partition and subsequently re-integrate the different
+components that constitute the I<many> documents in a system.  It
+offers speed and simplicity in constructing document systems and
+delegates "real programming" to a more powerful, general purpose
+language - Perl.
+
+There are many benefits to be gained from keeping Perl code separate
+from template documents.  You could, for example, write a single web
+application with a dozen different sets of templates to represent
+alternate user interfaces.  These would represent multiple "views" on
+the same underlying "model" and might differ in layout or design
+style, contain text only or go hard on the graphics, contain HTML
+frames or not, show "novice" or "expert" functionality, allow per-user
+customisation, present an internationalised or localised interface,
+and so on.  On the other side of the same coin, you could change your
+underlying code to implement a faster algorithm or more efficient
+storage method, but you wouldn't have to change the template files.
+They still get their "content" from the same "place" and don't need to
+concern themselves with what happens inside each black box.
 
 The end result is that complex, dynamic content systems can be built
 easily and quickly from a number of small, reusable components.  Some
@@ -102,82 +117,24 @@ from CPAN modules, Template Toolkit plugins, generic web applications
 such as chat rooms, FAQ lists, bulletin boards, etc., or any other
 code you can beg, borrow or write yourself.
 
-The philosophy behind the toolkit should hopefully now be clearer.  It
-is about speed and simplicity in constructing document systems.  It
-doesn't concern itself with how you write the "clever stuff" that
-performs whatever process and produces whatever output you desire.  It
-defers that task to a far more powerful, general purpose language -
-Perl.  
-
-  "Dammit Jim!
-     - I'm a template processor, not a programming language." 
-
-There are many times when the "best solution" in terms of getting the
-job done quickly and efficiently is to simply embed Perl code directly
-into the document.  In those cases, Mark-Jason Dominus' Text::Template
-module comes highly recommended (available from CPAN).  
-
-The Template Toolkit is generally there for the times when you want to
-build a more structured document I<system>. Rather than emphasing the
-raw programming power embedded within any I<single document>, it
-focusses on tools and techniques to help better partition and
-subsequently re-integrate the different components that constitute the
-I<many> documents in a system.  That's not to say that you can't use
-it in many interesting ways with just a single document, but if you
-only have a single document to worry about then the chances are that
-you haven't got a lot to worry about.
-
-You may be wondering how this differs from other Perl modules and how
-it compares to similar dynamic content construction techniques such as
-Server Side Include (SSI), Cascading Style Sheets (CSL), XML
-(Extensible Markup Language), and so on.  The main points are these:
-
-=over 4
-
-=item *
-
-The Template Toolkit promotes a structured approach to content
-construction.  There's a slight "startup" cost to using this approach
-because, like life, it always takes a little longer to get yourself
-properly organised.  The payoff comes in terms of scalability.  The 
-more you add, the more you benefit from having structure.
-
-=item *
-
-The Template Toolkit is not about how much raw programming power you
-can cram into a document.  For that, you simply can't beat directly
-embedding Perl and processing via a module such as Text::Template.
-This approach is something like CGI in reverse - instead of putting
-HTML in your program, you put your program in the HTML.  The Template
-Toolkit instead keeps the two entities separate. 
-
-=item *
-
-The Template Toolkit doesn't try and do it all.  In fact, it tries to
-do as little as possible, preferring instead to delegate to "Real
-Perl" and "Real Perl Modules" for "Real Programming" tasks.  The
-toolkit language concerns itself with nothing more than building
-documents.  It doesn't need to be anything like as versatile,
-powerful, complex or cryptic as Perl.  It remains blessedly focussed
-and bloat-free, and implements as few new wheels as possibly.  This is
-a Good Thing because it means I have less code to maintain and the
-hubris gets properly shared out.
-
-=item *
-
-The Template Toolkit is not specific to any particular application or
-environment.  Nothing in the core toolkit is specific in any way to
-HTML, CGI or a web server environment.  It simply processes text and
-doesn't concern itself which what that text might finally come to
-represent: HTML, POD, XML, XSL, LaTeX, RTF, etc.  Additional
-functionality is loaded only as required.  You can use it from a
-command line script, via one of the distribution scripts, B<tpage> and
-B<ttree>, in a CGI script or in a web or application server
-environment.  Your call.  You don't have to change the way you write
-templates or the way you write code because these things remain
-independant of the final "delivery method" of the document.
-
-=back
+It is worth noting that there is nothing to stop you from adopting a
+well structured approach to content construction using Text::Template
+or one of the other fine template processing modules available.  Many
+people do indeed develop content using these tools in such a way as to
+promote reusability and maintainability every bit as much as the
+Template Toolkit does.  The benefit of using the toolkit is that much
+of this is done for you.  You get to reap the benefits of template
+caching (resulting in fast runtime processing), automatic error
+detection and handing, variable localisation and namespacing, dynamic
+loading of external modules, and so on, without having to code it
+yourself or even worry about the specifics of implementation.  The
+details are hidden away, the directive syntax is simplified and you
+can get a lot done very quickly with the minimum of fuss.  The benefit
+of the Text::Template approach is that you have complete control over
+exactly what happens and you can be as structured or as unstructured
+as the task in hand demands.  The internal parsing and processing
+method is also extremely efficient and fast, being handled by Perl
+itself.
 
 The Template Toolkit is a direct descendant of, and replacement for
 the Text::MetaText module.  It has been designed and rebuilt from
@@ -185,5 +142,8 @@ scratch based on several years of experience gained from developing,
 supporting and using Text::MetaText and other template processing
 applications and tools.  It is an Open Source project in which
 contribution and collaboration are encouraged.
+
+
+
 
 

@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Utils.pm,v 1.5 1999/08/12 23:12:25 abw Exp $
+# $Id: Utils.pm,v 1.6 1999/08/28 04:52:23 abw Exp $
 #
 #============================================================================
 
@@ -28,9 +28,11 @@ require Exporter;
 
 use strict;
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
+use File::Basename;
+use File::Path;
 
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
 
 
 
@@ -130,7 +132,10 @@ sub output_handler {
     # a simple string is taken as a filename
     elsif (! $reftype) {
 	require Symbol;
+	# make destination directory if it doesn't exist
+	my $dir = dirname($where);
 	my $handle = &Symbol::gensym;
+	mkpath($dir) unless -d $dir;
 	if (open($handle, ">$where")) { 
 	    $output = sub { print $handle @_ };
 	}
@@ -220,7 +225,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.5 $
+$Revision: 1.6 $
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 1.7 1999/08/12 21:53:47 abw Exp $
+# $Id: Stash.pm,v 1.8 1999/09/09 17:03:02 abw Exp $
 #
 #============================================================================
 
@@ -30,7 +30,7 @@ use strict;
 use vars qw( $VERSION );
 use Template::Constants qw( :status :error );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
 
 # IMPORT/EXPORT parameters
 my $EXPORT = 'EXPORT';
@@ -156,12 +156,18 @@ sub declone {
 #------------------------------------------------------------------------ 
 
 sub get {
-    my ($self, $var, $params, $context) = @_;
+    my ($self, $var, $params, $context, $create) = @_;
+    my $value;
     $params ||= [];
 
-    my $value = $self->{ $var };
-    return &$value(@$params)
-	if ref($value) eq 'CODE';
+    if (defined ($value = $self->{ $var })) {
+	return &$value(@$params)
+	    if ref($value) eq 'CODE';
+    }
+    else {
+	# create empty hash if value not defined and $create flag set
+	$value = $self->{ $var } = { } if $create;
+    }
 
     return $value;
 }
@@ -370,7 +376,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.7 $
+$Revision: 1.8 $
 
 =head1 COPYRIGHT
 

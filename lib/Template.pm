@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.30 1999/08/16 14:14:31 abw Exp $
+#   $Id: Template.pm,v 1.31 1999/09/14 23:06:31 abw Exp $
 #
 #========================================================================
  
@@ -34,7 +34,7 @@ use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '0.25';
+$VERSION     = '0.26';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;
@@ -66,7 +66,6 @@ sub new {
 #------------------------------------------------------------------------
 # process($template, \%params, $output, $errout)
 #
-
 # Main template processing method which delegates to the Context
 # process() method.  The first parameter denotes the template
 # filename, handle, etc.  This is processed in a localised variable

@@ -38,7 +38,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Iterator.pm,v 1.5 1999/08/12 21:53:47 abw Exp $
+# $Id: Iterator.pm,v 1.8 1999/09/14 23:07:02 abw Exp $
 #
 #============================================================================
 
@@ -47,12 +47,12 @@ package Template::Iterator;
 require 5.004;
 
 use strict;
-use vars qw( $VERSION $DEBUG );
+use vars qw( $VERSION $DEBUG $AUTOLOAD );
 use Template::Constants qw( :status :error );
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 
@@ -94,7 +94,7 @@ sub new {
 #========================================================================
 
 #------------------------------------------------------------------------
-# first()
+# get_first()
 #
 # Initialises the object for iterating through the target data set.  The 
 # first record is returned, if defined, along with the STATUS_OK value.
@@ -105,7 +105,7 @@ sub new {
 # required data initialisation.
 #------------------------------------------------------------------------
 
-sub first {
+sub get_first {
     my $self  = shift;
     my $data  = $self->{ _DATA };
     my ($order, $error);
@@ -137,24 +137,24 @@ sub first {
     return (undef, STATUS_DONE) unless $size;		    ## RETURN ##
 
     # slice initial values into $self
-    @$self{ qw( _MAX _INDEX size max index number is_first is_last ) } 
+    @$self{ qw( _MAX _INDEX size max index number first last ) } 
     = ( $size - 1, $index, $size, $size - 1, $index, 1, 1, $size > 1 ? 0 : 1 );
 
     # first data item and OK status
-    return $self->iteration($self->{ _DATASET }->[ $index ]);
+    return $self->do_iteration($self->{ _DATASET }->[ $index ]);
 }
 
 
 
 #------------------------------------------------------------------------
-# next()
+# get_next()
 #
 # May be called repeatedly to access successive elements in the data.
 # Should only be called after a successful call to first or an error
 # code will be returned.
 #------------------------------------------------------------------------
 
-sub next {
+sub get_next {
     my $self = shift;
     my ($max, $index) = @$self{ qw( _MAX _INDEX ) };
 
@@ -162,18 +162,18 @@ sub next {
     # warn about incorrect usage
     unless (defined $index) {
 	my ($pack, $file, $line) = caller();
-	warn("Iterator next() called before first() at $file line $line\n");
+	warn("Iterator get_next() called before get_first() at $file line $line\n");
 	return (undef, STATUS_DONE);			    ## RETURN ##
     }
 
     # if there's still some data to go...
     if ($index < $max) {
 	# slice new values into $self
-	@$self{ qw( _INDEX index number is_first is_last ) }
+	@$self{ qw( _INDEX index number first last ) }
 	    = ( ++$index, $index, $index + 1, 0, $index == $max ? 1 : 0 );
 
 	# return data and OK status			    ## RETURN ##
-	return $self->iteration($self->{ _DATASET }->[ $index ]);  
+	return $self->do_iteration($self->{ _DATASET }->[ $index ]);  
     }
     else {
 	# clear index and indicate data finished
@@ -185,13 +185,13 @@ sub next {
 
 
 #------------------------------------------------------------------------
-# iteration($item)
+# do_iteration($item)
 #
 # Called each time the iterator is ready to return an iterative value.
 # This method calls any $self->{ ACTION } defined.
 #------------------------------------------------------------------------
 
-sub iteration {
+sub do_iteration {
     my ($self, $data) = @_;
     my $action;
 
@@ -217,6 +217,8 @@ sub iteration {
 
 sub sort {
     my ($self, $data, $reverse) = @_;
+    $data = $self->{ _DATA } unless $data;
+
     return $reverse 
 	?  [ map  { $_->[0] }
 	     sort { $b->[1] cmp $a->[1] }
@@ -230,6 +232,19 @@ sub sort {
 	   ]
 }
 
+
+#------------------------------------------------------------------------
+# AUTOLOAD
+#
+# Provides access to internal fields (e.g. size, first, last, max, etc)
+#------------------------------------------------------------------------
+sub AUTOLOAD {
+    my $self = shift;
+    my $item = $AUTOLOAD;
+    $item =~ s/.*:://;
+    return if $item eq 'DESTROY';
+    return $self->{ $item };
+}
 
 
 #========================================================================
@@ -255,7 +270,6 @@ sub _state {
 }
 
 
-
 1;
 
 __END__
@@ -270,13 +284,13 @@ Template::Iterator - Base iterator class used by the FOREACH directive.
 
 =head1 DESCRIPTION
 
-THe Template::Iterator module defines a generic data iterator for use 
+The Template::Iterator module defines a generic data iterator for use 
 by the FOREACH directive.  
 
 It may be used as the base class for custom iterators.
 
 =head1 PUBLIC METHODS
-    
+
 =head2 new(\@data, \%options) 
 
 Constructor method.  A reference to a list of values is passed as the
@@ -302,16 +316,23 @@ The modified data should be returned.
 
 =back
 
-=head2 first()
+=head2 get_first()
 
 Returns a ($value, $error) pair for the first item in the iterator set.
 Returns an error of STATUS_DONE if the list is empty.
 
-=head2 next()
+=head2 get_next()
 
 Returns a ($value, $error) pair for the next item in the iterator set.
 Returns an error of STATUS_DONE if all items in the list have been 
 visited.
+
+=head2 size(), max(), index(), number(), first(), last()
+
+Return the size of the iteration set, the maximum index number (size - 1),
+the current index number (0..max), the iteration number offset from 1
+(index + 1, i.e. 1..size), and boolean values indicating if the current
+iteration is the first or last in the set, respectively.
 
 =head1 AUTHOR
 
@@ -319,7 +340,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.5 $
+$Revision: 1.8 $
 
 =head1 COPYRIGHT
 

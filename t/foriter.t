@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foriter.t,v 1.4 1999/08/10 11:09:14 abw Exp $
+# $Id: foriter.t,v 1.7 1999/09/14 23:07:15 abw Exp $
 #
 #========================================================================
 
@@ -41,7 +41,8 @@ my $params = {
     'format' => \&format,
 };
 
-test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1 }, $params);
+test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1, DEBUG => 1 }, 
+	    $params);
  
 
 sub months {
@@ -93,17 +94,20 @@ alpha
 
 -- test --
 [% CATCH undef %]
-ERROR: [% e.info %]
+ERROR: [% e.info +%]
 [% END %]
 [% FOREACH item = [ a b c ] (order => 'sideways') %]
 $item
-[% END +%]
+[% END %]
 [% FOREACH item = [ a b c ] (order => inverted) %]
 $item
 [% END %]
 -- expect --
 ERROR: invalid iterator order: sideways
 ERROR: inverted is undefined
+alpha
+bravo
+charlie
 
 -- test --
 [% userlist = [ b c d a C 'Andy' 'tom' 'dick' 'harry' ] (order => 'sorted') %]
@@ -133,4 +137,62 @@ $item
 [- bravo   -]
 [- charlie -]
 [- delta   -]
+
+-- test --
+[% FOREACH item = [ a b c d ] %]
+[% "List of $loop.size items:\n" IF loop.first %]
+  #[% loop.number %]/[% loop.size %]: [% item +%]
+[% "That's all folks\n" IF loop.last %]
+[% END %]
+-- expect --
+List of 4 items:
+  #1/4: alpha
+  #2/4: bravo
+  #3/4: charlie
+  #4/4: delta
+That's all folks
+
+-- test --
+[% iterator = [ d b c a ](order => 'sorted') %]
+[% FOREACH item = iterator %]
+[% "List of $iterator.size items:\n----------------\n" IF iterator.first %]
+ * [% item +%]
+[% "----------------\n" IF iterator.last  %]
+[% END %]
+-- expect --
+List of 4 items:
+----------------
+ * alpha
+ * bravo
+ * charlie
+ * delta
+----------------
+
+-- test --
+[% list = [ a b c d ] %]
+[% i = 1 %]
+[% FOREACH item = list %]
+ #[% i %]/[% list.size %]: [% item +%]
+[% i = inc(i) %]
+[% END %]
+-- expect --
+ #1/4: alpha
+ #2/4: bravo
+ #3/4: charlie
+ #4/4: delta
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: iterator.t,v 1.4 1999/08/10 11:09:15 abw Exp $
+# $Id: iterator.t,v 1.5 1999/09/09 17:02:01 abw Exp $
 #
 #========================================================================
 
@@ -63,19 +63,19 @@ my $iter1 = Template::Iterator->new(\@set1);
 ok($iter1);
 
 #3-4 - call first and test expected result
-($value, $error) = $iter1->first();
+($value, $error) = $iter1->get_first();
 ok( ! $error);
 ok( $value eq $a );
 
 #5-8 - call next() and test expected result
 foreach ($b, $c) {
-    ($value, $error) = $iter1->next();
+    ($value, $error) = $iter1->get_next();
     ok( ! $error);
     ok( $value eq $_ );
 }
 
 #9 - call next() and expect STATUS_DONE
-($value, $error) = $iter1->next();
+($value, $error) = $iter1->get_next();
 ok( $error == STATUS_DONE );
 
 #10-11 - once more with feeling, expecting a warning
@@ -83,19 +83,19 @@ ok( $error == STATUS_DONE );
     my $warning;
     local $SIG{__WARN__} = sub { $warning = shift };
 
-    ($value, $error) = $iter1->next();
+    ($value, $error) = $iter1->get_next();
     ok( $error == STATUS_DONE );
     ok( length $warning );
 }
 
 #12-15 - now try re-iterating through the same set 
 @vals = ();
-($value, $error) = $iter1->first();
+($value, $error) = $iter1->get_first();
 ok( ! $error );
 push(@vals, $value);
 
 foreach (1..2) {
-    ($value, $error) = $iter1->next();
+    ($value, $error) = $iter1->get_next();
     ok( ! $error );
     push(@vals, $value);
 }
@@ -110,7 +110,7 @@ my $iter2 = Template::Iterator->new();
 ok($iter1);
 
 #17-18 - call first and test expected result (nothing)
-($value, $error) = $iter2->first();
+($value, $error) = $iter2->get_first();
 ok( $error == STATUS_DONE );
 ok( !defined $value );
 
@@ -123,12 +123,15 @@ my $iter3 = Template::Iterator->new($t);
 ok($iter3);
 
 #20-21 - call first and test expected result
-($value, $error) = $iter3->first();
+($value, $error) = $iter3->get_first();
 ok( ! $error );
 ok( $value eq $t );
 
 #22-23 - call next and test DONE
-($value, $error) = $iter3->next();
+($value, $error) = $iter3->get_next();
 ok( $error == STATUS_DONE );
 ok( ! defined $value );
+
+
+
 

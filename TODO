@@ -10,13 +10,14 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.37 1999/08/16 14:44:45 abw Exp $
+# $Id: TODO,v 1.44 1999/09/15 12:11:22 abw Exp $
 #
 #============================================================================
 
 Pending
 -------
-  * documentation for ttree.
+  * AppConfig pre-requisite.
+  * Copy option to ttree?
 
 Bugs
 ----
@@ -30,14 +31,15 @@ Possible Features
 ----------------
   * TRY to scope CATCH?
 
+  * General-purpose DEBUG option which can activate *limited* debug operations
+    (e.g. for tracing undefined values at runtime) 
+
   * PERL directive to encapsulate Perl code.  Stash variables could be 
     made available.  This should be delegated to Text::Template, or to 
     Template::Perl which is, or delegates to Text::Template.
 
   * An option to bind subs in a Perl namespace into a template namespace
     without requiring the specific binding to every function.
-
-  * general purpose methods (e.g. 'size' on a list, 'keys' on a hash)
 
   * add INSERT directive to insert a file without processing it.  
 
@@ -46,9 +48,6 @@ Possible Features
 
 General Improvements
 --------------------
-  * automatically create output directory and intermediate directories
-    within it.
-
   * user-defined filters can be provided in the FILTERS hash, but there
     is no way to dynamically load filters from the template unless they
     are "standard library" filters, defined in Template::Plugin::Filter.
@@ -57,26 +56,16 @@ General Improvements
     BREAK outside of a FOREACH, then a STATUS_DONE value is returned to
     the caller.
 
-  * Change default ERROR handler to be undef (errors retrieved via 
-    error()) and have uncaught exceptions call $context->error().
-
   * It is currently impossible to create a list and then pass the members 
     of that list to a code ref/method.  The following would pass the list
     reference to the code, not the items in the list.
-      %% things = [ b c a ]; sort(things) %%
-    Notionally, we might be able to add a 'members' operator as a postfix:
-      %% things = [ b c a ]; sort(things.*) %%
-    The same approach could be used for hashes:
-      %% users = { tom => 99, dick => 100, harry => 101 };
-         FOREACH name = users.keys 
-         FOREACH name = users.values  # or users.* as above
-    This needs addressing.
+      [% things = [ b c a ]; do_something(things) %]
 
   * At some point the 'cache' (really a file loader) should be
     modified to work in a more generic resource brokering role.  This
     could then be re-used for loading and caching code components.
 
-  * The parser could issue issue warnings
+  * The parser could issue warnings
 
   * The parser could return a Template::Document type encapsulating
     template information (and warnings, etc.) rather than a bare
@@ -90,25 +79,10 @@ General Improvements
     to enable a debugging-aware parser which inserts debugging directives
     into the template context.  These would then be processed at runtime.
 
-  * The parser grammar can be simplified a bit.  I think that the
-    re-write between 0.17 and 0.18 was a Good Thing but pitched the
-    intermediate code too low down at the opcode level.  It needs to
-    be lifted up a little to encompass broader concepts such as
-    generic parameter lists rather than opcode sequences.  This will
-    hopefully make the programmatical interface less complex, the
-    internal code cleaner, the language more flexible and the grammar
-    simpler and smaller.  What's more, I think it will run a little 
-    faster, too.  Benchmark results between 0.17 and 0.18 suggest that
-    there was a little slowdown in going to lower level opcodes for 
-    the gain of greater flexibility.  I think it can be re-factored 
-    slightly to give a Win-Win.
-
 Documentation
 -------------
-  * ttree is not documented.
-
   * note that object methods get called with the RHS as a parameter when 
-    specified as an lvalue of an assignment.  e.g. %% foo.bar = 10 %%
+    specified as an lvalue of an assignment.  e.g. [% foo.bar = 10 %]
     => $foo_obj->bar(10)
 
   * iterator options specified through list construct parameters are
@@ -132,11 +106,11 @@ Other plugins, modules, scripts
 
 ttree
 -----
-  * allow specification of config options, pre-defs, etc, on command line
-    and/or config file.
+  * 'copy' option which works like 'ignore' but simply copies file instead
+    of processing them.
 
-  * alternate config files ('profile' in metapage) should be allowed
-
-  * documentation
+  * Better documentation describing the use of ttree in building document
+    systems.  Examples of web sites, using config profiles, defining 
+    template variables in 'config' templates that get pre-processed, etc.
 
 

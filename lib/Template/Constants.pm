@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Constants.pm,v 1.8 1999/08/01 13:43:11 abw Exp $
+# $Id: Constants.pm,v 1.11 1999/09/14 23:07:01 abw Exp $
 #
 #============================================================================
  
@@ -30,7 +30,7 @@ use strict;
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
 
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 
 # BEGIN { print STDERR "Loading Template::Constants...\n" };
 
@@ -55,27 +55,38 @@ use constant STATUS_ERROR    => 255;      # error condition
 use constant ERROR_FILE      =>  'file';  # file error: I/O, parse, recursion
 use constant ERROR_UNDEF     =>  'undef'; # undefined variable value used
 
-use constant OP_ROOT         =>   1;
-use constant OP_DOT          =>   2;
-use constant OP_LDOT         =>   3;
-use constant OP_DUP          =>   4;
-use constant OP_CAT          =>   5;
-use constant OP_PUSH         =>   6;
-use constant OP_POP          =>   7;
-use constant OP_NOT          =>   8;
-use constant OP_ASSIGN       =>   9;
-use constant OP_BINOP        =>  10;
-use constant OP_LIST         =>  11;
-use constant OP_DEFAULT      =>  12;
-use constant OP_AND          =>  13;
-use constant OP_OR           =>  14;
-use constant OP_ITER         =>  15;
-use constant OP_TOLERANT     =>  16;
+use constant OP_NULLOP       =>   0;      # do nothing
+use constant OP_LITERAL      =>   1;      # literal value, do nothing
+use constant OP_IDENT        =>   2;
+use constant OP_RANGE        =>   3;
+use constant OP_LIST         =>   4;
+use constant OP_HASH         =>   5;
+use constant OP_QUOTE        =>   6;
+use constant OP_UNYOP        =>   7;   ## 
+use constant OP_BINOP        =>   8;
+use constant OP_NOT          =>   9;
+use constant OP_AND          =>  10;
+use constant OP_OR           =>  11;
+
+use constant OP_DOT          =>  12;
+use constant OP_LDOT         =>  13;
+use constant OP_LISTFOLD     =>  14;
+use constant OP_HASHFOLD     =>  15;
+use constant OP_HASHKEY      =>  16;
+use constant OP_LVALUE       =>  17;
+use constant OP_STRCAT       =>  18;
+use constant OP_ASSIGN       =>  19;
+use constant OP_LSET         =>  20;
+use constant OP_ITER         =>  21;
+use constant OP_ITERFOLD     =>  22;
+use constant OP_DEFAULT      =>  23;
+use constant OP_ARGS         =>  24;
+use constant OP_RANGEFOLD    =>  25;
 
 use vars qw( @OP_NAME );
-@OP_NAME       = qw( NULLOP ROOT DOT LDOT DUP CAT PUSH
-		     POP NOT ASSIGN BINOP LIST DEFAULT
-		     AND OR ITERATOR TOLERANT );
+@OP_NAME       = qw( NULLOP LITERAL IDENT RANGE LIST HASH QUOTE UNYOP BINOP 
+		     NOT AND OR DOT LDOT LISTFOLD HASHFOLD HASHKEY LVALUE 
+		     STRCAT ASSIGN LSET ITER ITERFOLD DEFAULT ARGS RFOLD );
 
 # CACHE constants controlling the Template::Cache
 use constant CACHE_NONE      =>   0;	  # don't cache anything
@@ -96,14 +107,15 @@ my @TEMPLATE = qw( TEMPLATE_OUTPUT TEMPLATE_ERROR TEMPLATE_DEBUG );
 my @STATUS   = qw( STATUS_OK STATUS_RETURN STATUS_STOP STATUS_DONE
 		   STATUS_ERROR );
 my @ERROR    = qw( ERROR_FILE ERROR_UNDEF );
-my @OPS      = qw( OP_ROOT OP_DOT OP_DUP OP_CAT OP_PUSH OP_POP OP_ASSIGN
-		   OP_BINOP OP_NOT OP_LDOT OP_LIST OP_DEFAULT OP_AND
-		   OP_OR OP_ITER OP_TOLERANT @OP_NAME );
+
+my @OPS      = qw( OP_NULLOP OP_LITERAL OP_IDENT OP_RANGE OP_LIST OP_HASH 
+		   OP_QUOTE OP_UNYOP OP_BINOP OP_NOT OP_AND OP_OR OP_DOT
+		   OP_LDOT OP_LISTFOLD OP_HASHFOLD OP_HASHKEY OP_LVALUE 
+		   OP_STRCAT OP_ASSIGN OP_LSET OP_ITER OP_ITERFOLD 
+		   OP_DEFAULT OP_ARGS OP_RANGEFOLD @OP_NAME );
 my @CACHE    = qw( CACHE_NONE CACHE_ALL );
 my @DEBUG    = qw( DEBUG_NONE DEBUG_INFO DEBUG_DATA DEBUG_TOKEN 
                    DEBUG_PARSE DEBUG_PROCESS DEBUG_ALL );
-
-
 @EXPORT_OK   = ( @TEMPLATE, @STATUS, @ERROR, @OPS, @CACHE, @DEBUG );
 %EXPORT_TAGS = (
     'all'      => [ @EXPORT_OK ],
@@ -203,7 +215,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.8 $
+$Revision: 1.11 $
 
 =head1 COPYRIGHT
 

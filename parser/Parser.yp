@@ -1,295 +1,239 @@
-%left DOT
-%left NOT
-%left AND
-%left OR
-%left COMPOP
 %left COMMA
+%left AND OR
+%left NOT
+%left DOT
+%left COMPOP
+%left TO 
+#STEP
 
 %%
 
-#========================================================================
-# START RULE
-#========================================================================
+#------------------------------------------------------------------------
+# START AND TOP-LEVEL RULES
+#------------------------------------------------------------------------
 
-block:		chunks	
-			{ Template::Directive::Block->new($_[1]) }
-	|	/* NULL - empty block */ 
-			{ Template::Directive::Block->new([])    }
+block:	    chunks	    	{ $factory->create(Block => $_[1])      }
+	|   /* NULL */	    	{ $factory->create(Block => [])         }
+;
+
+chunks:	    chunks chunk	{ push(@{$_[1]}, $_[2]) if defined $_[2];
+				   $_[1]                                }
+	|   chunk		{ defined $_[1] ? [ $_[1] ] : [ ]       }
+;
+
+chunk:	    TEXT            	{ $factory->create(Text => $_[1])       }
+	|   directive ';'
+;
+
+directive:  atomdir
+	|   catch
+	|   condition
+	|   loop
+	|   filter
+	|   defblock
+	|   debug
+	|   /* NULL - empty directive */
 ;
 
 
-#========================================================================
-# PRIME DIRECTIVE RULES
-#========================================================================
-
-
-chunks:		chunk	
-			{ return defined $_[1] ? [ $_[1] ] : [ ] }
-	|	chunks chunk
-			{ push(@{ $_[1] }, $_[2]) if defined $_[2]; $_[1] }
-;
-
-chunk:		text
-			{ $_[1] }
-	|	directive SEPARATOR
-			{ $_[1] }
-;
-
-directive:	atomdir
-	|	use
-	|	catch
-	|	debug
-	|	condition
-	|	loop
-	|	filter
-	|	defblock
-	|	/* NULL - empty directive */
-;
-
-atomdir:	get
-	|	set
-	|	include
-	|	throw
-	|	error
-	|	return
-;
-
-
-#========================================================================
+#------------------------------------------------------------------------
 # DIRECTIVE RULES
-#========================================================================
+#------------------------------------------------------------------------
 
-text:		TEXT	
-			{ Template::Directive::Text->new($_[1])          }
+atomdir:    GET term	    	{ $factory->create(Get     => $_[2])    }
+	|   SET setlist    	{ $factory->create(Set     => $_[2])    }
+	|   DEFAULT setlist     { unshift(@{$_[2]}, OP_DEFAULT);
+				  $factory->create(Set     => $_[2])    }
+	|   USE useparam    	{ $factory->create(Use     => @{$_[2]}) }
+	|   INCLUDE file setopt { $factory->create(Include => @_[2,3])  }
+	|   PROCESS file setopt { $factory->create(Process => @_[2,3])  }
+	|   THROW IDENT term    { $factory->create(Throw   => @_[2,3])  }
+	|   ERROR term	    	{ $factory->create(Error   => $_[2])    }
+	|   return		{ $factory->create(Return  => $_[1])    }
+	|   setlist		{ $factory->create(Set     => $_[1])    }
+	|   term		{ $factory->create(Get     => $_[1])    }
 ;
 
-get:		GET term
-			{ Template::Directive->new($_[2])                }
-
-	|	term		    
-			{ Template::Directive->new($_[1])                }
+return:	    RETURN		{ STATUS_RETURN }
+	|   STOP		{ STATUS_STOP   }
+	|   BREAK		{ STATUS_DONE   }
 ;
 
-set:		SET setlist
-			{ Template::Directive->new($_[2])                }
-	|	DEFAULT setlist		    
-			{ unshift(@{$_[2]}, OP_DEFAULT);  # enable DEFAULT
-			  Template::Directive->new($_[2])                }
-	|	IMPORT term
-			{ Template::Directive->new([ OP_ROOT, ['IMPORT'],
-				OP_LIST,  @{$_[2]}, OP_ASSIGN, OP_POP ]) }
-	|	setlist	{ Template::Directive->new($_[1])                }
+catch:	    CATCH IDENT ';' 
+	      block END		{ $factory->create(Catch =>, @_[2, 4])    }
+	|   CATCH ';' 
+	      block END		{ $factory->create(Catch => undef, $_[3]) }
 ;
 
-include:	INCLUDE incparam inclist
-			{ Template::Directive::Include->new(@_[2, 3])    }
-
-	|	PROCESS incparam inclist
-			{ Template::Directive::Process->new(@_[2, 3])    }
+condition:  IF expr ';' 
+	      block else END    { $factory->create(If => @_[2, 4, 5])   }
+	|   atomdir IF expr	{ $factory->create(If => @_[3, 1])      }
+	|   UNLESS expr ';'       # Wayne's World.... NOT!
+	      block else END    { push(@{$_[2]}, OP_NOT);
+				  $factory->create(If => @_[2, 4, 5])   }
+	|   atomdir UNLESS expr { push(@{$_[3]}, OP_NOT);
+				  $factory->create(If => @_[3, 1])      }
 ;
 
-use:		USE useparam
-			{ Template::Directive::Use->new(@{$_[2]})        }
-	|	USE IDENT ASSIGN useparam
-			{ Template::Directive::Use->new($_[4]->[0], 
-						$_[4]->[1], $_[2])       }
+else:	    ELSE ';' block      { $_[3]                                 }
+	|   ELSIF expr ';' 
+	      block else        { $factory->create(If => @_[2, 4, 5])   }
+	|   /* NULL */
 ;
 
-throw:		THROW IDENT term
-			{ Template::Directive::Throw->new(@_[2, 3])      }
+loop:	    FOR loopvar ';' 
+	      block END		{ $factory->create(For => @{$_[2]}, $_[4]) }
+	|   atomdir FOR loopvar { $factory->create(For => @{$_[3]}, $_[1]) }
+	|   WHILE expr ';' 
+	      block END	    	{ $factory->create(While  => @_[2, 4])   }
+	|   atomdir WHILE expr  { $factory->create(While  => @_[3, 1])   }
 ;
 
-catch:		CATCH IDENT SEPARATOR block END
-			{ Template::Directive::Catch->new(@_[2, 4])      }
-	|	CATCH SEPARATOR block END
-			{ Template::Directive::Catch->new(undef, $_[3])  }
+loopvar:    IDENT ASSIGN term	{ [ @_[1, 3] ]     }
+	|   term                { [ undef, $_[1] ] }
 ;
 
-error:		ERROR term
-			{ Template::Directive::Error->new($_[2])         }
+filter:	    FILTER useparam ';' 
+	      block END	    { $factory->create(Filter => @{$_[2]}, $_[4]) }
+	|   atomdir FILTER useparam  
+			    { $factory->create(Filter => @{$_[3]}, $_[1]) }
 ;
 
-return:		RETURN	{ Template::Directive::Return->new(
-			      Template::Constants::STATUS_RETURN)        }
-	|
-		STOP	{ Template::Directive::Return->new(
-			      Template::Constants::STATUS_STOP)          }
-	|
-		BREAK	{ Template::Directive::Return->new(
-			      Template::Constants::STATUS_DONE)          }
+defblock:   BLOCK textdot ';' 
+	      block END	    	{ $_[0]->define_block(@_[2, 4]); undef  }
 ;
 
-condition:	IF expr SEPARATOR block else END
-			{ Template::Directive::If->new(@_[2, 4, 5])      }
-	|	UNLESS expr SEPARATOR block else END
-			{ push(@{ $_[2] }, OP_NOT);   # negate expression
-			  Template::Directive::If->new(@_[2, 4, 5])      }
-	|	atomdir IF expr
-			{ Template::Directive::If->new(@_[3, 1])         }
-	|	atomdir UNLESS expr
-			{ push(@{ $_[3] }, OP_NOT);   # negate expression
-			  Template::Directive::If->new(@_[3, 1])         }
-;
-
-else:		/* NULL */
-			{ undef }
-	|	ELSE SEPARATOR block 
-			{ $_[3] }
-	|	ELSIF expr SEPARATOR block else
-			{ Template::Directive::If->new(@_[2, 4, 5])      }
-;
-
-loop:		FOR IDENT ASSIGN term SEPARATOR block END
-			{ Template::Directive::For->new(@_[4, 6, 2])     }
-	|	FOR term SEPARATOR block END
-			{ Template::Directive::For->new(@_[2, 4])        }
-	|	WHILE expr SEPARATOR block END
-			{ Template::Directive::While->new(@_[2, 4])      }
-	|	atomdir FOR IDENT ASSIGN term
-			{ Template::Directive::For->new(@_[5, 1, 3])     }
-	|	atomdir FOR term
-			{ Template::Directive::For->new(@_[3, 1])        }
-	|	atomdir WHILE expr
-			{ Template::Directive::While->new(@_[3, 1])      }
-;
-
-filter:		FILTER useparam SEPARATOR block END
-			{ Template::Directive::Filter->new(
-				$_[2]->[0], $_[2]->[1], $_[4])   }
-	|	FILTER IDENT ASSIGN useparam SEPARATOR block END
-			{ Template::Directive::Filter->new(
-				$_[4]->[0], $_[4]->[1], @_[6,2]) }
-	|	atomdir FILTER useparam 
-			{ Template::Directive::Filter->new(
-				$_[3]->[0], $_[3]->[1], $_[1])   }
-	|	atomdir FILTER IDENT ASSIGN useparam
-			{ Template::Directive::Filter->new(
-				$_[5]->[0], $_[5]->[1], @_[1,3]) }
-;
-
-defblock:	BLOCK textdot SEPARATOR block END
-			{ $_[0]->define_block(@_[2, 4]); undef           }
-;
-
-debug:		DEBUG TEXT
-			{ Template::Directive::Debug->new($_[2])         }
+debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2])      }
 ;
 
 
-#========================================================================
+#------------------------------------------------------------------------
 # FUNDAMENTAL ELEMENT RULES
-#========================================================================
+#------------------------------------------------------------------------
 
-expr:		expr  AND expr		{ push(@{$_[1]}, @{$_[3]}, OP_AND);
-					  $_[1]                             }
-	|	expr  OR  expr		{ push(@{$_[1]}, @{$_[3]}, OP_OR);
-					  $_[1]                             }
-	|	      NOT expr		{ push(@{$_[2]}, OP_NOT); 
+term:	    LITERAL			{ [ OP_LITERAL, $_[1]    ] }
+	|   ident			{ [ OP_IDENT,   $_[1]    ] }
+	|   '[' range ']'		{ [ OP_RANGE,   $_[2]    ] }
+	|   '[' list ']'		{ [ OP_LIST,    $_[2]    ] }
+	|   '[' list ']' '(' args ')'	{ [ OP_ITER,    @_[2, 5] ] }
+	|   '{' params '}'		{ [ OP_HASH,    $_[2]    ] }
+	|   '"' quoted '"'		{ [ OP_QUOTE,   $_[2]    ] }
+;
+
+ident:	    ident DOT item		{ push(@{$_[1]}, $_[3]); $_[1] }
+	|   item			{ [ $_[1] ] }
+	|   '$' item			{ [ $_[2] ] }
+;
+
+item:	    '${' term '}'		{ [ $_[2], 0     ] } 
+	|   IDENT '(' args ')'		{ [ $_[1], $_[3] ] }
+	|   IDENT			{ [ $_[1], 0     ] }
+;
+
+assign:	    ident ASSIGN term		{ push(@{$_[3]}, OP_ASSIGN, $_[1]);
+					  $_[3] }
+	|   LITERAL ASSIGN term		{ push(@{$_[3]}, OP_ASSIGN, $_[1]);
+					  $_[3] }
+;
+
+list:	    list term			{ push(@{$_[1]}, $_[2]); $_[1] }
+	|   list COMMA                  { $_[1] }
+	|   term			{ [ $_[1] ] }
+;
+
+setlist:    setlist assign		{ push(@{$_[1]}, @{$_[2]}); $_[1] }
+	|   setlist COMMA		{ $_[1] }
+	|   assign
+;
+
+setopt:	    setlist
+	|   /* NULL */			{ [ ] }
+;
+
+range:	    term TO term		{ [ @_[1, 3] ] }
+#	|   term TO term 
+#	      STEP term 		{ [ @_[1, 3, 5] ] }
+;
+
+param:      LITERAL ASSIGN term         { [ $_[1], $_[3] ] }
+	|   IDENT ASSIGN term           { [ $_[1], $_[3] ] }
+;
+
+paramlist:  paramlist param		{ push(@{$_[1]}, $_[2]); $_[1] }
+	|   paramlist COMMA		{ $_[1] }
+	|   param			{ [ $_[1] ] }
+;
+
+params:	    paramlist
+	|   /* NULL */			{ [ ] }
+;
+
+arg:	    param
+	|   term			{ [ 0, $_[1] ] }
+;
+
+arglist:    arglist arg			{ push(@{$_[1]}, $_[2]); $_[1] }
+	|   arglist COMMA		{ $_[1] }
+	|   arg				{ [ $_[1] ] }
+;
+
+args:	    arglist			{ [ OP_ARGS, $_[1] ]  }
+	|   /* NULL */			{ [ OP_LITERAL, [ ] ] }
+;
+
+expr:	    expr COMPOP expr		{ push(@{$_[1]}, @{$_[3]}, 
+						OP_BINOP, $_[2]); $_[1]     }
+	|   expr AND expr		{ push(@{$_[1]}, @{$_[3]}, 
+						OP_AND); $_[1]       }
+	|   expr OR expr		{ push(@{$_[1]}, @{$_[3]}, 
+						OP_OR); $_[1]        }
+	|   NOT expr			{ push(@{$_[2]}, OP_NOT);
 					  $_[2]                             }
-	|	'(' expr ')'		{ $_[2]                             }
-	|	'(' assign ')'		{ unshift(@{$_[2]}, OP_TOLERANT,
-					    OP_ROOT); $_[2] }
-	|	term			{ unshift(@{$_[1]}, OP_TOLERANT);
-					  $_[1]                             }
+	|   '(' expr ')'		{ $_[2]                             }
+	|   assign
+	|   term		
 ;
 
-assign:		lvalue ASSIGN term	{ [ @{$_[1]}, @{$_[3]}, OP_ASSIGN ] }
+
+# this is a special case parameter used by INCLUDE, PROCESS, etc., which 
+# interprets barewords as quoted strings rather than variable identifiers;
+# a leading '$' is used to explicitly specify a variable.  It permits '/'
+# and '.' characters, allowing it to be used to specify filenames sans quotes
+file:	    '$' ident			{ [ OP_IDENT, $_[2] ] }
+	|   '"' quoted '"'		{ [ OP_QUOTE, $_[2] ] }
+	|   textdot			
+	|   LITERAL			
 ;
 
-lvalue:		ident 			{ [ @{ shift @{$_[1]} },
-	     				    (map { (OP_LDOT, @$_) } @{$_[1]}), 
-					  ]                                 }
-	|	'$' ident 		{ [ @{ shift @{$_[2]} },
-	     				    (map { (OP_LDOT, @$_) } @{$_[2]}), 
-					  ]                                 }
-	|	LITERAL			{ [ [$_[1]], OP_LIST ]              }
-	|	IMPORT			{ [ ['IMPORT'], OP_LIST ]           }
+# concatenates a sequence of identifiers, periods and/or slashes into 
+# a single string
+textdot:    textdot DOT IDENT		{ $_[1] .= "$_[2]$_[3]"; $_[1] }
+	|   textdot '/' IDENT		{ $_[1] .= "$_[2]$_[3]"; $_[1] }
+	|   IDENT
 ;
 
-ident:		ident DOT node		{ push(@{$_[1]}, $_[3]); $_[1]      }
-	|	node			{ [ $_[1] ]                         }
+# useparam is used by USE, FILTER, etc., to specify optional params
+# after a textdot option, 
+useparam:  IDENT ASSIGN textdot '(' args ')'	{ [ @_[3, 5, 1]         ] }
+	|  IDENT ASSIGN textdot			{ [ $_[3], undef, $_[1] ] }
+	|  textdot '(' args ')'			{ [ $_[1], $_[3], undef ] }
+	|  textdot				{ [ $_[1], undef, undef ] }
 ;
 
-node:		'${' term '}'		{ push(@{$_[2]}, OP_LIST); $_[2]    } 
-	|	IDENT '(' list ')'	{ [ [$_[1]], @{$_[3]}  ]            }
-	|	IDENT			{ [ [$_[1]], OP_LIST ]              }
+# constructs an array containing the contents of an explicitly quoted
+# string consisting of text and/or embedded variable references.
+# we ignore undef generated by ';' separator in 'quotable' rule below
+quoted:	    quoted quotable 		{ push(@{$_[1]}, $_[2])
+						if defined $_[2]; $_[1] }
+	|   /* NULL */	        	{ [ ] }
 ;
 
-term:		term COMPOP term	{ push(@{$_[1]}, @{$_[3]},
-						[$_[2]], OP_BINOP);
-					  $_[1]                             }
-	|	'$' ident		{ [ OP_ROOT, ( map { (@$_, OP_DOT)  }
-						@{$_[2]} ) ]                }
-	|	ident			{ [ OP_ROOT, ( map { (@$_, OP_DOT)  }
-						@{$_[1]} ) ]                }
-	|	'[' list ']'		{ $_[2]                             }
-	|	'[' list ']''(' params ')'
-					{ push(@{$_[2]}, [ {} ], 
-							@{$_[5]}, OP_ITER);
-					  $_[2]                             }
-	|	'{' params '}'		{ unshift(@{$_[2]}, [ {} ]);
-					  $_[2]                             }
-	|	'"' quoted '"'		{ unshift(@{$_[2]}, [ "" ]);
-					  $_[2]                             }
-	|	LITERAL			{ [ [$_[1]] ]                       }
-;
-
-list:		list term		{ push(@{$_[1]}, @{$_[2]}, OP_PUSH);
-					  $_[1]                             }
-	|	list COMMA		{ $_[1]                             }
-	|	/* NULL */		{ [ OP_LIST ]                       }
-;
-
-params:		nparams		
-	|	/* NULL */		{ [ ]                               }
-;
-
-nparams:	nparams assign  	{ push(@{$_[1]}, OP_DUP, 
-							@{$_[2]}, OP_POP);
-				      	  $_[1]                             }
-	|	nparams COMMA		{ $_[1]                             }
-	|	assign	    		{ unshift(@{$_[1]}, OP_DUP);
-					  push(@{$_[1]}, OP_POP);
-					  $_[1]                             }
-;
-
-setlist:	nparams			{ unshift(@{$_[1]}, OP_ROOT);
-					     push(@{$_[1]}, OP_POP);
-					   $_[1]                            }
-;
-
-inclist:	params			{ unshift(@{$_[1]}, OP_ROOT);
-					     push(@{$_[1]}, OP_POP);
-					   $_[1]                            }
-;
-
-incparam:	'$' ident		{ [ OP_ROOT, ( map { (@$_, OP_DOT) }
-						@{$_[2]} ) ]                }
-	|	'"' quoted '"'		{ unshift(@{$_[2]}, [ "" ]);
-					  $_[2]                             }
-	|	textdot			{ [ [$_[1]] ]                       }
-	|	LITERAL			{ [ [$_[1]] ]                       }
-;
-
-useparam:	textdot '(' list ')'	{ [ @_[1, 3] ]                      }
-	|	textdot			{ [ $_[1] ]                         }
-;
-
-textdot:	textdot DOT IDENT	{ $_[1] .= "$_[2]$_[3]"; $_[1]      }
-	|	textdot '/' IDENT	{ $_[1] .= "$_[2]$_[3]"; $_[1]      }
-	|	IDENT
-;
-
-quoted:		quoted quotable 	{ push(@{$_[1]}, @{$_[2]}, OP_CAT)
-						if defined $_[2];
-					  $_[1]                             }
-	|	/* NULL - */	        { [  ]                              }
-;
-
-quotable:	ident			{ [ OP_ROOT, ( map { (@$_, OP_DOT) } 
-						@{$_[1]} ) ]                } 
-	|	TEXT			{ [ [$_[1]] ]                       }
-	|	SEPARATOR		{ undef }
+# the tokeniser adds an explicit ';' after each directive it finds to help
+# the parser identify directive/text boundaries;  we're not interested in 
+# them here so we can simply accept and ignore by returning undef
+quotable:   ident			{ [ OP_IDENT,   $_[1] ] } 
+	|   TEXT			{ [ OP_LITERAL, $_[1] ] }
+	|   ';'		        	{ undef }
 ;
 
 

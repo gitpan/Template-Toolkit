@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vars.t,v 1.4 1999/08/10 11:09:19 abw Exp $
+# $Id: vars.t,v 1.5 1999/09/14 11:33:43 abw Exp $
 #
 #========================================================================
 
@@ -127,3 +127,10 @@ $count
 100
 100
 
+-- test --
+[% a => c
+   b => d 
+-%]
+[% a %] [% b %]
+-- expect --
+charlie delta

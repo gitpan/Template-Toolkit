@@ -23,7 +23,6 @@ lib/Template/Plugin/Filter.pm
 bin/README
 bin/tpage
 bin/ttree
-bin/sample.ttreerc
 doc/README
 doc/bin/mkdoc
 doc/src/README.pod
@@ -65,6 +64,7 @@ t/chomp.t
 t/code.t
 t/constants.t
 t/context.t
+t/default.t
 t/directive.t
 t/error.t
 t/exception.t
@@ -73,15 +73,17 @@ t/foreach.t
 t/foriter.t
 t/format.t
 t/get.t
+t/global.t
 t/hash.t
 t/if.t
 t/import.t
 t/include.t
 t/interp.t
 t/iterator.t
-t/literal.t
 t/list.t
+t/literal.t
 t/multi.t
+t/named.t
 t/object.t
 t/output.t
 t/parser.t
@@ -91,6 +93,7 @@ t/predefs.t
 t/preproc.t
 t/private.t
 t/process.t
+t/recurse.t
 t/return.t
 t/set.t
 t/skel.t

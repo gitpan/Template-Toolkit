@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 1.6 1999/08/10 11:09:13 abw Exp $
+# $Id: foreach.t,v 1.7 1999/09/14 11:33:42 abw Exp $
 # 
 #========================================================================
 
@@ -129,11 +129,11 @@ romeo, romeo, wherefore art thou, romeo?
 [% FOREACH user = users %]
    $user.name ([% user.id %])
 [% END %]
-   [% user %]
+   [% user.name %]
 -- expect --
    Andy Wardley (abw)
    Simon Matthews (sam)
-   fred
+   Simon Matthews
 
 -- test --
 [% name = 'Joe Random Hacker' id = 'jrh' %]

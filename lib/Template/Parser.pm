@@ -31,7 +31,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 1.13 1999/08/12 21:53:47 abw Exp $
+# $Id: Parser.pm,v 1.14 1999/09/09 17:03:01 abw Exp $
 #
 #============================================================================
 
@@ -52,7 +52,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -109,6 +109,7 @@ sub new {
 	require Template::Grammar;
 	Template::Grammar->new();
     };
+    $self->{ FACTORY } ||= 'Template::Directive';
 
     # determine START_TAG and END_TAG for specified (or default) TAG_STYLE
     $tagstyle = $self->{ TAG_STYLE } || 'default';
@@ -168,6 +169,9 @@ sub parse {
     # split file into TEXT/DIRECTIVE chunks
     $tokens = $self->split_text($text)
 	|| return undef;				    ## RETURN ##
+
+#    local $" = '] [';
+#    print "token: [ @$tokens ]\n";
 
     # parse chunks
     $block = $self->_parse($tokens)
@@ -566,10 +570,13 @@ sub _parse {
     my $stack = [ [ 0, undef ] ];   # DFA stack
 
 # DEBUG
-#   local $" = ', ';
+   local $" = ', ';
 
     # retrieve internal rule and state tables
     my ($states, $rules) = @$self{ qw( STATES RULES ) };
+
+    # call the grammar set_factory method to install emitter factory
+    $self->{ GRAMMAR }->install_factory($self->{ FACTORY });
 
     # when we report errors, we want to be able to report the line offset
     # in the file or text where the error occured.  split_text() obliges us
@@ -596,12 +603,12 @@ sub _parse {
 	    $token = '' unless defined $token;
 
 # DEBUG
-#	    my $v = $value;
-#	    $v = '' unless defined $v;
-#	    $v =~ s/\n/\\n/g;
-#	    print "token: [$token] value: [$v]\n";
-#	    print "stack: [@$tokens]\n";
-
+#	     my $v = $value;
+#	     $v = '' unless defined $v;
+#	     $v =~ s/\n/\\n/g;
+#	     print "token: [$token] value: [$v]\n";
+#	     print "stack: [@$tokens]\n";
+# /DEBUG
 	    # if the token is a directive, we call call the lexer to
 	    # tokenise it
 	    if ($token eq 'DIRECTIVE') {
@@ -616,14 +623,14 @@ sub _parse {
 		$dirtoks = $self->tokenise_directive($value)
 		    || return undef;			    ## RETURN ##
 
-		# DEBUG
-		print STDERR "directive @ $line\ndirtoks: @$dirtoks\n"
-		    if $DEBUG;
-
+# DEBUG
+#		print STDERR "directive @ $line\ndirtoks: @$dirtoks\n"
+#		    if $DEBUG;
+# /DEBUG
 		# push tokens into front of existing token list,
 		# adding a 'SEPARATOR' token - this is a hack to 
 		# simulate the 'THEN' after an 'IF', for example
-		unshift(@$tokens, @$dirtoks, 'SEPARATOR', ';');
+		unshift(@$tokens, @$dirtoks, ';', ';');
 
 		($token, $value) = ();
 		redo;					    ## REDO ##
@@ -653,18 +660,18 @@ sub _parse {
 
 # DEBUG
 #	$self->_debug(DEBUG_PARSE, 
-#	print(
-#		"  State #$stateno",
-#		"  Token: ", 
-#		    defined $token ? "[$token]" : "<undef>",
-#		"  Value: ",
-#		    defined $value ? "[$value]" : "<undef>",
-#		"  Action: ",
-#		    $action > 0 
-#			? "shift -> $action"
-#			: "reduce -> $action",
-#		"\n");
-
+#	 print(
+#		 "  State #$stateno",
+#		 "  Token: ", 
+#		     defined $token ? "[$token]" : "<undef>",
+#		 "  Value: ",
+#		     defined $value ? "[$value]" : "<undef>",
+#		 "  Action: ",
+#		     $action > 0 
+#			 ? "shift -> $action"
+#			 : "reduce -> $action",
+#		 "\n");
+# /DEBUG
 
 	# ERROR: no ACTION
 	last unless defined $action;
@@ -675,9 +682,9 @@ sub _parse {
 	if ($action > 0) {
 	    push(@$stack, [ $action, $value ]);
 # DEBUG
-#	$self->_debug(DEBUG_PARSE, 
-#		"  Shift $action, $value\n");
-
+#	 $self->_debug(DEBUG_PARSE, 
+#		 "  Shift $action, $value\n");
+# /DEBUG
 
 	    $token = $value = undef;
 	    redo;
@@ -690,9 +697,9 @@ sub _parse {
 	($lhs, $len, $code) = @{ $rules->[ -$action ] };
 
 # DEBUG
-#	$self->_debug(DEBUG_PARSE, 
-#		"  Reduce stack by $len from rule '$lhs'\n");
-
+#	 $self->_debug(DEBUG_PARSE, 
+#		 "  Reduce stack by $len from rule '$lhs'\n");
+# /DEBUG
 	# no action imples ACCEPTance
 	$action
 	    or $status = ACCEPT;
@@ -770,6 +777,17 @@ sub _debug {
 	if $DEBUG;
 }
 
+sub dump_args {
+    my $self = shift;
+    my $args = shift || [];
+
+    foreach my $arg (@$args) {
+	print $arg;
+	print "  [@$arg]" if ref($arg) eq 'ARRAY';
+	print "\n";
+    }
+    $args;
+}
 
 1;
 
@@ -868,7 +886,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.13 $
+$Revision: 1.14 $
 
 =head1 COPYRIGHT
 

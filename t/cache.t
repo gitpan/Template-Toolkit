@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: cache.t,v 1.7 1999/08/12 02:30:38 abw Exp $
+# $Id: cache.t,v 1.8 1999/09/09 17:01:59 abw Exp $
 #
 #========================================================================
 
@@ -22,6 +22,9 @@ use vars qw( $DEBUG );
 use Template::Cache;
 require 'texpect.pl';
 $^W = 1;
+
+#use Template::Context;
+#$Template::Context::DEBUG = 1;
 
 $DEBUG = 0;
 
@@ -45,6 +48,7 @@ my $tproc = Template->new({
 })
     || die "Failed to create Template\n";
 
+print "Hello World\n";
 test_expect(\*DATA, $tproc);
 
 

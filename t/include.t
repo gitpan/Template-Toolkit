@@ -12,12 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# TODO: This is old code which is incomplete and possibly innaccurate.
-#   Note, in particular, that INCLUDE params must be quoted, e.g.
-#   [% INCLUDE 'header' %].  This is a bit tricky, but it *must* be 
-#   fixed ASAP.  Apart from this inconvenience, INCLUDE seems to work OK.
-#
-# $Id: include.t,v 1.9 1999/08/15 20:40:29 abw Exp $
+# $Id: include.t,v 1.10 1999/08/28 04:52:41 abw Exp $
 #
 #========================================================================
 
@@ -75,7 +70,7 @@ alpha
 bravo
 
 -- test --
-[% INCLUDE 'first_block' %]
+[% INCLUDE first_block %]
 -- expect --
 this is my first block, a is set to 'alpha'
 
@@ -100,7 +95,7 @@ this is my second block, a is initially set to 'alpha' and
 then set to 'sierra'  b is bravo  m is 98
 
 -- test --
-[% INCLUDE 'second_block' a = $r, b = c.f.g, m = 97 %]
+[% INCLUDE second_block a = $r, b = c.f.g, m = 97 %]
 [% a %]
 -- expect --
 this is my second block, a is initially set to 'romeo' and 

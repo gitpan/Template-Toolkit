@@ -23,41 +23,69 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 1.5 1999/08/16 14:55:41 abw Exp $
+# $Id: ttree,v 1.8 1999/09/15 12:11:45 abw Exp $
 #
 #========================================================================
 
-use lib '..';
 use strict;
 use Template;
+use AppConfig qw( :expand );
 use File::Find;
-use Getopt::Std;
+use File::Copy;
 
+
+#------------------------------------------------------------------------
+# config
+#------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
-my $opts     = { };
-my $config   = read_config($RCFILE);
-getopts('avrys:d:l:', $opts);
+# create a sample config file
+unless (-f $RCFILE) {
+    print("Do you want me to create a sample '.ttreerc' file for you?\n",
+	  "(file: $RCFILE)   [y/n]: ");
+    my $y = <STDIN>;
+    if ($y =~ /^y(es)?/i) {
+	write_config($RCFILE);
+	exit(0);
+    }
+}
 
-my $all      = $opts->{'a'} || 0;
-my $verbose  = $opts->{'v'} || 0;
-my $recurse  = $opts->{'r'} || $all;
-my $srcdir   = $opts->{'s'} || $config->{'src'}  || '.';
-my $libdir   = $opts->{'l'} || $config->{'lib'}  || '.';
-my $destdir  = $opts->{'d'} || $config->{'dest'} 
+# read configuration file and command line arguments - I need to remember 
+# to fix varlist() and varhash() in AppConfig to make this nicer...
+my $config   = read_config($RCFILE);
+my $verbose  = $config->verbose;
+my $recurse  = $config->recurse;
+my $debug    = $config->debug;
+my $all      = $config->all;
+my $libdir   = $config->lib;
+my $ignore   = $config->ignore;
+my $copy     = $config->copy;
+my $accept   = $config->accept;
+my $srcdir   = $config->src
+	       || die "Source directory not set (-s)\n";
+my $destdir  = $config->dest
 	       || die "Destination directory not set (-d)\n";
-my $ignore   = $config->{'ignore'};
+die "Source and destination directories may not be the same:\n  $srcdir\n"
+    if $srcdir eq $destdir;
+
+# get all template_* options from the config and fold keys to UPPER CASE
+my %ttopts   = $config->varlist('^template_', 1);
+my %ucttopts;
+@ucttopts{ map { uc } keys %ttopts } = values %ttopts;
+
+# now create complete parameter hash for creating template processor
 my $ttopts   = {
-    INCLUDE_PATH => [ $libdir, '.' ],
+    %ucttopts,
+    INCLUDE_PATH => [ @$libdir, '.' ],
     OUTPUT_PATH  => $destdir,
-    INTERPOLATE  => 1,
-    POST_CHOMP   => 1,
     ERROR        => \&error,
 };
+
 my $ttdata = {
+    # TODO: this is lava flow...
     'sys' => { 'time' => sub { time } },
 };
 
@@ -66,143 +94,361 @@ sub error {
     chomp $error;
     print STDERR "  ! $error\n";
 }
-
 $SIG{__WARN__} = \&error;
 
 
+#------------------------------------------------------------------------
+# pre-amble
+#------------------------------------------------------------------------
 print "$NAME $VERSION (Template Toolkit version $Template::VERSION)\n\n"
     if $verbose;
 
-#------------------------------------------------------------------------
+if ($verbose) {
+    local $" = ', ';
+    print(STDERR 
+	  "      Source: $srcdir\n",
+	  " Destination: $destdir\n",
+	  "Include Path: [ @$libdir ]\n",
+	  "      Ignore: [ @$ignore ]\n",
+	  "        Copy: [ @$copy ]\n",
+	  "      Accept: [ ", @$accept ? "@$accept" : "*", " ]\n\n");
+}
+if ($debug) {
+    local $" = ', ';
+    print STDERR "Template Toolkit configuration:\n";
+    foreach (keys %ucttopts) {
+	my $val = $ucttopts{$_};
+	next unless $val;
+	if (ref($val) eq 'ARRAY') {
+	    next unless @$val;
+	    $val = "[ @$val ]";
+	}
+	printf STDERR "  %-12s => $val\n", $_;
+    }
+    print STDERR "\n";
+}
 
+
+#------------------------------------------------------------------------
+# main-amble
+#------------------------------------------------------------------------
 my $template = Template->new($ttopts);
 
-find(\&process_file, $srcdir);
+if (@ARGV) {
+    # explicitly process files specified on command lines 
+    chdir($srcdir) || die "$srcdir: $!\n";
+    foreach my $file (@ARGV) {
+	print "  + $file\n" if $verbose;
+	$template->process("$file", $ttdata, $file)
+	    || print "  ! ", $template->error(), "\n";
+    }
+}
+else {
+    # implicitly process all file in source directory
+    find(\&process_file, $srcdir);
+}
+
+
+#------------------------------------------------------------------------
+# process_file()
+#
+# Main processing sub-routine called by find()
+#------------------------------------------------------------------------
 
 sub process_file {
-    my ($dir, $file) = ($File::Find::dir, $_);
-    my $check;
+    my ($dir, $file) = @_ ? (@_) : ($File::Find::dir, $_);
+    my ($check, $srcfile, $destfile, $srctime, $desttime);
 
-    # remove source directoy stem
+    # remove source directory stem
     $dir =~ s|$srcdir/?||;
 
     return if $file eq '.';
 
+    $srcfile = $dir ? "$dir/$file" : $file;
+    $destfile = $destdir ? "$destdir/$srcfile" : $srcfile;
+
+    # check against ignore list
     foreach $check (@$ignore) {
 	if ($file =~ /$check/) {
-	    print "  - ignoring $dir/$file (matches /$check/)\n"
+	    printf "  - %-32s (ignored, matches /$check/)\n", $srcfile
 		if $verbose;
 	    $File::Find::prune = 1 if -d $file;
 	    return;
 	}
     }
 
+    # recurse/don't recurse into directory
     if (-d $file) {
 	unless ($recurse) {
 	    $File::Find::prune = 1;
-	    print "  - ignoring $dir/$file (not recursing)\n"
+	    printf "  - %-32s (directory, not recursing)\n", $srcfile
 		if $verbose;
 	}
 	return;
     }
-	
-    print "  + $dir/$file\n"
-	if $verbose;
 
-    $template->process($file, $ttdata, $file)
+    # test modification time of existing destination file
+    if (-f $destfile && ! $all) {
+	$srctime  = ( stat($file)  )[9];
+	$desttime = ( stat($destfile) )[9];
+
+	if ($desttime > $srctime) {
+	    printf "  - %-32s (not modified)\n", $srcfile
+		if $verbose;
+	    return;
+	}
+    }
+	
+    # check against copy list
+    foreach $check (@$copy) {
+	if ($file =~ /$check/) {
+	    printf "  > %-32s (copied, matches /$check/)\n", $srcfile
+		if $verbose;
+	    copy($file, $destfile);
+	    return;
+	}
+    }
+
+    # check against acceptance list
+    if (@$accept) {
+	unless (grep { $file =~ /$_/ } @$accept) {
+	    printf "  - %-32s (not accepted)\n", $srcfile
+		if $verbose;
+	    return;
+	}
+    }
+
+    print "  + $srcfile\n" if $verbose;
+
+    # process file
+    $template->process($file, $ttdata, $srcfile)
 	|| print "  ! ", $template->error(), "\n";
 }
 
+
+#------------------------------------------------------------------------
+# read_config($file)
+#
+# Handles reading of config file and/or command line arguments.
 #------------------------------------------------------------------------
 
 sub read_config {
-    my $file   = shift;
-    my ($line, $var, $val, $existing);
-    my $config = { 
-	'lib'    => [ ],
-	'ignore' => [ ],
-    };
+    my $file = shift;
+    my $config = AppConfig->new({ 
+	ERROR => sub { die @_, "\ntry `$NAME --help'\n" }   }, 
+	'help|h'      => { ACTION => \&help },
+	'src|s=s'     => { EXPAND => EXPAND_ALL },
+	'dest|d=s'    => { EXPAND => EXPAND_ALL },
+	'lib|l=s@'    => { EXPAND => EXPAND_ALL },
+	'cfg|c=s'     => { EXPAND => EXPAND_ALL, DEFAULT => '.' },
+	'verbose|v'   => { DEFAULT => 0 },
+	'recurse|r'   => { DEFAULT => 0 },
+	'all|a'       => { DEFAULT => 0 },
+        'debug|dbg'   => { DEFAULT => 0 },
+	'ignore=s@',
+	'copy=s@',
+	'accept=s@',
+	'template_case|case',
+	'template_interpolate|interpolate',
+	'template_pre_chomp|pre_chomp|prechomp',
+	'template_post_chomp|post_chomp|postchomp',
+        'template_pre_process|pre_process|preprocess=s',
+        'template_post_process|post_process|postprocess=s',
+        'template_start_tag|start_tag|starttag=s',
+        'template_end_tag|end_tag|endtag=s',
+        'template_tag_style|tag_style|tagstyle=s',
+	'template_plugin_base|plugin_base|pluginbase|p=s@',
+    );
+    # define this option now that we have $config context
+    $config->define(
+	'file|f=s@'   => { EXPAND => EXPAND_ALL, 
+			   ACTION => sub { 
+			       my ($state, $item, $file) = @_;
+			       $file = $state->cfg . "/$file" 
+				   unless $file =~ /^[\.\/]/;
+			       $config->file($file) }  
+			   }
+    );
+    # process main config file, then command line args
+    $config->file($file);
+    $config->args();
 
-    local *CFGFILE;
-    open(CFGFILE, $file) || do {
-	warn "$file: $!\n";
-	return $config;
-    };
-    while (<CFGFILE>) {
-	chomp;
-	# ignore comments and blank lines
-	next if (/^#/ || /^\s+$/);
-	if (($var, $val) = split(/\s+=\s+/)) {
-	    # any variable by itself is a switch, e.g. 'verbose'
-	    $val = 1 unless defined $val;
-	    # look for an existing list value and coerce to a list
-	    if (($existing = $config->{ $var }) && ref($existing) eq 'ARRAY') {
-		push(@$existing, $val);
-	    }
-	    else {
-		$config->{ $var } = $val;
-	    }
-	}
-    }
-    close(CFGFILE);
     $config;
 }
 
 
+#------------------------------------------------------------------------
+# write_config($file)
+#
+# Writes a sample configuration file to the filename specified.
+#------------------------------------------------------------------------
+
+sub write_config {
+    my $file = shift;
+
+    open(CONFIG, ">$file") || die "failed to create $file: $!\n";
+    print(CONFIG <<END_OF_CONFIG);
+
+# the 'src' option defines the location of the template files that
+# you want to process
+src = $HOME/websrc/doc
+
+# the 'dest' option specifies where the output should go
+dest = $HOME/public_html
+
+# lib tells the processor (via INCLUDE_PATH) where to find any
+# template files that may be INCLUDE'd.  You can specify many.
+lib = $HOME/websrc/lib
+lib = /usr/local/templates/lib
+
+# things that aren't templates and should be ignored
+ignore = \\b(CVS|RCS)\\b
+ignore = ^#
+
+# things that should be copied rather than processed
+copy = \\.png\$ 
+copy = \\.gif\$ 
+
+# by default, everything not ignored or copied is accepted; add 'accept'
+# lines if you want to filter further. e.g.
+# accept = \\.html\$
+# accept = \\.atml\$
+
+END_OF_CONFIG
+
+    close(CONFIG);
+    print "$file created.  Please edit accordingly and re-run $NAME\n"; 
+}
+
+
+#------------------------------------------------------------------------
+# help()
+#
+# Prints help message and exits.
+#------------------------------------------------------------------------
+
+sub help {
+    print<<END_OF_HELP;
+$NAME $VERSION (Template Toolkit version $Template::VERSION)
+
+usage: $NAME [options] [files]
+
+Options:
+   -a      (--all)          Process all files, regardless of modification
+   -r      (--recurse)      Recurse into sub-directories
+   -v      (--verbose)      Verbose mode
+   -d      (--debug)        Debug mode
+   -h      (--help)         This help
+   -s DIR  (--src=DIR)      Source directory
+   -d DIR  (--dest=DIR)     Destination directory
+   -c DIR  (--cfg=DIR)      Location of configuration files
+   -l DIR  (--lib=DIR)      Library directory (INCLUDE_PATH)  (multiple)
+   -f FILE (--file=FILE)    Read named configuration file     (multiple)
+
+File search specifications (all may appear multiple times):
+   --ignore=REGEX           Ignore files matching REGEX
+   --copy=REGEX             Copy files matching REGEX
+   --accept=REGEX           Process only files matching REGEX 
+
+Additional options to set Template Toolkit configuration items:
+   --interpolate            Interpolate '\$var' references in text
+   --case                   Case sensitivity of reserved words
+   --pre_chomp              Chomp leading whitespace 
+   --post_chomp             Chomp trailing whitespace
+   --pre_process=TEMPLATE   Use TEMPLATE as header
+   --post_process=TEMPLATE  Use TEMPLATE as footer
+   --start_tag=STRING       STRING defines start of directive tag
+   --end_tag=STRING         STRING defined end of directive tag
+   --tag_style=STYLE        Use pre-defined tag STYLE    
+   --plugin_base=PACKAGE    Base PACKAGE for plugins            
+
+See 'perldoc ttree' for further information.
+
+END_OF_HELP
+
+    exit(0);
+}
+
 __END__
+
+#------------------------------------------------------------------------
+# POD
+#
 
 =head1 NAME
 
 ttree - template tree processor
 
-=head1 USAGE
+=head1 SYNOPSIS
 
-    ttree filename      # process file(s)
-    ttree -a            # process all files (implicit -r)
-    ttree -r            # recurse into sub-directories
-    ttree -v            # verbose
-    ttree -s dir        # source directory
-    ttree -d dir        # destination directory
-    ttree -l lib        # template lib directory (INCLUDE_PATH)
-    
-e.g.
-
-    ttree index.html    # process one file from 'src' to 'dest'
-
-    ttree -va           # process all files (definitions for src, dest
-                        # etc., read from ~/.ttreerc)
-
-    ttree -va -s /tmp/templates -d /tmp/output -l /user/abw/templates  
-                        # explicit definition of directories
+    ttree [options] [files]
 
 =head1 DESCRIPTION
 
 The F<ttree> script is used to process entire directory trees containing
-template files.  This documentation is incomplete but will be updated
-for the next beta release.
+template files.  The resulting output from processing each file is then 
+written to a corresponding file in a destination directory.  The script
+compares the modification times of source and destination files (where
+they already exist) and processes only those files that have been modified.
+In other words, it is the equivalent of 'make' for the Template Toolkit.
 
-The script reads the F<.ttreerc> file in the directory represented by the
-HOME environment variable.  The TTREERC environment variable may define 
-an alternative configuration file.  Such a file might look like this:
+It supports a number of options which can be used to configure
+behaviour, define locations and set Template Toolkit options.  The
+script first reads the F<.ttreerc> configuration file in the HOME
+directory, or an alternative file specified in the TTREERC environment
+variable.  Then, it processes any command line arguments, including
+any additional configuration files specified via the B<-f> (file) option.
+
+A typical F<.ttreerc> file might look like this:
   
-    # this is my .ttreerc file for Template Toolkit
     src    = /home/abw/websrc/doc
-    dest   = /home/abw/public_html/
+    dest   = /home/abw/public_html
     lib    = /home/abw/websrc/lib
     lib    = /usr/local/templates/lib
-    ignore = ^CVS$
-    ignore = \.gif$ 
+    cfg    = /home/abw/etc/ttree
+    ignore = \b(CVS|RCS)\b
+    ignore = ^#
+    copy   = \.(gif|png)$ 
+    accept = \.[ah]tml$
 
-The 'src' directory represent a directory where the script will start 
-looking for files.  Any files named on the command line should be 
-relative to this location.  If no files are named and the C<-a> option
-is specified then all files in that and any sub-directories will be 
-processed.  The result of processing each template is output to the 
-corresponding file in the 'dest' directory.  The 'lib' option may 
-be specified any number of times to indicate directories in which the 
-Template Toolkit should look for other template files (INCLUDE_PATH).
-The ignore option can be used to specify one or more Perl regexen 
-to match against files that shouldn't be processed.
+The B<src> option indicates a directory containing the template files
+to be processed.  A list of files may be specified on the command line
+and each will be processed in turn, writing the generated output to a
+corresponding file in the B<dest> directory.  If no files are
+explicitly named then all files in the B<src> directory will be
+processed.  The B<-r> (recurse) option will also cause sub-directories
+to be searched for files.  A source file is only processed if it has a
+later modification time than any corresponding destination file.
+Files will always be processed, regardless of modification times, if
+they are named explicitly on the command line, or the B<-a> (all)
+option is used.
+
+The B<lib> option may be specified any number of times to indicate
+directories in which the Template Toolkit should look for other
+template files (INCLUDE_PATH) that it may need to INCLUDE or PROCESS,
+but don't represent complete documents that should be processed in
+their own right (e.g. headers, footers, menu).  The B<cfg> directory
+specifies the location of additional configuration files that may be
+loaded via the B<-f> option.  
+
+The B<ignore>, B<copy> and B<accept> options are used to specify Perl
+regexen to filter file names.  Files that match any of the B<ignore>
+options will not be processed.  Remaining files that match any of the
+B<copy> regexen will be copied to the destination directory.  Remaining
+files that then match any of the B<accept> criteria are then processed
+via the Template Toolkit.  If no B<accept> parameter is specified then 
+all files will be accepted for processing if not already copied or
+ ignored.
+
+Additional options may be used to set Template Toolkit parameters.
+For example:
+
+   interpolate        
+   post_chomp         
+   pre_process  = header
+   post_process = footer
+
+See B<ttree --help> for a summary of options.
 
 =head1 AUTHOR
 
@@ -210,16 +456,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.5 $
-
-=head1 BUGS
-
-Amongst other things...
-
-Lack of documentation.
-
-Doesn't check modification times of source and destination files to only
-process updated files.
+$Revision: 1.8 $
 
 =head1 COPYRIGHT
 
@@ -234,5 +471,6 @@ modify it under the same terms as Perl itself.
 L<Template|Template>
 
 =cut
+
 
 

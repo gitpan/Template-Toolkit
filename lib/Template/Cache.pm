@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Cache.pm,v 1.7 1999/08/12 21:53:46 abw Exp $
+# $Id: Cache.pm,v 1.8 1999/08/28 12:55:04 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Exception;
 use vars qw( $VERSION $PATHSEP $DEBUG );
 
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
 $PATHSEP  = ':';      # default path separator
 $DEBUG    = 0;
 
@@ -221,6 +221,13 @@ sub _load {
 	local *FH;
 
 	OPEN: {
+	    # anything starting "./" is always relative to CWD.  We 
+	    if ($template =~ /^\.\//) {
+		last OPEN				## LAST ##
+		    if -f $template and open(FH, $template);
+		return $self->_error(ERROR_FILE, "$template: $!");
+	    }
+		 
 	    # look for file in each PATH element : [ \@dirs, \%opts ]
 	    foreach (@$path) {
 		# $p = \@dirs, $o = \%opts
@@ -525,7 +532,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.7 $
+$Revision: 1.8 $
 
 =head1 COPYRIGHT
 

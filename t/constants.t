@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: constants.t,v 1.4 1999/08/10 11:09:12 abw Exp $
+# $Id: constants.t,v 1.5 1999/09/09 17:02:00 abw Exp $
 #
 #========================================================================
 
@@ -57,7 +57,7 @@ main::ok( defined STATUS_STOP );
 #5-6: test import of tagset
 package test2;
 use Template::Constants qw( :ops );
-main::ok( OP_ROOT );
+main::ok( OP_HASH );
 main::ok( OP_DOT  );
 
 

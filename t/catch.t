@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: catch.t,v 1.7 1999/08/10 11:09:11 abw Exp $
+# $Id: catch.t,v 1.8 1999/09/09 17:02:00 abw Exp $
 #
 #========================================================================
 
@@ -38,6 +38,7 @@ my $tproc = Template->new({
 		  },
 	'default' => STATUS_STOP,
     },
+    DEBUG => 1,
 });
 
 test_expect(\*DATA, $tproc, callsign());

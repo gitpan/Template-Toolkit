@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: object.t,v 1.4 1999/08/10 11:09:16 abw Exp $
+# $Id: object.t,v 1.5 1999/09/09 17:02:01 abw Exp $
 #
 #========================================================================
 
@@ -141,7 +141,7 @@ my $obj_params = {
     },
 };
 
-my $tproc   = Template->new({ INTERPOLATE => 1 });
+my $tproc   = Template->new({ INTERPOLATE => 1, DEBUG => 1 });
 my $tobj    = TestObject->new($tproc->context(), $obj_params);
 my $params  = {
     'e'     => $e,
@@ -361,25 +361,25 @@ THROWN! [We came, we saw, we hurled]
 -- test --
 [% thing._private %]
 -- expect --
-ERROR: _private is undefined
+ERROR: invalid member name '_private'
 
 -- test --
 [% thing._private = 10 %]
 -- expect --
-ERROR: invalid name [ _private ]
+ERROR: invalid member name '_private'
 
 
 -- test --
 [% key = '_private' -%]
 [% thing.${key} %]
 -- expect --
-ERROR: _private is undefined
+ERROR: invalid member name '_private'
 
 -- test --
 [% key = '.private' -%]
 [% thing.${key} = 'foo' %]
 -- expect --
-ERROR: invalid name [ .private ]
+ERROR: invalid member name '.private'
 
 
 

@@ -341,6 +341,21 @@ directed to a file by specifying the OUTPUT option or by passing
 a third parameter to the process() method.  The default value for 
 OUTPUT_PATH is '.', representing the current working directory.
 
+    $tproc = Template->new({
+	INCLUDE_PATH => '/tmp/src',
+  	OUTPUT_PATH  => '/tmp/dest',
+    });
+
+    my $params = { 'baz' => 'Qux' };
+
+    foreach $file ('foo', 'bar') {
+	$tproc->process($file, $params, $file)
+	    || warn "Error in $file: ", $tproc->error(), "\n";
+    }
+
+This example would process the files F</tmp/src/foo> and F</tmp/src/bar>,
+writing the output to F</tmp/dest/foo> and F</tmp/dest/bar> respectively.
+
 =item OUTPUT, ERROR
 
 The OUTPUT and ERROR options may be specified to redirect template output
@@ -420,6 +435,12 @@ parser expertise required).
         GRAMMAR = MyTemplate::MyGrammar->new();
     });
 
+=item RECURSION
+
+The template processor will raise a file exception if it detects
+direct or indirect recursion into a template.  Setting this option to 
+any true value will permit such recursion.
+
 =item CACHE
 
 The CACHE item can be used to specify an alternate cache object to 
@@ -483,10 +504,11 @@ to the underlying Template::Context object().
 The first parameter should specify 'output' or 'error' (defined as the 
 constants TEMPLATE_OUTPUT and TEMPLATE_ERROR in Template::Constants).
 
-The second parameter should contain a file handle (GLOB or IO::handle) 
-to which the output or error stream should be written.  Alternatively,
-$where may be a reference to a scalar variable to which output is appended
-or a code reference which is called to handle output.
+The second parameter should contain a file name (relative to
+OUTPUT_PATH), a file handle (GLOB or IO::handle) to which the output
+or error stream should be written, a reference to a scalar variable to
+which output is appended or a code reference which is called to handle
+output.
 
     use Template::Context;
     use Template::Constants qw( :template );

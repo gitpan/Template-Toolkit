@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.24 1999/08/15 20:46:36 abw Exp $
+# $Id: Context.pm,v 1.29 1999/09/14 23:07:01 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.29 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -51,8 +51,8 @@ my $binop  = {
     '<='  => sub { local $^W = 0; $_[0] <= $_[1] ? 1 : 0 },
     '>'   => sub { local $^W = 0; $_[0] >  $_[1] ? 1 : 0 },
     '>='  => sub { local $^W = 0; $_[0] >= $_[1] ? 1 : 0 },
-    '&&'  => sub { $_[0] && $_[1] ? 1 : 0 },
-    '||'  => sub { $_[0] || $_[1] ? 1 : 0 },
+#    '&&'  => sub { $_[0] && $_[1] ? 1 : 0 },
+#    '||'  => sub { $_[0] || $_[1] ? 1 : 0 },
 };
 
 
@@ -73,11 +73,14 @@ my $binop  = {
 sub new {
     my $class  = shift;
     my $params = shift || { };
-    my ($cache, $stash, $pbase) = 
-	@$params{ qw( CACHE STASH PLUGIN_BASE ) };
+    my ($cache, $stash, $pbase, $predefs) = 
+	@$params{ qw( CACHE STASH PLUGIN_BASE PRE_DEFINE ) };
 
-    # stash is constructed with any PRE_DEFINE variables
-    $stash ||= Template::Stash->new($params->{ PRE_DEFINE });
+
+    # stash is constructed with any PRE_DEFINE variables;
+    # we add a 'global' namespace for convenience
+    $predefs->{'global'} ||=  { };
+    $stash ||= Template::Stash->new($predefs);
 
     # CACHE can be either an option to the Template::Cache->new() 
     # constructor or a cache object reference
@@ -98,6 +101,8 @@ sub new {
 	FILTERS      => $params->{ FILTERS } || { },
         FILTER_CACHE => { },
         OUTPUT_PATH  => $params->{ OUTPUT_PATH } || '.',
+	RECURSION    => $params->{ RECURSION }   || 0,
+	DEBUG        => $params->{ DEBUG }       || 0,
     }, $class;
 
     $self->redirect(TEMPLATE_OUTPUT, $params->{ OUTPUT });
@@ -141,6 +146,7 @@ sub old {
 
 sub process {
     my ($self, $template) = @_;
+    my $no_recurse = ! $self->{ RECURSION };
     my $error;
 
     # request compiled template from cache
@@ -150,7 +156,7 @@ sub process {
 
     # check we're not already visiting this template
     return $self->throw(ERROR_FILE, "recursion into '$template' identified")
-	if $self->{ VISITING }->{ $template };		    ## RETURN ##
+	if $no_recurse && $self->{ VISITING }->{ $template };   ## RETURN ##
 
     # mark template as being visited
     $self->{ VISITING }->{ $template } = 1;
@@ -494,229 +500,248 @@ sub DESTROY {
 #========================================================================
 
 #------------------------------------------------------------------------
-# _runop(\@oplist) 
+# _evaluate(\@ops, $type)
 #
-# This is the main runtime loop for processing opcode lists.  A reference
-# to a list is passed in by parameter and the result of processing
-# the sequence of operations contained therein is returned.  A second
-# parameter may also be returned to indicate the status of the 
-# operation.  This may be undefined or 0 (STATUS_OK) to indicate no
-# error.
-#
-# Each entry in the list may be a numerical constant to indicate a
-# fundamental operation or an array ref containing one member - an
-# item to be be pushed straight onto the stack.  Different operations
-# may push, pop or manipulate the stack in other ways.
-#
-# The top item on the stack after completing the opcode list is 
-# popped and returned.  A second value may also be returned to 
-# indicate an exception or error.
-#------------------------------------------------------------------------ 
+# \@ops is a list of opcodes interpreted as [ @ops ]
+# $type is an optional param to indicate that the list is to be 
+# interpreted in a particular way, i.e. as [ $type, \@ops ]
+# The method implements a Finite State Machine which runs the 
+# sequence of opcodes and returns the result.
+#------------------------------------------------------------------------
+
+my $list_ops = {
+    'max'  => sub { local $^W = 0; my $item = shift; $#$item; },
+    'size' => sub { local $^W = 0; my $item = shift; $#$item + 1; },
+    'sort' => sub { my $item = shift; [ sort @$item ] },
+};
+
+my $hash_ops = {
+    'keys'   => sub { [ keys   %{ $_[0] } ] },
+    'values' => sub { [ values %{ $_[0] } ] },
+};
 
 my $root_ops = {
     'inc'  => sub { local $^W = 0; my $item = shift; ++$item }, 
     'dec'  => sub { local $^W = 0; my $item = shift; --$item }, 
 };
 
-sub _runop {
-    my ($self, $oplist) = @_;
-    my $root = $self->{ STASH };
-    my @stack = ();
-    my ($op, $err, $val, $lflag, $p, $x, $y, $z);
+sub _evaluate {
+    my ($self, $ops, $type) = @_;
+    my ($root, $debug) = @$self{ qw( STASH DEBUG ) };
+    my ($nops, $ip, $op);
+    my ($x, $y, $z, $p, $e, $val, $lflag, $err);
+    my (@stack, @pending, @expand);
     my $default_mode = 0;
-    my $tolerant = 0;
 
-    # DEBUG
+    # return literal value intact
+    return $ops unless ref($ops);
+
+    # determine size of opcode list and preset @pending's size (plus a few 
+    # extra for early expansions) before copying 
+    $nops = scalar @$ops;
+    $#pending = $nops + 16;
+    @pending = $type ? ( $type, $ops ) : @$ops;
+    @stack = ();
+
+# DEBUG
     local $" = ', ';
-    if ($DEBUG) {
-	print STDERR "\n----- OPCODE RUNTIME -----\n";
-	$self->oplist_dump($oplist);
-	print STDERR "--------------------------\n";
-    }
+    print "nops = ", $nops / 2, "\nops: [@$ops]\n" if $DEBUG;
+    $ip = 0;
+# /DEBUG
 
-    foreach $op (@$oplist) {
-	print STDERR "stack   ", join("\n        ", reverse @stack), "\n"
-	    if $DEBUG;
+    while ($op = shift @pending) {
+	printf("#$ip:  %02d %-8s\n", $op, $OP_NAME[$op])  if $DEBUG;
+	$ip++;
 
-	# if $op is an ARRAY ref then it contains some value which 
-	# should be pushed straight onto the stack
-	if (ref($op)) {
-	    # DEBUG
-	    print STDERR "runop + $op->[0]\n" if $DEBUG;
+	next unless $op;		    # NULLOP
 
-	    push(@stack, $op->[0]);
-	    next;					    ## NEXT ##
+	if ($op == OP_LITERAL) {
+	    # push literal text straight onto the stack
+	    push(@stack, shift @pending);
+	    print "  <- literal ($stack[-1])\n" if $DEBUG;
 	}
-
-	# if $op isn't an ARRAY ref then it should be a numeric 
-	# indicating the opcode type 
-
-	# DEBUG
-	print STDERR "runop * $op ($OP_NAME[$op]) " if $DEBUG;
-
-	## OP_ROOT ##
-	if ($op == OP_ROOT) {
-	    # DEBUG
-	    print STDERR "- $root\n" if $DEBUG;
-
-	    # push a reference to the root stash onto the stack
-	    push(@stack, $root);
+	elsif ($op == OP_QUOTE) {
+	    # push individual items onto front of pending op queue followed
+	    # by the appropriate op (OP_STRCAT) to join them up again
+	    $x = shift @pending;
+	    unshift(@pending, (map { @{ $_ } } @$x), 
+		    OP_STRCAT, scalar @$x);
+	    print "   + ", scalar @$x, " quote items\n" if $DEBUG;
 	}
-
-	## OP_BINOP ##
+	elsif ($op == OP_STRCAT) {
+	    # concatentate top n items on stack
+	    $x = shift @pending; 
+	    push(@stack, join('', map { defined $_ ? $_ : '' } 
+					splice(@stack, -$x)));
+	    print "  <- strcat ($stack[-1])\n" if $DEBUG;
+	}	
+	elsif ($op == OP_LIST) {
+	    # expand list items onto front of pending list, followed by
+	    # an opcode to fold top n stack items into a list
+	    $x = shift @pending;
+	    unshift(@pending, (map { @$_ } @$x), OP_LISTFOLD, scalar @$x);
+	    print "   + ", scalar @$x, " list items\n" if $DEBUG;
+	}
+	elsif ($op == OP_LISTFOLD) {
+	    # pop top $item items off the stack and push a new list
+	    $x = shift @pending;
+	    push(@stack, [ splice(@stack, -$x) ]);
+	    print("  -> pop $x items\n",
+		  "  <- list ($stack[-1])\n") if $DEBUG;
+	}
+	elsif ($op == OP_ARGS) {
+	    # args is a list of [ key => value ] or [ 0, value ] pairs.
+	    # the former get converted into hash entries, the latter 
+	    # into a list by extracting only the 'value' element.
+	    # the hash is then added to the end of the list
+	    $y = shift @pending;
+	    my $hash = [];
+	    @expand = ();
+	    foreach $z (@$y) {
+		if ($z->[0]) { push(@$hash, $z)       } # named parameter
+		else         { push(@expand, $z->[1]) } # list variable
+	    }
+	    push(@expand, [ OP_HASH, $hash ]) if @$hash;
+	    unshift(@pending, (map { @$_ } @expand), 
+		    OP_LISTFOLD, scalar @expand);
+	    print("   + ", scalar @expand, " list args ",
+		  @$hash ? "with" : "without", " named param hash\n") 
+		if $DEBUG;
+	}
+	elsif ($op == OP_HASH) {
+	    # expand each [key, value] pair onto the stack followed by an
+	    # OP_HASHFOLD to create the hash.
+	    $x = shift @pending;
+	    unshift(@pending, 
+		    ( map { 
+			( ref $_->[0] ? @{$_->[0]} : (OP_LITERAL, $_->[0]),
+		          @{$_->[1]} ) 
+			} @$x ), OP_HASHFOLD, scalar @$x);
+	    print "   + ", scalar @$x, " hash items\n" if $DEBUG;
+	}
+	elsif ($op == OP_HASHFOLD) {
+	    # pop top ($item * 2) items off the stack and push a new hash
+	    $x = shift @pending;
+	    push(@stack, { splice(@stack, -($x * 2)) }); 
+	    print("  -> pop $x items\n",
+		  "  <- hash ($stack[-1])\n") if $DEBUG;
+	}
+	elsif ($op == OP_ITER) {
+	    # expand list items onto front of pending list, followed by
+	    # an opcode to make iterator for top n stack items 
+	    ($x, $p) = splice(@pending, 0, 2);
+	    unshift(@pending, (map { @$_ } @$x), @$p, 
+		    OP_ITERFOLD, scalar @$x);
+	    print "   + ", scalar @$x, " list items\n" if $DEBUG;
+	}
+	elsif ($op == OP_ITERFOLD) {
+	    $x = shift @pending;  # next item is list size
+	    $p = pop @stack;      # top item on stack is iterator params
+	    require Template::Iterator;
+	    push(@stack, 
+	         Template::Iterator->new([ splice(@stack, -$x) ], @$p));
+	    print("  -> pop $x items\n",
+		  "  <- list ($stack[-1])\n") if $DEBUG;
+	}
+	elsif ($op == OP_RANGE) {
+	    $x = shift @pending;
+	    unshift(@pending, (map { @$_ } @$x), 
+		    OP_LISTFOLD, scalar @$x, OP_RANGEFOLD);
+	    print "   + range items (@$x)\n" if $DEBUG;
+	}
+	elsif ($op == OP_RANGEFOLD) {
+	    require Template::Iterator;
+	    $p = pop @stack;
+	    push(@stack, Template::Iterator->new([ $p->[0] .. $p->[1] ]));
+	    print "  <- range (@$p)\n" if $DEBUG;
+	}
 	elsif ($op == OP_BINOP) {
-	    # top item on stack is a binary operator which keys into
-	    # the $execute hash to get a coderef.  This is called with 
-	    # the top two items popped off the stack and the result is
-	    # pushed back onto the top.
-	    $x = pop(@stack);
-	    $y = $binop->{ $x }
-		|| die "Invalid binary operation: $x\n";
-
-	    # DEBUG
-	    print STDERR "- $x ($stack[-2]) ($stack[-1])\n" if $DEBUG;
-
-	    ($z, $err) = &$y(splice(@stack, -2));
-	    return (undef, $err) if $err;		    ## RETURN ##
-	    push(@stack, $z);
+	    $x = shift @pending;
+	    $y = $binop->{ $x };
+	    warn("illegal binary op: $x\n"), return
+		unless $y;
+	    push(@stack, &$y(splice(@stack, -2)));
+	    print("  <- binary op $x (", $stack[-1] ? 'true' : 'false', 
+		  ")\n")if $DEBUG;
 	}
-
-	## OP_NOT ##
-	elsif ($op == OP_NOT) {
-	    # DEBUG
-	    print STDERR "- $stack[-1]\n" if $DEBUG;
-
-	    # logical negation of top item on stack
-	    $stack[-1] = ! $stack[-1];
-	}
-
-	## OP_AND ##
 	elsif ($op == OP_AND) {
-	    # DEBUG
-	    print STDERR "- $stack[-2] AND $stack[-1]\n" if $DEBUG;
-
-	    # logical AND of top two items
 	    $x = pop @stack;
 	    $stack[-1] &&= $x;
+	    print "  <- and (", $stack[-1] ? 'true' : 'false', 
+		  ")\n"if $DEBUG;
 	}
-
-	## OP_OR ##
 	elsif ($op == OP_OR) {
-	    # DEBUG
-	    print STDERR "- $stack[-2] OR $stack[-1]\n" if $DEBUG;
-
-	    # logical OR of top two items
 	    $x = pop @stack;
 	    $stack[-1] ||= $x;
-
+	    print "  <- or (", $stack[-1] ? 'true' : 'false', 
+		  ")\n"if $DEBUG;
 	}
-
-	## OP_DUP ##
-	elsif ($op == OP_DUP) {
-	    # DEBUG
-	    print STDERR "- $stack[-1]\n" if $DEBUG;
-
-	    # duplicate top item on stack
-	    push(@stack, $stack[-1]);
+	elsif ($op == OP_NOT) {
+	    $stack[-1] = ! $stack[-1];
 	}
-
-	## OP_POP ##
-	elsif ($op == OP_POP) {
-	    # DEBUG
-	    print STDERR "- $stack[-1]\n" if $DEBUG;
-
-	    # pop top item off stack and discard
-	    pop(@stack);
-	}
-
-	## OP_LIST ##
-	elsif ($op == OP_LIST) {
-	    # pushes a new anonymous list onto the stack
-	    push(@stack, []);
-
-	    # DEBUG
-	    print STDERR "- $stack[-1]\n" if $DEBUG;
-	}
-
-	## OP_ITER ##
-	elsif ($op == OP_ITER) {
-	    require Template::Iterator;
-	    ($x, $y) = splice(@stack, -2);
-	    push(@stack, Template::Iterator->new($x, $y));
-	}
-
-	## OP_PUSH ##
-	elsif ($op == OP_PUSH) {
-	    # pushes the item popped off the top of the stack onto the end 
-	    # of the list ref (we hope!) underneath it
-	    # NOTE: this is *not* the logical opposite of OP_POP.  Think
-	    # of it more as OP_LIST_PUSH without the extra typing.
-	    
-	    # DEBUG
-	    print STDERR "- $stack[-1]\n" if $DEBUG;
-	    $z = pop @stack;
-	    push(@{$stack[-1]}, $z);
-	}
-
-	## OP_CAT ##
-	elsif ($op == OP_CAT) {
-	    # DEBUG
-	    print STDERR "- $stack[-1]\n" if $DEBUG;
-
-	    # concatenates the item popped off the top of the stack onto the 
-	    # end of the string underneath it underneath it
-	    $z = pop @stack;
-	    $stack[-1] .= $z;
-	}
-
-	## OP_DEFAULT ##
 	elsif ($op == OP_DEFAULT) {
-	    # this is  kludge to turn the modify the OP_ASSIGN operator to
-	    # only make the assignment if not already set (DEFAULT mode)
 	    $default_mode = 1;
 	}
-
-	## OP_TOLERANT ##
-	elsif ($op == OP_TOLERANT) {
-	    # this is another hack to tell the DOT_OP to *NOT* raise an 
-	    # exception when it encounters an undefined result.  Used by IF
-	    $tolerant = 1;
-	}
-
-	## OP_DOT ##
-	elsif ($op == OP_DOT || $op == OP_LDOT) {
-	    # evaluates the item on top of the stack, representing the 
-	    # right hand side of a 'dot' (aka period, '.') with respect to 
-	    # the item below it, representing the left hand side.  Both 
-	    # items are popped off and the result, based on a fairly 
-	    # simple heuristic, is pushed back onto the stack. In the case
-	    # of OP_LDOT, the operation is assumed to be on an lvalue and
-	    # thus we allow auto-vivification of intermediate namespaces
-
-	    # three items represent part of a variable of the form: x.y(p)
-	    ($x, $y, $p) = splice(@stack, -3);
-	    $p ||= [];
-	    $lflag = ($op == OP_LDOT);
-
-	    # DEBUG
-	    print STDERR "- ", "[ $x ].[ $y ]( @$p )\n"
-		if $DEBUG;
-
-	    if (! defined $x || ! defined $y) {
-		$x = 'undefined' unless defined $x;
-		$y = 'undefined' unless defined $y;
-		return (undef, $self->throw(ERROR_UNDEF,    ## RETURN ##
-					    "cannot access [ $x ].[ $y ]"));
+	elsif ($op == OP_IDENT) {
+	    $x = shift @pending;
+	    push(@stack, $root);    # push root stash to resolve ident
+	    @expand = ();
+	    foreach (@$x) {
+		($y, $p) = @$_;	    # item: [ ident/literal, params/0 ]
+		push(@expand, ref $y ? @$y : (OP_LITERAL, $y));
+		push(@expand, $p ? @$p : (OP_LITERAL, 0));
+		push(@expand, OP_DOT);
 	    }
-	    elsif ($y =~ /^[\._]/) {
-		$z = undef;
+	    unshift(@pending, @expand);
+# DEBUG
+	    my $iname = join('.', (map { ref($_) ? $_->[0] : $_ } @$x));
+	    print "   + ident ($iname)\n" if $DEBUG;
+	}
+	elsif ($op == OP_ASSIGN) {
+	    # the term on the RHS of the assignment is on the top of
+	    # the stack.  We push a reference to the root stash and 
+	    # then add pending ops to expand each element of the LHS
+	    # ident WRT to the item on top of the stack (LDOT).  The
+	    # final element gets an LSET operation to do the assignment
+	    # e.g. foo.bar = baz  
+	    #     ==>   stack: ($baz, $root) 
+	    #         pending: ('foo', OP_LDOT, 'bar', OP_LSET)
+	    $x = shift @pending;
+	    @expand = ();
+	    # coerce scalar into a list
+	    $x = [ $x ] unless ref($x) eq 'ARRAY';
+	    foreach (@$x) {
+		# item: [ ident/literal, params/0 ] or just 'ident'
+		($y, $p) = ref $_ ? @$_ : ($_, 0);   
+		push(@expand, ref $y ? @$y : (OP_LITERAL, $y));
+		push(@expand, $p ? @$p : (OP_LITERAL, 0));
+		push(@expand, OP_LDOT);
+	    }
+	    # change final OP_LDOT to OP_LSET
+	    $expand[-1] = OP_LSET;
+	    push(@stack, $root);
+	    unshift(@pending, @expand);
+	    print "   + assign\n" if $DEBUG;
+	}
+	elsif ($op == OP_DOT || $op == OP_LDOT) {
+	    ($x, $y, $p) = splice(@stack, -3);    # x.y(p)
+	    $lflag = ($op == OP_LDOT);
+	    $p = [] unless $p;
+	    ($err, $e) = (); 
+
+	    # can't do anything if the LHS is undef/0 or the RHS is undefined.
+	    # the RHS may be 0 (e.g. mylist.0)
+	    push(@stack, undef), next
+		unless $x && defined $y;
+
+	    # setting $e will trigger an exception to be raised 
+	    # an exception or other error already in $err will take priority
+
+	    if ($y =~ /^[\._]/) {
+		($z, $e) = (undef, "invalid member name '$y'")
 	    }
 	    elsif (UNIVERSAL::isa($x, 'Template::Stash')) {
-		# DEBUG
-		print STDERR "        . (Stash)\n" if $DEBUG;
-
-		# if the LHS is a Stash then we call its get() method
-		($z, $err) = $x->get($y, $p, $self);
+		($z, $err) = $x->get($y, $p, $self, $lflag);
 
 		unless (defined $z || $err) {
 		    # create an intermediate namespace hash if the item 
@@ -726,143 +751,95 @@ sub _runop {
 		    }
 		    # try to resolve undefined root variables
 		    elsif ($x eq $root) {
-			$z = $root_ops->{ $y };
 			($z, $err) = &$z(@$p)
-			    if $z;
+			    if $z = $root_ops->{ $y };
 		    }
 		}
 	    }
 	    elsif (ref($x) eq 'HASH') {
-		# DEBUG
-		print STDERR "        . (HASH)\n" if $DEBUG;
-
-		# if the LHS is a HASH then we look for the entry keyed by RHS;
-		# value may be a CODE ref, which is called; if this is an 
-		# OP_LDOT (lvalue) then we create a hash (intermediate 
-		# namespace) if it doesn't already exist
-		$z = $x->{ $y };
-		if (defined $z) {
-		    # TODO: may want to look for and reference returned lists
-		    ($z, $err) = &$z(@$p)
-			if ref($z) eq 'CODE';
+		if (defined($z = $x->{ $y })) {
+		    ($z, $err) = &$z(@$p)   # execute any code binding
+			if $z && ref($z) eq 'CODE';
 		}
 		elsif ($lflag) {
-		    $z = $x->{ $y } = { };
+		    # create empty hash if OP_LDOT
+		    $z = $x->{ $y } = { } if $lflag;
+		}
+		else {
+		    ($z, $err) = &$z($x) 
+			if $z = $hash_ops->{ $y };
 		}
 	    }
+	    elsif (ref($x) eq 'ARRAY') {
+		($z, $err) = &$z($x)
+		    if $z = $list_ops->{ $y };
+	    }
 	    elsif (ref($x)) {
-		# LHS may be an object ref so we call $lhs->$rhs($params)
-		eval {
-		    ($z, $err) = $x->$y(@$p);
-		    # DEBUG
-		    print STDERR "        . (Object)\n" if $DEBUG;
-		};
-
-		return (undef, $self->throw(ERROR_UNDEF,    ## RETURN ##
-					    "cannot access [ $x ].$y ($@)")) 
-		    if $@;
+		eval { ($z, $err) = $x->$y(@$p); };
+		$e = $@ if $@;
 	    }
 	    else {
-		# give up
-		return (undef, $self->throw(ERROR_UNDEF,    ## RETURN ##
-		     "cannot access [ $x ].$y"));
+		$e = "don't know how to access [ $x ].$y";
 	    }
 
-	    # can't carry on in the face of an error
-	    return (undef, $err) if $err;		    ## RETURN ##
-	    
-	    # an undefined value is OK (but converted to '') if error is 
-	    # defined but 0 (STATUS_OK)
-	    $z = ''
-		if ! defined $z && defined $err;
-		
-	    # throw an exception if value is undefined - note that the 
-	    # handler may return STATUS_OK to effectively clear the error.
-	    return (undef, $self->throw(ERROR_UNDEF,	    ## RETURN ##
-			"$y is undefined"))
-		unless defined($z) || $tolerant;
+	    $e = "$y is undefined"	# NOTE $err may be defined and 0
+		if $debug && ! defined $z && ! $e && ! defined $err;
 
-	    # DEBUG
-	    print STDERR "runop < ", $lflag ? "LDOT" : "DOT", " pushing $z\n"
-		if $DEBUG;
+	    # throw an exception into $err if $e is defined unless $err
+	    # is already set
+	    $err = $self->throw(ERROR_UNDEF, $e) 
+		if $e && ! $err;
+	    return (undef, $err) if $err;
 
 	    push(@stack, $z);
+	    print "  <- dot (", $stack[-1] || '<undef>', ")\n" if $DEBUG;
 	}
+	elsif ($op == OP_LSET) {
+	    ($z, $x, $y, $p) = splice(@stack, -4);   # x.y(p) = z
 
-	## OP_ASSIGN ##
-	elsif ($op == OP_ASSIGN) {
-	    ($x, $y, $p, $z) = splice(@stack, -4);
+	    push(@stack, undef), next
+		unless $x && defined $y;
 
-	    # DEBUG
-	    print STDERR "- $x.$y(@$p) = $z\n" if $DEBUG;
-
-	    if (! defined $x || ! defined $y) {
-		$x = 'undefined' unless defined $x;
-		$y = 'undefined' unless defined $y;
-		return (undef, $self->throw(ERROR_UNDEF,    ## RETURN ##
-					    "cannot assign to [ $x ].[ $y ]"));
-	    }
-	    elsif  ($y =~ /^[\._]/) {
-		return (undef, $self->throw(ERROR_UNDEF,    ## RETURN ##
-					    "invalid name [ $y ]"));
+	    if ($y =~ /^[\._]/) {
+		($z, $e) = (undef, "invalid member name '$y'")
 	    }
 	    elsif (UNIVERSAL::isa($x, 'Template::Stash')) {
-		# DEBUG
-		print STDERR "        = (Stash)\n" if $DEBUG;
 		$err = $x->set($y, $z, $self)
 		    unless ($default_mode 
 			    && (($val, $err) = $x->get($y, $p, $self))
 			    && $val);
 	    }
 	    elsif (ref($x) eq 'HASH') {
-		# DEBUG
-		print STDERR "        = (HASH)\n" if $DEBUG;
 		$x->{ $y } = $z
 		    unless $default_mode && $x->{ $y };
 	    }
 	    elsif (ref($x)) {
-		# LHS may be an object ref so we call $lhs->$rhs($value)
-		eval {
-		    ($z, $err) = $x->$y($z)
-			unless ($default_mode 
-			    && (($val, $err) = $x->$y())
-			    && $val);
-
-		    # DEBUG
-		    print STDERR "        . (Object)\n" if $DEBUG;
+		eval { ($z, $err) = $x->$y($z)
+			   unless ($default_mode 
+				   && (($val, $err) = $x->$y())
+				   && $val);
 		};
-
-		return (undef, $self->throw(ERROR_UNDEF,    ## RETURN ##
-					    "cannot assign to [ $x ].$y")) 
-		    if $@;
+		$e = $@ if $@;
 	    }
 	    else {
-		# give up
-		return (undef, $self->throw(ERROR_UNDEF,    ## RETURN ##
-		     "Cannot assign to [$x].$y"));
+		$e = "don't know how to assign to [ $x ].$y";
 	    }
 
-	    # can't carry on in the face of an error
-	    return (undef, $err) if $err;		    ## RETURN ##
-	    
-	    # NOTE: we may want to throw an exception if value is undefined...
-	    
-	    # DEBUG
-	    print STDERR "runop < $z\n" if $DEBUG;
+	    $err = $self->throw(ERROR_UNDEF, $e) 
+		if $e && ! $err;
+	    return (undef, $err) if $err;
 
 	    push(@stack, $z);
+	    print "  <- lset ($stack[-1])\n" if $DEBUG;
 	}
-
-	## BAD OP ##
 	else {
-	    return (undef, $self->throw('opcode', "Bad opcode: $op\n"));
+	    print "Bad, bad OP ($op).\n";
 	}
+	
     }
-
-    pop(@stack);
+    pop @stack;
 }
-
-
+    
 
 #------------------------------------------------------------------------
 # oplist_dump(\@oplist)
@@ -990,6 +967,12 @@ that might then be used in the main template, for example.
 Any uncaught exceptions raised in the PRE/POST_PROCESS templates
 are ignored.
 
+=item RECURSION
+
+By default, the context will return a file exception if it detects
+direct or indirect recursion into a template.  Setting this option to 
+any true value will permit such recursion.
+
 =item CACHE
 
 A reference to a L<Template::Cache|Template::Cache> object or derivative
@@ -1081,7 +1064,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.24 $
+$Revision: 1.29 $
 
 =head1 COPYRIGHT
 

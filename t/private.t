@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: private.t,v 1.3 1999/08/10 11:09:17 abw Exp $
+# $Id: private.t,v 1.4 1999/09/09 17:02:01 abw Exp $
 #
 #========================================================================
 
@@ -63,8 +63,8 @@ alpha bravo charlie
 [% see = '.c' -%]
 [% ${"$see"} %]
 -- expect --
-! _b is undefined
-! .c is undefined
+! invalid member name '_b'
+! invalid member name '.c'
 
 -- test --
 [% more.c %]
@@ -79,6 +79,9 @@ delta
 -- test --
 [% more._d %]
 -- expect --
-! _d is undefined
+! invalid member name '_d'
+
+
+
 
 

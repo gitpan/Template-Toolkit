@@ -4,7 +4,7 @@ The Template Toolkit comprises of a number of Perl modules and two
 additional scripts.
 
 The F<Template> module acts as a general interface to the toolkit
-and contains comprehensive documentation desribing the toolkit, its
+and contains comprehensive documentation describing the toolkit, its
 usage and further sources of reference.
 
     perldoc Template

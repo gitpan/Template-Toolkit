@@ -19,10 +19,10 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.16 1999/08/15 20:46:37 abw Exp $
+# $Id: Directive.pm,v 1.19 1999/09/14 23:07:01 abw Exp $
 #
 #============================================================================
- 
+
 package Template::Directive;
 
 require 5.004;
@@ -33,8 +33,8 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/);
-$DEBUG = 1;
+$VERSION = sprintf("%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/);
+$DEBUG = 0;
 
 
 #========================================================================
@@ -43,93 +43,52 @@ $DEBUG = 1;
 
 # table defining parameters for each directive type
 my %param_tbl = (
-    'INCLUDE'   => [ qw( IDENT PARAMS             ) ],
-    'PROCESS'   => [ qw( IDENT PARAMS             ) ],
-    'USE'       => [ qw( IDENT PARAMS NAMESPACE   ) ],
-    'IF'        => [ qw( EXPR BLOCK ELSE          ) ],
-    'FOR'       => [ qw( LIST BLOCK VARNAME       ) ],
-    'WHILE'     => [ qw( EXPR BLOCK               ) ],
-    'FILTER'    => [ qw( NAME PARAMS BLOCK ALIAS  ) ],
-    'BLOCK'     => [ qw( CONTENT                  ) ],
-    'TEXT'      => [ qw( TEXT                     ) ],
-    'CATCH'     => [ qw( ERRTYPE BLOCK            ) ],
-    'THROW'     => [ qw( ERRTYPE EXPR             ) ],
-    'ERROR'     => [ qw( EXPR                     ) ],
-    'RETURN'    => [ qw( RETVAL                   ) ],
+    'Get'       => [ qw( TERM                   ) ],
+    'Set'       => [ qw( ARGS                   ) ],
+#    'Default'   => [ qw( ARGS                   ) ],
+#    'Import'    => [ qw( ARGS                   ) ],
+    'Include'   => [ qw( FILE ARGS              ) ],
+    'Process'   => [ qw( FILE ARGS              ) ],
+    'Use'       => [ qw( NAME ARGS ALIAS       ) ],
+    'If'        => [ qw( EXPR BLOCK ELSE       ) ],
+    'For'       => [ qw( ITEM LIST BLOCK       ) ],
+    'While'     => [ qw( EXPR BLOCK            ) ],
+    'Filter'    => [ qw( NAME ARGS ALIAS BLOCK ) ],
+    'Block'     => [ qw( CONTENT                ) ],
+    'Text'      => [ qw( TEXT                   ) ],
+    'Catch'     => [ qw( ETYPE BLOCK            ) ],
+    'Throw'     => [ qw( ETYPE INFO             ) ],
+    'Error'     => [ qw( INFO                   ) ],
+    'Return'    => [ qw( RETVAL                 ) ],
 );
 
 my $PKGVAR = 'PARAMS';
 
 
 
-#========================================================================
-#                 -----  BASE CLASS PUBLIC METHODS -----
-#========================================================================
-
 #------------------------------------------------------------------------
-# new($opcode, $tokens)
+# create($type, \@params) 
 #
-# Constructor method which creates and returns a reference to a 
-# Template::Directive object.  The constructor is almost certainly 
-# going to be called for a derived class (such as those defined later
-# in this file).
-#
-# We look at the class name and see if it is defined in our parameter
-# table above.  If not, we have a look for a "@PARAMS" variable in the 
-# class package.  This parameter list defines the named paramters 
-# which are expected to follow in @_.  These are shifted off (they may
-# be undefined, but we don't worry about that now) and the internal 
-# parameters are set to the respective values.  
-#
-# Return a reference to a new Template::Directive (or derived) object.
-# 
+# This is the base class factory method which is called to instantiate
+# Template::Directive objects.  A string representing the directive type
+# is passed in as the first parameter (e.g. 'text', 'include') along 
+# with any additional parameters specific to the directive.  The method 
+# indexes into %param_tbl to find the information required to construct
+# an object of the specific type and then does so.  There is no need for 
+# any directive-specific construction.  This approach is significantly
+# faster than deriving all directives from a common base class whose
+# shared new() constructor performs this task. .  
 #------------------------------------------------------------------------
 
-sub new {
-    my $class   = shift;
-    my $package = __PACKAGE__;
-    my $self;
-    my ($type, $accept);
-    local $" = ', ';
+sub create {
+    my $class = shift;
+    my $type  = shift;
+    my ($self, $accept);
 
-    # see if we can determine the directive type from the class name...
-    $type = $class;
-
-    # examine the class name to see if we have a param table entry for it
-    if ($type =~ s/^$package\::(.+)/$1/) {
-	$type = uc $type;
-
-	# look for parameter acceptance list in %param_tbl
-	$accept = $param_tbl{ $type };
-    }
-    elsif ($type eq $package) {
-	$accept = [ 'OPCODES' ]; 
-    }
-    
-    # if it doesn't exist, we look for @PARAMS in the derived class package
-    unless (defined $accept) {
-	my $sym = \%main::;
-
-        PARAMS: {
-	    foreach my $pkg (split(/::/, $class)) {
-		unless (defined($sym = $sym->{$pkg})) {
-		    warn("\@$class\::$PKGVAR not defined\n");
-		    $accept = [];
-		    last PARAMS;
-		}
-	    }
-	    if (defined($sym = $sym->{ $PKGVAR }) && defined(@$sym)) {
-		$accept = \@$sym;
-	    }
-	    else {
-		warn("\@$class\::$PKGVAR not defined\n");
-		$accept = [];
-	    }
-	}
-    }
-
-
-    $self = bless { TYPE => $type }, $class;
+    # look for parameter acceptance list in %param_tbl
+    $accept = $param_tbl{ $type };
+    die "not accepted ($type)\n" unless $accept;
+    $self = bless { TYPE => $type }, "$class\::$type";
 
     foreach my $key (@$accept) {
 	$self->{ $key } = shift;
@@ -139,44 +98,9 @@ sub new {
 }
 
 
-
-#------------------------------------------------------------------------
-# process($context)
-#
-# The process() method is called by the template processor context 
-# ($context) when the directive is due for processing.  This base class 
-# method executes the opcode sequence in $self->{ OPCODE } by calling
-# the context->_runop() method.  Thus, it performs as a general directive
-# for executing opcode sequences (e.g. GET, SET).
-#------------------------------------------------------------------------
-
-sub process {
-    my ($self, $context) = @_;
-    my ($value, $error) = $context->_runop($self->{ OPCODES });
-    $error ||= 0;
-    $context->output($value)
-	if !$error && defined $value;
-    return $error || Template::Constants::STATUS_OK;
-}
-
-
-
 #========================================================================
 #                       ----- DEBUG METHODS -----
 #========================================================================
-
-#------------------------------------------------------------------------
-# _inspect()
-#
-# Inspector method which may be called for debugging purposes.  This
-# definition does nothing but is redefined in Template::Debug.
-#------------------------------------------------------------------------
-
-sub _inspect {
-}
-
-
-
 #------------------------------------------------------------------------
 # _report(@msg)
 #
@@ -204,7 +128,49 @@ sub _report {
 #========================================================================
 
 #------------------------------------------------------------------------
-# INCLUDE			    [% INCLUDE ident params %]
+# SET				    [% SET args %]
+#------------------------------------------------------------------------
+
+package Template::Directive::Set;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
+
+sub process {
+    my ($self, $context) = @_;
+    my ($arg, $ident, $term, $value, $error);
+
+    local $" = ', ';
+
+    ($value, $error) = $context->_evaluate($self->{ ARGS });
+    return $error || Template::Constants::STATUS_OK;
+}
+
+
+#------------------------------------------------------------------------
+# GET				                           [% GET term %]
+#------------------------------------------------------------------------
+
+package Template::Directive::Get;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
+
+sub process {
+    my ($self, $context) = @_;
+    my ($ident, $value, $error);
+
+    ($value, $error) = $context->_evaluate($self->{ TERM });
+    return $error if $error;
+
+    # throw an exception if value is undefined
+    $context->output($value)
+	if defined($value);
+
+    return Template::Constants::STATUS_OK;
+}
+
+
+#------------------------------------------------------------------------
+# INCLUDE			    [% INCLUDE file args %]
 #
 # The INCLUDE directive calls on the context process() method to 
 # process another template file or block.  Parameters may be defined
@@ -220,21 +186,26 @@ use vars qw( @ISA );
 
 sub process {
     my ($self, $context) = @_;
-    my ($ident, $error);
+    my ($file, $value, $error);
 
     # the file/block identifier might be a variable reference so must
     # first be evaluated in context
-    ($ident, $error) = $context->_runop($self->{ IDENT });
-    return $error					    ## RETURN ##
-	if $error;
-
+    if (ref($file = $self->{ FILE })) {
+	($file, $error) = $context->_evaluate($file);
+	return $error					    ## RETURN ##
+	    if $error;
+    }
     return $context->throw(Template::Constants::ERROR_FILE, 
 			   'Undefined INCLUDE file/block name')
-	unless defined $ident && length $ident;
+	unless $file;
 
+    # localise variables and set parameters
     $context->localise();
-    $context->_runop($self->{ PARAMS });
-    $error = $context->process($ident);
+    ($value, $error) = $context->_evaluate($self->{ ARGS });
+    return $error if $error;				    ## RETURN ##
+
+    # process file then restore previous variable context
+    $error = $context->process($file);
     $context->delocalise();
 
     $error;
@@ -260,22 +231,24 @@ use vars qw( @ISA );
 
 sub process {
     my ($self, $context) = @_;
-    my ($ident, $error);
+    my ($file, $value, $error);
 
     # the file/block identifier might be a variable reference so must
     # first be evaluated in context
-    ($ident, $error) = $context->_runop($self->{ IDENT });
-    return $error					    ## RETURN ##
-	if $error;
-
+    if (ref($file = $self->{ FILE })) {
+	($file, $error) = $context->_evaluate($file);
+	return $error					    ## RETURN ##
+	    if $error;
+    }
     return $context->throw(Template::Constants::ERROR_FILE, 
 			   'Undefined PROCESS file/block name')
-	unless defined $ident && length $ident;
+	unless $file;
 
-    # call _runop() to update any variables
-    $context->_runop($self->{ PARAMS });
+    # update variables
+    ($value, $error) = $context->_evaluate($self->{ ARGS });
+    return $error if $error;				    ## RETURN ##
 
-    $context->process($ident);
+    $context->process($file);
 }
 
 
@@ -297,10 +270,8 @@ sub process {
     my $input = $self->{ EXPR };
     my ($true, $else, $error);
 
-    ($true, $error) = $context->_runop($self->{ EXPR });
+    ($true, $error) = $context->_evaluate($self->{ EXPR });
     return $error if $error;
-
-#    $self->_report('IF evaluated ', $true ? 'TRUE' : 'FALSE', "\n");
 
     if ($true) {
 	return $self->{ BLOCK }->process($context);	    ## RETURN ##
@@ -340,7 +311,7 @@ sub process {
     my $failsafe = $MAXITER + 1;
     for (;--$failsafe;) {
 	# test expression
-	($true, $error) = $context->_runop($self->{ EXPR });
+	($true, $error) = $context->_evaluate($self->{ EXPR });
 	return $error if $error;
 	last unless $true;
 
@@ -358,11 +329,8 @@ sub process {
 }
 
 
-
 #------------------------------------------------------------------------
-# FOR				    [% FOREACH varname IN list %]
-#
-# Iterates through a list of expressions.
+# FOR				    [% FOREACH item list block %]
 #------------------------------------------------------------------------
  
 package Template::Directive::For;
@@ -372,32 +340,32 @@ use vars qw( @ISA );
 sub process {
     my ($self, $context) = @_;
     my $stash = $context->{ STASH };
-    my ($varname, $varlist, $iterator, $value, $error);
+    my ($item, $list) = @$self{ qw( ITEM LIST ) };
+    my ($iterator, $value, $error);
 
     require Template::Iterator;
 
-    # retrieve target variable name and list values
-    $varname = $self->{ VARNAME };
-    ($varlist, $error) = $context->_runop($self->{ LIST });
+    ($list, $error) = $context->_evaluate($list);
     return $error if $error;
 
     # do nothing if there's nothing to do
     return Template::Constants::STATUS_OK		    ## RETURN ##
-	unless defined $varlist;
+	unless defined $list;
 
     # the target may already be an iterator, otherwise we create one
-    $iterator = UNIVERSAL::isa($varlist, 'Template::Iterator')
-	? $varlist
-	: Template::Iterator->new($varlist);
+    $iterator = UNIVERSAL::isa($list, 'Template::Iterator')
+	? $list
+	: Template::Iterator->new($list);
 
     # initialise iterator
-    ($value, $error) = $iterator->first();
+    ($value, $error) = $iterator->get_first();
 
-    # clone the stash so that we don't have to worry about trampling
-    # on any variables. We should probably localise the stash for each
-    # iteration but that's too costly, IMHO, for a level of
-    # "correctness" that most people won't ever need to worry about.
-    $context->localise();
+    # clone the stash if we're going to try to import hash items so 
+    # that we don't have to worry about trampling on any variables. 
+    $context->localise()
+	unless $item;
+
+    $context->{ STASH }->set('loop' => $iterator);
 
     # loop
     while (! $error) {
@@ -408,9 +376,9 @@ sub process {
 	# anything else is gracefully ignored.  If a loop variable has
 	# been specified then we set that variable to each iterative
 	# item.  
-	if ($varname) {
+	if ($item) {
 	    # set target variable to iteration value
-	    $context->{ STASH }->set($varname , $value);
+	    $context->{ STASH }->set($item , $value);
 	}
 	elsif (ref($value) eq 'HASH') {
 	    # otherwise IMPORT a hash value
@@ -421,11 +389,14 @@ sub process {
 	last if ($error = $self->{ BLOCK }->process($context));
 
 	# get next iteration
-	($value, $error) = $iterator->next();
+	($value, $error) = $iterator->get_next();
     }
 
+    $context->{ STASH }->set('iter' => undef);
+
     # declone the stash (revert to parent context)
-    $context->delocalise();
+    $context->delocalise()
+	unless $item;
 
     # STATUS_DONE indicates the iterator completed succesfully
     return $error == Template::Constants::STATUS_DONE
@@ -434,33 +405,26 @@ sub process {
 }
 
 
+#------------------------------------------------------------------------
+# FILTER			  [% FILTER alias = name(args) ; block %]
+#------------------------------------------------------------------------
 
-#========================================================================
-#                 -----  Template::Directive::Filter  -----
-#========================================================================
- 
 package Template::Directive::Filter;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
 
-
-#------------------------------------------------------------------------
-# process($context)  ->  %% FILTER alias = name(params) %%
-#------------------------------------------------------------------------
-
-#name params block alias
-
 sub process {
     my ($self, $context) = @_;
-    my ($name, $params, $block, $alias) 
-	= @$self{ qw( NAME PARAMS BLOCK ALIAS ) };
+    my ($name, $args, $alias, $block) 
+	= @$self{ qw( NAME ARGS ALIAS BLOCK ) };
     my ($filter, $handler, $input, $output, $error);
-
-    # evaluate PARAMS
-    ($params, $error) = $context->_runop($params);
+    
+    # evaluate ARGS
+    ($args, $error) = $context->_evaluate($args);
+    return $error if $error;
 
     # ask the context for the requested filter
-    ($filter, $error) = $context->use_filter($name, $params, $alias)
+    ($filter, $error) = $context->use_filter($name, $args, $alias)
 	unless $error;
 
     return $error					    ## RETURN ##
@@ -488,71 +452,54 @@ sub process {
 }
 
 
-
-#========================================================================
-#                 -----  Template::Directive::Use  -----
-#========================================================================
+#------------------------------------------------------------------------
+# USE			    [% USE alias = name(args) %]
+#------------------------------------------------------------------------
  
 package Template::Directive::Use;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
 
-
-#------------------------------------------------------------------------
-# process($context)  ->  %% USE ident = plugin(params) %%
-#------------------------------------------------------------------------
-
 sub process {
     my ($self, $context) = @_;
-    my ($name, $params, $plugin, $ident, $error);
+    my ($name, $args, $alias) =
+	@$self{ qw( NAME ARGS ALIAS ) };
+    my ($plugin, $error);
 
-    $name = $self->{ IDENT };
+    # evaluate ARGS
+    ($args, $error) = $context->_evaluate($args);
+    return $error if $error;
+    $args ||= [];
 
-    # evaluate PARAMS
-    ($params, $error) = $context->_runop($self->{ PARAMS });
-    return $error					    ## RETURN ##
-	if $error;
-
-    $params = [] 
-	unless defined $params;
-
-    ($plugin, $error) = $context->use_plugin($name, $params);
+    ($plugin, $error) = $context->use_plugin($name, $args);
     return $error
 	if $error;
 
     # default target ident to plugin name and convert illegal characters
-    $ident = $self->{ NAMESPACE } || $name;
-    $ident =~ s/\W+/_/g;
+    $alias ||= $name;
+    $alias =~ s/\W+/_/g;
 
     # bind plugin object into stash under identifier
-    $context->{ STASH }->set($ident, $plugin);
+    $context->{ STASH }->set($alias, $plugin);
 
     return Template::Constants::STATUS_OK;
 }
 
 
-
-#========================================================================
-#                -----  Template::Directive::Block  -----
-#========================================================================
+#------------------------------------------------------------------------
+# BLOCK			    [% BLOCK content %]
+#------------------------------------------------------------------------
 
 package Template::Directive::Block;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
-
-
-#------------------------------------------------------------------------
-# process($context)
-#
-# Iterates through the array of directive references stores in the 
-# $self->{ CONTENT } list, calling the process() method on each one.
-#------------------------------------------------------------------------
 
 sub process {
     my ($self, $context) = @_;
     my $error = Template::Constants::STATUS_OK;
 
     foreach my $child (@{ $self->{ CONTENT } }) {
+	next unless defined $error;
 	$error = $child->process($context);
 
 	# the child process may return an exception that hasn't yet been 
@@ -566,109 +513,67 @@ sub process {
 }
 
 
+#------------------------------------------------------------------------
+# TEXT			    [% BLOCK content %]
+#------------------------------------------------------------------------
 
-#========================================================================
-#                 -----  Template::Directive::Text  -----
-#========================================================================
- 
 package Template::Directive::Text;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
 
-
-#------------------------------------------------------------------------
-# process($context)
-#
-# Outputs the text stored in $self->{ TEXT } by calling the output() 
-# method on the template instance referenced by the first parameter.
-#------------------------------------------------------------------------
-
 sub process {
     my ($self, $context) = @_;
-
     $context->output($self->{ TEXT });
-
     return Template::Constants::STATUS_OK;
 }
 
 
-
-#========================================================================
-#                 -----  Template::Directive::Throw  -----
-#========================================================================
+#------------------------------------------------------------------------
+# THROW			    [% THROW etype einfo %]
+#------------------------------------------------------------------------
  
 package Template::Directive::Throw;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
 
-
-#------------------------------------------------------------------------
-# process($context)
-#
-# Calls $context->throw() to raise an exception. 
-#------------------------------------------------------------------------
-
 sub process {
     my ($self, $context) = @_;
-    my ($info, $error, $errtype);
+    my ($info, $error);
 
-    $errtype = $self->{ ERRTYPE } || 'default';
-
-    # evaluate EXPR
-    ($info, $error) = $context->_runop($self->{ EXPR });
+    # evaluate info 
+    ($info, $error) = $context->_evaluate($self->{ INFO });
     return $error					    ## RETURN ##
 	if $error;
 
-    return $context->throw($errtype, $info);
+    return $context->throw($self->{ ETYPE } || 'default', $info);
 }
 
 
-
-#========================================================================
-#                 -----  Template::Directive::Catch  -----
-#========================================================================
+#------------------------------------------------------------------------
+# CATCH			    [% CATCH etype block %]
+#------------------------------------------------------------------------
  
 package Template::Directive::Catch;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
 
-
-#------------------------------------------------------------------------
-# process($context)
-#
-# Calls $context->catch() to install an exception handling template
-# block.
-#------------------------------------------------------------------------
-
 sub process {
     my ($self, $context) = @_;
-    my $retval;
-
-    my $errtype = $self->{ ERRTYPE } || 'default';
-
-    return $context->catch($errtype, $self->{ BLOCK });
+    return $context->catch($self->{ ETYPE } || 'default', $self->{ BLOCK });
 }
 
 
-#========================================================================
-#                 -----  Template::Directive::Error  -----
-#========================================================================
+#------------------------------------------------------------------------
+# ERROR			    [% ERROR info %]
+#------------------------------------------------------------------------
  
 package Template::Directive::Error;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
 
-
-#------------------------------------------------------------------------
-# process($context)
-#
-# Evaluate the term specified in the ERROR directive and send the result
-# to the $context->error() method.
-#------------------------------------------------------------------------
-
 sub process {
     my ($self, $context) = @_;
-    my ($value, $error) = $context->_runop($self->{ EXPR });
+    my ($value, $error) = $context->_evaluate($self->{ INFO });
     $error ||= 0;
     $context->error($value)
 	if !$error && defined $value;
@@ -676,21 +581,13 @@ sub process {
 }
 
 
-
-#========================================================================
-#                 -----  Template::Directive::Return  -----
-#========================================================================
+#------------------------------------------------------------------------
+# RETURN		    [% RETURN retval %]
+#------------------------------------------------------------------------
  
 package Template::Directive::Return;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
-
-
-#------------------------------------------------------------------------
-# process($context)
-#
-# Returns the value in $self->{ RETVAL } or STATUS_RETURN if not defined.
-#------------------------------------------------------------------------
 
 sub process {
     my ($self, $context) = @_;
@@ -774,7 +671,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.16 $
+$Revision: 1.19 $
 
 =head1 COPYRIGHT
 

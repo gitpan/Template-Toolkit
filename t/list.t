@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: list.t,v 1.3 1999/08/10 11:09:15 abw Exp $
+# $Id: list.t,v 1.4 1999/09/14 23:07:16 abw Exp $
 # 
 #========================================================================
 
@@ -23,6 +23,8 @@ use Template;
 require 'texpect.pl';
 $^W = 1;
 
+#use Template::Context;
+#$Template::Context::DEBUG = 1;
 $DEBUG = 0;
 
 test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1}, callsign());
@@ -78,6 +80,36 @@ done
 list: alpha, bravo, charlie, 
 list: delta, echo, foxtrot, 
 list: golf, hotel, india, 
+
+-- test --
+[% list1 = [ a b c d ]
+   list2 = [ e f g h i j ]
+%]
+size of list1: [% list1.size +%]
+ max of list2: [% list2.max +%]
+-- expect --
+size of list1: 4
+ max of list2: 5
+
+-- test -- 
+[% FOREACH a = [1..5] %]
+[% a %]
+[% END %]
+-- expect --
+12345
+
+-- test --
+[% start = 1
+   finish = 4 
+%]
+[% FOREACH a = [start..finish] %]
+[% a +%]
+[% END %]
+-- expect --
+1
+2
+3
+4
 
 
 

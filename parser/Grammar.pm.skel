@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm.skel,v 1.11 1999/08/10 11:09:10 abw Exp $
+# $Id: Grammar.pm.skel,v 1.12 1999/09/09 17:03:13 abw Exp $
 #
 #========================================================================
 
@@ -36,12 +36,12 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 
-use Template::Constants qw( :ops );
+use Template::Constants qw( :ops :status );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, $LEXTABLE, $RULES, $STATES);
-
+my $factory;
 
 sub new {
     my $class = shift;
@@ -52,6 +52,12 @@ sub new {
     };
 }
 
+# update method to set package-scoped $factory lexical 
+sub install_factory {
+    my ($self, $new_factory) = @_;
+    $factory = $new_factory;
+}
+
 
 
 #========================================================================
@@ -59,10 +65,10 @@ sub new {
 #========================================================================
 
 @RESERVED = qw( 
-	GET SET DEFAULT IMPORT INCLUDE PROCESS 
+	GET SET DEFAULT INCLUDE PROCESS 
 	IF UNLESS ELSE ELSIF FOR WHILE USE FILTER 
 	THROW CATCH ERROR RETURN STOP BREAK 
-	BLOCK END AND OR NOT
+	BLOCK END TO STEP AND OR NOT
     );
 
 
@@ -78,7 +84,7 @@ $LEXTABLE = {
     '!'       => 'NOT',
     '.'       => 'DOT',
     '..'      => 'TO',
-    ';'       => 'SEPARATOR',
+#    ';'       => 'SEPARATOR',
     '='       => 'ASSIGN',
     '=>'      => 'ASSIGN',
 #    '/'      => 'END',
@@ -90,8 +96,8 @@ $LEXTABLE = {
 
 # localise the temporary variables needed to complete lexer table
 { 
-    my @tokens   = qw< ( ) [ ] { } ${ $ / >;
-    my @compop   = qw( == != < <= > >= );
+    my @tokens   = qw< ( ) [ ] { } ${ $ / ; >;
+    my @compop   = qw( == != < <= >= > );
 
     # fill lexer table, slice by slice, with reserved words and operators
     @$LEXTABLE{ @RESERVED, @compop, @tokens } 

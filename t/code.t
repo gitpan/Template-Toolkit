@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: code.t,v 1.4 1999/08/10 11:09:12 abw Exp $
+# $Id: code.t,v 1.5 1999/09/09 17:02:00 abw Exp $
 #
 #========================================================================
 
@@ -26,7 +26,7 @@ $^W = 1;
 
 $DEBUG = 0;
 
-my $tproc = Template->new({ INTERPOLATE => 1 });
+my $tproc = Template->new({ INTERPOLATE => 1, DEBUG => 1 });
 
 # sample data
 my ($a, $b, $c, $d) = qw( alpha bravo charlie delta );
