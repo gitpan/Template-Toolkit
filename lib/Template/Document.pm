@@ -20,7 +20,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.2 2000/09/14 12:47:23 abw Exp $
+# $Id: Document.pm,v 2.3 2000/11/14 15:54:58 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use vars qw( $VERSION $ERROR $COMPERR $DEBUG $AUTOLOAD );
 use base qw( Template::Base );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -237,7 +237,7 @@ sub write_perl_file {
 		       map { 
 			   my $x = $metadata->{ $_ }; 
 			   $x =~ s/['\\]/\\$1/g; 
-			   "'$_' => '$x',";
+			   "'$_' => '$x',\n";
 		       } keys %$metadata);
 
     local *CFH;

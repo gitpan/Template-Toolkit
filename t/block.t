@@ -15,7 +15,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: block.t,v 2.0 2000/08/10 14:56:15 abw Exp $
+# $Id: block.t,v 2.3 2000/11/01 12:01:44 abw Exp $
 #
 #========================================================================
 
@@ -25,6 +25,8 @@ use Template::Test;
 $^W = 1;
 
 $Template::Test::DEBUG = 0;
+#$Template::Parser::DEBUG = 1;
+#$Template::Directive::PRETTY = 1;
 
 my $ttcfg = {
     INCLUDE_PATH => [ qw( t/test/lib test/lib ) ],	
@@ -87,3 +89,25 @@ A long time ago in a galaxy far, far away...
 <html><head><title>A New Beginning</title></head><body>
 A long time ago in a galaxy far, far away...
 </body></html>
+
+-- test --
+[% BLOCK foo:bar %]
+blah
+[% END %]
+[% PROCESS foo:bar %]
+-- expect --
+blah
+
+-- test --
+[% BLOCK 'hello html' -%]
+Hello World!
+[% END -%]
+[% PROCESS 'hello html' %]
+-- expect --
+Hello World!
+
+-- test --
+<[% INCLUDE foo %]>
+[% BLOCK foo %][% END %]
+-- expect --
+<>

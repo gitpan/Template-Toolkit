@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filters.pm,v 2.2 2000/09/14 12:47:23 abw Exp $
+# $Id: Filters.pm,v 2.4 2000/12/01 15:29:35 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $FILTERS );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
 
 #------------------------------------------------------------------------
 # standard filters, defined in one of the following forms:
@@ -59,8 +59,11 @@ $FILTERS = {
     'replace'    => [ \&replace_filter_factory,  1 ],
     'remove'     => [ \&remove_filter_factory,   1 ],
     'eval'       => [ \&eval_filter_factory,     1 ],
-    'evalperl'   => [ \&perl_filter_factory,     1 ],
+    'evaltt'     => [ \&eval_filter_factory,     1 ],	# alias
+    'perl'       => [ \&perl_filter_factory,     1 ],
+    'evalperl'   => [ \&perl_filter_factory,     1 ],	# alias
     'redirect'   => [ \&redirect_filter_factory, 1 ],
+    'file'       => [ \&redirect_filter_factory, 1 ],   # alias
 };
 
 
@@ -262,7 +265,7 @@ sub format_filter_factory {
 
 sub repeat_filter_factory {
     my ($context, $iter) = @_;
-    $iter = 1 unless defined $iter;
+    $iter = 1 unless defined $iter and length $iter;
 
     return sub {
 	my $text = shift;
@@ -361,7 +364,11 @@ sub perl_filter_factory {
 	my $text = shift;
 	$Template::Perl::context = $context;
 	$Template::Perl::stash = $stash;
-	my $out = eval "package Template::Perl; $text";
+	my $out = eval <<EOF;
+package Template::Perl; 
+\$stash = \$context->stash(); 
+$text
+EOF
 	$context->throw($@) if $@;
 	return $out;
     }

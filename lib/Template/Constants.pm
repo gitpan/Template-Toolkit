@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Constants.pm,v 2.1 2000/09/14 12:47:22 abw Exp $
+# $Id: Constants.pm,v 2.2 2000/10/03 11:48:59 abw Exp $
 #
 #============================================================================
  
@@ -30,7 +30,7 @@ use strict;
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
 
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -51,11 +51,12 @@ use constant ERROR_FILE      =>  'file';   # file error: I/O, parse, recursion
 use constant ERROR_UNDEF     =>  'undef';  # undefined variable value used
 use constant ERROR_PERL      =>  'perl';   # error in [% PERL %] block
 use constant ERROR_FILTER    =>  'filter'; # filter error
+use constant ERROR_PLUGIN    =>  'plugin'; # plugin error
 
 my @STATUS   = qw( STATUS_OK STATUS_RETURN STATUS_STOP STATUS_DONE
 		   STATUS_DECLINED STATUS_ERROR );
 my @ERROR    = qw( ERROR_FILE ERROR_UNDEF ERROR_PERL ERROR_RETURN
-		   ERROR_FILTER );
+		   ERROR_FILTER ERROR_PLUGIN );
 
 @EXPORT_OK   =   ( @STATUS, @ERROR );
 %EXPORT_TAGS = (

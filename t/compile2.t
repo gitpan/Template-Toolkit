@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile2.t,v 2.0 2000/08/10 14:56:17 abw Exp $
+# $Id: compile2.t,v 2.1 2000/11/14 15:54:58 abw Exp $
 #
 #========================================================================
 
@@ -33,6 +33,12 @@ my $ttcfg = {
 # check compiled template files exist
 ok( -f "$dir/foo.ttc" );
 ok( -f "$dir/complex.ttc" );
+
+# ensure template metadata is saved in compiled file (bug fixed in v2.00)
+my $out = '';
+my $tt = Template->new($ttcfg);
+ok( $tt->process('baz', { showname => 1 }, \$out) );
+ok( $out =~ /^name: baz/ );
 
 # we're going to hack on the foo.ttc file to change some key text.
 # this way we can tell that the template was loaded from the compiled

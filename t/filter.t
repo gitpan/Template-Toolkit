@@ -4,7 +4,7 @@
 #
 # Template script testing FILTER directive.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
 # Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
 # Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 2.4 2000/09/14 12:47:24 abw Exp $
+# $Id: filter.t,v 2.6 2000/12/01 15:29:35 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
+use lib qw( ./lib ../lib );
 use Template qw( :status );
 use Template::Parser;
 use Template::Test;
@@ -173,7 +173,7 @@ blah blah blah
 BZZZT: [% error.type %]: [% error.info %]
 [% END %]
 -- expect --
-BZZZT: undef: invalid FILTER entry for 'nonfilt' (not a CODE ref)
+BZZZT: filter: invalid FILTER entry for 'nonfilt' (not a CODE ref)
 
 -- test --
 [% TRY %]
@@ -184,7 +184,7 @@ blah blah blah
 BZZZT: [% error.type %]: [% error.info %]
 [% END %]
 -- expect --
-BZZZT: undef: invalid FILTER for 'badfact' (not a CODE ref)
+BZZZT: filter: invalid FILTER for 'badfact' (not a CODE ref)
 
 -- test --
 [% TRY %]
@@ -195,7 +195,7 @@ blah blah blah
 BZZZT: [% error.type %]: [% error.info %]
 [% END %]
 -- expect --
-BZZZT: undef: invalid FILTER entry for 'badfilt' (not a CODE ref)
+BZZZT: filter: invalid FILTER entry for 'badfilt' (not a CODE ref)
 
 -- test --
 [% TRY;
@@ -205,7 +205,7 @@ BZZZT: undef: invalid FILTER entry for 'badfilt' (not a CODE ref)
    END
 %]
 -- expect --
-undef: barfed
+filter: barfed
 
 -- test --
 [% TRY;
@@ -225,7 +225,7 @@ dead: deceased
    END
 %]
 -- expect --
-undef: keeled over
+filter: keeled over
 
 -- test --
 [% TRY;
@@ -527,8 +527,10 @@ stderr: arse
 %]
 [% dir +%]
 FILTER [[% dir | eval %]]
+FILTER [[% dir | evaltt %]]
 -- expect --
 [% a %] blah blah [% b %]
+FILTER [alpha blah blah bravo]
 FILTER [alpha blah blah bravo]
 
 -- test -- 
@@ -593,7 +595,7 @@ bar: some random value
 -- test --
 [% TRY -%]
 before
-[% FILTER redirect(outfile) -%]
+[% FILTER file(outfile) -%]
 blah blah blah
 here is the news
 [% a %]
@@ -763,3 +765,18 @@ more blah blah blah
 -- expect --
 blah blah blah...
 more blah blah blah...
+
+-- test --
+[% '$stash->{ a } = 25' FILTER evalperl %]
+[% a %]
+-- expect --
+25
+25
+
+-- test --
+[% '$stash->{ a } = 25' FILTER perl %]
+[% a %]
+-- expect --
+25
+25
+

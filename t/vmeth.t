@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vmeth.t,v 2.1 2000/09/08 08:10:53 abw Exp $
+# $Id: vmeth.t,v 2.5 2000/12/01 15:29:35 abw Exp $
 #
 #========================================================================
 
@@ -21,7 +21,6 @@ use strict;
 use lib qw( ./lib ../lib );
 use Template::Test;
 use Template::Constants qw( :status );
-use Template::Stash;
 $^W = 1;
 
 #$Template::Stash::DEBUG = 1;
@@ -67,7 +66,10 @@ my $params = {
 		  { id => 'dick',  name => 'Richard' },
 		  { id => 'larry', name => 'Larry' },
 		],
-    primes  => [ 13, 11, 17, 19, 2, 3, 5, 7 ],, 
+    primes   => [ 13, 11, 17, 19, 2, 3, 5, 7 ],
+    phones   => { 3141 => 'Leon', 5131 => 'Andy', 4131 => 'Simon' },
+    groceries => { 'Flour' => 3, 'Milk' => 1, 'Peanut Butter' => 21 },
+
 };
 
 test_expect(\*DATA, undef, $params);
@@ -191,6 +193,16 @@ Richard
 Tom
 
 -- test --
+[% folk = [] -%]
+[% folk.push("<a href=\"${person.id}.html\">$person.name</a>")
+    FOREACH person = people.sort('id') -%]
+[% folk.join(",\n") %]
+-- expect --
+<a href="dick.html">Richard</a>,
+<a href="larry.html">Larry</a>,
+<a href="tom.html">Tom</a>
+
+-- test --
 [% primes.sort.join(', ') %]
 -- expect --
 11, 13, 17, 19, 2, 3, 5, 7
@@ -220,3 +232,48 @@ Tom
 [% primes.odd.nsort.join(', ') %]
 -- expect --
 3, 5, 7, 11, 13, 17, 19
+
+-- test --
+[% FOREACH n = phones.sort -%]
+[% phones.$n %] is [% n %],
+[% END %]
+-- expect --
+Andy is 5131,
+Leon is 3141,
+Simon is 4131,
+
+-- test --
+[% FOREACH n = groceries.nsort.reverse -%]
+I want [% groceries.$n %] kilos of [% n %],
+[% END %]
+-- expect --
+I want 21 kilos of Peanut Butter,
+I want 3 kilos of Flour,
+I want 1 kilos of Milk,
+
+
+-- test --
+[% string = 'foo' -%]
+[% string.repeat(3) %]
+-- expect --
+foofoofoo
+
+-- test --
+[% string1 = 'foobarfoobarfoo'
+   string2 = 'foobazfoobazfoo'
+-%]
+[% string1.search('bar') ? 'ok' : 'not ok' %]
+[% string2.search('bar') ? 'not ok' : 'ok' %]
+[% string1.replace('bar', 'baz') %]
+[% string2.replace('baz', 'qux') %]
+-- expect --
+ok
+ok
+foobazfoobazfoo
+fooquxfooquxfoo
+
+-- test --
+[% string = 'foo     bar   ^%$ baz' -%]
+[% string.replace('\W+', '_') %]
+-- expect --
+foo_bar_baz

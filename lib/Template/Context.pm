@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 2.4 2000/09/14 12:47:23 abw Exp $
+# $Id: Context.pm,v 2.7 2000/12/01 15:29:34 abw Exp $
 #
 #============================================================================
 
@@ -36,7 +36,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.7 $ =~ /(\d+)\.(\d+)/);
 
 
 
@@ -105,11 +105,15 @@ sub template {
     foreach my $provider (@{ $self->{ LOAD_TEMPLATES } }) {
 	($template, $error) = $provider->fetch($name);
 	return $template unless $error;
-	return $self->error($template)
-	    if $error == &Template::Constants::STATUS_ERROR;
+#	return $self->error($template)
+	if ($error == Template::Constants::STATUS_ERROR) {
+	    $self->throw($template) if ref $template;
+	    $self->throw(Template::Constants::ERROR_FILE, $template);
+	}
     }
 
-    return $self->error("$name: not found");
+#    return $self->error("$name: not found");
+    $self->throw(Template::Constants::ERROR_FILE, "$name: not found");
 }
 
 
@@ -130,16 +134,15 @@ sub plugin {
 
     # request the named plugin from each of the LOAD_PLUGINS providers in turn
     foreach my $provider (@{ $self->{ LOAD_PLUGINS } }) {
-#	print STDERR "Asking plugin provider $provider for $name...\n"
-#	    if $DEBUG;
-
 	($plugin, $error) = $provider->fetch($name, $args, $self);
 	return $plugin unless $error;
-	return $self->error($plugin)
-	    if $error == &Template::Constants::STATUS_ERROR;
+	if ($error == Template::Constants::STATUS_ERROR) {
+	    $self->throw($plugin) if ref $plugin;
+	    $self->throw(Template::Constants::ERROR_PLUGIN, $plugin);
+	}
     }
 
-    return $self->error("$name: plugin not found");
+    $self->throw(Template::Constants::ERROR_PLUGIN, "$name: plugin not found");
 }
 
 
@@ -162,16 +165,17 @@ sub filter {
 
     # request the named filter from each of the FILTERS providers in turn
     foreach my $provider (@{ $self->{ LOAD_FILTERS } }) {
-#	print STDERR "Asking filter provider $provider for $name...\n"
-#	    if $DEBUG;
-
 	$filter = $name, last 
 	    if ref $name;
 
 	($filter, $error) = $provider->fetch($name, $args, $self);
 	last unless $error;
-	return $self->error($filter)
-	    if $error == &Template::Constants::STATUS_ERROR;
+	if ($error == Template::Constants::STATUS_ERROR) {
+	    $self->throw($filter) if ref $filter;
+	    $self->throw(Template::Constants::ERROR_FILTER, $filter);
+	}
+	# return $self->error($filter)
+	#    if $error == &Template::Constants::STATUS_ERROR;
     }
 
     return $self->error("$name: filter not found")
@@ -180,9 +184,6 @@ sub filter {
     # alias defaults to name if undefined
     $alias = $name
 	unless defined($alias) or ref($name);
-
-#    print STDERR "adding filter $filter to cache as $alias\n"
-#	if $DEBUG;
 
     # cache FILTER if alias is valid
     $self->{ FILTER_CACHE }->{ $alias } = $filter
@@ -212,9 +213,9 @@ sub process {
     my $name = $template;
 
     # request compiled template from cache 
-    $template = $self->template($template)
-	|| die Template::Exception->new(&Template::Constants::ERROR_FILE, 
-				$self->{ _ERROR } || "$template: not found");
+    $template = $self->template($template);
+#	|| die Template::Exception->new(&Template::Constants::ERROR_FILE, 
+#				$self->{ _ERROR } || "$template: not found");
 
     # merge any local blocks defined in the Template::Document into our
     # local BLOCKS cache
@@ -225,7 +226,7 @@ sub process {
     # update stash with any new parameters passed
     $params ||= { };
     $params->{ component } = ref $template eq 'CODE' 
-	? { ref $name ? () : (name => $name, modtime => time()) }
+	? { ref $name ? () : ( name => $name, modtime => time() ) }
         : $template;
     $self->{ STASH }->update($params);
 #	if $params;
@@ -272,9 +273,9 @@ sub include {
     my $name = $template;
 
     # request compiled template from cache 
-    $template = $self->template($template)
-	|| die Template::Exception->new(&Template::Constants::ERROR_FILE, 
-			       $self->{ _ERROR } || "$template: not found" );
+    $template = $self->template($template);
+#	|| die Template::Exception->new(&Template::Constants::ERROR_FILE, 
+#			       $self->{ _ERROR } || "$template: not found" );
 
     # localise the variable stash with any parameters passed
     $params ||= { };
@@ -324,12 +325,13 @@ sub insert {
     foreach my $provider (@{ $self->{ LOAD_TEMPLATES } }) {
 	($text, $error) = $provider->load($file);
 	return $text unless $error;
-	die Template::Exception->new(&Template::Constants::ERROR_FILE, $text)
-	    if $error == &Template::Constants::STATUS_ERROR; 
+	if ($error == Template::Constants::STATUS_ERROR) {
+	    $self->throw($text) if ref $text;
+	    $self->throw(Template::Constants::ERROR_FILE, $text);
+	}
     }
 
-    $text = "$file: not found";
-    die Template::Exception->new(&Template::Constants::ERROR_FILE, $text);
+    $self->throw(Template::Constants::ERROR_FILE, "$file: not found");
 }
 
 

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: list.t,v 2.1 2000/09/08 08:10:52 abw Exp $
+# $Id: list.t,v 2.3 2000/11/01 12:01:45 abw Exp $
 #
 #========================================================================
 
@@ -25,6 +25,8 @@ $^W = 1;
 
 use Template::Parser;
 $Template::Test::DEBUG = 0;
+#$Template::Parser::DEBUG = 1;
+#$Template::Directive::PRETTY = 1;
 
 # sample data
 my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $j, $k, $l, $m, 
@@ -45,7 +47,11 @@ my $vars = {
     wxyz => [ { id => $z, name => 'Zebedee', rank => 'aa' },
 	      { id => $y, name => 'Yinyang', rank => 'ba' },
 	      { id => $x, name => 'Xeexeez', rank => 'ab' },
-	      { id => $w, name => 'Warlock', rank => 'bb' }, ]
+	      { id => $w, name => 'Warlock', rank => 'bb' }, ],
+    inst => [ { name => 'piano', url => '/roses.html'  },
+	      { name => 'flute', url => '/blow.html'   },
+	      { name => 'organ', url => '/tulips.html' }, ],
+    nest => [ [ 3, 1, 4 ], [ 2, [ 7, 1, 8 ] ] ],
 };
 
 my $config = {};
@@ -134,4 +140,54 @@ nsort: [% data.nsort.join(', ') %]
 -- expect --
  sort: 1, 10, 11, 2, 5, 50, 52, 6, 70, 8, 90
 nsort: 1, 2, 5, 6, 8, 10, 11, 50, 52, 70, 90
+
+-- test --
+[% ilist = [] -%]
+[% ilist.push("<a href=\"$i.url\">$i.name</a>") FOREACH i = inst -%]
+[% ilist.join(",\n") -%]
+[% global.ilist = ilist -%]
+-- expect --
+<a href="/roses.html">piano</a>,
+<a href="/blow.html">flute</a>,
+<a href="/tulips.html">organ</a>
+
+-- test -- 
+[% global.ilist.pop %]
+-- expect --
+<a href="/tulips.html">organ</a>
+
+-- test -- 
+[% global.ilist.shift %]
+-- expect --
+<a href="/roses.html">piano</a>
+
+-- test -- 
+[% global.ilist.unshift('another') -%]
+[% global.ilist.join(', ') %]
+-- expect --
+another, <a href="/blow.html">flute</a>
+
+-- test --
+[% nest.0.0 %].[% nest.0.1 %][% nest.0.2 +%]
+[% nest.1.shift %].[% nest.1.0.join('') %]
+-- expect --
+3.14
+2.718
+
+-- test --
+[% # define some initial data
+   people   => [ 
+     { id => 'tom',   name => 'Tom'     },
+     { id => 'dick',  name => 'Richard' },
+     { id => 'larry', name => 'Larry'   },
+   ]
+-%]
+[% folk = [] -%]
+[% folk.push("<a href=\"${person.id}.html\">$person.name</a>")
+       FOREACH person = people.sort('name') -%]
+[% folk.join(",\n") -%]
+-- expect --
+<a href="larry.html">Larry</a>,
+<a href="dick.html">Richard</a>,
+<a href="tom.html">Tom</a>
 

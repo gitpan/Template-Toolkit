@@ -80,14 +80,19 @@ the USE directive.
 	}, $class;	     # returns blessed MyPlugin object
     }
 
-=item fail($error)
+=item error($error)
 
-This method is used for reporting errors.  It returns undef.  e.g.
+This method, inherited from the Template::Base module, is used for 
+reporting and returning errors.   It can be called as a package method
+to set/return the $ERROR package variable, or as an object method to 
+set/return the object _ERROR member.  When called with an argument, it
+sets the relevant variable and returns undef.  When called without an
+argument, it returns the value of the variable.
 
     sub new {
 	my ($class, $context, $dsn) = @_;
 
-	return $class->fail('No data source specified')
+	return $class->error('No data source specified')
 	    unless $dsn;
 
 	bless {
@@ -95,19 +100,22 @@ This method is used for reporting errors.  It returns undef.  e.g.
 	}, $class;
     }
 
-=item error()
+    ...
 
-This method returns the error as set by the above fail() method.  It is
-called by the loading/creating Template::Context object.
+    my $something = MyModule->new()
+	|| die MyModule->error(), "\n";
+
+    $something->do_something()
+	|| die $something->error(), "\n";
 
 =back
 
 =head1 DEEPER MAGIC
 
 The Template::Context object that handles the loading and use of
-plugins calls the new(), fail() and error() methods against the
-package name returned by the load() method.  In pseudo-code terms,
-it might look something like this:
+plugins calls the new() and error() methods against the package name
+returned by the load() method.  In pseudo-code terms, it might look
+something like this:
 
     $class  = MyPlugin->load($context);       # returns 'MyPlugin'
 
@@ -115,8 +123,8 @@ it might look something like this:
 	|| die $class->error();               # MyPlugin->error()
 
 The load() method may alterately return a blessed reference to an
-object instance.  In this case, new(), fail() and error() are then
-called as I<object> methods against that prototype instance. 
+object instance.  In this case, new() and error() are then called as
+I<object> methods against that prototype instance.
 
     package YourPlugin;
 
@@ -230,7 +238,7 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 1.1 $
+$Revision: 1.2 $
 
 =head1 COPYRIGHT
 

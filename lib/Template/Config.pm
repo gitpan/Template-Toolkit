@@ -17,7 +17,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Config.pm,v 2.0 2000/08/10 14:55:57 abw Exp $
+#   $Id: Config.pm,v 2.1 2000/12/01 15:29:34 abw Exp $
 #
 #========================================================================
  
@@ -31,7 +31,7 @@ use vars qw( $VERSION $DEBUG $ERROR $AUTOLOAD
 	     $PARSER $PROVIDER $PLUGINS $FILTERS $ITERATOR 
 	     $STASH $SERVICE $CONTEXT );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
 $DEBUG    = 0 unless defined $DEBUG;
 $ERROR    = '';
 
@@ -215,6 +215,31 @@ sub service {
     return $SERVICE->new($params) 
 	|| $class->error("failed to create context: ", $SERVICE->error);
 }
+
+
+#========================================================================
+# This should probably be moved somewhere else in the long term, but for
+# now it ensures that Template::TieString is available even if the 
+# Template::Directive module hasn't been loaded, as is the case when 
+# using compiled templates and Template::Parser hasn't yet been loaded
+# on demand.
+#========================================================================
+
+#------------------------------------------------------------------------
+# simple package for tying $output variable to STDOUT, used by perl()
+#------------------------------------------------------------------------
+
+package Template::TieString;
+
+sub TIEHANDLE {
+    my ($class, $textref) = @_;
+    bless $textref, $class;
+}
+sub PRINT {
+    my $self = shift;
+    $$self .= join('', @_);
+}
+
 
 
 1;

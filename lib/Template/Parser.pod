@@ -85,8 +85,8 @@ The TAGS directive may also be used to set a TAG_STYLE
 Anything outside a directive tag is considered plain text and is
 generally passed through unaltered (but see the INTERPOLATE option).
 This includes all whitespace and newlines characters surrounding
-directive tags.  Any directives that don't generate any output will
-leave gaps in the output document.
+directive tags.  Directives that don't generate any output will leave
+gaps in the output document.
 
 Example:
 
@@ -148,7 +148,7 @@ per-directive basis.
     User: [% user +%]
     [% END %]
 
-With POST_CHOMP set on, the above example would be parsed as if written:
+With POST_CHOMP enabled, the above example would be parsed as if written:
 
     [% FOREACH user = userlist %]User: [% user %]
     [% END %]
@@ -167,18 +167,26 @@ Variables should be prefixed by a '$' to identify them.  Curly braces
 can be used in the familiar Perl/shell style to explicitly scope the
 variable name where required.
 
-    # INTERPOLATE = 0
+    # INTERPOLATE => 0
     <a href="http://[% server %]/[% help %]">
     <img src="[% images %]/help.gif"></a>
     [% myorg.name %]
   
-    # INTERPOLATE = 1
+    # INTERPOLATE => 1
     <a href="http://$server/$help">
     <img src="$images/help.gif"></a>
     $myorg.name
   
     # explicit scoping with {  }
     <img src="$images/${icon.next}.gif">
+
+Note that a limitation in Perl's regex engine restricts the maximum length
+of an interpolated template to around 32 kilobytes or possibly less.  Files
+that exceed this limit in size will typically cause Perl to dump core with
+a segmentation fault.  If you routinely process templates of this size 
+then you should disable INTERPOLATE or split the templates in several 
+smaller files or blocks which can then be joined backed together via 
+PROCESS or INCLUDE.
 
 =item ANYCASE
 
@@ -201,10 +209,10 @@ of the same name as a reserved word, regardless of case.  The reserved
 words are currently:
 
     GET CALL SET DEFAULT INSERT INCLUDE PROCESS WRAPPER 
-    IF UNLESS ELSE ELSIF FOR FORNEXT WHILE SWITCH CASE
+    IF UNLESS ELSE ELSIF FOR FOREACH WHILE SWITCH CASE
     USE PLUGIN FILTER MACRO PERL RAWPERL BLOCK META
-    TRY THROW CATCH FINAL BREAK RETURN STOP CLEAR
-    TO STEP AND OR NOT MOD DIV END
+    TRY THROW CATCH FINAL NEXT LAST BREAK RETURN STOP 
+    CLEAR TO STEP AND OR NOT MOD DIV END
 
 The only lower case reserved words that cannot be used for variables,
 regardless of the ANYCASE option, are the operators:
@@ -550,3 +558,5 @@ A common base class for many Template::* modules.
 
 Module for testing the Template Toolkit, primarily used by the test
 scripts in the 't' distribution sub-directory.
+
+=back

@@ -4,7 +4,7 @@
 #
 # Template script testing the WRAPPER directive.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
 # Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
 # Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: wrapper.t,v 2.0 2000/08/10 14:56:36 abw Exp $
+# $Id: wrapper.t,v 2.2 2000/12/01 15:29:35 abw Exp $
 #
 #========================================================================
 
@@ -128,20 +128,13 @@ of nuclear fusion.
 
 <hr>
 
-#========================================================================
-# STOP!  The rest of these tests don't work because the WRAPPER content
-#        is actually a closure constructed in the context of the
-#        calling block rather than the enclosing one.
-#========================================================================
--- stop --
-
 -- test --
 [%# FOREACH s = [ 'one' 'two' ]; WRAPPER section; PROCESS $s; END; END %]
 [% PROCESS $s WRAPPER section FOREACH s = [ 'one' 'two' ] %]
 [% BLOCK one; title = 'Block One' %]This is one[% END %]
 [% BLOCK two; title = 'Block Two' %]This is two[% END %]
 [% BLOCK section %]
-<h1>[% title %]</h2>
+<h1>[% title %]</h1>
 <p>
 [% content %]
 </p>
@@ -150,9 +143,7 @@ of nuclear fusion.
 <h1>Block One</h1>
 <p>
 This is one
-</p>
-
-<h1>Block Two</h1>
+</p><h1>Block Two</h1>
 <p>
 This is two
 </p>
@@ -165,12 +156,26 @@ This is two
 [% content %]
 </p>
 [% END %]
-[% WRAPPER section %]
+[% WRAPPER section -%]
 [% PROCESS one %]
-[% END %]
+[%- END %]
 title: [% title %]
 -- expect --
 <h1>Block One</h1>
 <p>
 This is one
 </p>
+title: Block One
+
+-- test --
+[% title = "foo" %]
+[% WRAPPER outer title="bar" -%]
+The title is [% title %]
+[%- END -%]
+[% BLOCK outer -%]
+outer [[% title %]]: [% content %]
+[%- END %]
+-- expect --
+outer [bar]: The title is foo
+
+

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugins.pm,v 2.1 2000/09/08 08:10:50 abw Exp $
+# $Id: Plugins.pm,v 2.4 2000/12/01 15:29:35 abw Exp $
 #
 #============================================================================
 
@@ -31,17 +31,20 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $STD_PLUGINS );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
 
 $STD_PLUGINS   = {
-    'cgi'      => 'Template::Plugin::CGI',
-    'date'     => 'Template::Plugin::Date',
-    'dbi'      => 'Template::Plugin::DBI',
-    'url'      => 'Template::Plugin::URL',
-    'format'   => 'Template::Plugin::Format',
-    'table'    => 'Template::Plugin::Table',
-    'iterator' => 'Template::Plugin::Iterator',
-    'datafile' => 'Template::Plugin::Datafile',
+    'cgi'        => 'Template::Plugin::CGI',
+    'date'       => 'Template::Plugin::Date',
+    'dbi'        => 'Template::Plugin::DBI',
+    'url'        => 'Template::Plugin::URL',
+    'format'     => 'Template::Plugin::Format',
+    'table'      => 'Template::Plugin::Table',
+    'iterator'   => 'Template::Plugin::Iterator',
+    'datafile'   => 'Template::Plugin::Datafile',
+    'dumper'     => 'Template::Plugin::Dumper',
+    'wrap'       => 'Template::Plugin::Wrap',
+    'autoformat' => 'Template::Plugin::Autoformat',
 };
 
 
@@ -98,10 +101,10 @@ sub fetch {
 	print STDERR "args: [ @$args ]\n"
 	    if $DEBUG;
 	$plugin = $factory->new(@$args)
-    	    || die "$name plugin: ", $factory->error(), "\n";	## DIE
+    	    || die "$name plugin failed: ", $factory->error(), "\n";	## DIE
     };
     if ($error = $@) {
-	chomp $error;
+#	chomp $error;
 	return $self->{ TOLERANT } 
 	       ? (undef,  Template::Constants::STATUS_DECLINED)
 	       : ($error, Template::Constants::STATUS_ERROR);

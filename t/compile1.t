@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile1.t,v 2.0 2000/08/10 14:56:17 abw Exp $
+# $Id: compile1.t,v 2.2 2000/12/01 15:29:35 abw Exp $
 #
 #========================================================================
 
@@ -31,6 +31,7 @@ my $ttcfg = {
     POST_CHOMP   => 1,
     INCLUDE_PATH => $dir,
     COMPILE_EXT => '.ttc',
+    EVAL_PERL   => 1,
 };
 
 # delete any existing files
@@ -46,6 +47,11 @@ ok( -f "$dir/complex.ttc" );
 
 
 __DATA__
+-- test --
+[% INCLUDE evalperl %]
+-- expect --
+This file includes a perl block.
+
 -- test --
 [% TRY %]
 [% INCLUDE foo %]
@@ -63,6 +69,11 @@ This is the header, title: Yet Another Template Test
 This is a more complex file which includes some BLOCK definitions
 This is the footer, author: abw, version: 3.14
 - 3 - 2 - 1 
+
+-- test --
+[% INCLUDE baz %]
+-- expect --
+This is the baz file, a: 
 
 
 

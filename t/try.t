@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: try.t,v 2.0 2000/08/10 14:56:34 abw Exp $
+# $Id: try.t,v 2.1 2000/12/01 15:29:35 abw Exp $
 #
 #========================================================================
 
@@ -22,7 +22,8 @@ use Template::Test;
 $^W = 1;
 
 $Template::Test::DEBUG = 0;
-#$Template::Parser::DEBUG = 0;
+#$Template::Parser::DEBUG = 1;
+#$Template::Directive::PRETTY = 1;
 
 my $ttcfg = {
     INCLUDE_PATH => [ qw( t/test/lib test/lib ) ],	
@@ -562,6 +563,7 @@ outer
 inner
 RIGHT: caught outer foo golf
 after
+
 
 #------------------------------------------------------------------------
 # test throwing from Perl code via die()

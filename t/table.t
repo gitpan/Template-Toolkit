@@ -4,14 +4,14 @@
 #
 # Tests the 'Table' plugin.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
 # Copyright (C) 2000 Andy Wardley. All Rights Reserved.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: table.t,v 2.1 2000/09/14 12:47:24 abw Exp $
+# $Id: table.t,v 2.3 2000/11/01 12:01:45 abw Exp $
 #
 #========================================================================
 
@@ -24,6 +24,7 @@ $Template::Test::DEBUG = 0;
 
 my $params = { 
     alphabet => [ 'a'..'z' ],
+    empty    => [ ],
 };
 
 test_expect(\*DATA, { POST_CHOMP => 1 }, $params);
@@ -138,3 +139,17 @@ v w x y z
 [% END %]
 -- expect --
 1, 3, 5
+
+-- test --
+>
+[% USE table(empty, rows=3) -%]
+[% FOREACH col = table.cols -%]
+col
+[% FOREACH item = col -%]
+item: [% item -%]
+[% END -%]
+[% END -%]
+<
+-- expect --
+>
+<

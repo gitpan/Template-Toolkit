@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Service.pm,v 2.2 2000/09/12 15:25:21 abw Exp $
+# $Id: Service.pm,v 2.6 2000/12/01 15:29:35 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use base qw( Template::Base );
 use Template::Base;
 use Template::Config;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.6 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 
@@ -63,8 +63,9 @@ sub process {
 
     # pre-request compiled template from context so that we can alias it 
     # in the stash for pre-processed templates to reference
-    $template = $context->template($template)
-	|| return $self->error($context->error);
+    eval { $template = $context->template($template) };
+    return $self->error($@)
+	if $@;
 
     # localise the variable stash with any parameters passed
     # and set the 'template' variable
@@ -132,13 +133,15 @@ sub context {
 sub _init {
     my ($self, $config) = @_;
     my ($item, $data, $context, $block, $blocks);
+    my $delim = $config->{ DELIMITER };
+    $delim = ':' unless defined $delim;
 
     # coerce PRE_PROCESS, PROCESS and POST_PROCESS to arrays if necessary, 
     # by splitting on non-word characters
     foreach $item (qw( PRE_PROCESS PROCESS POST_PROCESS )) {
 	$data = $config->{ $item };
 	next unless defined $data;
-	$data = [ split(/\W+/, $data || '') ]
+	$data = [ split($delim, $data || '') ]
 	    unless ref $data eq 'ARRAY';
         $self->{ $item } = $data;
     }
@@ -174,6 +177,14 @@ sub _recover {
     my $context = $self->{ CONTEXT };
     my ($hkey, $handler, $output);
 
+    # there's a pesky lurking somewhere deep - let's hope this catches it
+    unless (ref $$error) {
+	require Carp;
+	confess('internal error: not an exception object',
+		' - please contact the author: <abw@kfs.org>\n',
+		"ERROR: $$error\n");
+    }
+
     # a 'stop' exception is thrown by [% STOP %] - we return the output
     # buffer stored in the exception object
     return $$error->text()
@@ -197,8 +208,9 @@ sub _recover {
 	$handler = $handlers;
     }
 
-    $handler = $context->template($handler) || do {
-	$$error = $context->error;
+    eval { $handler = $context->template($handler) };
+    if ($@) {
+	$$error = $@;
 	return undef;						## RETURN
     };
 

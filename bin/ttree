@@ -12,18 +12,18 @@
 #   it's a lot like 'make' for templates.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 2.1 2000/09/12 15:25:15 abw Exp $
+# $Id: ttree,v 2.3 2000/12/01 15:29:34 abw Exp $
 #
 #========================================================================
 
@@ -39,12 +39,13 @@ use File::Basename;
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
-# create a sample config file
-unless (-f $RCFILE) {
+# offer create a sample config file if it doesn't exist, unless a '-f'
+# has been specified on the command line
+unless (-f $RCFILE or grep(/^-f$/, @ARGV) ) {
     print("Do you want me to create a sample '.ttreerc' file for you?\n",
 	  "(file: $RCFILE)   [y/n]: ");
     my $y = <STDIN>;
@@ -324,8 +325,8 @@ sub read_config {
 	'template_pre_chomp|pre_chomp|prechomp',
 	'template_post_chomp|post_chomp|postchomp',
 	'template_trim|trim',
-        'template_pre_process|pre_process|preprocess=s',
-        'template_post_process|post_process|postprocess=s',
+        'template_pre_process|pre_process|preprocess=s@',
+        'template_post_process|post_process|postprocess=s@',
         'template_process|process=s',
         'template_default|default=s',
         'template_error|error=s',
@@ -351,7 +352,7 @@ sub read_config {
     );
 
     # process main config file, then command line args
-    $config->file($file);
+    $config->file($file) if -f $file;
     $config->args();
 
     $config;
@@ -600,16 +601,16 @@ See B<ttree --help> for a summary of options.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>cre.canon.co.ukE<gt>
+Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 2.1 $
+$Revision: 2.3 $
 
 =head1 COPYRIGHT
 
-Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

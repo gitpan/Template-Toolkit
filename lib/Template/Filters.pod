@@ -102,7 +102,7 @@ dynamic.
     my $context = $template->context();
     $context->define_filter('new_html', \&new_html);
     $context->define_filter('new_repeat', \&new_repeat, 1);
-					
+
 Static filters are those where a single subroutine reference is used
 for all invocations of a particular filter.  Filters that don't accept
 any configuration parameters (e.g. 'html') can be implemented
@@ -221,7 +221,7 @@ output:
 Similar to the html_para filter described above, but uses the HTML tag
 sequence E<lt>brE<gt>E<lt>brE<gt> to join paragraphs.
 
-    [% FILTER html_para %]
+    [% FILTER html_break %]
     The cat sat on the mat.
 
     Mary had a little lamb.
@@ -269,14 +269,16 @@ output:
 Repeats the text block for as many iterations as are specified (default: 1).
 
     [% FILTER repeat(3) %]
-    Am I repeating myself?
+    We want more beer and we want more beer,
     [% END %]
+    We are the more beer wanters!
 
 output:
 
-    Am I repeating myself?
-    Am I repeating myself?
-    Am I repeating myself?
+    We want more beer and we want more beer,
+    We want more beer and we want more beer,
+    We want more beer and we want more beer,
+    We are the more beer wanters!
 
 =item remove(string) 
 
@@ -289,11 +291,6 @@ string.
 output: 
 
     Thecatsatonthemat
-
-The '|' character is an alias for FILTER, allowing the previous example
-to be written as:
-
-    [% "The  cat  sat  on  the  mat" | remove('\s+') %]
 
 =item replace(search, replace) 
 
@@ -317,6 +314,13 @@ file, specified relative to the OUTPUT_PATH configuration item.
        [% END %]
     [% END %]
 
+or more succinctly, using side-effect notation:
+
+    [% INCLUDE userinfo 
+         FILTER redirect("users/${user.id}.html")
+	   FOREACH user = myorg.userlist 
+    %]
+
 A 'file' exception will be thrown if the OUTPUT_PATH option is undefined.
 
 =item eval(template_text)
@@ -327,10 +331,10 @@ contain template fragments, or for some method to be provided for
 returning template fragments from an external source such as a
 database, which can then be processed in the template as required.
 
-    my $replace  = {
+    my $vars  = {
 	fragment => "The cat sat on the [% place %]",
     };
-    $template->process($file, $replace);
+    $template->process($file, $vars);
 
 The following example:
 
@@ -340,12 +344,15 @@ is therefore equivalent to
 
     The cat sat on the [% place %]
 
-=item evalperl(perlcode)
+The 'evaltt' filter is provided as an alias for 'eval'.
 
-The 'evalperl' filter evaluates the block as Perl code.  The EVAL_PERL
-option must be set to a true value or a 'perl' exception will be thrown.
+=item perl(perlcode)
 
-    [% my_perl_code | evalperl %]
+The 'perl' filter evaluates the block as Perl code.  The EVAL_PERL
+option must be set to a true value or a 'perl' exception will be
+thrown.
+
+    [% my_perl_code | perl %]
 
 In most cases, the [% PERL %] ... [% END %] block should suffice for 
 evaluating Perl code, given that template directives are processed 
@@ -358,13 +365,17 @@ been written in the more verbose form:
 
 as well as
 
-    [% FILTER evalperl %]
+    [% FILTER perl %]
     [% my_perl_code %]
     [% END %]
 
-It is an unfortunate circumstance that this filter cannot simply be called
-'perl'.  This is due to the clash with the reserved word of that name 
-(i.e. PERL blocks).
+The 'evalperl' filter is provided as an alias for 'perl' for backwards
+compatability.
+
+=item stderr
+
+The stderr filter prints the output generating by the enclosing block to
+STDERR 
 
 =back
 

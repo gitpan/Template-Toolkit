@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: process.t,v 2.1 2000/09/08 08:10:52 abw Exp $
+# $Id: process.t,v 2.4 2000/12/01 15:29:35 abw Exp $
 #
 #========================================================================
 
@@ -30,12 +30,12 @@ my $config = {
 my $tt1 = Template->new($config);
 
 $config->{ PRE_PROCESS  } = 'config';
-$config->{ PROCESS      } = 'header,content';
+$config->{ PROCESS      } = 'header:content';
 $config->{ POST_PROCESS } = 'footer';
 $config->{ TRIM } = 0;
 my $tt2 = Template->new($config);
 
-$config->{ PRE_PROCESS } = 'config,header';
+$config->{ PRE_PROCESS } = 'config:header.tt2';
 $config->{ PROCESS } = '';
 my $tt3 = Template->new($config);
 
@@ -81,12 +81,8 @@ footer
 [% META title = 'Test 3' -%]
 This is the third test
 -- expect --
-header:
+header.tt2:
   title: Joe Random Title
   menu: This is the menu, defined in 'config'
 footer
-
-
-
-
 

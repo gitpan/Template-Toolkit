@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: iterator.t,v 2.0 2000/08/10 14:56:26 abw Exp $
+# $Id: iterator.t,v 2.2 2000/11/14 15:54:58 abw Exp $
 #
 #========================================================================
 
@@ -73,6 +73,41 @@ __DATA__
    * qux
 
 -- test --
+[% items = [ 'foo' 'bar' 'baz' 'qux' ] %]
+[% FOREACH i = items %]
+   #[% loop.index %]/[% loop.max %] [% i +%]
+[% END %]
+-- expect --
+   #0/3 foo
+   #1/3 bar
+   #2/3 baz
+   #3/3 qux
+
+-- test --
+[% items = [ 'foo' 'bar' 'baz' 'qux' ] %]
+[% FOREACH i = items %]
+   #[% loop.count %]/[% loop.size %] [% i +%]
+[% END %]
+-- expect --
+   #1/4 foo
+   #2/4 bar
+   #3/4 baz
+   #4/4 qux
+
+-- test --
+# test that 'number' is supported as an alias to 'count', for backwards
+# compatability
+[% items = [ 'foo' 'bar' 'baz' 'qux' ] %]
+[% FOREACH i = items %]
+   #[% loop.number %]/[% loop.size %] [% i +%]
+[% END %]
+-- expect --
+   #1/4 foo
+   #2/4 bar
+   #3/4 baz
+   #4/4 qux
+
+-- test --
 [% USE iterator(data) %]
 [% FOREACH i = iterator %]
 [% IF iterator.first %]
@@ -94,3 +129,13 @@ List of items:
    * waz
 End of list
 
+
+-- test --
+[% FOREACH i = [ 'foo' 'bar' 'baz' 'qux' ] %]
+[% "$loop.prev<-" IF loop.prev -%][[% i -%]][% "->$loop.next" IF loop.next +%]
+[% END %]
+-- expect --
+[foo]->bar
+foo<-[bar]->baz
+bar<-[baz]->qux
+baz<-[qux]

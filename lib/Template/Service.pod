@@ -151,6 +151,15 @@ processed in the order defined.
 	POST_PROCESS => 'footer',
     };
 
+Alternately, multiple template may be specified as a single string, 
+delimited by ':'.  This delimiter string can be changed via the 
+DELIMITER option.
+
+    my $service = Template::Service->new({
+	PRE_PROCESS  => 'config:header',
+	POST_PROCESS => 'footer',
+    };
+
 The PRE_PROCESS and POST_PROCESS templates are evaluated in the same
 variable context as the main document and may define or update
 variables for subseqent use.
@@ -214,6 +223,7 @@ processed by specifying it as a variable reference (i.e. prefixed by
 '$') to an INCLUDE, PROCESS or WRAPPER directive.
 
 content:
+
     <html>
     <head>
     <title>[% template.title %]</title>
@@ -227,6 +237,7 @@ content:
     </html>
 
 foo.html:
+
     [% META 
        title     = 'The Foo Page'
        author    = 'Fred Foo'
@@ -235,13 +246,26 @@ foo.html:
     <h1>[% template.title %]</h1>
     Welcome to the Foo Page, blah blah blah
 
-output:
+output:    
+
+    <html>
+    <head>
+    <title>The Foo Page</title>
+    </head>
+
+    <body>
+    <h1>The Foo Page</h1>
+    Welcome to the Foo Page, blah blah blah
+    <hr>
+    &copy; Copyright 2000 Fred Foo
+    </body>
+    </html>
 
 =item ERROR
 
 The ERROR (or ERRORS if you prefer) configuration item can be used to
 name a single template or specify a hash array mapping exception types
-to template names, to be used for error handling.  If an uncaught
+to templates which should be used for error handling.  If an uncaught
 exception is raised from within a template then the appropriate error
 template will instead be processed.
 

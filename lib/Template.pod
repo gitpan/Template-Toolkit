@@ -14,18 +14,18 @@
 #   *******************************************************************
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pod,v 2.3 2000/09/12 15:25:17 abw Exp $
+#   $Id: Template.pod,v 2.6 2000/12/01 15:29:34 abw Exp $
 #
 #========================================================================
 
@@ -209,8 +209,8 @@ Template Toolkit - a fast, flexible and extensible template processing system
   NEXT      - next item in a FOREACH/WHILE loop
               [% NEXT %]
      
-  BREAK     - break out of FOREACH/WHILE loop
-              [% BREAK %]
+  LAST      - break out of FOREACH/WHILE loop
+              [% LAST %]
      
   RETURN    - stop processing current template
               [% RETURN %]
@@ -233,7 +233,7 @@ Template Toolkit - a fast, flexible and extensible template processing system
 
 =head1 VERSION
 
-This is version 2.00-beta5 of the Template Toolkit.  
+This is version 2.00 of the Template Toolkit.  
 
 Please consult the F<Changes> file for information about visible changes
 in the Template Toolkit between releases.  The F<TODO> file contains 
@@ -277,7 +277,7 @@ values.
     The Management.
 
 By default, template directives are embedded within the character
-sequences '[%' ... '%]' but you can changes these and various other
+sequences '[%' ... '%]' but you can change these and various other
 options to configure how the Template Toolkit looks, feels and works.
 You can set the INTERPOLATE option, for example, if you prefer to
 embed your variables in Perl style:
@@ -320,8 +320,8 @@ of variable definitions for substitution in the template.
 
 The process() method returns true (1) on success and prints the
 template output to STDOUT, by default.  On error, the process() method
-returns false (undef).  The error() method can be called to retrieve
-details of the error.
+returns false (undef).  The error() method can then be called to
+retrieve details of the error.
 
 A number of special directives are provided, such as INSERT, INCLUDE
 and PROCESS, which allow content to be built up from smaller template
@@ -371,7 +371,7 @@ objects.
 	client => {
 	    name => 'Doctor Joseph von Satriani',
 	    id   => 'JVSAT',
-	}
+	},
 	checkout => sub { my $total = shift; ...; return $something },
 	shopcart => My::Cool::Shopping::Cart->new(),
     };
@@ -500,12 +500,15 @@ parameter, containing definitions of template variables.
 
     $text = "[% INCLUDE header %]\nHello world!\n[% INCLUDE footer %]";
 
+    # filename
     $tt->process('welcome.tt2')
         || die $tt->error(), "\n";
 
+    # text reference
     $tt->process(\$text)
         || die $tt->error(), "\n";
 
+    # GLOB
     $tt->process(\*DATA)
         || die $tt->error(), "\n";
 
@@ -529,15 +532,20 @@ be called, passing the generated output as a parameter.
 
 Examples:
 
+    # output filename
     $tt->process('welcome.tt2', $vars, 'welcome.html')
         || die $tt->error(), "\n";
 
-    $tt->process('welcome.tt2', $vars, 
-		 sub { my $output = shift; print $output })
+    # reference to output subroutine
+    sub myout {
+	my $output = shift;
+	...
+    }
+    $tt->process('welcome.tt2', $vars, \&myout)
         || die $tt->error(), "\n";
 
+    # reference to output text string
     my $output = '';
-    
     $tt->process('welcome.tt2', $vars, \$output)
         || die $tt->error(), "\n";
     
@@ -546,15 +554,13 @@ Examples:
 In an Apache/mod_perl handler:
 
     sub handler {
-	my $r    = shift;
-	my $file = $r->path_info();
+	my $req = shift;
 
-        my $tt   = Template->new();
-	my $vars = { ... }
+        ...
 
-	# direct output to Apache::Request via $r->print($output)
-	$tt->process($file, $vars, $r) || do {
-	    $r->log_reason($tt->error());
+	# direct output to Apache::Request via $req->print($output)
+	$tt->process($file, $vars, $req) || do {
+	    $req->log_reason($tt->error());
 	    return SERVER_ERROR;
 	};
 
@@ -603,10 +609,9 @@ process().
         || die $tt->error(), "\n";
 
 Errors are represented in the Template Toolkit by objects of the
-Template::Exception class.  The error() object method will generally
-return an object of this class although there may be a few cases where
-strings are returned (these should soon be "fixed" to also return
-exception objects).  The type() and info() methods can be used to
+Template::Exception class.  If the process() method returns a false
+value then the error() method can be called to return an object of
+this class.  The type() and info() methods can called on the object to
 retrieve the error type and information string, respectively.  The
 as_string() method can be called to return a string of the form "$type
 - $info".  This method is also overloaded onto the stringification
@@ -697,7 +702,8 @@ POST_CHOMP options for further details.
 The simplest directives are GET and SET which retrieve and update
 variable values respectively.  The GET and SET keywords are actually
 optional as the parser is smart enough to see them for what they
-really are.  Thus, you'll generally see:
+really are (but note the caveat below on using side-effect notation).
+Thus, you'll generally see:
 
     [% SET foo = 10 %]
     [% GET foo %]
@@ -728,7 +734,7 @@ entirely separate from the STOP directive.
 
 Directives such as FOREACH, WHILE, BLOCK, FILTER, etc., mark the start
 of a block which may contain text or other directives up to the
-appropriate END directive.  Blocks may be nested indefinately.  The
+matching END directive.  Blocks may be nested indefinately.  The
 IF, UNLESS, ELSIF and ELSE directives also define blocks and may be
 grouped together in the usual manner.
 
@@ -774,6 +780,50 @@ versus:
     Danger Will Robinson
     [% END %]
 
+The output of a directive can be captured by simply assigning the directive
+to a variable.
+
+    [% headtext = PROCESS header title="Hello World" %]
+
+    [% people = PROCESS userinfo FOREACH user = userlist %]
+
+This can be used in conjunction with the BLOCK directive for defining large 
+blocks of text or other content.
+
+    [% poem = BLOCK %]
+       The boy stood on the burning deck,
+       His fleece was white as snow.
+       A rolling stone gathers no moss,
+       And Keith is sure to follow.
+    [% END %]
+
+Note one important caveat of using this syntax in conjunction with side-effect
+notation.  The following directive does not behave as might be expected:
+
+    [% var = 'value' IF some_condition %]
+
+In this case, the directive is interpreted as (spacing added for clarity)
+
+    [% var = IF some_condition %]
+       value
+    [% END %]
+
+rather than
+
+    [% IF some_condition %]
+       [% var = 'value' %]
+    [% END %]
+
+The variable is assigned the output of the IF block which returns
+'value' if true, but nothing if false.  In other words, the following
+directive will always cause 'var' to be cleared.
+
+    [% var = 'value' IF 0 %]
+
+To achieve the expected behaviour, the directive should be written as:
+
+    [% SET var = 'value' IF some_condition %]
+
 Multiple FILTER directives can be chained together in sequence.  They
 are called in the order defined, piping the output of one into the 
 input of the next.
@@ -784,12 +834,6 @@ The pipe character, '|', can also be used as an alias for FILTER.
 
     [% PROCESS somefile | truncate(100) | html %]
 
-The output of a directive can be captured by simply assigning the directive
-to a variable.
-
-    [% headtext = PROCESS header title="Hello World" %]
-
-    [% people = PROCESS userinfo FOREACH user = userlist %]
 
 Multiple directives can be included within a single tag when delimited
 by semi-colons, ';'.  Note however that the TAGS directive must always
@@ -849,10 +893,10 @@ with an existing or future reserved word.  As of version 2.00, these
 are:
 
     GET CALL SET DEFAULT INSERT INCLUDE PROCESS WRAPPER 
-    IF UNLESS ELSE ELSIF FOR FORNEXT WHILE SWITCH CASE
+    IF UNLESS ELSE ELSIF FOR FOREACH WHILE SWITCH CASE
     USE PLUGIN FILTER MACRO PERL RAWPERL BLOCK META
-    TRY THROW CATCH FINAL BREAK RETURN STOP CLEAR
-    TO STEP AND OR NOT MOD DIV END
+    TRY THROW CATCH FINAL NEXT LAST BREAK RETURN STOP 
+    CLEAR TO STEP AND OR NOT MOD DIV END
 
 The variable values may be of virtually any Perl type, including
 simple scalars, references to lists, hash arrays, subroutines or
@@ -1252,8 +1296,10 @@ version.
 =head2 Virtual Variable Methods
 
 The Template Toolkit provides virtual methods for manipulating
-variable values.  The following methods can be called against any
-scalar value:
+variable values.  Most of them are analagous to regular Perl functions
+of the same names.  
+
+The following methods can be called against any scalar value:
 
 =over 4 
 
@@ -1271,7 +1317,30 @@ Returns the length of the string representation of the item:
        Password too short, dumbass!
     [% END %]
 
-=item split
+=item repeat(n)
+
+Repeat the string a specified number of times.
+
+    [% name = 'foo' %]
+    [% name.repeat(3) %]		# foofoofoo
+
+=item replace(search, replace)
+
+Outputs the string with all instances of the first argument (specified
+as a Perl regular expression) with the second.
+
+    [% name = 'foo, bar & baz' %]
+    [% name.replace('\W+', '_') %]    # foo_bar_baz
+
+=item search(pattern)
+
+Returns true if the string matches the regular expression pattern passed 
+as an argument.
+
+    [% name = 'foo bar baz' %]
+    [% name.search('bar') ? 'bar' : 'no bar' %]	    # bar
+
+=item split(pattern)
 
 Calls Perl's split() function to split a string into a list of
 strings.
@@ -1294,6 +1363,15 @@ have it interpolated (i.e. replaced with its value) before use.
 
     [% FOREACH key = product.keys %]
        [% key %] => [% product.$key %]
+    [% END %]
+
+=item sort, nsort
+
+Return a list of the keys, sorted alphabetically (sort) or numerically
+(nsort) according to the corresponding values in the hash.
+
+    [% FOREACH n = phones.sort %]
+       [% phones.$n %] is [% n %],
     [% END %]
 
 =item import
@@ -1329,7 +1407,8 @@ The following virtual methods are provided for lists:
 
 =item first, last
 
-Returns the first/last item in the list.
+Returns the first/last item in the list.  The item is not removed from the 
+list.
 
     [% results.first %] to [% results.last %]
 
@@ -1366,15 +1445,57 @@ passed as an argument to specify the sort field.
 
     [% library = books.sort('author') %]
 
+=item unshift(item), push(item)
+
+Adds an item to the start/end of a list.
+
+    [% mylist.unshift('prev item') %]
+    [% mylist.push('next item')    %]
+
+=item shift, pop
+
+Removes the first/last item from the list and returns it.
+
+    [% first = mylist.shift %]
+    [% last  = mylist.pop   %]
+
 =back
 
-You can also define your own virtual methods for scalars, lists and hash 
-arrays.  The Template::Stash package variables $SCALAR_OPS, $LIST_OPS and 
-$HASH_OPS are references to hash arrays that define these virtual methods.
-HASH_OPS and LIST_OPS methods are subroutines that accept a hash/list
-reference as the first item.  SCALAR_OPS are subroutines that accept
-a scalar value as the first item.  Any other arguments specified when 
-the method is called will be passed to the subroutine.
+The following example demonstrates how an empty list ('folk') can be 
+populated with formatted strings by using the push() method in conjunction
+with a FOREACH loop.  The resultant list can then be printed using join.
+
+    [% # define some initial data
+       people   => [ 
+           { id => 'tom',   name => 'Tom'     },
+	   { id => 'dick',  name => 'Richard' },
+           { id => 'larry', name => 'Larry'   },
+       ]
+
+       # define an empty list that list methods can be called against
+       folk = [] 
+    -%]
+
+    [% folk.push("<a href=\"${person.id}.html\">$person.name</a>")
+         FOREACH person = people.sort('name') -%]
+    [% folk.join(",\n") %]
+
+Output:
+
+    <a href="larry.html">Larry</a>,
+    <a href="dick.html">Richard</a>,
+    <a href="tom.html">Tom</a>
+
+You can define your own virtual methods for scalars, lists and hash
+arrays.  The Template::Stash package variables $SCALAR_OPS, $LIST_OPS
+and $HASH_OPS are references to hash arrays that define these virtual
+methods.  HASH_OPS and LIST_OPS methods are subroutines that accept a
+hash/list reference as the first item.  SCALAR_OPS are subroutines
+that accept a scalar value as the first item.  Any other arguments
+specified when the method is called will be passed to the subroutine.
+
+    # load Template::Stash to make method tables visible
+    use Template::Stash;
 
     # define list method to return new list of odd numbers only
     $Template::Stash::LIST_OPS->{ odd } = sub {
@@ -1476,7 +1597,7 @@ variable changes made in the included template from interfering with
 existing variables.  The PROCESS option bypasses the localisation step
 altogether making it slightly faster, but requiring greater attention
 to the possibility of side effects caused by creating or changing any
-variables within the PROCESSed template.
+variables within the processed template.
 
     [% BLOCK change_name %]
        [% name = 'bar' %]
@@ -1525,7 +1646,7 @@ the template is finished processing.
     [% x %]			    # outputs '10'
     [% y %]			    # nothing, y is undefined
 
-Similarly, if you update an element of a complex variable which
+Similarly, if you update an element of a compound variable which
 I<doesn't> already exists then a hash will be created automatically
 and deleted again at the end of the block.
 
@@ -1593,6 +1714,16 @@ This example should demonstrate the difference:
     [% template.name %]		    # foo
     [% component.name %]            # footer
 
+=item loop
+
+Within a FOREACH loop, the 'loop' variable references the Template::Iterator
+object responsible for controlling the loop.
+
+    [% FOREACH item = [ 'foo', 'bar', 'baz' ] -%]
+       [% "Items:\n" IF loop.first -%]
+       [% loop.count %]/[% loop.size %]: [% item %]
+    [% END %]
+
 =item error
 
 Within a CATCH block, the 'error' variable contains a reference to the 
@@ -1605,6 +1736,27 @@ be printed for automatic stringification into a message of the form
        ...
     [% CATCH %]
        [% error %]
+    [% END %]
+
+=item content
+
+The WRAPPER method captures the output from a template block and then 
+includes a named template, passing the captured output as the 'content'
+variable.
+
+    [% WRAPPER box %]
+    Be not afeard; the isle is full of noises,
+    Sounds and sweet airs, that give delight and hurt not.
+    [% END %]
+
+    [% BLOCK box %]
+    <table border=1>
+    <tr>
+      <td>
+      [% content %]
+      </td>
+    </tr>
+    </table>
     [% END %]
 
 =back
@@ -1844,7 +1996,7 @@ interspersed, if you prefer.
 
     [% INCLUDE table 
 	 title   = "Active Projects" 
-         bgcolor = "#ffffff"	# white
+         bgcolor = "#80ff00"	# chartreuse
 	 border  = 2
     %]
 
@@ -1907,8 +2059,6 @@ output:
        changed foo to 20
     foo is 20
 
-    [% INCLUDE table %]
-
 Parameters may be specified in the PROCESS directive, but these too will 
 become visible changes to current variable values.
 
@@ -1926,7 +2076,7 @@ become visible changes to current variable values.
 output:
 
     foo is 10
-       this is bar, foo is [% 20 %]
+       this is bar, foo is 20
     foo is 20
 
 The PROCESS directive is slightly faster than INCLUDE because it
@@ -2024,8 +2174,24 @@ not generate any output.
 
     [% BLOCK tmpblk %] This is OK [% END %]
 
-Anonymous BLOCKs can be used to define block macros.  The enclosing 
-block is processed each time the macro is called.
+You can use an anonymous BLOCK to capture the output of a template
+fragment.  
+
+    [% julius = BLOCK %]
+       And Caesar's spirit, ranging for revenge,
+       With Ate by his side come hot from hell,
+       Shall in these confines with a monarch's voice
+       Cry  'Havoc', and let slip the dogs of war;
+       That this foul deed shall smell above the earth
+       With carrion men, groaning for burial.
+    [% END %]
+
+Like a named block, it can contain any other template directives which 
+are processed when the block is defined.  The output generated by the 
+block is then assigned to the variable 'julius'.
+
+Anonymous BLOCKs can also be used to define block macros.  The
+enclosing block is processed each time the macro is called.
 
     [% MACRO whereabouts BLOCK %]
        The [% animal %] sat on the [% place %].
@@ -2033,18 +2199,6 @@ block is processed each time the macro is called.
 
     [% foo(animal='cat', place='mat') %]    # The cat sat on the mat
     [% foo(animal='dog', place='log') %]    # The dog sat on the log
-
-You can also use anonymous BLOCK to capture the output of 
-a template fragment, should you need to:
-
-    [% mytext = BLOCK %]
-       This is part of the block
-       [% INCLUDE this ; INCLUDE that %]
-       More block.
-    [% END %]
-
-The BLOCK content is processed once and the output assigned to the 
-variable.
 
 =back
 
@@ -2099,7 +2253,7 @@ conditional test.  The SWITCH directive expects an expression which is
 first evaluated and then compared against each CASE statement in turn.
 Each CASE directive should contain a single value or a list of values
 which should match.  CASE may also be left blank or written as [% CASE
-default %] to specify a default match.  Only one CASE matches, there
+DEFAULT %] to specify a default match.  Only one CASE matches, there
 is no drop-through between CASE statements.
   
     [% SWITCH myvar %]
@@ -2218,41 +2372,75 @@ The NEXT directive starts the next iteration in the FOREACH loop.
        Name: [% user.name %]    Email: [% user.email %]
     [% END %]
 
-The BREAK directive can be used to prematurely exit the loop..
+The LAST directive can be used to prematurely exit the loop.  BREAK is
+also provided as an alias for LAST.
 
     [% FOREACH match = results.nsort('score').reverse %]
-       [% BREAK IF match.score < 50 %]
+       [% LAST IF match.score < 50 %]
        [% match.score %] : [% match.url %]
     [% END %]
 
 The FOREACH directive is implemented using the Template::Iterator
 module.  A reference to the iterator object for a FOREACH directive is
-implicitly available in the 'loop' variable.  This can be used to call
-methods on the iterator object to return the list size, maximum index
-(size - 1), current index (0..size-1), current iteration number
-(1..size), boolean values to indicate if the loop is in the first/last
-iteration, and so on.  See L<Template::Iterator> for further details.
+implicitly available in the 'loop' variable.  The following methods 
+can be called on the 'loop' iterator.
 
-    [% FOREACH item = itemlist %]
-       [% "<ul>\n" IF loop.first %]
-       <li>[% loop.number %]/[% loop.size %] : [% item %]
-       [% "</ul>\n" IF loop.last %]
+    size()	number of elements in the list
+    max()       index number of last element (size - 1)
+    index()     index of current iteration from 0 to max()
+    count()     iteration counter from 1 to size() (i.e. index() + 1)
+    first()     true if the current iteration is the first
+    last()      true if the current iteration is the last
+    prev()      return the previous item in the list
+    next()      return the next item in the list
+
+See L<Template::Iterator> for further details.
+
+Example:
+
+    [% FOREACH item = [ 'foo', 'bar', 'baz' ] -%]
+       [%- "<ul>\n" IF loop.first %]
+       <li>[% loop.count %]/[% loop.size %]: [% item %]
+       [%- "</ul>\n" IF loop.last %]
+    [% END %]
+
+Output:
+
+    <ul>
+    <li>1/3: foo
+    <li>2/3: bar
+    <li>3/3: baz
+    </ul>
+
+Note that the number() method is supported as an alias for count() for
+backwards compatability but may be deprecated in some future version.
+
+Nested loops will work as expected, with the 'loop' variable correctly 
+referencing the innermost loop and being restored to any previous 
+value (i.e. an outer loop) at the end of the loop.
+
+    [% FOREACH group = grouplist %]
+       [% "Groups:\n" IF loop.first %]	      # loop => group iterator
+       [% FOREACH user = group.userlist %]
+	  [% loop.count %]: [% user.name %]   # loop => user iterator
+       [% END %]
+       [% "End of Groups\n" IF loop.last %]   # loop => group iterator
     [% END %]
 
 The 'iterator' plugin can also be used to explicitly create an
-iterator object.  See Template::Plugin::Iterator for further details.
+iterator object.  This can be useful within nested loops where you
+need to keep a reference to the outer iterator within the inner loop.
+The iterator plugin effectively allows you to create an iterator by a
+name other than 'loop'.  See Template::Plugin::Iterator for further
+details.
 
-    [% USE stuff = iterator(['a', 'b', 'c']) %]
+    [% USE giter = iterator(grouplist) %]
 
-    [% FOREACH item = stuff %]
-    *  [% stuff.index %] : [% item %]
+    [% FOREACH group = giter %]
+       [% FOREACH user = group.userlist %]
+       user [% loop.count %] in group [% giter.count %]: [% user.name %]
+       [% END %]
     [% END %]
-
-output:
-
-    *  0 : a
-    *  1 : b
-    *  2 : c
 
 =item WHILE
 
@@ -2297,7 +2485,7 @@ The FILTER directive can be used to post-process the output of a
 block.  A number of standard filters are provided with the Template
 Toolkit.  The 'html' filter, for example, escapes the 'E<lt>', 'E<gt>'
 and '&' characters to prevent them from being interpreted as HTML tags
-or entity reference.
+or entity reference markers.
 
     [% FILTER html %]
        HTML text may have < and > characters embedded
@@ -2339,7 +2527,7 @@ an example of a static filter, implemented as:
 	    s/>/&gt;/g;
     	}
 	return $text;
-}
+    }
 
 Dynamic filters can accept arguments which are specified when the filter
 is called from a template.  The 'repeat' filter is such an example, 
@@ -2353,10 +2541,10 @@ output:
     blah blah blah
 
 These are implemented as filter 'factories'.  The factory subroutine
-is passed a reference to the current Template::Context object along 
-with any additional arguments specified.  It should then return a 
-subroutine reference (closure) which implements the filter.  The 
-'repeat' filter factory is implemented like this:
+is passed a reference to the current Template::Context object along
+with any additional arguments specified.  It should then return a
+subroutine reference (e.g. a closure) which implements the filter.
+The 'repeat' filter factory is implemented like this:
 
     sub repeat_filter_factory {
 	my ($context, $iter) = @_;
@@ -2373,6 +2561,26 @@ The FILTERS option, described in L<CONFIGURATION OPTIONS>, allows
 custom filters to be defined when a Template object is instantiated.  
 The Template::Context define_filter() method allows further filters
 to be defined at any time.
+
+When using a filter, it is possible to assign an alias to it for 
+further use.  This is most useful for dynamic filters that you want 
+to re-use with the same configuration.
+
+    [% FILTER echo = repeat(2) %]
+    Is there anybody out there?
+    [% END %]
+
+    [% FILTER echo %]
+    Mother, should I build a wall?
+    [% END %]
+
+Output:
+
+    Is there anybody out there?
+    Is there anybody out there?
+
+    Mother, should I build a wall?
+    Mother, should I build a wall?
 
 The FILTER directive automatically quotes the name of the filter.  As
 with INCLUDE et al, you can use a variable to provide the name of the 
@@ -2537,8 +2745,8 @@ Output:
     <b>This is bold</b>
     <i>This is italic</i>
 
-The URL plugin allows you to build dynamic URLs from a base part and
-optional query parameters.
+This next example shows how the URL plugin can be used to build
+dynamic URLs from a base part and optional query parameters.
 
     [% USE mycgi = URL('/cgi-bin/foo.pl', debug=1) %]
     <a href="[% mycgi %]">...
@@ -2567,8 +2775,8 @@ All of the methods provided by CGI.pm are available via the plugin.
 
     [% CGI.end_form %]
 
-Simon Matthews has written a DBI plugin which provides an interface to
-Tim Bunce's DBI module (both available from CPAN).  Here's a short
+Simon Matthews has written the DBI plugin which provides an interface
+to Tim Bunce's DBI module (available from CPAN).  Here's a short
 example:
 
     [% USE DBI('DBI:mSQL:mydbname') %]
@@ -2923,9 +3131,9 @@ or even:
        END
     %]
 
-The DBI plugin, as you should by now have realised, throws exceptions
-of the 'DBI' type.   The other specific exception caught here is of the 
-'file' type.
+The DBI plugin throws exceptions of the 'DBI' type (in case that
+wasn't already obvious).  The other specific exception caught here is
+of the 'file' type.
 
 A 'file' error is automatically thrown by the Template Toolkit when it
 can't find a file, or fails to load, parse or process a file that has
@@ -2974,7 +3182,7 @@ the default 'header' file instead.  Any DBI errors that occur within
 the scope of the outer TRY block will be caught in the relevant CATCH
 block, causing the 'database/error.html' template to be processed.
 Note that included templates inherit all currently defined template
-variable so these errors file can quite happily access the 'error'
+variable so these error files can quite happily access the 'error'
 variable to retrieve information about the currently caught exception.
 e.g.
 
@@ -3031,15 +3239,15 @@ output:
     culinary delights: carrots
       
 Exception types are hierarchical, with each level being separated by
-the familiar dot.  A 'DBI.connect' exception is a more specific kind
-of 'DBI' error.  Similarly, a 'myown.error.barf' is a more specific
-kind of 'myown.error' type which itself is also a 'myown' error.  A
-CATCH handler that specifies a general exception type (such as 'DBI'
-or 'myown.error') will also catch more specific types that have the
-same prefix as long as a more specific handler isn't defined.  Note
-that the order that CATCH handlers are defined in is irrelevant; a
-more specific handler which always catch an exception in preference to
-a more generic or default one.
+the familiar dot operator.  A 'DBI.connect' exception is a more
+specific kind of 'DBI' error.  Similarly, a 'myown.error.barf' is a
+more specific kind of 'myown.error' type which itself is also a
+'myown' error.  A CATCH handler that specifies a general exception
+type (such as 'DBI' or 'myown.error') will also catch more specific
+types that have the same prefix as long as a more specific handler
+isn't defined.  Note that the order in which CATCH handlers are
+defined is irrelevant; a more specific handler will always catch an
+exception in preference to a more generic or default one.
 
     [% TRY %]
        ...
@@ -3067,6 +3275,37 @@ variable, etc.
     [% THROW user.login 'no user id: please login' %]
 
     [% THROW $myerror.type "My Error: $myerror.info" %]
+
+It's also possible to specify additional positional or named 
+parameters to the THROW directive if you want to pass more than 
+just a simple message back as the error info field.  
+
+    [% THROW food 'eggs' 'flour' msg='Missing Ingredients' %]
+
+In this case, the error 'info' field will be a hash array containing
+the named arguments, in this case 'msg' => 'Missing Ingredients',
+and an 'args' item which contains a list of the positional arguments, 
+in this case 'eggs' and 'flour'.  The error 'type' field remains 
+unchanged, here set to 'food'.
+
+    [% CATCH food %]
+       [% error.info.msg %]
+       [% FOREACH item = error.info.args %]
+          * [% item %]
+       [% END %]
+    [% END %]
+
+This produces the output:
+
+       Missing Ingredients
+         * eggs
+         * flour
+
+In addition to specifying individual positional arguments as
+[% error.info.args.n %], the 'info' hash contains keys directly 
+pointing to the positional arguments, as a convenient shortcut.
+
+    [% error.info.0 %]   # same as [% error.info.args.0 %]
 
 Exceptions can also be thrown from Perl code which you've bound to
 template variables, or defined as a plugin or other extension.  To
@@ -3099,6 +3338,30 @@ template:
 output:
 
     Error: myerr.naughty error - Bad, bad error
+
+The 'info' field can also be a reference to another object or data
+structure, if required.
+
+    die Template::Exception->new('myerror', { 
+	module => 'foo.pl', 
+	errors => [ 'bad permissions', 'naughty boy' ],
+    });
+
+Later, in a template:
+
+    [% TRY %]
+       ...
+    [% CATCH myerror %]
+       [% error.info.errors.size or 'no';
+          error.info.errors.size == 1 ? ' error' : ' errors' %]
+       in [% error.info.module %]: 
+          [% error.info.errors.join(', ') %].
+    [% END %]
+
+Generating the output:
+
+       2 errors in foo.pl:
+          bad permissions, naughty boy.
 
 You can also call die() with a single string, as is common in much 
 existing Perl code.  This will automatically be converted to an 
@@ -3133,15 +3396,17 @@ or WHILE loop.
        Name: [% user.name %]    Email: [% user.email %]
     [% END %]
 
-=item BREAK
+=item LAST
 
-The BREAK directive can be used to prematurely exit a FOREACH or WHILE
+The LAST directive can be used to prematurely exit a FOREACH or WHILE
 loop.
 
     [% FOREACH user = userlist %]
        Name: [% user.name %]    Email: [% user.email %]
-       [% BREAK IF some.condition %]
+       [% LAST IF some.condition %]
     [% END %]
+
+BREAK can also be used as an alias for LAST.
 
 =item RETURN
 
@@ -3210,6 +3475,8 @@ from a TRY block up to the point where the error occurred.
        [% error %]               # print error string
     [% END %]
 
+=back
+
 =head2 Miscellaneous
 
 =over 4
@@ -3253,7 +3520,7 @@ and footers to reference metadata items from the main template.
 	POST_PROCESS => 'footer',
     });
 
-    $template->process('catinhat');
+    $template->process('cat_in_hat');
 
 header:
     <html>
@@ -3262,7 +3529,7 @@ header:
     </head>
     <body>
 
-catinhat:
+cat_in_hat:
     [% META
        title   = 'The Cat in the Hat'
        author  = 'Dr. Seuss'
@@ -3293,10 +3560,6 @@ The output generated from the above example is:
     </body>
     </html>
 
-
-Template.name
-template.modtime
-
 =item TAGS
 
 The TAGS directive can be used to set the START_TAG and END_TAG values
@@ -3312,10 +3575,6 @@ The TAGS directive may also be used to set a named TAG_STYLE
     <!-- INCLUDE header -->
 
 See the TAGS and TAG_STYLE configuration options for further details.
-
-=item FORNEXT
-
-TODO
 
 =back
 
@@ -3389,8 +3648,8 @@ The TAGS directive may also be used to set a TAG_STYLE
 Anything outside a directive tag is considered plain text and is
 generally passed through unaltered (but see the INTERPOLATE option).
 This includes all whitespace and newlines characters surrounding
-directive tags.  Any directives that don't generate any output will
-leave gaps in the output document.
+directive tags.  Directives that don't generate any output will leave
+gaps in the output document.
 
 Example:
 
@@ -3452,7 +3711,7 @@ per-directive basis.
     User: [% user +%]
     [% END %]
 
-With POST_CHOMP set on, the above example would be parsed as if written:
+With POST_CHOMP enabled, the above example would be parsed as if written:
 
     [% FOREACH user = userlist %]User: [% user %]
     [% END %]
@@ -3506,18 +3765,26 @@ Variables should be prefixed by a '$' to identify them.  Curly braces
 can be used in the familiar Perl/shell style to explicitly scope the
 variable name where required.
 
-    # INTERPOLATE = 0
+    # INTERPOLATE => 0
     <a href="http://[% server %]/[% help %]">
     <img src="[% images %]/help.gif"></a>
     [% myorg.name %]
   
-    # INTERPOLATE = 1
+    # INTERPOLATE => 1
     <a href="http://$server/$help">
     <img src="$images/help.gif"></a>
     $myorg.name
   
     # explicit scoping with {  }
     <img src="$images/${icon.next}.gif">
+
+Note that a limitation in Perl's regex engine restricts the maximum length
+of an interpolated template to around 32 kilobytes or possibly less.  Files
+that exceed this limit in size will typically cause Perl to dump core with
+a segmentation fault.  If you routinely process templates of this size 
+then you should disable INTERPOLATE or split the templates in several 
+smaller files or blocks which can then be joined backed together via 
+PROCESS or INCLUDE.
 
 =item ANYCASE
 
@@ -3540,10 +3807,10 @@ of the same name as a reserved word, regardless of case.  The reserved
 words are currently:
 
     GET CALL SET DEFAULT INSERT INCLUDE PROCESS WRAPPER 
-    IF UNLESS ELSE ELSIF FOR FORNEXT WHILE SWITCH CASE
+    IF UNLESS ELSE ELSIF FOR FOREACH WHILE SWITCH CASE
     USE PLUGIN FILTER MACRO PERL RAWPERL BLOCK META
-    TRY THROW CATCH FINAL BREAK RETURN STOP CLEAR
-    TO STEP AND OR NOT MOD DIV END
+    TRY THROW CATCH FINAL NEXT LAST BREAK RETURN STOP 
+    CLEAR TO STEP AND OR NOT MOD DIV END
 
 The only lower case reserved words that cannot be used for variables,
 regardless of the ANYCASE option, are the operators:
@@ -3712,12 +3979,52 @@ or
 
 =item EVAL_PERL
 
-This flag is used to indicate if PERL and/or RAWPERL blocks should be 
-evaluated.  By default, it is disabled and any PERL or RAWPERL blocks 
-encountered will be ignored.  Note however that any RAWPERL blocks 
-should always contain valid Perl code, regardless of the EVAL_PERL 
-flag.  The parser will fail to compile templates that contain invalid
-Perl code in RAWPERL blocks and will throw a 'file' exception.
+This flag is used to indicate if PERL and/or RAWPERL blocks should be
+evaluated.  By default, it is disabled and any PERL or RAWPERL blocks
+encountered will raise exceptions of type 'perl' with the message
+'EVAL_PERL not set'.  Note however that any RAWPERL blocks should
+always contain valid Perl code, regardless of the EVAL_PERL flag.  The
+parser will fail to compile templates that contain invalid Perl code
+in RAWPERL blocks and will throw a 'file' exception.
+
+When using compiled templates (see L<COMPILE_EXT> and L<COMPILE_DIR>),
+the EVAL_PERL has an affect when the template is compiled, and again
+when the templates is subsequently processed, possibly in a different
+context to the one that compiled it.
+
+If the EVAL_PERL is set when a template is compiled, then all PERL and
+RAWPERL blocks will be included in the compiled template.  If the 
+EVAL_PERL option isn't set, then Perl code will be generated which 
+B<always> throws a 'perl' exception with the message 'EVAL_PERL not
+set' B<whenever> the compiled template code is run.
+
+Thus, you must have EVAL_PERL set if you want your compiled templates
+to include PERL and RAWPERL blocks.
+
+At some point in the future, using a different invocation of the
+Template Toolkit, you may come to process such a pre-compiled
+template.  Assuming the EVAL_PERL option was set at the time the
+template was compiled, then the output of any RAWPERL blocks will be
+included in the compiled template and will get executed when the
+template is processed.  This will happen regardless of the runtime
+EVAL_PERL status.
+
+Regular PERL blocks are a little more cautious, however.  If the 
+EVAL_PERL flag isn't set for the I<current> context, that is, the 
+one which is trying to process it, then it will throw the familiar 'perl'
+exception with the message, 'EVAL_PERL not set'.
+
+Thus you can compile templates to include PERL blocks, but optionally
+disable them when you process them later.  Note however that it is 
+possible for a PERL block to contain a Perl "BEGIN { # some code }"
+block which will always get run regardless of the runtime EVAL_PERL
+status.  Thus, if you set EVAL_PERL when compiling templates, it is
+assumed that you trust the templates to Do The Right Thing.  Otherwise
+you must accept the fact that there's no bulletproof way to prevent 
+any included code from trampling around in the living room of the 
+runtime environment, making a real nuisance of itself if it really
+wants to.  If you don't like the idea of such uninvited guests causing
+a bother, then you can accept the default and keep EVAL_PERL disabled.
 
 =item PRE_PROCESS, POST_PROCESS
 
@@ -3737,6 +4044,15 @@ processed in the order defined.
 
     my $template = Template->new({
 	PRE_PROCESS  => [ 'config', 'header' ],
+	POST_PROCESS => 'footer',
+    };
+
+Alternately, multiple template may be specified as a single string, 
+delimited by ':'.  This delimiter string can be changed via the 
+DELIMITER option.
+
+    my $template = Template->new({
+	PRE_PROCESS  => 'config:header',
 	POST_PROCESS => 'footer',
     };
 
@@ -3803,6 +4119,7 @@ processed by specifying it as a variable reference (i.e. prefixed by
 '$') to an INCLUDE, PROCESS or WRAPPER directive.
 
 content:
+
     <html>
     <head>
     <title>[% template.title %]</title>
@@ -3816,6 +4133,7 @@ content:
     </html>
 
 foo.html:
+
     [% META 
        title     = 'The Foo Page'
        author    = 'Fred Foo'
@@ -3824,13 +4142,26 @@ foo.html:
     <h1>[% template.title %]</h1>
     Welcome to the Foo Page, blah blah blah
 
-output:
+output:    
+
+    <html>
+    <head>
+    <title>The Foo Page</title>
+    </head>
+
+    <body>
+    <h1>The Foo Page</h1>
+    Welcome to the Foo Page, blah blah blah
+    <hr>
+    &copy; Copyright 2000 Fred Foo
+    </body>
+    </html>
 
 =item ERROR
 
 The ERROR (or ERRORS if you prefer) configuration item can be used to
 name a single template or specify a hash array mapping exception types
-to template names, to be used for error handling.  If an uncaught
+to templates which should be used for error handling.  If an uncaught
 exception is raised from within a template then the appropriate error
 template will instead be processed.
 
@@ -3946,14 +4277,13 @@ example 4 (subroutine):
     });
 
 example 5 (Apache/mod_perl handler):
-    
+
     sub handler {
 	my $r = shift;
 
 	my $t = Template->new({
 	    OUTPUT => $r,
 	});
-
 	...
     }
 
@@ -3961,10 +4291,10 @@ The default OUTPUT location be overridden by passing a third parameter
 to the Template process() method.  This can be specified as any of the 
 above argument types.
 
-    $t->process($file1, $vars, "/tmp/foo");
-    $t->process($file2, $vars, "bar");
-    $t->process($file3, $vars, \*MYGLOB);
-    $t->process($file4, $vars, $r);  # Apache::Request
+    $t->process($file, $vars, "/tmp/foo");
+    $t->process($file, $vars, "bar");
+    $t->process($file, $vars, \*MYGLOB);
+    $t->process($file, $vars, $r);  # Apache::Request
     ...
 
 =item  OUTPUT_PATH
@@ -3992,6 +4322,12 @@ This example will read the input files '/tmp/src/foo.html' and
 '/tmp/src/bar.html' and write the processed output to '/tmp/dest/foo.html'
 and '/tmp/dest/bar.html', respectively.
 
+=item DEBUG
+
+The DEBUG option causing any access to an undefined variable to be 
+raised as an 'undef' error.
+
+
 =back
 
 =head2 Caching and Compiling Options
@@ -4005,12 +4341,12 @@ to re-parse template files or blocks each time they are used.  The CACHE_SIZE
 option is used to limit the number of compiled templates that the module
 should cache.
 
-By default, the CACHE_SIZE is undefined and all compiled templates are 
-cached.  When set to any positive value, the cache will be limited to 
-storing that many compiled templates.  When a new template is loaded and 
-compiled and the cache is full (i.e. the number of entries == CACHE_SIZE), 
-the least recently used compiled template is discarded to make room for the
-new one.
+By default, the CACHE_SIZE is undefined and all compiled templates are
+cached.  When set to any positive value, the cache will be limited to
+storing no more than that number of compiled templates.  When a new
+template is loaded and compiled and the cache is full (i.e. the number
+of entries == CACHE_SIZE), the least recently used compiled template
+is discarded to make room for the new one.
 
 The CACHE_SIZE can be set to 0 to disable caching altogether.
 
@@ -4026,10 +4362,10 @@ The CACHE_SIZE can be set to 0 to disable caching altogether.
 
 From version 2 onwards, the Template Toolkit has the ability to
 compile templates to Perl code and save them to disk for subsequent
-use (e.g. cache persistance).  The COMPILE_EXT option may be
+use (i.e. cache persistance).  The COMPILE_EXT option may be
 provided to specify a filename extension for compiled template files.
 It is undefined by default and no attempt will be made to read or write 
-any compiled template file.
+any compiled template files.
 
     my $template = Template->new({
 	COMPILE_EXT => '.ttc',
@@ -4105,7 +4441,7 @@ compiled forms save in the relevant COMPILE_DIR directory.
 The PLUGINS options can be used to provide a reference to a hash array
 that maps plugin names to Perl module names.  A number of standard
 plugins are defined (e.g. 'table', 'cgi', 'dbi', etc.) which map to
-their corresponding Template::Plugin::* couterpart.  These can be
+their corresponding Template::Plugin::* counterparts.  These can be
 redefined by values in the PLUGINS hash.
 
     my $template = Template->new({
@@ -4221,7 +4557,7 @@ dynamic.
     my $context = $template->context();
     $context->define_filter('new_html', \&new_html);
     $context->define_filter('new_repeat', \&new_repeat, 1);
-					
+
 Static filters are those where a single subroutine reference is used
 for all invocations of a particular filter.  Filters that don't accept
 any configuration parameters (e.g. 'html') can be implemented
@@ -4439,9 +4775,9 @@ constructor method.
 
 The LOAD_PLUGINS options can be used to specify a list of provider
 objects (i.e. they implement the fetch() method) which are responsible
-for loading and instantiating template plugin objects.  The plugin()
-method queries each provider in turn in a "Chain of Responsibility" as
-per the template() and filter() methods.
+for loading and instantiating template plugin objects.  The
+Template::Content plugin() method queries each provider in turn in a
+"Chain of Responsibility" as per the template() and filter() methods.
 
     my $template = Template->new({
 	LOAD_PLUGINS => [
@@ -4464,9 +4800,9 @@ constructor.
 
 The LOAD_FILTERS option can be used to specify a list of provider
 objects (i.e. they implement the fetch() method) which are responsible
-for returning and/or creating filter subroutines.  The filter()
-method queries each provider in turn in a "Chain of Responsibility" as
-per the template() and plugin() methods.
+for returning and/or creating filter subroutines.  The
+Template::Context filter() method queries each provider in turn in a
+"Chain of Responsibility" as per the template() and plugin() methods.
 
     my $template = Template->new({
 	LOAD_FILTERS => [
@@ -4636,7 +4972,7 @@ output:
 Similar to the html_para filter described above, but uses the HTML tag
 sequence E<lt>brE<gt>E<lt>brE<gt> to join paragraphs.
 
-    [% FILTER html_para %]
+    [% FILTER html_break %]
     The cat sat on the mat.
 
     Mary had a little lamb.
@@ -4684,14 +5020,16 @@ output:
 Repeats the text block for as many iterations as are specified (default: 1).
 
     [% FILTER repeat(3) %]
-    Am I repeating myself?
+    We want more beer and we want more beer,
     [% END %]
+    We are the more beer wanters!
 
 output:
 
-    Am I repeating myself?
-    Am I repeating myself?
-    Am I repeating myself?
+    We want more beer and we want more beer,
+    We want more beer and we want more beer,
+    We want more beer and we want more beer,
+    We are the more beer wanters!
 
 =item remove(string) 
 
@@ -4704,11 +5042,6 @@ string.
 output: 
 
     Thecatsatonthemat
-
-The '|' character is an alias for FILTER, allowing the previous example
-to be written as:
-
-    [% "The  cat  sat  on  the  mat" | remove('\s+') %]
 
 =item replace(search, replace) 
 
@@ -4732,6 +5065,13 @@ file, specified relative to the OUTPUT_PATH configuration item.
        [% END %]
     [% END %]
 
+or more succinctly, using side-effect notation:
+
+    [% INCLUDE userinfo 
+         FILTER redirect("users/${user.id}.html")
+	   FOREACH user = myorg.userlist 
+    %]
+
 A 'file' exception will be thrown if the OUTPUT_PATH option is undefined.
 
 =item eval(template_text)
@@ -4742,10 +5082,10 @@ contain template fragments, or for some method to be provided for
 returning template fragments from an external source such as a
 database, which can then be processed in the template as required.
 
-    my $replace  = {
+    my $vars  = {
 	fragment => "The cat sat on the [% place %]",
     };
-    $template->process($file, $replace);
+    $template->process($file, $vars);
 
 The following example:
 
@@ -4755,12 +5095,15 @@ is therefore equivalent to
 
     The cat sat on the [% place %]
 
-=item evalperl(perlcode)
+The 'evaltt' filter is provided as an alias for 'eval'.
 
-The 'evalperl' filter evaluates the block as Perl code.  The EVAL_PERL
-option must be set to a true value or a 'perl' exception will be thrown.
+=item perl(perlcode)
 
-    [% my_perl_code | evalperl %]
+The 'perl' filter evaluates the block as Perl code.  The EVAL_PERL
+option must be set to a true value or a 'perl' exception will be
+thrown.
+
+    [% my_perl_code | perl %]
 
 In most cases, the [% PERL %] ... [% END %] block should suffice for 
 evaluating Perl code, given that template directives are processed 
@@ -4773,68 +5116,43 @@ been written in the more verbose form:
 
 as well as
 
-    [% FILTER evalperl %]
+    [% FILTER perl %]
     [% my_perl_code %]
     [% END %]
 
-It is an unfortunate circumstance that this filter cannot simply be called
-'perl'.  This is due to the clash with the reserved word of that name 
-(i.e. PERL blocks).
+The 'evalperl' filter is provided as an alias for 'perl' for backwards
+compatability.
+
+=item stderr
+
+The stderr filter prints the output generating by the enclosing block to
+STDERR 
 
 =back
 
 =head1 TEMPLATE TOOLKIT PLUGINS
 
-The following plugin modules are distributed with the Template Toolkit.
+The following plugin modules are distributed with the Template
+Toolkit.  Some of the plugins interface to external modules (detailed
+below) which should be downloaded from any CPAN site and installed
+before using the plugin.
 
 =over 4
 
-=item Date
+=item Autoformat
 
-The Date plugin provides an easy way to generate formatted time and date
-strings by delegating to the POSIX strftime() routine.   See
-L<Template::Plugin::Date> for further details.
-
-    [% USE date %]
-    [% date.format %]		# current time/date
-
-    File last modified: [% date.format(template.modtime) %]
-
-=item Format
-
-The Format plugin provides a simple way to format text according to a
-printf()-like format.   See L<Template::Plugin::Format> for further 
+The Autoformat plugin is an interface to Damian Conway's Text::Autoformat 
+Perl module which provides advanced text wrapping and formatting.  See
+L<Template::Plugin::Autoformat> and L<Text::Autoformat> for further 
 details.
 
-    [% USE bold = format('<b>%s</b>') %]
-    [% bold('Hello') %]
+    [% USE autoformat(left=10, right=20) %]
+    [% autoformat(mytext) %]	    # call autoformat sub
+    [% mytext FILTER autoformat %]  # or use autoformat filter
 
-=item URL
+The Text::Autoformat module is available from CPAN:
 
-The URL plugin provides a simple way of contructing URLs from a base
-part and a variable set of parameters.  See L<Template::Plugin::URL>
-for further details.
-
-    [% USE mycgi = url('/cgi-bin/bar.pl', debug=1) %]
-
-    [% mycgi %]
-       # ==> /cgi/bin/bar.pl?debug=1
-
-    [% mycgi(mode='submit') %]
-       # ==> /cgi/bin/bar.pl?mode=submit&debug=1
-
-=item Table
-
-The Table plugin allows you to format a list of data items into a 
-virtual table by specifying a fixed number of rows or columns, with 
-an optional overlap.  See L<Template::Plugin::Table> for further 
-details.
-
-    [% USE table(list, rows=10, overlap=1) %]
-
-    [% FOREACH item = table.col(3) %]
-       [% item %]
-    [% END %]
+    http://www.cpan.org/modules/by-module/Text/
 
 =item CGI
 
@@ -4844,14 +5162,21 @@ distributed with the Template Toolkit (see L<Template::Plugin::CGI>)
 and the CGI module itself is distributed with recent versions Perl,
 or is available from CPAN.
 
+    [% USE CGI %]
+    [% CGI.param('param_name') %]
+    [% CGI.start_form %]
+    [% CGI.popup_menu( Name   => 'color', 
+                       Values => [ 'Green', 'Brown' ] ) %]
+    [% CGI.end_form %]
+
 =item Datafile
 
 Provides an interface to data stored in a plain text file in a simple
-delimited format.  The first line in the file specifies field names and
-subsequent lines contain data, delimited by the same non-word character 
-as the fields in the first line.  Blank lines and comments (lines starting
-'#' are ignored).   See L<Template::Plugin::Datafile> for further 
-details.
+delimited format.  The first line in the file specifies field names
+which should be delimiter by any non-word character sequence.
+Subsequent lines define data using the same delimiter as int he first
+line.  Blank lines and comments (lines starting '#') are ignored.  See
+L<Template::Plugin::Datafile> for further details.
 
 /tmp/mydata:
 
@@ -4869,46 +5194,161 @@ example:
        [% user.name %] ([% user.id %])
     [% END %]
 
+=item Date
+
+The Date plugin provides an easy way to generate formatted time and date
+strings by delegating to the POSIX strftime() routine.   See
+L<Template::Plugin::Date> and L<POSIX> for further details.
+
+    [% USE date %]
+    [% date.format %]		# current time/date
+
+    File last modified: [% date.format(template.modtime) %]
+
+=item DBI
+
+The DBI plugin, developed by Simon Matthews
+E<lt>sam@knowledgepool.comE<gt>, brings the full power of Tim Bunce's
+E<lt>Tim.Bunce@ig.co.ukE<gt> database interface module (DBI) to your
+templates.  See L<Template::Plugin::DBI> and L<DBI> for further details.
+
+    [% USE DBI('dbi:driver:database', 'user', 'pass') %]
+
+    [% FOREACH user = DBI.query( 'SELECT * FROM users' ) %]
+       [% user.id %] [% user.name %]
+    [% END %]
+
+The DBI and relevant DBD modules are available from CPAN:
+
+  http://www.cpan.org/modules/by-module/DBI/
+
+=item Dumper
+
+The Dumper plugin provides an interface to the Data::Dumper module.  See
+L<Template::Plugin::Dumper> and L<Data::Dumper> for futher details.
+
+    [% USE dumper(indent=0, pad="<br>") %]
+    [% dumper.dump(myvar, yourvar) %]
+
+=item Format
+
+The Format plugin provides a simple way to format text according to a
+printf()-like format.   See L<Template::Plugin::Format> for further 
+details.
+
+    [% USE bold = format('<b>%s</b>') %]
+    [% bold('Hello') %]
+
+=item Iterator
+
+The Iterator plugin provides a way to create a Template::Iterator
+object to iterate over a data set.  An iterator is created
+automatically by the FOREACH directive and is aliased to the 'loop'
+variable.  This plugin allows an iterator to be explicitly created
+with a given name, or the default plugin name, 'iterator'.  See
+L<Template::Plugin::Iterator> for further details.
+
+    [% USE iterator(list, args) %]
+
+    [% FOREACH item = iterator %]
+       [% '<ul>' IF iterator.first %]
+       <li>[% item %]
+       [% '</ul>' IF iterator.last %]
+    [% END %]
+
+=item Table
+
+The Table plugin allows you to format a list of data items into a 
+virtual table by specifying a fixed number of rows or columns, with 
+an optional overlap.  See L<Template::Plugin::Table> for further 
+details.
+
+    [% USE table(list, rows=10, overlap=1) %]
+
+    [% FOREACH item = table.col(3) %]
+       [% item %]
+    [% END %]
+
+=item URL
+
+The URL plugin provides a simple way of contructing URLs from a base
+part and a variable set of parameters.  See L<Template::Plugin::URL>
+for further details.
+
+    [% USE mycgi = url('/cgi-bin/bar.pl', debug=1) %]
+
+    [% mycgi %]
+       # ==> /cgi/bin/bar.pl?debug=1
+
+    [% mycgi(mode='submit') %]
+       # ==> /cgi/bin/bar.pl?mode=submit&debug=1
+
+=item Wrap
+
+The Wrap plugin uses the Text::Wrap module by David Muir Sharnoff 
+E<lt>muir@idiom.comE<gt> (with help from Tim Pierce and many many others)
+to provide simple paragraph formatting.  See L<Template::Plugin::Wrap>
+and L<Text::Wrap> for further details.
+
+    [% USE wrap %]
+    [% wrap(mytext, 40, '* ', '  ') %]	# use wrap sub
+    [% mytext FILTER wrap(40) -%]	# or wrap FILTER
+
+The Text::Wrap module is available from CPAN:
+
+    http://www.cpan.org/modules/by-module/Text/
+
 =item XML::DOM
 
 The XML::DOM plugin gives access to the XML Document Object Module via
 Clark Cooper E<lt>cooper@sch.ge.comE<gt> and Enno Derksen's 
-E<lt>enno@att.comE<gt> XML::DOM module.  The plugin is distributed with 
-the Template Toolkit (see L<Template::Plugin::XML::DOM>) and requires the 
-XML::DOM module, available from CPAN:
+E<lt>enno@att.comE<gt> XML::DOM module.  See L<Template::Plugin::XML::DOM> 
+and L<XML::DOM> for further details.
 
-    http://www.cpan.org/modules/by-module/XML
+    [% USE dom = XML.DOM %]
+    [% doc = dom.parse(filename) %]
+
+    [% FOREACH node = doc.getElementsByTagName('CODEBASE') %]
+       * [% node.getAttribute('href') %]
+    [% END %]
+
+The plugin requires the XML::DOM module, available from CPAN:
+
+    http://www.cpan.org/modules/by-module/XML/
+
+=item XML::XPath
+
+The XML::XPath plugin provides an interface to Matt Sergeant's
+E<lt>matt@sergeant.orgE<gt> XML::XPath module.  See 
+L<Template::Plugin::XML::XPath> and L<XML::XPath> for further details.
+
+    [% USE xpath = XML.XPath(xmlfile) %]
+    [% FOREACH page = xpath.findnodes('/html/body/page') %]
+       [% page.getAttribute('title') %]
+    [% END %]
+
+The plugin requires the XML::XPath module, available from CPAN:
+
+    http://www.cpan.org/modules/by-module/XML/
 
 =item XML::RSS
 
 The XML::RSS plugin is a simple interface to Jonathan Eisenzopf's
-E<lt>eisen@pobox.comE<gt> XML::RSS module.  An RSS (Rich Site Summary)
+E<lt>eisen@pobox.comE<gt> XML::RSS module.  A RSS (Rich Site Summary)
 file is typically used to store short news 'headlines' describing
 different links within a site.  This plugin allows you to parse RSS
-files and format the contents accordingly using templates.  The
-plugin is distributed with the Template Toolkit 
-(see L<Template::Plugin::XML::RSS>) and requires the XML::RSS module, 
-also available from CPAN:
+files and format the contents accordingly using templates.  
+See L<Template::Plugin::XML::RSS> and L<XML::RSS> for further details.
 
-    http://www.cpan.org/modules/by-module/XML
+    [% USE news = XML.RSS(filename) %]
+   
+    [% FOREACH item = news.items %]
+       <a href="[% item.link %]">[% item.title %]</a>
+    [% END %]
 
+The XML::RSS module is available from CPAN:
 
-=back
-
-The following module is distributed separately from the Template Toolkit.
-
-=over 4
-
-=item DBI
-
-Simon Matthews E<lt>sam@knowledgepool.comE<gt> has developed a DBI
-plugin for the Template Toolkit which brings the full power of Tim
-Bunce's E<lt>Tim.Bunce@ig.co.ukE<gt> database interface module (DBI)
-to your templates.  The DBI plugin and the DBI modules themselves are
-available from CPAN at:
-
-  http://www.cpan.org/modules/by-module/Template/
-  http://www.cpan.org/modules/by-module/DBI/
+    http://www.cpan.org/modules/by-module/XML/
 
 =back
 
@@ -5064,6 +5504,8 @@ A common base class for many Template::* modules.
 Module for testing the Template Toolkit, primarily used by the test
 scripts in the 't' distribution sub-directory.
 
+=back
+
 
 
 
@@ -5090,7 +5532,7 @@ developed in the Text::MetaText module.  This itself was the public
 manifestation of an earlier template processing system I developed
 while working at Peritas Ltd. (http://www.knowledgepool.com/).
 
-In later years, the Template Toolkit was developed Canon Research
+In later years, the Template Toolkit was developed at Canon Research
 Centre Europe Ltd. (http://www.cre.canon.co.uk) as part of a general
 research theme into Web-related publishing and dynamic content
 generation.
@@ -5101,8 +5543,10 @@ Please let me know if you think anyone is missing from this list.
 
   Chuck Adams               <scrytch@uswest.net>
   Thierry-Michel Barral     <kktos@electron-libre.com>
+  Stas Beckman		    <stas@stason.org>
   Neil Bowers               <neilb@cre.canon.co.uk>
   Leon Brocard              <acme@astray.com>  
+  Piers Cawley              <pdcawley@bofh.org.uk>
   Chris Dean                <ctdean@babycenter.com>  
   Francois Desarmenien      <desar@club-internet.fr>
   Horst Dumcke              <hdumcke@cisco.com> 
@@ -5115,10 +5559,12 @@ Please let me know if you think anyone is missing from this list.
   Craig McLane              <mclanec@oxy.edu>     
   Leslie Michael Orchard    <deus_x@ninjacode.com>
   Eugene Miretskiy          <eugene@invision.net>
+  Chris Nandor              <pudge@pobox.com>
   Martin Portman            <mrp@cre.canon.co.uk>
   Randal L. Schwartz        <merlyn@stonehenge.com>
   Paul Sharpe               <paul@miraclefish.com>
   Doug Steinwand            <dsteinwand@etoys.com>
+  Michael Stevens           <michael@etla.org>
   Drew Taylor               <dtaylor@vialogix.com>   
   Swen Thuemmler            <Swen.Thuemmler@paderlinx.de>   
   Jim Vaughan               <jim@mrjim.com> 

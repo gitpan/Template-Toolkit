@@ -4,7 +4,7 @@
 #
 # Template script testing variable references.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
 # Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
 # Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: ref.t,v 2.1 2000/09/08 08:10:52 abw Exp $
+# $Id: ref.t,v 2.2 2000/11/01 12:01:45 abw Exp $
 #
 #========================================================================
 

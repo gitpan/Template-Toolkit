@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 2.3 2000/09/12 15:25:21 abw Exp $
+# $Id: Stash.pm,v 2.8 2000/12/01 15:29:35 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.8 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -46,16 +46,35 @@ $VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
 $ROOT_OPS = {
     'inc'  => sub { local $^W = 0; my $item = shift; ++$item }, 
     'dec'  => sub { local $^W = 0; my $item = shift; --$item }, 
+    defined $ROOT_OPS ? %$ROOT_OPS : (),
 };
 
 $SCALAR_OPS = {
     'length'  => sub { length $_[0] },
     'defined' => sub { return 1 },
+    'repeat'  => sub { 
+	my ($str, $count) = @_;
+	$str = '' unless defined $str;  $count ||= 1;
+	return $str x $count;
+    },
+    'search'  => sub { 
+	my ($str, $pattern) = @_;
+	return $str unless defined $str and $pattern;
+	return $str =~ /$pattern/;
+    },
+    'replace'  => sub { 
+	my ($str, $search, $replace) = @_;
+	return $str unless defined $str and $search and $replace;
+	$str =~ s/$search/$replace/g;
+	return $str;
+    },
     'split'   => sub { 
 	my ($str, $split, @args) = @_;
+	$str = '' unless defined $str;
 	return [ defined $split ? split($split, $str, @args)
 				: split(' ', $str, @args) ];
     },
+    defined $SCALAR_OPS ? %$SCALAR_OPS : (),
 };
 
 $HASH_OPS = {
@@ -67,9 +86,22 @@ $HASH_OPS = {
 		      @$hash{ keys %$imp } = values %$imp;
 		      return '';
 		  },
+    'sort'    => sub {
+	my ($hash) = @_;
+        [ sort { lc $hash->{$a} cmp lc $hash->{$b} } (keys %$hash) ];
+    },
+    'nsort'    => sub {
+	my ($hash) = @_;
+        [ sort { $hash->{$a} <=> $hash->{$b} } (keys %$hash) ];
+    },
+    defined $HASH_OPS ? %$HASH_OPS : (),
 };
 
 $LIST_OPS = {
+    'push'    => sub { my $list = shift; push(@$list, shift); return '' },
+    'pop'     => sub { my $list = shift; pop(@$list) },
+    'unshift' => sub { my $list = shift; unshift(@$list, shift); return '' },
+    'shift'   => sub { my $list = shift; shift(@$list) },
     'max'     => sub { local $^W = 0; my $list = shift; $#$list; },
     'size'    => sub { local $^W = 0; my $list = shift; $#$list + 1; },
     'first'   => sub { my $list = shift; $list->[0] },
@@ -79,7 +111,7 @@ $LIST_OPS = {
 	    my ($list, $joint) = @_; 
 	    join(defined $joint ? $joint : ' ', 
 		 map { defined $_ ? $_ : '' } @$list) 
-	},
+    },
     'sort'    => sub {
 	my ($list, $field) = @_;
 	return $list unless $#$list;	    # no need to sort 1 item lists
@@ -105,7 +137,8 @@ $LIST_OPS = {
 	       sort { $a->[1] <=> $b->[1] }
 	       map  { [ $_, lc $_ ] } 
 	       @$list
-   },
+    },
+    defined $LIST_OPS ? %$LIST_OPS : (),
 };
 
 
@@ -427,7 +460,7 @@ sub _dotop {
 	    @result = &$value(@$args);
 	}
 	elsif ($@) {
-	    die $@;					    ## DIE
+	    @result = (undef, $@);
 	}
     }
     elsif (($value = $SCALAR_OPS->{ $item }) && ! $lvalue) {

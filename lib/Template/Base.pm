@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Base.pm,v 2.0 2000/08/10 14:55:57 abw Exp $
+#   $Id: Base.pm,v 2.1 2000/11/01 12:01:39 abw Exp $
 #
 #========================================================================
  
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -58,7 +58,7 @@ sub new {
 # 
 # May be called as a class or object method to set or retrieve the 
 # package variable $ERROR (class method) or internal member 
-# $self->{ ERROR } (object method).  The presence of parameters indicates
+# $self->{ _ERROR } (object method).  The presence of parameters indicates
 # that the error value should be set.  Undef is then returned.  In the
 # abscence of parameters, the current error value is returned.
 #------------------------------------------------------------------------

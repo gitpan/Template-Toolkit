@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: directive.t,v 2.0 2000/08/10 14:56:20 abw Exp $
+# $Id: directive.t,v 2.2 2000/12/01 15:29:35 abw Exp $
 #
 #========================================================================
 
@@ -345,6 +345,27 @@ this is block foo
 this is block bar
 end
 
+
+-- test --
+<foo>[% PROCESS foo %]</foo>
+<bar>[% PROCESS bar %]</bar>
+[% BLOCK foo %]
+
+this is block foo
+
+[% END -%]
+[% BLOCK bar %]
+
+this is block bar
+
+[% END -%]
+end
+-- expect --
+<foo>this is block foo</foo>
+<bar>this is block bar</bar>
+end
+
+
 -- test --
 [% r; r = s; "-"; r %].
 -- expect --
@@ -354,4 +375,9 @@ romeo-sierra.
 [% IF a; b; ELSIF c; d; ELSE; s; END %]
 -- expect --
 bravo
+
+
+
+
+
 

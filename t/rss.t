@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: rss.t,v 2.0 2000/08/10 14:56:30 abw Exp $
+# $Id: rss.t,v 2.2 2000/10/09 15:38:49 abw Exp $
 # 
 #========================================================================
 
@@ -23,11 +23,11 @@ use Template::Test;
 use Cwd qw( abs_path );
 $^W = 1;
 
+# I hate having to do this
+my $shut_up_warnings = $XML::RSS::VERSION;
+
 eval "use XML::RSS";
-if ($@) {
-    print "1..0\n";
-    exit(0);
-}
+exit if $@ || ($] == 5.006 && $XML::RSS::VERSION < 0.9);
 
 # account for script being run in distribution root or 't' directory
 my $file = abs_path( -d 't' ? 't/test/xml' : 'test/xml' );

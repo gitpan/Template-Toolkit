@@ -31,7 +31,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 2.3 2000/09/08 08:10:50 abw Exp $
+# $Id: Parser.pm,v 2.4 2000/10/03 11:49:01 abw Exp $
 #
 #============================================================================
 
@@ -52,7 +52,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 $ERROR   = '';
 
@@ -383,7 +383,7 @@ sub tokenise_directive {
 		(-?\d+(?:\.\d+)?)       # numbers
 	    |
 		# filename matches in $5
-	    	( \/?\w+(?:(?:\/|::)\w*)+ | \/\w+)
+	    	( \/?\w+(?:(?:\/|::?)\w*)+ | \/\w+)
 	    |
 		# an identifier matches in $6
 		(\w+)                    # variable identifier

@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 2.1 2000/09/12 15:25:18 abw Exp $
+#   $Id: Template.pm,v 2.4 2000/11/14 15:54:58 abw Exp $
 #
 #========================================================================
  
@@ -39,7 +39,7 @@ use File::Path;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '2.00-beta5';
+$VERSION     = '2.00';
 $ERROR       = '';
 $DEBUG       = 0;
 

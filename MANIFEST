@@ -30,15 +30,20 @@ lib/Template/Parser.pm
 lib/Template/Parser.pod
 lib/Template/Plugin.pm
 lib/Template/Plugin.pod
+lib/Template/Plugin/Autoformat.pm
 lib/Template/Plugin/CGI.pm
+lib/Template/Plugin/DBI.pm
 lib/Template/Plugin/Datafile.pm
 lib/Template/Plugin/Date.pm
+lib/Template/Plugin/Dumper.pm
 lib/Template/Plugin/Format.pm
 lib/Template/Plugin/Iterator.pm
 lib/Template/Plugin/Table.pm
 lib/Template/Plugin/URL.pm
+lib/Template/Plugin/Wrap.pm
 lib/Template/Plugin/XML/DOM.pm
 lib/Template/Plugin/XML/RSS.pm
+lib/Template/Plugin/XML/XPath.pm
 lib/Template/Plugins.pm
 lib/Template/Plugins.pod
 lib/Template/Provider.pm
@@ -56,6 +61,7 @@ parser/README
 parser/yc
 t/README
 t/args.t
+t/autoform.t
 t/base.t
 t/binop.t
 t/block.t
@@ -71,9 +77,11 @@ t/config.t
 t/context.t
 t/datafile.t
 t/date.t
+t/dbi.t
 t/directive.t
 t/document.t
 t/dom.t
+t/dumper.t
 t/error.t
 t/evalperl.t
 t/exception.t
@@ -110,6 +118,7 @@ t/test/lib/default
 t/test/lib/error
 t/test/lib/footer
 t/test/lib/header
+t/test/lib/header.tt2
 t/test/lib/incblock
 t/test/lib/menu
 t/test/lib/trimme
@@ -124,6 +133,7 @@ t/test/src/bar/baz.txt
 t/test/src/baz
 t/test/src/benchmark
 t/test/src/complex
+t/test/src/evalperl
 t/test/src/foo
 t/test/src/foobar
 t/test/src/golf
@@ -140,4 +150,6 @@ t/vars.t
 t/varsv1.t
 t/vmeth.t
 t/while.t
+t/wrap.t
 t/wrapper.t
+t/xpath.t

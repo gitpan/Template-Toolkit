@@ -4,20 +4,14 @@
 #
 # Tests the 'Date' plugin.
 #
-# NOTE: this relies on a hacked version of Template::Test.pm that supports
-# the '-- process --' flag in an '-- expect --' block.  We need this
-# because we can't hard-code expected output in advance when we're 
-# dealing with generating date string based on the current time at
-# execution. 
-#
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
 # Copyright (C) 2000 Andy Wardley. All Rights Reserved.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: date.t,v 2.2 2000/09/12 15:25:23 abw Exp $
+# $Id: date.t,v 2.3 2000/11/01 12:01:44 abw Exp $
 #
 #========================================================================
 

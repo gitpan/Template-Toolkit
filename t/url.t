@@ -4,15 +4,14 @@
 #
 # Template script testing URL plugin.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
 # Copyright (C) 2000 Andy Wardley.  All Rights Reserved.
-# All Rights Reserved.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: url.t,v 2.0 2000/08/10 14:56:34 abw Exp $
+# $Id: url.t,v 2.2 2000/11/14 15:54:58 abw Exp $
 #
 #========================================================================
 
@@ -37,12 +36,12 @@ sub sort_params {
 
     print STDERR "sort_parms(\"$query\")\n" if $Template::Test::DEBUG;
 
-    @args = split('&', $args);
+    @args = split('&amp;', $args);
     @keys = map { (split('=', $_))[0] } @args;
     @argtab{ @keys } = @args;
     @keys = sort keys %argtab;
     @args = map { $argtab{ $_ } } @keys;
-    $args = join('&', @args);
+    $args = join('&amp;', @args);
     $query = join('?', length $base ? ($base, $args) : $args);
 
     print STDERR "returning [$query]\n" if $Template::Test::DEBUG;
@@ -84,7 +83,7 @@ here
 there
 here?any=where
 every?which=way
-every?which=way&you=can
+every?which=way&amp;you=can
 
 -- test --
 [% USE url('there', name='fred') -%]
@@ -96,8 +95,8 @@ every?which=way&you=can
 -- expect --
 there?name=fred
 there?name=tom
-there?age=24&name=fred
-there?age=42&name=frank
+there?age=24&amp;name=fred
+there?age=42&amp;name=frank
 
 -- test --
 [% USE url('/cgi-bin/woz.pl') -%]

@@ -11,15 +11,15 @@
 #   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Datafile.pm,v 2.0 2000/08/10 14:56:06 abw Exp $
+# $Id: Datafile.pm,v 2.3 2000/11/14 15:54:58 abw Exp $
 #
 #============================================================================
 
@@ -32,8 +32,7 @@ use vars qw( @ISA $VERSION );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
-
+$VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my ($class, $context, $filename, $params) = @_;
@@ -55,6 +54,7 @@ sub new {
     # first line of file should contain field definitions
     while (! $line || $line =~ /^#/) {
 	$line = <FD>;
+	chomp $line;
     }
     (@fields = split(/\s*$delim\s*/, $line)) 
 	|| return $class->fail("first line of file must contain field names");
@@ -76,11 +76,13 @@ sub new {
 	push(@$self, \%record);
     }
 
+#    return $self;
     bless $self, $class;
 }	
 
 
-sub AUTOLOAD {
+sub as_list {
+    return $_[0];
 }
 
 
@@ -151,7 +153,7 @@ Andy Wardley E<lt>kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 2.0 $
+$Revision: 2.3 $
 
 =head1 COPYRIGHT
 

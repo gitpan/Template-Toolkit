@@ -11,16 +11,13 @@ Template::Context - runtime context in which templates are processed
 	|| die $Template::Context::ERROR;
 
     # fetch (load and compile) a template
-    $template = $context->template($template_name)
-	|| die $context->error(); 
+    $template = $context->template($template_name);
 
     # fetch (load and instantiate) a plugin object
-    $plugin = $context->plugin($name, \@args)
-	|| die $context->error(); 
+    $plugin = $context->plugin($name, \@args);
 
     # fetch (return or create) a filter subroutine
-    $filter = $context->filter($name, \@args, $alias)
-	|| die $context->error(); 
+    $filter = $context->filter($name, \@args, $alias);
 
     # process/include a template, errors are thrown via die()
     $output = $context->process($template, \%vars);
@@ -221,12 +218,52 @@ The TRIM option is disabled (0) by default.
 
 =item EVAL_PERL
 
-This flag is used to indicate if PERL and/or RAWPERL blocks should be 
-evaluated.  By default, it is disabled and any PERL or RAWPERL blocks 
-encountered will be ignored.  Note however that any RAWPERL blocks 
-should always contain valid Perl code, regardless of the EVAL_PERL 
-flag.  The parser will fail to compile templates that contain invalid
-Perl code in RAWPERL blocks and will throw a 'file' exception.
+This flag is used to indicate if PERL and/or RAWPERL blocks should be
+evaluated.  By default, it is disabled and any PERL or RAWPERL blocks
+encountered will raise exceptions of type 'perl' with the message
+'EVAL_PERL not set'.  Note however that any RAWPERL blocks should
+always contain valid Perl code, regardless of the EVAL_PERL flag.  The
+parser will fail to compile templates that contain invalid Perl code
+in RAWPERL blocks and will throw a 'file' exception.
+
+When using compiled templates (see L<COMPILE_EXT> and L<COMPILE_DIR>),
+the EVAL_PERL has an affect when the template is compiled, and again
+when the templates is subsequently processed, possibly in a different
+context to the one that compiled it.
+
+If the EVAL_PERL is set when a template is compiled, then all PERL and
+RAWPERL blocks will be included in the compiled template.  If the 
+EVAL_PERL option isn't set, then Perl code will be generated which 
+B<always> throws a 'perl' exception with the message 'EVAL_PERL not
+set' B<whenever> the compiled template code is run.
+
+Thus, you must have EVAL_PERL set if you want your compiled templates
+to include PERL and RAWPERL blocks.
+
+At some point in the future, using a different invocation of the
+Template Toolkit, you may come to process such a pre-compiled
+template.  Assuming the EVAL_PERL option was set at the time the
+template was compiled, then the output of any RAWPERL blocks will be
+included in the compiled template and will get executed when the
+template is processed.  This will happen regardless of the runtime
+EVAL_PERL status.
+
+Regular PERL blocks are a little more cautious, however.  If the 
+EVAL_PERL flag isn't set for the I<current> context, that is, the 
+one which is trying to process it, then it will throw the familiar 'perl'
+exception with the message, 'EVAL_PERL not set'.
+
+Thus you can compile templates to include PERL blocks, but optionally
+disable them when you process them later.  Note however that it is 
+possible for a PERL block to contain a Perl "BEGIN { # some code }"
+block which will always get run regardless of the runtime EVAL_PERL
+status.  Thus, if you set EVAL_PERL when compiling templates, it is
+assumed that you trust the templates to Do The Right Thing.  Otherwise
+you must accept the fact that there's no bulletproof way to prevent 
+any included code from trampling around in the living room of the 
+runtime environment, making a real nuisance of itself if it really
+wants to.  If you don't like the idea of such uninvited guests causing
+a bother, then you can accept the default and keep EVAL_PERL disabled.
 
 =item RECURSION
 
@@ -280,9 +317,9 @@ constructor method.
 
 The LOAD_PLUGINS options can be used to specify a list of provider
 objects (i.e. they implement the fetch() method) which are responsible
-for loading and instantiating template plugin objects.  The plugin()
-method queries each provider in turn in a "Chain of Responsibility" as
-per the template() and filter() methods.
+for loading and instantiating template plugin objects.  The
+Template::Content plugin() method queries each provider in turn in a
+"Chain of Responsibility" as per the template() and filter() methods.
 
     my $context = Template::Context->new({
 	LOAD_PLUGINS => [
@@ -305,9 +342,9 @@ constructor.
 
 The LOAD_FILTERS option can be used to specify a list of provider
 objects (i.e. they implement the fetch() method) which are responsible
-for returning and/or creating filter subroutines.  The filter()
-method queries each provider in turn in a "Chain of Responsibility" as
-per the template() and plugin() methods.
+for returning and/or creating filter subroutines.  The
+Template::Context filter() method queries each provider in turn in a
+"Chain of Responsibility" as per the template() and plugin() methods.
 
     my $context = Template::Context->new({
 	LOAD_FILTERS => [
@@ -347,53 +384,58 @@ version 1.
 
 =head2 template($name) 
 
-Returns a compiled template by querying each of the TEMPLATES providers
-(instances of Template::Provider, or sub-class).  On error, undef is 
-returned and the internal error string set to contain a relevant message.
-This can be retrieved via error().
+Returns a compiled template by querying each of the LOAD_TEMPLATES providers
+(instances of Template::Provider, or sub-class) in turn.  
 
-    $template = $context->template('header')
-        || die $context->error(), "\n";
+    $template = $context->template('header');
+
+On error, a Template::Exception object of type 'file' is thrown via
+die().  This can be caught by enclosing the call to template() in an
+eval block and examining $@.
+
+    eval {
+	$template = $context->template('header');
+    };
+    if ($@) {
+	print "failed to fetch template: $@\n";
+    }
 
 =head2 plugin($name, \@args)
 
-Instantiates a plugin object by querying each of the PLUGINS
-providers.  The default PLUGINS provider is a Template::Plugins object
-which attempts to load plugin modules, according the various
+Instantiates a plugin object by querying each of the LOAD_PLUGINS
+providers.  The default LOAD_PLUGINS provider is a Template::Plugins
+object which attempts to load plugin modules, according the various
 configuration items such as PLUGIN_BASE, LOAD_PERL, etc., and then
 instantiate an object via new().  A reference to a list of constructor
 arguments may be passed as the second parameter.  These are forwarded
-to the plugin constructor.  
+to the plugin constructor.
 
 Returns a reference to a plugin (which is generally an object, but
-doesn't have to be) or undef on failure.  Errors can be retrieved via
-error().
+doesn't have to be).  Errors are thrown as Template::Exception objects
+of type 'plugin'.
 
-    $plugin = $context->plugin('DBI', 'dbi:msql:mydbname')
-	|| die $context->error(), "\n";
+    $plugin = $context->plugin('DBI', 'dbi:msql:mydbname');
 
 =head2 filter($name, \@args, $alias)
 
-Instantiates a filter subroutine by querying the FILTERS providers.
-The default FILTERS providers is a Template::Filters object.
+Instantiates a filter subroutine by querying the LOAD_FILTERS providers.
+The default LOAD_FILTERS providers is a Template::Filters object.
 Additional arguments may be passed by list reference along with an
 optional alias under which the filter will be cached for subsequent
 use.  The filter is cached under its own $name if $alias is undefined.
 Subsequent calls to filter($name) will return the cached entry, if
 defined.  Specifying arguments bypasses the caching mechanism and
-always creates a new filter.
+always creates a new filter.  Errors are thrown as Template::Exception
+objects of typre 'filter'.
 
     # static filter (no args)
-    $filter = $context->filter('html')
-	|| die $context->error(), "\n";
+    $filter = $context->filter('html');
 
     # dynamic filter (args) aliased to 'padright'
-    $filter = $context->filter('format', '%60s', 'padright')
-	|| die $context->error(), "\n";
+    $filter = $context->filter('format', '%60s', 'padright');
 
     # retrieve previous filter via 'padright' alias
-    $filter = $context->filter('padright')
-	|| die $context->error(), "\n";
+    $filter = $context->filter('padright');
 
 =head2 process($template, \%vars)
 
@@ -517,7 +559,7 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 1.3 $
+$Revision: 1.4 $
 
 =head1 COPYRIGHT
 

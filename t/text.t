@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: text.t,v 2.0 2000/08/10 14:56:34 abw Exp $
+# $Id: text.t,v 2.1 2000/12/01 15:29:35 abw Exp $
 #
 #========================================================================
 
@@ -43,6 +43,36 @@ $ @ { } @{ } ${ } # ~ ' ! % *foo
 $a ${b} $c
 
 -- test --
+<table width=50%>&copy;
+-- expect --
+<table width=50%>&copy;
+
+-- test --
+[% foo = 'Hello World' -%]
+start
+[%
+#
+# [% foo %]
+#
+#
+-%]
+end
+-- expect --
+start
+end
+
+-- test --
+pre
+[%
+# [% PROCESS foo %]
+-%]
+mid
+[% BLOCK foo; "This is foo"; END %]
+-- expect --
+pre
+mid
+
+-- test --
 -- use interp --
 This is a text block "hello" 'hello' 1/3 1\4 <html> </html>
 \$ @ { } @{ } \${ } # ~ ' ! % *foo
@@ -52,6 +82,37 @@ This is a text block "hello" 'hello' 1/3 1\4 <html> </html>
 $ @ { } @{ } ${ } # ~ ' ! % *foo
 alpha bravo charlie
 
+-- test --
+<table width=50%>&copy;
+-- expect --
+<table width=50%>&copy;
+
+-- test --
+[% foo = 'Hello World' -%]
+start
+[%
+#
+# [% foo %]
+#
+#
+-%]
+end
+-- expect --
+start
+end
+
+-- test --
+pre
+[%
+#
+# [% PROCESS foo %]
+#
+-%]
+mid
+[% BLOCK foo; "This is foo"; END %]
+-- expect --
+pre
+mid
 
 
 

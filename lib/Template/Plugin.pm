@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugin.pm,v 2.0 2000/08/10 14:56:02 abw Exp $
+# $Id: Plugin.pm,v 2.2 2000/11/14 15:54:58 abw Exp $
 #
 #============================================================================
 
@@ -28,9 +28,12 @@ package Template::Plugin;
 require 5.004;
 
 use strict;
-use vars qw( $VERSION $DEBUG $ERROR $AUTOLOAD );
+use Template::Base;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
+use vars qw( $VERSION $DEBUG $ERROR $AUTOLOAD );
+use base qw( Template::Base );
+
+$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 
@@ -73,7 +76,7 @@ sub new {
     my ($class, $context, $delclass, @params) = @_;
     my ($delegate, $delmod);
 
-    return $class->fail("Invalid context passed to $class constructor\n")
+    return $class->error("no context passed to $class constructor\n")
 	unless defined $context;
 
     if (ref $delclass) {
@@ -89,7 +92,7 @@ sub new {
 	    $delegate = $delclass->new(@params)
 		|| die "failed to instantiate $delclass object\n";
 	};
-	return $class->fail($@) if $@;
+	return $class->error($@) if $@;
     }
 
     bless {
@@ -103,27 +106,17 @@ sub new {
 #------------------------------------------------------------------------
 # fail($error)
 # 
-# Report class errors via the $ERROR package variable.
+# Version 1 error reporting function, now replaced by error() inherited
+# from Template::Base.  Raises a "deprecated function" warning and then
+# calls error().
 #------------------------------------------------------------------------
 
 sub fail {
     my $class = shift;
-    $ERROR = shift;
-    return undef;
+    my ($pkg, $file, $line) = caller();
+    warn "Template::Plugin::fail() is deprecated at $file line $line.  Please use error()\n";
+    $class->error(@_);
 }
-
-
-#------------------------------------------------------------------------
-# error()
-# 
-# Return error in the $ERROR package variable, previously set by calling
-# fail().
-#------------------------------------------------------------------------
-
-sub error {
-    $ERROR;
-}
-
 
 
 #========================================================================
@@ -140,11 +133,17 @@ sub error {
 sub AUTOLOAD {
     my $self     = shift;
     my $method   = $AUTOLOAD;
-    my $delegate = $self->{ _DELEGATE } || return;
 
     $method =~ s/.*:://;
     return if $method eq 'DESTROY';
-    $delegate->$method(@_);
+
+    if (ref $self eq 'HASH') {
+	my $delegate = $self->{ _DELEGATE } || return;
+	return $delegate->$method(@_);
+    }
+    my ($pkg, $file, $line) = caller();
+    warn "no such '$method' method called on $self at $file line $line\n";
+    return undef;
 }
 
 

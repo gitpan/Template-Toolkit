@@ -26,7 +26,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm.skel,v 2.1 2000/09/12 15:25:22 abw Exp $
+# $Id: Grammar.pm.skel,v 2.3 2000/11/01 12:01:44 abw Exp $
 #
 #========================================================================
 
@@ -37,13 +37,14 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, %CMPOP, $LEXTABLE, $RULES, $STATES);
 my ($factory, $rawstart);
 
 
 #========================================================================
+
 # Reserved words, comparison and binary operators
 #========================================================================
 
@@ -51,7 +52,7 @@ my ($factory, $rawstart);
 	GET CALL SET DEFAULT INSERT INCLUDE PROCESS WRAPPER BLOCK END
 	USE PLUGIN FILTER MACRO PERL RAWPERL TO STEP AND OR NOT DIV MOD
 	IF UNLESS ELSE ELSIF FOR NEXT WHILE SWITCH CASE META
-	TRY THROW CATCH FINAL BREAK RETURN STOP CLEAR
+	TRY THROW CATCH FINAL LAST RETURN STOP CLEAR
     );
 
 %CMPOP = qw( != ne  == eq  < <  > >  >= >=  <= <= );
@@ -64,6 +65,7 @@ my ($factory, $rawstart);
 # lookup table used by lexer is initialised with special-cases
 $LEXTABLE = {
     'FOREACH' => 'FOR',
+    'BREAK'   => 'LAST',
     '&&'      => 'AND',
     '||'      => 'OR',
     '!'       => 'NOT',

@@ -27,7 +27,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Provider.pm,v 2.1 2000/09/08 08:10:50 abw Exp $
+# $Id: Provider.pm,v 2.3 2000/11/14 15:54:58 abw Exp $
 #
 #============================================================================
 
@@ -43,7 +43,7 @@ use Template::Constants;
 use Template::Document;
 use File::Basename;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
 
 use constant PREV   => 0;
 use constant NAME   => 1;
@@ -258,8 +258,9 @@ sub _init {
     my ($self, $params) = @_;
     my $size = $params->{ CACHE_SIZE   };
     my $path = $params->{ INCLUDE_PATH } || '.';
-    my $dlim = $params->{ DELIMITER    } || ':';
     my $cdir = $params->{ COMPILE_DIR  } || '';
+    my $dlim = $params->{ DELIMITER    };
+    $dlim = ':' unless defined $dlim;
 
     # coerce INCLUDE_PATH to an array ref, if not already so
     $path = [ split($dlim, $path) ]
@@ -675,7 +676,12 @@ sub _compile {
 
     # call parser to compile template into Perl code
     if ($parsedoc = $parser->parse($text, $data)) {
-	# NOTE: probably shouldn't write the file until we know it compiled OK
+
+	$parsedoc->{ METADATA } = { 
+	    'name'    => $data->{ name },
+	    'modtime' => $data->{ time },
+	    %{ $parsedoc->{ METADATA } },
+	};
 	
 	# write the Perl code to the file $compfile, if defined
 	if ($compfile) {
@@ -689,15 +695,7 @@ sub _compile {
 							   $parsedoc);
 	    print STDERR "error: $error" if $error;
 	}
-	
-	# call Template::Document constructor to compile Perl code and 
-	# return a cohesive object encapsulating the template, additional
-	# BLOCKs and metadata
-	$parsedoc->{ METADATA } = { 
-	    'name'    => $data->{ name },
-	    'modtime' => $data->{ time },
-	    %{ $parsedoc->{ METADATA } },
-	};
+
 	unless ($error) {
 	    return $data				        ## RETURN ##
 		if $data->{ data } = Template::Document->new($parsedoc);

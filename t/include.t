@@ -4,7 +4,7 @@
 #
 # Template script testing the INCLUDE and PROCESS directives.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
 # Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
 # Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: include.t,v 2.1 2000/08/17 08:59:35 abw Exp $
+# $Id: include.t,v 2.2 2000/11/01 12:01:45 abw Exp $
 #
 #========================================================================
 

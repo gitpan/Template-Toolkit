@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Date.pm,v 2.0 2000/08/10 14:56:07 abw Exp $
+# $Id: Date.pm,v 2.1 2000/11/01 12:01:43 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 
 use POSIX ();
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
 $FORMAT  = '%H:%M:%S %d-%b-%Y';    # default strftime() format
 
 
@@ -220,12 +220,14 @@ epoch.
 =head1 AUTHORS
 
 Thierry-Michel Barral E<lt>kktos@electron-libre.comE<gt> wrote the original
-plugin and Andy Wardley E<lt>abw@cre.canon.co.ukE<gt> provided some minor 
-fixups/enhancements, a test script and documentation).
+plugin.
+
+Andy Wardley E<lt>abw@cre.canon.co.ukE<gt> provided some minor
+fixups/enhancements, a test script and documentation.
 
 =head1 REVISION
 
-$Revision: 2.0 $
+$Revision: 2.1 $
 
 =head1 COPYRIGHT
 

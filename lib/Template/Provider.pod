@@ -124,12 +124,12 @@ to re-parse template files or blocks each time they are used.  The CACHE_SIZE
 option is used to limit the number of compiled templates that the module
 should cache.
 
-By default, the CACHE_SIZE is undefined and all compiled templates are 
-cached.  When set to any positive value, the cache will be limited to 
-storing that many compiled templates.  When a new template is loaded and 
-compiled and the cache is full (i.e. the number of entries == CACHE_SIZE), 
-the least recently used compiled template is discarded to make room for the
-new one.
+By default, the CACHE_SIZE is undefined and all compiled templates are
+cached.  When set to any positive value, the cache will be limited to
+storing no more than that number of compiled templates.  When a new
+template is loaded and compiled and the cache is full (i.e. the number
+of entries == CACHE_SIZE), the least recently used compiled template
+is discarded to make room for the new one.
 
 The CACHE_SIZE can be set to 0 to disable caching altogether.
 
@@ -145,10 +145,10 @@ The CACHE_SIZE can be set to 0 to disable caching altogether.
 
 From version 2 onwards, the Template Toolkit has the ability to
 compile templates to Perl code and save them to disk for subsequent
-use (e.g. cache persistance).  The COMPILE_EXT option may be
+use (i.e. cache persistance).  The COMPILE_EXT option may be
 provided to specify a filename extension for compiled template files.
 It is undefined by default and no attempt will be made to read or write 
-any compiled template file.
+any compiled template files.
 
     my $provider = Template::Provider->new({
 	COMPILE_EXT => '.ttc',

@@ -24,7 +24,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Tutorial.pod,v 2.0 2000/09/12 15:27:59 abw Exp $
+#   $Id: Tutorial.pod,v 2.2 2000/12/01 15:29:34 abw Exp $
 #
 #========================================================================
 
@@ -375,7 +375,7 @@ to the template:
        message  => "Hello World\n"
     };
 
-    my $template->new();
+    my $template = Template->new();
 
     $template->process($file, $vars)
 	|| die "Template process failed: ", $template->error(), "\n";
@@ -531,12 +531,12 @@ module.  That module might look something like this:
     
     	# use the path_info to determine which template file to process
     	my $file = $r->path_info;
-    	$path =~ s[^/][];
+    	$file =~ s[^/][];
     
     	$r->content_type('text/html');
     	$r->send_http_header;
     	
-    	$template->process($path, $params) 
+    	$template->process($file, $params) 
     	    || return fail($r, SERVER_ERROR, $template->error());
     
     	return OK;
@@ -739,7 +739,7 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 2.0 $
+$Revision: 2.2 $
 
 =head1 COPYRIGHT
 

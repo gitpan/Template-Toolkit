@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Table.pm,v 2.1 2000/09/14 12:47:24 abw Exp $
+# $Id: Table.pm,v 2.2 2000/10/09 11:14:45 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use vars qw( @ISA $VERSION $AUTOLOAD );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -77,6 +77,7 @@ sub new {
 	if ($size < $rows) {
 	    $rows = $size;   # pad?
 	    $cols = 1;
+	    $coloff = 0;
 	}
 	else {
 	    $coloff = $rows - $overlap;
@@ -407,7 +408,7 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 2.1 $
+$Revision: 2.2 $
 
 =head1 COPYRIGHT
 
