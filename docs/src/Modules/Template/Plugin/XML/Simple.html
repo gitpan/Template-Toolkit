@@ -38,8 +38,13 @@
 <!-- Pod to HTML conversion by the Template Toolkit version 2 -->
 [% WRAPPER section
     title="SYNOPSIS"
--%]<pre>    # load plugin and specify XML file to parse
+-%]<pre>    # load plugin and specify XML text or file to parse
     [% tt_start_tag %] USE xml = XML.Simple(xml_file_or_text) [% tt_end_tag %]</pre>
+<pre>    # or load plugin as an object...
+    [% tt_start_tag %] USE xml = XML.Simple [% tt_end_tag %]</pre>
+<pre>    # ...then use XMLin or XMLout as usual
+    [% tt_start_tag %] xml.XMLout(data_ref, args) [% tt_end_tag %]
+    [% tt_start_tag %] xml.XMLin(xml_file_or_text, args) [% tt_end_tag %]</pre>
 [%- END %]
 [% WRAPPER section
     title="DESCRIPTION"
@@ -69,8 +74,8 @@ was written by Grant McLean &lt;grantm@web.co.nz&gt;.
 [% WRAPPER section
     title="VERSION"
 -%]<p>
-2.63, distributed as part of the
-Template Toolkit version 2.13, released on 30 January 2004.
+2.65, distributed as part of the
+Template Toolkit version 2.14, released on 04 October 2004.
 </p>
 [%- END %]
 [% WRAPPER section

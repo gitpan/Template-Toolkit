@@ -17,7 +17,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Config.pm,v 2.67 2004/01/13 16:19:10 abw Exp $
+#   $Id: Config.pm,v 2.68 2004/01/30 19:32:23 abw Exp $
 #
 #========================================================================
  
@@ -32,7 +32,7 @@ use vars qw( $VERSION $DEBUG $ERROR $INSTDIR
              $LATEX_PATH $PDFLATEX_PATH $DVIPS_PATH
 	     $STASH $SERVICE $CONTEXT $CONSTANTS @PRELOAD );
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 2.67 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 2.68 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0 unless defined $DEBUG;
 $ERROR     = '';
 $CONTEXT   = 'Template::Context';
@@ -441,8 +441,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.67, distributed as part of the
-Template Toolkit version 2.13, released on 30 January 2004.
+2.68, distributed as part of the
+Template Toolkit version 2.14, released on 04 October 2004.
 
 =head1 COPYRIGHT
 
