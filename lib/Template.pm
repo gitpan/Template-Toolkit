@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Template.pm,v 2.75 2004/01/12 12:37:46 abw Exp $
+#   $Id: Template.pm,v 2.76 2004/01/13 15:27:35 abw Exp $
 #
 #========================================================================
  
@@ -38,7 +38,7 @@ use File::Path;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '2.12';
+$VERSION     = '2.13';
 $ERROR       = '';
 $DEBUG       = 0;
 
@@ -938,7 +938,7 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.12, released on 12 January 2004.
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

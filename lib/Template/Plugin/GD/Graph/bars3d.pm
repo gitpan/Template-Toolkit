@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: bars3d.pm,v 1.56 2004/01/12 12:38:43 abw Exp $
+# $Id: bars3d.pm,v 1.57 2004/01/13 16:20:56 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Graph::bars3d Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.56 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.57 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -138,8 +138,8 @@ The GD::Graph3d module was written by Jeremy Wadsack.
 
 =head1 VERSION
 
-1.55, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+1.57, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 # 
 # REVISION
-#   $Id: Context.pm,v 2.87 2004/01/12 12:37:54 abw Exp $
+#   $Id: Context.pm,v 2.89 2004/01/30 18:37:47 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.87 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.89 $ =~ /(\d+)\.(\d+)/);
 $DEBUG_FORMAT = "\n## \$file line \$line : [% \$text %] ##\n";
 
 
@@ -326,6 +326,13 @@ sub process {
             my $element = ref $compiled eq 'CODE' 
                 ? { (name => (ref $name ? '' : $name), modtime => time()) }
 	        : $compiled;
+
+            if (UNIVERSAL::isa($component, 'Template::Document')) {
+                $element->{ caller } = $component->{ name };
+                $element->{ callers } = $component->{ callers } || [];
+                push(@{$element->{ callers }}, $element->{ caller });
+            }
+
             $stash->set('component', $element);
             
             unless ($localize) {
@@ -1537,8 +1544,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.86, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+2.89, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

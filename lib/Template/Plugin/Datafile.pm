@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Datafile.pm,v 2.65 2004/01/12 12:38:32 abw Exp $
+# $Id: Datafile.pm,v 2.66 2004/01/13 16:20:38 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use vars qw( @ISA $VERSION );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.65 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.66 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my ($class, $context, $filename, $params) = @_;
@@ -172,8 +172,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.64, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+2.66, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

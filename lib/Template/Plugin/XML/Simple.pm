@@ -16,7 +16,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Simple.pm,v 2.61 2004/01/12 12:38:50 abw Exp $
+# $Id: Simple.pm,v 2.63 2004/01/13 16:21:50 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use XML::Simple;
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.61 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.63 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -52,12 +52,12 @@ sub new {
 #------------------------------------------------------------------------
 # _throw($errmsg)
 #
-# Raise a Template::Exception of type XML.XPath via die().
+# Raise a Template::Exception of type XML.Simple via die().
 #------------------------------------------------------------------------
 
 sub _throw {
     my ($self, $error) = @_;
-    die (Template::Exception->new('XML.XPath', $error));
+    die (Template::Exception->new('XML.Simple', $error));
 }
 
 
@@ -107,8 +107,8 @@ was written by Grant McLean E<lt>grantm@web.co.nzE<gt>.
 
 =head1 VERSION
 
-2.60, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+2.63, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

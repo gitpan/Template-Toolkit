@@ -19,7 +19,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: tpage,v 2.61 2004/01/12 12:36:40 abw Exp $
+# $Id: tpage,v 2.62 2004/01/13 16:18:23 abw Exp $
 #
 #========================================================================
 
@@ -112,8 +112,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.67, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+2.69, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

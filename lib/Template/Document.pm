@@ -20,7 +20,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.70 2004/01/12 12:37:55 abw Exp $
+# $Id: Document.pm,v 2.71 2004/01/13 16:19:10 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use vars qw( $VERSION $ERROR $COMPERR $DEBUG $AUTOLOAD );
 use base qw( Template::Base );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.70 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.71 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -466,8 +466,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.69, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+2.71, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

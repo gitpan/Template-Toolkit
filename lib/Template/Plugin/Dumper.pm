@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------------
 #
-# $Id: Dumper.pm,v 2.63 2004/01/12 12:38:33 abw Exp $
+# $Id: Dumper.pm,v 2.64 2004/01/13 16:20:38 abw Exp $
 # 
 #==============================================================================
 
@@ -33,7 +33,7 @@ use Data::Dumper;
 use vars qw( $VERSION $DEBUG @DUMPER_ARGS $AUTOLOAD );
 use base qw( Template::Plugin );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.63 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.64 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 @DUMPER_ARGS = qw( Indent Pad Varname Purity Useqq Terse Freezer
                    Toaster Deepcopy Quotekeys Bless Maxdepth );
@@ -161,8 +161,8 @@ Simon Matthews E<lt>sam@knowledgepool.comE<gt>
 
 =head1 VERSION
 
-2.62, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+2.64, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 
 

@@ -27,7 +27,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Provider.pm,v 2.78 2004/01/12 12:37:55 abw Exp $
+# $Id: Provider.pm,v 2.79 2004/01/13 16:19:16 abw Exp $
 #
 #============================================================================
 
@@ -44,7 +44,7 @@ use Template::Document;
 use File::Basename;
 use File::Spec;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.78 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.79 $ =~ /(\d+)\.(\d+)/);
 
 # name of document class
 $DOCUMENT = 'Template::Document' unless defined $DOCUMENT;
@@ -1423,8 +1423,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.77, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+2.79, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------------
 #
-# $Id: Procedural.pm,v 1.10 2004/01/12 12:38:33 abw Exp $
+# $Id: Procedural.pm,v 1.11 2004/01/13 16:20:38 abw Exp $
 # 
 #==============================================================================
 
@@ -31,7 +31,7 @@ use strict;
 use vars qw( $VERSION $DEBUG $AUTOLOAD );
 use base qw( Template::Plugin );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 
 #------------------------------------------------------------------------
@@ -144,8 +144,8 @@ L<http://www.twoshortplanks.com|http://www.twoshortplanks.com>
 
 =head1 VERSION
 
-1.09, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+1.11, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

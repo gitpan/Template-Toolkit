@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Polygon.pm,v 1.54 2004/01/12 12:38:40 abw Exp $
+# $Id: Polygon.pm,v 1.55 2004/01/13 16:20:46 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.54 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.55 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -127,8 +127,8 @@ Lincoln D. Stein wrote the GD.pm interface to the GD library.
 
 =head1 VERSION
 
-1.53, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+1.55, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

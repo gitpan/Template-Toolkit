@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 2.73 2004/01/12 12:36:40 abw Exp $
+# $Id: ttree,v 2.75 2004/01/30 18:30:03 abw Exp $
 #
 #========================================================================
 
@@ -37,7 +37,7 @@ use File::Basename;
 use Text::ParseWords qw(quotewords);
 
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 2.73 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 2.75 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 my $TTMODULE = 'Template';
@@ -296,6 +296,8 @@ sub process_file {
     my ($dest, $destfile, $filename, $check, 
         $srctime, $desttime, $mode, $uid, $gid);
     my ($old_suffix, $new_suffix);
+    my $is_dep = 0;
+    my $copy_file = 0;
 
     $absfile ||= $file;
     $filename = basename($file);
@@ -314,6 +316,15 @@ sub process_file {
                    
 #    print "proc $file => $dest\n";
 
+
+    
+    # check against copy list
+    foreach $check (@$copy) {
+        if ($filename =~ /$check/) {
+            $copy_file = 1;
+        }
+    }
+
     # stat the source file unconditionally, so we can preserve
     # mode and ownership
     (undef, undef, $mode, undef, $uid, $gid, undef, undef, undef, $srctime,
@@ -323,10 +334,11 @@ sub process_file {
     if (! $all && ! $options{ force } && -f $dest) {
         $desttime = ( stat($dest) )[9];
 
-        if (defined $depends) {
+        if (defined $depends and not $copy_file) {
             my $deptime  = depend_time($file, $depends);
             if (defined $deptime && ($srctime < $deptime)) {
                 $srctime = $deptime;
+                $is_dep = 1;
             }
         }
     
@@ -338,21 +350,19 @@ sub process_file {
     }
     
     # check against copy list
-    foreach $check (@$copy) {
-        if ($filename =~ /$check/) {
-            printf "  > %-32s (copied, matches /$check/)\n", $file
-                if $verbose;
+    if ($copy_file) {
+        printf "  > %-32s (copied, matches /$check/)\n", $file
+            if $verbose;
 
-            unless ($dryrun) {
-                copy($absfile, $dest);
+        unless ($dryrun) {
+            copy($absfile, $dest);
 
-                if ($preserve) {
-                    chown($uid, $gid, $dest) || warn "chown($dest): $!\n";
-                    chmod($mode, $dest) || warn "chmod($dest): $!\n";
-                }
+            if ($preserve) {
+                chown($uid, $gid, $dest) || warn "chown($dest): $!\n";
+                chmod($mode, $dest) || warn "chmod($dest): $!\n";
             }
-            return;
         }
+        return;
     }
 
     # check against acceptance list
@@ -1042,8 +1052,8 @@ Brocard who gets everywhere, it seems.
 
 =head1 VERSION
 
-2.67, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+2.69, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 

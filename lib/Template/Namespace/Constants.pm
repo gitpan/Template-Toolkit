@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Constants.pm,v 1.21 2004/01/12 12:38:28 abw Exp $
+#   $Id: Constants.pm,v 1.22 2004/01/13 16:20:36 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Exception;
 use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 
 
@@ -179,8 +179,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.20, distributed as part of the
-Template Toolkit version 2.12, released on 12 January 2004.
+1.22, distributed as part of the
+Template Toolkit version 2.13, released on 30 January 2004.
 
 =head1 COPYRIGHT
 
