@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: URL.pm,v 2.2 2000/11/14 15:54:58 abw Exp $
+# $Id: URL.pm,v 2.5 2001/03/30 08:09:23 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use vars qw( @ISA $VERSION );
 use Template::Plugin;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.5 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -78,12 +78,23 @@ sub escape {
 
 1;
 
-
 __END__
+
+
+#------------------------------------------------------------------------
+# IMPORTANT NOTE
+#   This documentation is generated automatically from source
+#   templates.  Any changes you make here may be lost.
+# 
+#   The 'docsrc' documentation source bundle is available for download
+#   from http://www.template-toolkit.org/docs.html and contains all
+#   the source templates, XML files, scripts, etc., from which the
+#   documentation for the Template Toolkit is built.
+#------------------------------------------------------------------------
 
 =head1 NAME
 
-Template::Plugin::URL - constructs query URL's with parameters
+Template::Plugin::URL - Plugin to construct complex URLs
 
 =head1 SYNOPSIS
 
@@ -181,24 +192,22 @@ http://ppewww.ph.gla.ac.uk/~flavell/www/formgetbyurl.html
 
 Andy Wardley E<lt>abw@kfs.orgE<gt>
 
-=head1 REVISION
+L<http://www.andywardley.com/|http://www.andywardley.com/>
 
-$Revision: 2.2 $
+=head1 VERSION
+
+Template Toolkit version 2.01, released on 30th March 2001.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2000 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template::Plugin|Template::Plugin>, 
-
-=cut
-
-
-
+L<Template::Plugin|Template::Plugin>
 
 

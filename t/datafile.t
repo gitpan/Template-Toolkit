@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: datafile.t,v 2.2 2000/11/01 12:01:44 abw Exp $
+# $Id: datafile.t,v 2.3 2001/03/22 12:23:14 abw Exp $
 #
 #========================================================================
 
@@ -63,6 +63,10 @@ Users:
   * mop: Marty Proton <mop@cre.canon.co.uk>
   * nellb: Nell Browser <nellb@cre.canon.co.uk>
 
-
+-- test --
+[% USE userlist = datafile(datafile.1, delim = '|') -%]
+size: [% userlist.size %]
+-- expect --
+size: 3
 
 

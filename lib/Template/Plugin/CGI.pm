@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: CGI.pm,v 2.1 2000/11/01 12:01:43 abw Exp $
+# $Id: CGI.pm,v 2.4 2001/03/30 08:09:23 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use CGI;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my $class   = shift;
@@ -44,9 +44,21 @@ sub new {
 
 __END__
 
+
+#------------------------------------------------------------------------
+# IMPORTANT NOTE
+#   This documentation is generated automatically from source
+#   templates.  Any changes you make here may be lost.
+# 
+#   The 'docsrc' documentation source bundle is available for download
+#   from http://www.template-toolkit.org/docs.html and contains all
+#   the source templates, XML files, scripts, etc., from which the
+#   documentation for the Template Toolkit is built.
+#------------------------------------------------------------------------
+
 =head1 NAME
 
-Template::Plugin::CGI - simple Template Plugin interface to CGI.pm module
+Template::Plugin::CGI - Interface to the CGI module
 
 =head1 SYNOPSIS
 
@@ -86,27 +98,24 @@ constructor:
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>kfs.orgE<gt>
+Andy Wardley E<lt>abw@kfs.orgE<gt>
 
-=head1 REVISION
+L<http://www.andywardley.com/|http://www.andywardley.com/>
 
-$Revision: 2.1 $
+=head1 VERSION
+
+Template Toolkit version 2.01, released on 30th March 2001.
 
 =head1 COPYRIGHT
 
-Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<CGI|CGI>, L<Template::Plugin|Template::Plugin>, 
-
-=cut
-
-
-
+L<Template::Plugin|Template::Plugin>, L<CPAN::CGI|CPAN::CGI>
 
 

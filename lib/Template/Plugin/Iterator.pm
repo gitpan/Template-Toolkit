@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Iterator.pm,v 2.0 2000/08/10 14:56:08 abw Exp $
+# $Id: Iterator.pm,v 2.3 2001/03/30 08:09:23 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use Template::Iterator;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
 
 #------------------------------------------------------------------------
 # new($context, \@data, \%args)
@@ -46,12 +46,23 @@ sub new {
 
 1;
 
-
 __END__
+
+
+#------------------------------------------------------------------------
+# IMPORTANT NOTE
+#   This documentation is generated automatically from source
+#   templates.  Any changes you make here may be lost.
+# 
+#   The 'docsrc' documentation source bundle is available for download
+#   from http://www.template-toolkit.org/docs.html and contains all
+#   the source templates, XML files, scripts, etc., from which the
+#   documentation for the Template Toolkit is built.
+#------------------------------------------------------------------------
 
 =head1 NAME
 
-Template::Plugin::Iterator - plugin to create Template::Iterator objects
+Template::Plugin::Iterator - Plugin to create iterators (Template::Iterator)
 
 =head1 SYNOPSIS
 
@@ -68,31 +79,28 @@ Template::Plugin::Iterator - plugin to create Template::Iterator objects
 The iterator plugin provides a way to create a Template::Iterator object 
 to iterate over a data set.  An iterator is implicitly automatically by the
 FOREACH directive.  This plugin allows the iterator to be explicitly created
-with a given name. 
+with a given name.
 
 =head1 AUTHOR
 
 Andy Wardley E<lt>abw@kfs.orgE<gt>
 
-=head1 REVISION
+L<http://www.andywardley.com/|http://www.andywardley.com/>
 
-$Revision: 2.0 $
+=head1 VERSION
+
+Template Toolkit version 2.01, released on 30th March 2001.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2000 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template::Iterator|Template::Iterator>, 
-L<Template::Plugin|Template::Plugin>
-
-=cut
-
-
-
+L<Template::Plugin|Template::Plugin>, L<Template::Iterator|Template::Iterator>
 
 

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: provider.t,v 2.1 2000/09/12 15:25:24 abw Exp $
+# $Id: provider.t,v 2.3 2001/03/22 12:23:15 abw Exp $
 #
 #========================================================================
 
@@ -28,6 +28,10 @@ $Template::Test::DEBUG = 0;
 #$Template::Provider::DEBUG = 0;
 #$Template::Parser::DEBUG = 1;
 #$Template::Directive::PRETTY = 1;
+
+# uncommenting the next line should cause test 43 to fail because
+# the provider doesn't stat the file.
+# $Template::Provider::STAT_TTL = 10;
 
 my $DEBUG = 0;
 
@@ -170,6 +174,7 @@ Error: [% error.type %] - [% error.info.split(': ').1 %]
 This is the foo file, a is 
 Error: file - not found
 
+
 -- test --
 [% TRY %]
 [% INCLUDE foo %]
@@ -181,9 +186,10 @@ Error: [% error.type %] - [% error.info.split(': ').1 %]
 This is the foo file, a is 
 Error: file - not found
 
+
 -- test --
 [% TRY %]
-[% INSERT foo %]
+[% INSERT foo -%]
 [% INSERT $absfile %]
 [% CATCH file %]
 Error: [% error %]
@@ -194,7 +200,6 @@ Error: [% error %]
 This is the foo file, a is [% a %]
 Error: file error - [* absfile *]: not found
 
-
 #------------------------------------------------------------------------
 
 -- test --
@@ -202,7 +207,7 @@ Error: file error - [* absfile *]: not found
 [% TRY %]
 [% INCLUDE $relfile %]
 [% INCLUDE foo %]
-[% CATCH file %]
+[% CATCH file -%]
 Error: [% error.type %] - [% error.info %]
 [% END %]
 -- expect --
@@ -211,7 +216,7 @@ Error: file - foo: not found
 
 -- test --
 [% TRY %]
-[% INCLUDE $relfile %]
+[% INCLUDE $relfile -%]
 [% INCLUDE $absfile %]
 [% CATCH file %]
 Error: [% error.type %] - [% error.info.split(': ').1 %]
@@ -219,6 +224,7 @@ Error: [% error.type %] - [% error.info.split(': ').1 %]
 -- expect --
 This is the foo file, a is 
 Error: file - absolute paths are not allowed (set ABSOLUTE option)
+
 
 -- test --
 foo: [% TRY; INSERT foo;      CATCH; "$error\n"; END %]

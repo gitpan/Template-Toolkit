@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: wrapper.t,v 2.2 2000/12/01 15:29:35 abw Exp $
+# $Id: wrapper.t,v 2.3 2000/12/15 16:01:11 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
+use lib qw( ../lib ./lib );
 use Template::Constants qw( :status );
 use Template;
 use Template::Test;
@@ -63,7 +63,6 @@ Wrapper Header
 Title: Another Test
 This is some more content
 Wrapper Footer
-
 
 -- test --
 [% WRAPPER mywrap

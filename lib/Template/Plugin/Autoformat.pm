@@ -21,7 +21,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Autoformat.pm,v 2.2 2000/11/01 12:01:43 abw Exp $
+# $Id: Autoformat.pm,v 2.5 2001/03/30 08:09:23 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use Text::Autoformat;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.5 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my ($class, $context, $options) = @_;
@@ -89,9 +89,21 @@ sub tt_autoformat {
 
 __END__
 
+
+#------------------------------------------------------------------------
+# IMPORTANT NOTE
+#   This documentation is generated automatically from source
+#   templates.  Any changes you make here may be lost.
+# 
+#   The 'docsrc' documentation source bundle is available for download
+#   from http://www.template-toolkit.org/docs.html and contains all
+#   the source templates, XML files, scripts, etc., from which the
+#   documentation for the Template Toolkit is built.
+#------------------------------------------------------------------------
+
 =head1 NAME
 
-Template::Plugin::Autoformat - interface to Text::Autoformat module
+Template::Plugin::Autoformat - Interface to Text::Autoformat module
 
 =head1 SYNOPSIS
 
@@ -210,9 +222,11 @@ E<lt>abw@kfs.orgE<gt>.
 Damian Conway E<lt>damian@conway.orgE<gt> wrote the Text::Autoformat 
 module (in his copious spare time :-) which does all the clever stuff.
 
-=head1 REVISION
+=head1 VERSION
 
-$Revision: 2.2 $
+Template Toolkit version 2.01, released on 30th March 2001.
+
+
 
 =head1 COPYRIGHT
 
@@ -225,4 +239,3 @@ modify it under the same terms as Perl itself.
 
 L<Template::Plugin|Template::Plugin>, L<Text::Autoformat|Text::Autoformat>
 
-=cut

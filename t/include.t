@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: include.t,v 2.2 2000/11/01 12:01:45 abw Exp $
+# $Id: include.t,v 2.4 2001/03/22 12:23:14 abw Exp $
 #
 #========================================================================
 
@@ -245,4 +245,54 @@ recursion count: 3
 -- expect --
 ERROR: file error - nosuchfile: not found
 
+-- test --
+[% INCLUDE src:foo %]
+[% BLOCK src:foo; "This is foo!"; END %]
+-- expect --
+This is foo!
 
+-- test --
+[% a = ''; b = ''; d = ''; e = 0 %]
+[% INCLUDE foo name = a or b or 'c'
+               item = d or e or 'f' -%]
+[% BLOCK foo; "name: $name  item: $item\n"; END %]
+-- expect --
+name: c  item: f
+
+-- test --
+[% style = 'light'; your_title="Hello World" -%]
+[% INCLUDE foo 
+         title = my_title or your_title or default_title
+         bgcol = (style == 'dark' ? '#000000' : '#ffffff') %]
+[% BLOCK foo; "title: $title\nbgcol: $bgcol\n"; END %]
+-- expect --
+title: Hello World
+bgcol: #ffffff
+
+-- test --
+[% myhash = {
+    name  = 'Tom'
+    item  = 'teacup'
+   }
+-%]
+[% INCLUDE myblock
+    name = 'Fred'
+    item = 'fish'
+%]
+[% INCLUDE myblock
+     import=myhash
+%]
+import([% import %])
+[% PROCESS myblock
+     import={ name = 'Tim', item = 'teapot' }
+%]
+import([% import %])
+[% BLOCK myblock %][% name %] has a [% item %][% END %]
+-- expect --
+Fred has a fish
+Tom has a teacup
+import()
+Tim has a teapot
+import()
+
+-- test --

@@ -15,7 +15,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: block.t,v 2.3 2000/11/01 12:01:44 abw Exp $
+# $Id: block.t,v 2.4 2000/12/15 16:01:11 abw Exp $
 #
 #========================================================================
 
@@ -111,3 +111,23 @@ Hello World!
 [% BLOCK foo %][% END %]
 -- expect --
 <>
+
+-- stop --
+# these test the experimental BLOCK args feature which will hopefully allow
+# parser/eval options to be set for different blocks
+
+-- test --
+[% BLOCK foo eval_perl=0 tags="star" -%]
+This is the foo block
+[% END -%]
+foo: [% INCLUDE foo %]
+-- expect --
+foo: This is the foo block
+
+-- test --
+[% BLOCK eval_perl=0 tags="star" -%]
+This is an anonymous block
+[% END -%]
+-- expect --
+This is an anonymous block
+

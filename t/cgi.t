@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: cgi.t,v 2.4 2000/12/01 15:29:35 abw Exp $
+# $Id: cgi.t,v 2.5 2001/03/22 12:23:14 abw Exp $
 # 
 #========================================================================
 
@@ -32,6 +32,7 @@ if ($@) {
     exit(0);
 }
 
+
 my $cgi = CGI->new('');
 $cgi = join("\n", $cgi->checkbox_group(
 		-name     => 'words',
@@ -45,6 +46,7 @@ test_expect(\*DATA, undef, { cgicheck => $cgi, barf => \&barf });
 sub barf {
     carp('failed');
 }
+
 
 __END__
 -- test --

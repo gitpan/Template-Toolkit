@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 2.3 2000/12/01 15:29:34 abw Exp $
+# $Id: ttree,v 2.6 2001/03/30 08:09:20 abw Exp $
 #
 #========================================================================
 
@@ -39,7 +39,7 @@ use File::Basename;
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 2.6 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
@@ -96,7 +96,8 @@ my $replace = $config->get('define');
 my $ttopts   = {
     %ucttopts,
     RELATIVE     => 1,
-    INCLUDE_PATH => [ @$libdir, '.' ],
+#    INCLUDE_PATH => [ @$libdir, '.' ],
+    INCLUDE_PATH => [ $srcdir, @$libdir ],
     OUTPUT_PATH  => $destdir,
 };
 
@@ -138,7 +139,7 @@ if ($debug) {
 # main-amble
 #------------------------------------------------------------------------
 
-chdir($srcdir) || die "$srcdir: $!\n";
+#chdir($srcdir) || die "$srcdir: $!\n";
 
 my $template = Template->new($ttopts);
 
@@ -146,7 +147,7 @@ if (@ARGV) {
     # explicitly process files specified on command lines 
     foreach my $file (@ARGV) {
 	print "  + $file\n" if $verbose;
-	$template->process("$file", $replace, $file)
+	$template->process($file, $replace, $file)
 	    || print "  ! ", $template->error(), "\n";
     }
 }
@@ -165,16 +166,23 @@ else {
 
 sub process_tree {
     my $dir = shift;
-    my ($file, $path, $check);
+    my ($file, $path, $abspath, $check);
     my $target;
     local *DIR;
 
-    opendir(DIR, $dir || '.') || return undef;
+    my $absdir = join('/', $srcdir ? $srcdir : (), $dir ? $dir : ());
+    $absdir ||= '.';
+
+    print STDERR "  * processing tree: $absdir\n" if $debug;
+
+    opendir(DIR, $absdir) || do { warn "$absdir: $!\n"; return undef; };
 
     FILE: while (defined ($file = readdir(DIR))) {
 	next if $file eq '.' || $file eq '..';
 	$path = $dir ? "$dir/$file" : $file;
-	next unless -e $path;
+	$abspath = "$absdir/$file";
+	
+	next unless -e $abspath;
 
 	# check against ignore list
 	foreach $check (@$ignore) {
@@ -184,22 +192,23 @@ sub process_tree {
 		next FILE;
 	    }
 	}
-	
-	if (-d $path) {
+
+	if (-d $abspath) {
 	    if ($recurse) {
 		my ($uid, $gid, $mode);
 
 		(undef, undef, $mode, undef, $uid, $gid, undef, undef,
-		 undef, undef, undef, undef, undef)  = stat($path);
+		 undef, undef, undef, undef, undef)  = stat($abspath);
 
 		# create target directory if required
 		$target = "$destdir/$path";
 		unless (-d $target || $dryrun) {
 		    mkdir $target, $mode || do { 
-			warn "mkdir($target): $!\n";
+			warn "mkdir  ($target): $!\n";
 			next;
 		    };
-		    chown($uid, $gid, $target) || warn "chown($target): $!\n";
+# commented out by abw on 2000/12/04 - seems to raise a warning?   
+#		    chown($uid, $gid, $target) || warn "chown($target): $!\n";
 		    printf "  + %-32s (created target directory)\n", $path
 			if $verbose;
 		}
@@ -212,7 +221,7 @@ sub process_tree {
 	    }
 	}
 	else {
-	    process_file($path);
+	    process_file($path, $abspath);
 	}
     }
     closedir(DIR);
@@ -226,18 +235,19 @@ sub process_tree {
 #------------------------------------------------------------------------
 
 sub process_file {
-    my $file = shift;
+    my ($file, $absfile) = @_;
     my ($dest, $base, $check, $srctime, $desttime, $mode, $uid, $gid);
 
+    $absfile ||= $file;
     $dest = $destdir ? "$destdir/$file" : $file;
     $base = basename($file);
-
+			       
 #    print "proc $file => $dest\n";
 
     # stat the source file unconditionally, so we can preserve
     # mode and ownership
     (undef, undef, $mode, undef, $uid, $gid, undef, undef, undef, $srctime,
-     undef, undef, undef)  = stat($file);
+     undef, undef, undef)  = stat($absfile);
     
     # test modification time of existing destination file
     if (-f $dest && ! $all) {
@@ -257,7 +267,7 @@ sub process_file {
 		if $verbose;
 
 	    unless ($dryrun) {
-		copy($file, $dest);
+		copy($absfile, $dest);
 
 		if ($preserve) {
 		    chown($uid, $gid, $dest) || warn "chown($dest): $!\n";
@@ -281,7 +291,7 @@ sub process_file {
 
     # process file
     unless ($dryrun) {
-        $template->process("./$file", $replace, $file)
+        $template->process($file, $replace, $file)
 	    || print("  ! ", $template->error(), "\n");
 
 	if ($preserve) {
@@ -515,17 +525,23 @@ END_OF_HELP
     exit(0);
 }
 
-
-
 __END__
 
+
 #------------------------------------------------------------------------
-# POD
-#
+# IMPORTANT NOTE
+#   This documentation is generated automatically from source
+#   templates.  Any changes you make here may be lost.
+# 
+#   The 'docsrc' documentation source bundle is available for download
+#   from http://www.template-toolkit.org/docs.html and contains all
+#   the source templates, XML files, scripts, etc., from which the
+#   documentation for the Template Toolkit is built.
+#------------------------------------------------------------------------
 
 =head1 NAME
 
-ttree - template tree processor
+Template::Tools::ttree - Process entire directory trees of templates
 
 =head1 SYNOPSIS
 
@@ -548,7 +564,7 @@ variable.  Then, it processes any command line arguments, including
 any additional configuration files specified via the B<-f> (file) option.
 
 A typical F<.ttreerc> file might look like this:
-  
+
     src    = /home/abw/websrc/doc
     dest   = /home/abw/public_html
     lib    = /home/abw/websrc/lib
@@ -603,23 +619,22 @@ See B<ttree --help> for a summary of options.
 
 Andy Wardley E<lt>abw@kfs.orgE<gt>
 
-=head1 REVISION
+L<http://www.andywardley.com/|http://www.andywardley.com/>
 
-$Revision: 2.3 $
+=head1 VERSION
+
+Template Toolkit version 2.01, released on 30th March 2001.
 
 =head1 COPYRIGHT
 
-Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
-Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template|Template>
-
-=cut
-
+L<tpage|Template::Tools::tpage>
 
 

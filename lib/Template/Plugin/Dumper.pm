@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------------
 #
-# $Id: Dumper.pm,v 2.1 2000/10/03 11:49:02 abw Exp $
+# $Id: Dumper.pm,v 2.4 2001/03/30 08:09:23 abw Exp $
 # 
 #==============================================================================
 
@@ -33,7 +33,7 @@ use Data::Dumper;
 use vars qw( $VERSION $DEBUG $AUTOLOAD );
 use base qw( Template::Plugin );
 
-$VERSION = sprintf("%.02f", (q$Revision: 2.1 $ =~ /(\d+.\d+)/) - 1);
+$VERSION = sprintf("%.02f", (q$Revision: 2.4 $ =~ /(\d+.\d+)/) - 1);
 $DEBUG   = 0 unless defined $DEBUG;
 
 #==============================================================================
@@ -86,9 +86,21 @@ sub dump_html {
 
 __END__
 
+
+#------------------------------------------------------------------------
+# IMPORTANT NOTE
+#   This documentation is generated automatically from source
+#   templates.  Any changes you make here may be lost.
+# 
+#   The 'docsrc' documentation source bundle is available for download
+#   from http://www.template-toolkit.org/docs.html and contains all
+#   the source templates, XML files, scripts, etc., from which the
+#   documentation for the Template Toolkit is built.
+#------------------------------------------------------------------------
+
 =head1 NAME
 
-Template::Plugin::Dumper - simple Template Plugin interface to Data::Dumper
+Template::Plugin::Dumper - Plugin interface to Data::Dumper
 
 =head1 SYNOPSIS
 
@@ -145,6 +157,12 @@ entities and newlines converted to E<lt>brE<gt>.
 
 Simon Matthews E<lt>sam@knowledgepool.comE<gt>
 
+=head1 VERSION
+
+Template Toolkit version 2.01, released on 30th March 2001.
+
+ 
+
 =head1 COPYRIGHT
 
 Copyright (C) 2000 Simon Matthews All Rights Reserved.
@@ -154,8 +172,5 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Data::Dumper|Data::Dumper>, L<Template::Plugin|Template::Plugin>, 
-
-=cut
-
+L<Template::Plugin|Template::Plugin>, L<Data::Dumper|Data::Dumper>
 

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vars.t,v 2.2 2000/09/12 15:25:25 abw Exp $
+# $Id: vars.t,v 2.3 2001/03/22 12:23:15 abw Exp $
 #
 #========================================================================
 
@@ -512,3 +512,14 @@ Mithrandir, Olorin, Incanus
 -- expect --
 []
 
+-- stop --
+# Stas reported a problem with spacing in expressions but I can't
+# remember enough of the problem to reproduce it
+-- test --
+[% a = 4 -%]
+[% b=6 -%]
+[% c = a + b -%]
+[% d=a+b -%]
+[% c %]/[% d %]
+-- expect --
+10/10

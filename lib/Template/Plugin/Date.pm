@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Date.pm,v 2.1 2000/11/01 12:01:43 abw Exp $
+# $Id: Date.pm,v 2.4 2001/03/30 08:09:23 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 
 use POSIX ();
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
 $FORMAT  = '%H:%M:%S %d-%b-%Y';    # default strftime() format
 
 
@@ -118,9 +118,21 @@ sub format {
 
 __END__
 
+
+#------------------------------------------------------------------------
+# IMPORTANT NOTE
+#   This documentation is generated automatically from source
+#   templates.  Any changes you make here may be lost.
+# 
+#   The 'docsrc' documentation source bundle is available for download
+#   from http://www.template-toolkit.org/docs.html and contains all
+#   the source templates, XML files, scripts, etc., from which the
+#   documentation for the Template Toolkit is built.
+#------------------------------------------------------------------------
+
 =head1 NAME
 
-Template::Plugin::Date - generate formatted date strings
+Template::Plugin::Date - Plugin to generate formatted date strings
 
 =head1 SYNOPSIS
 
@@ -225,9 +237,11 @@ plugin.
 Andy Wardley E<lt>abw@cre.canon.co.ukE<gt> provided some minor
 fixups/enhancements, a test script and documentation.
 
-=head1 REVISION
+=head1 VERSION
 
-$Revision: 2.1 $
+Template Toolkit version 2.01, released on 30th March 2001.
+
+ 
 
 =head1 COPYRIGHT
 
@@ -238,7 +252,5 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template::Plugin|Template::Plugin>, L<POSIX|POSIX>
-
-=cut
+L<Template::Plugin|Template::Plugin>, L<CPAN::POSIX|CPAN::POSIX>
 

@@ -1,52 +1,72 @@
 #============================================================= -*-perl-*-
 #
-# Template::Tutorial.pod
+# Template::Tutorial
 #
 # DESCRIPTION
-#   This is the Template Toolkit tutorial.  It is constructed
-#   automatically during the 'make dist' process from the template
-#   in the docs/src distribution sub-directory.
-#
-#   **************************** IMPORTANT ****************************
-#     Any changes to this document should be made to the files in the 
-#     docs/src and docs/lib directories.
-#   *******************************************************************
+#   This tutorial provides an introduction to the Template Toolkit and
+#   a "quick start" guide to getting up to speed. Its primarily focus
+#   is on using the Template Toolkit to build web content and it covers
+#   4 basic areas: using tpage and ttree; using the Template.pm module
+#   in CGI scripts; writing Apache/mod_perl handlers; and extending the
+#   toolkit by writing plugins.
 #
 # AUTHOR
-#   Andy Wardley   <abw@kfs.org>
+#   Andy Wardley  <abw@kfs.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#------------------------------------------------------------------------
-#
-#   $Id: Tutorial.pod,v 2.2 2000/12/01 15:29:34 abw Exp $
+# REVISION
+#   
 #
 #========================================================================
 
 
+#------------------------------------------------------------------------
+# IMPORTANT NOTE
+#   This documentation is generated automatically from source
+#   templates.  Any changes you make here may be lost.
+# 
+#   The 'docsrc' documentation source bundle is available for download
+#   from http://www.template-toolkit.org/docs.html and contains all
+#   the source templates, XML files, scripts, etc., from which the
+#   documentation for the Template Toolkit is built.
+#------------------------------------------------------------------------
+
 =head1 NAME
 
-Template Tutorial - a tutorial on using and abusing the Perl Template Toolkit
+Template::Tutorial - Tutorial on using and abusing the Template Toolkit
 
 =head1 DESCRIPTION
 
 This tutorial document provides a introduction to the Template Toolkit
-and demonstrates some of the typical ways it may be used.  It covers
-the generation of static pages from templates using the F<tpage> and
-F<ttree> scripts and then goes on to show dynamic content generation 
-using CGI scripts and Apache/mod_perl handlers.
+and demonstrates some of the typical ways it may be used for
+generating web content.  It covers the generation of static pages from
+templates using the L<tpage|Template::Tools::tpage> and 
+L<ttree|Template::Tools::ttree> scripts and then goes on to
+show dynamic content generation using CGI scripts and Apache/mod_perl
+handlers.
 
 Various features of the Template Toolkit are introduced and described 
-briefly and explained by use of example.  For a complete reference and
-guide to the template directives, features and options, consult the 
-F<Template> documentation.  e.g.
+briefly and explained by use of example.  For further information,
+see L<Template>, L<Template::Manual> and the various sections within
+it.  e.g.
 
-    perldoc Template
+    perldoc Template			# Template.pm module usage
+    perldoc Template::Manual	        # index to manual
+    perldoc Template::Manual::Config    # e.g. configuration options
+
+The documentation is now also distributed in HTML format (or rather,
+in the form of HTML templates).  See the 'docs' sub-directory of the 
+distribution for further information on building the HTML documentation.
+
+If you're already reading this as part of the HTML documentation, then
+you don't need to worry about all that.  You can have a seat, sit back.
+ back and enjoy the rest of the tutorial...
 
 =head1 INTRODUCTION
 
@@ -93,6 +113,7 @@ separate 'header' and 'footer' template files, including the output in
 the current document.  These files might look like this:
 
 header:
+
     <html>
     <head>
     <title>[% title %]</title>
@@ -101,6 +122,7 @@ header:
     <body bgcolor="#ffffff">
 
 footer:
+
     <hr>
 
     <center>
@@ -258,6 +280,7 @@ in this file which would then be prepended to each and every template
 file, but for now we'll keep all that in a separate 'header' file.
 
 $lib/config:
+
     [% root     = '~/abw'
        home     = "$root/index.html"
        images   = "$root/images"
@@ -275,6 +298,7 @@ web pages like the following in your 'src' directory and process them
 with F<ttree>.
 
 $src/newpage.html:
+
     [% INCLUDE header
        title = 'Another Template Toolkit Test Page'
     %]
@@ -327,6 +351,7 @@ command line arguments to F<ttree>:
 This is what the destination page looks like.
 
 $dest/newpage.html:
+
     <html>
     <head>
     <title>Another Template Toolkit Test Page</title>
@@ -357,7 +382,7 @@ implement in terms of common templates elements or variables.
 
 =head1 DYNAMIC CONTENT GENERATION VIA CGI SCRIPT
 
-The F<Template> modules provides a simple front-end to the Template 
+The L<Template|Template> module provides a simple front-end to the Template 
 Toolkit for use in CGI scripts and Apache/mod_perl handlers.  Simply
 'use' the Template module, create an object instance with the new()
 method and then call the process() method on the object, passing the
@@ -446,6 +471,7 @@ Here's a sample template file that we might create to build the output
 for this script.
 
 $src/userinfo.html:
+
     [% INCLUDE header
        title = 'Template Toolkit CGI Test'
     %]
@@ -468,7 +494,8 @@ the presentation (HTML) which not only makes them easier to maintain in
 isolation, but also allows the re-use of existing template elements
 such as headers and footers, etc.  By using template to create the 
 output of your CGI scripts, you can give them the same consistency 
-as your static pages built via F<ttree> or other means.
+as your static pages built via L<ttree|Template::Tools::ttree> or 
+other means.
 
 Furthermore, we can modify our script so that it processes any one of a
 number of different templates based on some condition.  A CGI script to
@@ -480,8 +507,16 @@ functionality you care to write to implement the logic of your
 application and then choose one or other template to generate the 
 desired output for the application state.
 
-
 =head1 DYNAMIC CONTENT GENERATION VIA APACHE/MOD_PERL HANDLER
+
+B<NOTE:> the Apache::Template module is now available from CPAN
+and provides a simple and easy to use Apache/mod_perl interface to the
+Template Toolkit.  It's only in it's first release (0.01) at the time
+of writing and it currently only offers a fairly basic facility, but
+it implements most, if not all of what is described below, and it
+avoids the need to write your own handler.  However, in many cases,
+you'll want to write your own handler to customise processing for your
+own need, and this section will show you how to get started.
 
 The Template module can be used in a similar way from an Apache/mod_perl
 handler.  Here's an example of a typical Apache F<httpd.conf> file:
@@ -513,11 +548,11 @@ module.  That module might look something like this:
     
     sub handler {
     	my $r = shift;
-    
+
     	my $websrc = $r->dir_config('websrc_root')
     	    or return fail($r, SERVER_ERROR,
     			   "'websrc_root' not specified");
-    
+
     	my $template = Template->new({ 
     	    INCLUDE_PATH  => "$websrc/src/user:$websrc/lib",
     	    PRE_PROCESS   => 'config',
@@ -574,12 +609,13 @@ any template document, even those that are processed "statically" by
 F<tpage> or F<ttree>.  You I<don't> need to write a Perl wrapper to 
 explicitly load the module and make it available via the stash.
 
-Let's demonstrate this principle using the DBI plugin written by Simon 
-Matthews <sam@knowledgepool.com>.  You can create this template in your
-'src' directory and process it using F<ttree> to see the results.  Of
-course, this example relies on the existence of the appropriate SQL 
-database but you should be able to adapt it to your own resources, or
-at least use it as a demonstrative example of what's possible.
+Let's demonstrate this principle using the DBI plugin written by Simon
+Matthews E<lt>sam@knowledgepool.comE<gt>.  You can create this
+template in your 'src' directory and process it using F<ttree> to see
+the results.  Of course, this example relies on the existence of the
+appropriate SQL database but you should be able to adapt it to your
+own resources, or at least use it as a demonstrative example of what's
+possible.
 
     [% INCLUDE header
        title = 'User Info'
@@ -628,9 +664,9 @@ edit FooBar.pm to look something like this:
     package MyOrg::Template::Plugin::FooBar;
 
     use Template::Plugin;
-    use vars qw( $VERSION @ISA );
+    use vars qw( $VERSION );
+    use base qw( Template::Plugin );
 
-    @ISA = qw( Template::Plugin );
     $VERSION = 1.23;
 
     sub new {
@@ -682,12 +718,14 @@ configuration file instead.  This has the effect of add '/path/to/modules'
 to the @INC array to a similar end.
 
 $HOME/.ttreerc:
+
     perl5lib = /path/to/modules
 
 One further configuration item must be added to inform the toolkit of
 the new package name we have adopted for our plugins:
 
 $HOME/.ttreerc:
+
     plugin_base = 'MyOrg::Template::Plugin'
 
 If you're writing Perl code to control the Template modules directly,
@@ -729,30 +767,23 @@ directives and plugin objects allows complex, dynamic content to be
 built from a few simple template documents without knowing anything
 about the underlying implementation.
 
-
 =head1 AUTHOR
 
 Andy Wardley E<lt>abw@kfs.orgE<gt>
 
-    http://www.template-toolkit.org/
-    http://www.kfs.org/~abw/
+L<http://www.andywardley.com/|http://www.andywardley.com/>
 
-=head1 REVISION
+=head1 VERSION
 
-$Revision: 2.2 $
+Template Toolkit version 2.01, released on 30th March 2001.
 
 =head1 COPYRIGHT
 
-    Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
-    Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
-=head1 SEE ALSO
 
-
-L<Template|Template>, 
-L<tpage|tpage>, 
-L<ttree|ttree>

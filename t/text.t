@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: text.t,v 2.1 2000/12/01 15:29:35 abw Exp $
+# $Id: text.t,v 2.2 2001/03/29 23:00:54 abw Exp $
 #
 #========================================================================
 
@@ -114,5 +114,25 @@ mid
 pre
 mid
 
+-- test --
+[% a = "C'est un test"; a %]
+-- expect --
+C'est un test
 
+-- test --
+[% META title = "C'est un test" -%]
+[% component.title -%]
+-- expect --
+C'est un test
 
+-- test --
+[% META title = 'C\'est un autre test' -%]
+[% component.title -%]
+-- expect --
+C'est un autre test
+
+-- test --
+[% META title = "C'est un \"test\"" -%]
+[% component.title -%]
+-- expect --
+C'est un "test"

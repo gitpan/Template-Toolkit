@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vmeth.t,v 2.5 2000/12/01 15:29:35 abw Exp $
+# $Id: vmeth.t,v 2.8 2001/03/29 23:00:54 abw Exp $
 #
 #========================================================================
 
@@ -277,3 +277,23 @@ fooquxfooquxfoo
 [% string.replace('\W+', '_') %]
 -- expect --
 foo_bar_baz
+
+-- test --
+[% var = 'value99' ;
+   var.replace('value', '')
+%]
+-- expect --
+99
+
+
+-- stop --
+
+-- test --
+[% var = 'foo'; var.replace('f(o+)$', 'b$1') %]
+-- expect --
+boo
+
+-- test --
+[% var = 'foo|bar/baz'; var.replace('(fo+)|(bar)(.*)$', '[ $1 | $2 | $3 ]') %]
+-- expect --
+[ foo | bar | ]

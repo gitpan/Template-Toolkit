@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile3.t,v 2.1 2000/12/01 15:29:35 abw Exp $
+# $Id: compile3.t,v 2.2 2000/12/15 16:01:11 abw Exp $
 #
 #========================================================================
 
@@ -108,7 +108,7 @@ This is the footer, author: albert, version: emc2
 [% CALL bust_it -%]
 [% TRY; INCLUDE complex; CATCH; "$error"; END %]
 -- expect --
-file error - parse error: complex line 18: unexpected end of input
+file error - parse error: complex line 19: unexpected end of input
 
 
 

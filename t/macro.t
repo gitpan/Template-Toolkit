@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: macro.t,v 2.1 2000/11/01 12:01:45 abw Exp $
+# $Id: macro.t,v 2.2 2000/12/15 16:01:11 abw Exp $
 #
 #========================================================================
 
@@ -121,4 +121,28 @@ end
   <td>Babar</td>
 </tr>
 </table>
+
+-- test --
+[% MACRO one BLOCK -%]
+one: [% title %]
+[% END -%]
+[% saveone = one %]
+[% MACRO two BLOCK; title="2[$title]" -%]
+two: [% title %] -> [% saveone %]
+[% END -%]
+[% two(title="The Title") %]
+-- expect --
+two: 2[The Title] -> one:
+
+-- test --
+[% MACRO one BLOCK -%]
+one: [% title %]
+[% END -%]
+[% saveone = \one %]
+[% MACRO two BLOCK; title="2[$title]" -%]
+two: [% title %] -> [% saveone %]
+[% END -%]
+[% two(title="The Title") %]
+-- expect --
+two: 2[The Title] -> one: 2[The Title]
 

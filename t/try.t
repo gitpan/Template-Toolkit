@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: try.t,v 2.1 2000/12/01 15:29:35 abw Exp $
+# $Id: try.t,v 2.2 2001/03/29 23:00:54 abw Exp $
 #
 #========================================================================
 
@@ -615,4 +615,32 @@ up error - feeling sick
 [% END %]
 -- expect --
 up error - feeling sick
+
+-- test --
+[% TRY; THROW food 'cabbage'; CATCH DEFAULT; "caught $e.info"; END %]
+-- expect --
+caught cabbage
+
+
+-- test --
+[%  TRY; 
+	THROW food 'cabbage'; 
+     CATCH food; 
+	"caught food: $e.info\n";
+     CATCH DEFAULT;
+	"caught default: $e.info";
+     END
+ %]
+-- expect --
+caught food: cabbage
+
+-- test --
+[% TRY;
+     PROCESS no_such_file;
+   CATCH;
+     "error: $error\n";
+   END;
+%]
+-- expect --
+error: file error - no_such_file: not found
 

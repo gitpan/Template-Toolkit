@@ -12,12 +12,13 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 2.6 2000/12/01 15:29:35 abw Exp $
+# $Id: filter.t,v 2.9 2001/03/29 23:00:54 abw Exp $
 #
 #========================================================================
 
 use strict;
 use lib qw( ./lib ../lib );
+use Template::Filters;
 use Template qw( :status );
 use Template::Parser;
 use Template::Test;
@@ -264,6 +265,13 @@ All the &lt;tags&gt; should be escaped &amp; protected
 [% text FILTER html %]
 -- expect --
 The &lt;cat&gt; sat on the &lt;mat&gt;
+
+-- test --
+[% FILTER html %]
+"It isn't what I expected", he replied.
+[% END %]
+-- expect --
+&quot;It isn't what I expected&quot;, he replied.
 
 -- test --
 [% FILTER format %]
@@ -574,7 +582,7 @@ ERROR [% error.type %]: [% error.info %]
 
 -- expect --
 before
-ERROR file: OUTPUT_PATH is not set
+ERROR redirect: OUTPUT_PATH is not set
 
 -- test --
 -- use evalperl --
@@ -604,7 +612,6 @@ after
 [% CATCH %]
 ERROR [% error.type %]: [% error.info %]
 [% END %]
-
 -- expect --
 before
 after
@@ -779,4 +786,65 @@ more blah blah blah...
 -- expect --
 25
 25
+
+-- test --
+[% FILTER indent -%]
+The cat sat
+on the mat
+[% END %]
+-- expect --
+    The cat sat
+    on the mat
+
+-- test --
+[% FILTER indent(2) -%]
+The cat sat
+on the mat
+[% END %]
+-- expect --
+  The cat sat
+  on the mat
+
+-- test --
+[% FILTER indent('>> ') -%]
+The cat sat
+on the mat
+[% END %]
+-- expect --
+>> The cat sat
+>> on the mat
+
+-- test --
+[% text = 'The cat sat on the mat';
+   text | indent('> ') | indent('+') %]
+-- expect --
++> The cat sat on the mat
+
+-- test --
+<<[% FILTER trim %]
+   
+          
+The cat sat
+on the
+mat
+
+
+[% END %]>>
+-- expect --
+<<The cat sat
+on the
+mat>>
+
+-- test --
+<<[% FILTER collapse %]
+   
+          
+The    cat     sat
+on    the
+mat
+
+
+[% END %]>>
+-- expect --
+<<The cat sat on the mat>>
 

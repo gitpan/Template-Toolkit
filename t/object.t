@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: object.t,v 2.1 2000/09/12 15:25:23 abw Exp $
+# $Id: object.t,v 2.2 2001/03/22 12:23:15 abw Exp $
 #
 #========================================================================
 
@@ -102,6 +102,24 @@ sub AUTOLOAD {
     }
 }
 
+#------------------------------------------------------------------------
+# another object for testing auto-stringification
+#------------------------------------------------------------------------
+
+package Stringy;
+
+use overload '""' => 'stringify';
+
+sub new {
+    my ($class, $text) = @_;
+    bless \$text, $class;
+}
+
+sub stringify {
+    my $self = shift;
+    return "stringified '$$self'";
+}
+
 
 #------------------------------------------------------------------------
 # main 
@@ -116,7 +134,8 @@ my $objconf = {
 };
 
 my $replace = {
-    thing => TestObject->new($objconf),
+    thing  => TestObject->new($objconf),
+    string => Stringy->new('Test String'),
     %{ callsign() },
 };
 
@@ -223,4 +242,33 @@ before mid after
 -- expect --
 []
 []
+
+#------------------------------------------------------------------------
+# test auto-stringification
+#------------------------------------------------------------------------
+
+-- test --
+[% string.stringify %]
+-- expect --
+stringified 'Test String'
+
+-- test --
+[% string %]
+-- expect --
+stringified 'Test String'
+
+-- test --
+[% "-> $string <-" %]
+-- expect --
+-> stringified 'Test String' <-
+
+-- test --
+[% "$string" %]
+-- expect --
+stringified 'Test String'
+
+-- test --
+foo $string bar
+-- expect --
+foo stringified 'Test String' bar
 

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: tags.t,v 2.1 2000/09/08 08:10:53 abw Exp $
+# $Id: tags.t,v 2.2 2000/12/15 16:01:11 abw Exp $
 # 
 #========================================================================
 
@@ -205,3 +205,10 @@ a: 10
 3
 5
 7
+
+-- test --
+[% TAGS star -%]
+[* a = 10 -*]
+a is [* a *]
+-- expect --
+a is 10
