@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 1.4 1999/11/25 17:51:23 abw Exp $
+# $Id: filter.t,v 1.6 2000/03/06 20:10:33 abw Exp $
 #
 #========================================================================
 
@@ -31,6 +31,7 @@ my $params = {
     'c'      => $c,
     'd'      => $d,
     'list'   => [ $a, $b, $c, $d ],
+    'text'   => 'The cat sat on the mat',
 };
 my $config = {
     INTERPOLATE => 1, 
@@ -180,4 +181,131 @@ This is italic
 [% "foo" FILTER format("<< %s >>") FILTER format("=%s=") %]
 -- expect --
 =<< foo >>=
+
+
+-- test --
+[% FILTER into('blocktext') %]
+The cat sat on the mat
+
+Mary had a little Lamb
+
+
+
+You shall have a fishy on a little dishy, when the boat comes in.  What 
+if I can't wait until then?  I'm hungry!
+[% END -%]
+[% global.blocktext = blocktext; blocktext %]
+
+-- expect --
+The cat sat on the mat
+
+Mary had a little Lamb
+
+
+
+You shall have a fishy on a little dishy, when the boat comes in.  What 
+if I can't wait until then?  I'm hungry!
+
+-- test --
+[% global.blocktext FILTER html_para %]
+
+-- expect --
+<p>
+The cat sat on the mat
+</p>
+
+<p>
+Mary had a little Lamb
+</p>
+
+<p>
+You shall have a fishy on a little dishy, when the boat comes in.  What 
+if I can't wait until then?  I'm hungry!
+</p>
+
+-- test --
+[% global.blocktext FILTER html_break %]
+
+-- expect --
+The cat sat on the mat
+<br>
+<br>
+Mary had a little Lamb
+<br>
+<br>
+You shall have a fishy on a little dishy, when the boat comes in.  What 
+if I can't wait until then?  I'm hungry!
+
+-- test --
+[% global.blocktext FILTER truncate(10) %]
+
+-- expect --
+The cat...
+
+-- test --
+[% global.blocktext FILTER truncate %]
+
+-- expect --
+The cat sat on the mat
+
+Mary ...
+
+-- test --
+[% "foo..." FILTER repeat(5) %]
+
+-- expect --
+foo...foo...foo...foo...foo...
+
+-- test --
+[% FILTER truncate(21) %]
+I have much to say on this matter that has previously been said
+on more than one occassion.
+[% END %]
+
+-- expect --
+I have much to say...
+
+-- test --
+[% FILTER truncate(25) %]
+Nothing much to say
+[% END %]
+
+-- expect --
+Nothing much to say
+
+
+-- test --
+[% FILTER repeat(3) %]
+Am I repeating myself?
+[% END %]
+
+-- expect --
+Am I repeating myself?
+Am I repeating myself?
+Am I repeating myself?
+
+-- test --
+[% text FILTER remove(' ') +%]
+[% text FILTER remove('\s+') +%]
+[% text FILTER remove('cat') +%]
+[% text FILTER remove('at') +%]
+[% text FILTER remove('at', 'splat') +%]
+
+-- expect --
+Thecatsatonthemat
+Thecatsatonthemat
+The  sat on the mat
+The c s on the m
+The c s on the m
+
+-- test --
+[% text FILTER replace(' ', '_') +%]
+[% text FILTER replace('sat', 'shat') +%]
+[% text FILTER replace('at', 'plat') +%]
+
+-- expect --
+The_cat_sat_on_the_mat
+The cat shat on the mat
+The cplat splat on the mplat
+
 

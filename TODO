@@ -10,7 +10,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.66 2000/02/29 18:12:18 abw Exp $
+# $Id: TODO,v 1.70 2000/03/20 16:21:42 abw Exp $
 #
 #============================================================================
 
@@ -19,6 +19,9 @@ Pending
 
 Bugs
 ----
+  * object method call is failing when called against a non-object 
+    reference.
+
   * CATCH installs a block which overwrites any previous one.  This then 
     perists until the Context object is destroyed or the handler re-defined.
 
@@ -111,8 +114,4 @@ Other plugins, modules, scripts
            [% html.header(title='Test') %] 
     equivalent to:
 	   [% INCLUDE html/header title='Test' %]
-
-
-
-
 

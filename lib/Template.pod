@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pod,v 1.7 2000/03/01 14:22:02 abw Exp $
+#   $Id: Template.pod,v 1.50 2000/03/20 16:30:30 abw Exp $
 #
 #========================================================================
 
@@ -68,6 +68,9 @@ Template Toolkit - a Perl toolkit for template processing.
               [%      variable %]
               [%      hash.var %]
               [% "value: $var" %]
+
+  CALL      - as above without printing result
+	      [%  CALL variable %]
 
   SET       - assign a value to a variable
 	      [% SET variable = value %]
@@ -539,6 +542,15 @@ sense).
        id   = 'jdoe'
     %]
 
+The CALL directive is similar to GET in evaluating the variable named,
+but doesn't print the result returned.  This can be useful when a
+variable is bound to a sub-routine or object method which you want to
+call but aren't interested in the value returned (especially if it
+returns 0 or some other status code).  See L<VARIABLES BOUND TO USER
+CODE> and L<VARIABLES BOUND TO OBJECTS> below, for further details.
+
+    [% CALL inc_page_counter %]
+
 The INTERPOLATE option allows you to embed variables directly into text
 without requiring the '[%' and '%]' tags.  Instead, the variable name 
 should be prefixed by a '$'.  You can use curly braces to explicitly 
@@ -620,9 +632,10 @@ The fact that a keyword may be expressed in any case, precludes you from
 using any variable that has the same name as a reserved word, irrespective
 of its case.  Reserved words are:
 
-    GET, SET, DEFAULT, INCLUDE, PROCESS, IMPORT, FILTER, USE
+    GET, SET, CALL, DEFAULT, INCLUDE, PROCESS, IMPORT, FILTER, USE
     FOR, FOREACH, IF, UNLESS, ELSE, ELSIF, AND, OR, NOT 
     BLOCK, MACRO, END, THROW, CATCH, ERROR, RETURN, STOP, PERL
+    DEBUG
 
 e.g.
 
@@ -888,20 +901,6 @@ Output:
       * Foo
       * Foo Bar
 
-Individual elements of the list can be referenced by a numerical suffix.
-The first element of the list is element 0.
-
-    [% list = [ 'one' 'two' 'three' 'four' ] %]
-    [% list.0 %] [% list.3 %]
-
-    [% FOREACH n = [0..3] %]
-    [% list.${n} %], 
-    [%- END %]
-
-Output:
-    one four
-    one, two, three, four, 
-
 When the FOREACH directive is used without specifying a target variable, 
 any iterated values which are hash references will be automatically 
 imported.
@@ -930,15 +929,60 @@ loop.
        [% BREAK IF some.condition %]
     [% END %]
 
-The 'size' and 'max' values can be examined for a list to determine
-the number of elements and maximum index (size - 1).  The 'sort'
-method returns a sorted list of the elements in the list.
+Individual elements of the list can be referenced by a numerical suffix.
+The first element of the list is element 0.
+
+    [% list = [ 'one' 'two' 'three' 'four' ] %]
+    [% list.0 %] [% list.3 %]
+
+    [% FOREACH n = [0..3] %]
+    [% list.${n} %], 
+    [%- END %]
+
+Output:
+    one four
+    one, two, three, four, 
+
+Several general purpose methods are defined for accessing elements or
+otherwise manipulating lists.
+
+=over 4
+
+=item size
+
+Returns the number of items in the list.
+
+=item max
+
+Returns the index number of the last entry in the list (size - 1).  
+
+=item first
+
+Returns the first item in the list. 
+
+=item last
+
+Returns the last item in the list. 
+
+=item sort
+
+Returns the list items in basic sorted order (using Perl's 'sort').
+
+=item join
+
+Returns all elements in the list joined into a single string.  A joining
+string can be specified as a parameter.
+
+=back
+
+Example 1:
 
     [% list = [ 'Tom', 'Dick', 'Harry' ] %]
-    [% list.size %] names:
     [% FOREACH name = list.sort %]
        * [% name %]
     [% END %]
+
+    or: [% list.sort.join(', ') %]
 
 Output:
 
@@ -947,11 +991,19 @@ Output:
       * Harry
       * Tom
 
-The 'join' method can be called on a list to concatenate all values
-into a single string.  Values will be separated by a space or an
-alternate string can be passed as a parameter.
+    or: Dick, Harry, Tom
 
-    [% mylist.join(', ') %]
+Example 2:
+
+    [% items  = [ 'alpha', 'bravo', 'charlie', 'whisky', 'zulu' ] %]
+    [% items.size %] entries ([% items.first %] - [% items.last %]):
+       -> [% items.join(', ') %]
+
+Output:
+
+    5 entries (alpha - zulu):
+       -> alpha, bravo, charlie, whisky, zulu
+
 
 =head2 VARIABLES BOUND TO USER CODE
 
@@ -982,6 +1034,14 @@ Output:
     He chanted the magic spell, "Abracadabra!", and
     disappeared in a puff of smoke
 
+In this example, the [% magic %] variable is bound to the do_magic()
+sub-routine.  The code is called and the return value, 'Abracadabra',
+inserted into the document in place of the directive.  The CALL
+directive can be used to evaluate a variable (e.g. call code or an 
+object method) without printing the returned result.
+
+   [% CALL some_code %]
+
 Any additional parameters specified in parenthesis will also be passed
 to the code:
 
@@ -989,7 +1049,7 @@ to the code:
 	'foo'   => 'Mr. Foo',
 	'bar'   => 'Mr. Bar',
 	'qux'   => 'Qux',
-	'join'  => sub { my $joint = shift; join($joint, @_); },
+	'bold'  => sub { my $text = shift; return "<b>$text</b>"; },
     }
 
     $template->process('myfile', $data)
@@ -997,24 +1057,27 @@ to the code:
 
 myfile:
 
-    [% join(', ', foo, bar, 'Mr. Baz', "Mr. $qux") %]
+    [% bold('face') %]
 
 Output:
 
-    Mr. Foo, Mr. Bar, Mr. Baz, Mr Qux
+    <b>face</b>
 
 Named parameters may also be specified.  These are automatically collected
 into a single hash array which is passed by reference as the B<last> 
 parameter to the sub-routine.  Note how '=>' is synonymous for '='.
 
     [% whatever(foo, bar, name = 'John Doe', id = 'jdoe') %]
+
        # calls whatever('Mr. Foo', 'Mr. Bar', 
-			{ name => 'John Doe', id => 'jdoe' });
+		        { name => 'John Doe', id => 'jdoe' });
 
     [% whatever(name => 'John Doe', id => 'jdoe') %]
+
        # calls whatever({ name => 'John Doe', id=>'jdoe' });
 
     [% whatever(10, name='John Doe', 20, id='jdoe') %]
+
        # calls whatever(10, 20, { name => 'John Doe', id=>'jdoe' });
 
 The last example demonstrates the re-ordering of parameters. For the sake
@@ -1619,13 +1682,13 @@ which is then repeatedly evaluated each time the macro is called.
 
     [% MACRO header INCLUDE header %]
 
-    [% header %]             # => [% INCLUDE header %]
+    [% header %]   # => [% INCLUDE header %]
 
 Macros can be passed named parameters when called.  These values remain 
 local to the macro.
 
     [% header(title='Hello World') %]  
-                             # => [% INCLUDE header title='Hello World' %]
+                   # => [% INCLUDE header title='Hello World' %]
 
 A MACRO definition may include parameter names.  Values passed to the 
 macros are then mapped to these local variables.  Other named parameters
@@ -1681,6 +1744,13 @@ module name.  Any periods, '.', in the name will be converted to '::'.
     [% USE MyPlugin %]     #  => Template::Plugin::MyPlugin
     [% USE Foo.Bar  %]     #  => Template::Plugin::Foo::Bar
 
+Various 'system' plugins are included with the Template Toolkit (see 
+below and L<TEMPLATE TOOLKIT PLUGINS>.  These can be specified in lower
+case and are mapped to the appropriate name.
+
+    [% USE cgi   %]        # => Template::Plugin::CGI
+    [% USE table %]        # => Template::Plugin::Table
+
 Any additional parameters supplied in parenthesis after the plugin name
 will be also be passed to the new() constructor.  A reference to the 
 template Context object is always passed as the first parameter.
@@ -1729,6 +1799,18 @@ Output:
 
     <b>This is bold</b>
     <i>This is italic</i>
+
+The URL plugin allows you to build dynamic URLs from a base part and
+optional query parameters.
+
+    [% USE mycgi = URL('/cgi-bin/foo.pl', debug=1) %]
+    <a href="[% mycgi %]">...
+    <a href="[% mycgi(mode='submit') %]"...
+
+Output:
+
+    <a href="/cgi-bin/foo.pl?debug=1">...
+    <a href="/cgi-bin/foo.pl?mode=submit&debug=1">...
 
 The CGI plugin is an example of one which delegates to another Perl
 module.  In this this case, it is to Lincoln Stein's CGI.pm module.
@@ -1816,17 +1898,69 @@ thrown as a 'perl' exception.
 =head2 POST-PROCESSING FILTERS
 
 The FILTER directive can be used to post-process the output of a
-block.  The Template::Filters module defines the 'html',
-'format', 'redirect' and 'into' filters.  The 'html' filter converts
-the characters '<', '>' and '&' to '&lt;', '&gt;' and '&amp',
+block.  The following filters are avilable by default:
+
+=over 4
+
+=item html
+
+Converts the characters '<', '>' and '&' to '&lt;', '&gt;' and '&amp',
 respectively, protecting them from being interpreted as representing
-HTML tags or entities.  The 'format' filter takes a format string as a
-parameter (as per printf()) and formats each line of text accordingly.
+HTML tags or entities. 
 
     [% FILTER html %]
     Binary "<=>" returns -1, 0, or 1 depending on...
     [% END %]
-  
+
+output:
+
+    Binary "&lt;=&gt;" returns -1, 0, or 1 depending on...
+
+=item html_para
+
+This filter formats a block of text into HTML paragraphs.  A sequence of 
+two or more newlines is used as the delimiter for paragraphs which are 
+then wrapped in HTML E<lt>pE<gt>...E<lt>/pE<gt> tags.
+
+    [% FILTER html_para %]
+    The cat sat on the mat.
+
+    Mary had a little lamb.
+    [% END %]
+
+output:
+
+    <p>
+    The cat sat on the mat.
+    </p>
+
+    <p>
+    Mary had a little lamb.
+    </p>
+
+=item html_break
+
+Similar to the html_para filter described above, but uses the HTML tag
+sequence E<lt>brE<gt>E<lt>brE<gt> to join paragraphs.
+
+    [% FILTER html_para %]
+    The cat sat on the mat.
+
+    Mary had a little lamb.
+    [% END %]
+
+output:
+
+    The cat sat on the mat.
+    <br>
+    <br>
+    Mary had a little lamb.
+
+=item format(format)
+
+The 'format' filter takes a format string as a parameter (as per
+printf()) and formats each line of text accordingly.
+
     [% FILTER format('<!-- %-40s -->') %]
     This is a block of text filtered 
     through the above format.
@@ -1834,10 +1968,62 @@ parameter (as per printf()) and formats each line of text accordingly.
 
 output:
 
-    Binary "&lt;=&gt;" returns -1, 0, or 1 depending on...
-  
     <!-- This is a block of text filtered        -->
     <!-- through the above format.               -->
+
+=item truncate(length)
+
+Truncates the text block to the length specified, or a default length of
+32.  Truncated text will be terminated with '...' (i.e. the '...' falls
+inside the required length, rather than appending to it).
+
+    [% FILTER truncate(21) %]
+    I have much to say on this matter that has previously been said
+    on more than one occassion.
+    [% END %]
+
+output:
+
+    I have much to say...
+
+=item repeat(iterations)
+
+Repeats the text block for as many iterations as are specified (default: 1).
+
+    [% FILTER repeat(3) %]
+    Am I repeating myself?
+    [% END %]
+
+output:
+
+    Am I repeating myself?
+    Am I repeating myself?
+    Am I repeating myself?
+
+=item remove(string) 
+
+Searches the input text for any occurences of the specified string and 
+removes them.  A Perl regular expression may be specified as the search 
+string.
+
+    [% "The  cat  sat  on  the  mat" FILTER remove('\s+') %]
+
+output: 
+
+    Thecatsatonthemat
+
+=item replace(search, replace) 
+
+Similar to the remove filter described above, but taking a second parameter
+which is used as a replacement string for instances of the search string.
+
+    [% "The  cat  sat  on  the  mat" FILTER replace('\s+'m '_') %]
+
+output: 
+
+    The_cat_sat_on_the_mat
+
+=item redirect(file)
 
 The 'redirect' filter redirects the output of the block into a separate
 file, specified relative to the OUTPUT_PATH configuration item.
@@ -1847,6 +2033,8 @@ file, specified relative to the OUTPUT_PATH configuration item.
           [% INCLUDE userinfo %]
        [% END %]
     [% END %]
+
+=item into(varname)
 
 The 'into' filter allows you to capture the output of a block into a template 
 variable.
@@ -1858,9 +2046,11 @@ variable.
 
     [% notify_new_user_details(user_details) %]
 
+=back
+
 Additional filters may be provided via the FILTERS configuration option.
 Filters may also be added at any time via the register_filter($name, $factory)
-method.
+method.  See L<Template::Filters|Template::Filters> for further information.
 
 A filter that is created without any specific parameters will be cached
 and re-used whenever that same filter is required.  Specifying parameters
@@ -2729,20 +2919,54 @@ the values are defined in Template::Constants.
 
 =head1 TEMPLATE TOOLKIT PLUGINS
 
-Simon Matthews E<lt>sam@knowledgepool.comE<gt> has developed a DBI
-plugin for the Template Toolkit which brings the full power of Tim
-Bunce's E<lt>Tim.Bunce@ig.co.ukE<gt> database interface module (DBI)
-to your templates.  The DBI plugin and the DBI modules themselves are
-available from CPAN at:
+The following plugin modules are distributed with the Template Toolkit.
 
-  http://www.cpan.org/authors/id/S/SA/SAM/
-  http://www.cpan.org/modules/by-module/DBI/
+=over 4
+
+=item Format
+
+The Format plugin provides a simple way to format text according to a
+printf()-like format.
+
+    [% USE bold = format('<b>%s</b>') %]
+    [% bold('Hello') %]
+
+=item URL
+
+The URL plugin provides a simple way of contructing URLs from a base
+part and a variable set of parameters.  See L<Template::Plugin::URL>
+for further details.
+
+    [% USE mycgi = url('/cgi-bin/bar.pl', debug=1) %]
+
+    [% mycgi %]
+       # ==> /cgi/bin/bar.pl?debug=1
+
+    [% mycgi(mode='submit') %]
+       # ==> /cgi/bin/bar.pl?mode=submit&debug=1
+
+=item Table
+
+The Table plugin allows you to format a list of data items into a 
+virtual table by specifying a fixed number of rows or columns, with 
+an optional overlap.  See L<Template::Plugin::Table> for further 
+details.
+
+    [% USE table(list, rows=10, , overlap=1) %]
+
+    [% FOREACH item = table.col(3) %]
+       [% item %]
+    [% END %]
+
+=item CGI
 
 The CGI plugin is a wrapper around Lincoln Stein's 
 E<lt>lstein@genome.wi.mit.eduE<gt> CGI.pm module.  The plugin is 
 distributed with the Template Toolkit (see L<Template::Plugin::CGI>)
 and the CGI module itself is distributed with recent versions Perl,
 or is available from CPAN.
+
+=item XML::DOM
 
 The XML::DOM plugin gives access to the XML Document Object Module via
 Clark Cooper E<lt>cooper@sch.ge.comE<gt> and Enno Derksen's 
@@ -2751,6 +2975,8 @@ the Template Toolkit (see L<Template::Plugin::XML::DOM>) and requires the
 XML::DOM module, available from CPAN:
 
   http://www.cpan.org/modules/by-module/XML
+
+=item XML::RSS
 
 The XML::RSS plugin is a simple interface to Jonathan Eisenzopf's
 E<lt>eisen@pobox.comE<gt> XML::RSS module.  An RSS (Rich Site Summary)
@@ -2762,6 +2988,27 @@ plugin is distributed with the Template Toolkit
 also available from CPAN:
 
   http://www.cpan.org/modules/by-module/XML
+
+=back
+
+The following module is distributed separately from the Template Toolkit.
+
+=over 4
+
+=item DBI
+
+Simon Matthews E<lt>sam@knowledgepool.comE<gt> has developed a DBI
+plugin for the Template Toolkit which brings the full power of Tim
+Bunce's E<lt>Tim.Bunce@ig.co.ukE<gt> database interface module (DBI)
+to your templates.  The DBI plugin and the DBI modules themselves are
+available from CPAN at:
+
+  http://www.cpan.org/authors/id/S/SA/SAM/
+  http://www.cpan.org/modules/by-module/DBI/
+
+=back
+
+
 
 =head1 EXAMPLES
 
@@ -2906,7 +3153,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 VERSION
 
-This is version 1.04 of the Template Toolkit.  
+This is version 1.05 of the Template Toolkit.  
 
 Please consult the F<Changes> file for information about visible changes
 in the Template Toolkit between releases.  The F<TODO> file contains 
@@ -2951,6 +3198,7 @@ a number of years.  Please let me know if you think anyone is missing
 from this list.
 
   Thiery-Michel Barral      <kktos@electron-libre.com>
+  Neil Bowers               <neilb@cre.canon.co.uk>
   Francois Desarmenien      <desar@club-internet.fr>
   Horst Dumcke              <hdumcke@cisco.com> 
   Perrin Harkins            <pharkins@etoys.com>
@@ -2995,17 +3243,6 @@ the process of reworking it to use the Template Toolkit as the
 presentation layer.  The module is available from CPAN in 
 
   http://www.cpan.org/modules/by-module/DbFramework/
-
-The XML::RSS plugin is a simple interface to Jonathan Eisenzopf's
-E<lt>eisen@pobox.comE<gt> XML::RSS module.  An RSS (Rich Site Summary)
-file is typically used to store short news 'headlines' describing
-different links within a site.  This plugin allows you to parse RSS
-files and format the contents accordingly using templates.  The
-XML::RSS module and plugin are available from CPAN:
-
-  http://www.cpan.org/modules/by-module/XML
-  http://www.cpan.org/authors/id/ABW
-
 
 =head1 SEE ALSO
 

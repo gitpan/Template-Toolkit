@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.44 2000/02/29 18:12:24 abw Exp $
+# $Id: Context.pm,v 1.45 2000/03/20 08:02:19 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.44 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.45 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -181,7 +181,7 @@ sub process {
     # a STATUS_RETURN is caught and cleared as this represents the 
     # correct point for a [% RETURN %] to return to
     $error = STATUS_OK 
-	if $error == STATUS_RETURN;
+	if $error =~ /^\d+$/ && $error == STATUS_RETURN;
 
     # clear visitation flag
     undef $self->{ VISITING }->{ $template };
@@ -266,7 +266,6 @@ sub throw {
 	$info = $type;
 	$type = ERROR_UNDEF;
     }
-#    print "type: $type   info: $info\n";
 
     # we first examine the exception type to see if a handler is defined.
     # if not, we strip off dotted elements from the end of the type to 
@@ -290,7 +289,6 @@ sub throw {
 
     # call sub-routine if $catch is a CODE ref
     if (($catchref = ref($catch)) eq 'CODE') {
-	print "throwing code handler\n";
 	$catch = &$catch($self, $type, $info);
     }
     # call process() to render a Template::Directive reference
@@ -585,11 +583,14 @@ sub DESTROY {
 #------------------------------------------------------------------------
 
 my $list_ops = {
-    'max'  => sub { local $^W = 0; my $item = shift; $#$item; },
-    'size' => sub { local $^W = 0; my $item = shift; $#$item + 1; },
-    'sort' => sub { my $item  = shift; [ sort @$item ] },
-    'join' => sub { my ($list, $joint) = @_; 
-		    join(defined $joint ? $joint : ' ', @$list) },
+    'max'   => sub { local $^W = 0; my $item = shift; $#$item; },
+    'size'  => sub { local $^W = 0; my $item = shift; $#$item + 1; },
+    'sort'  => sub { my $item  = shift; [ sort @$item ] },
+    'first' => sub { my $list = shift; $list->[0] },
+    'last'  => sub { my $list = shift; $list->[$#$list] },
+    'join'  => sub { my ($list, $joint) = @_; 
+		    join(defined $joint ? $joint : ' ', 
+			 map { defined $_ ? $_ : '' } @$list) },
 };
 
 my $hash_ops = {
@@ -1093,7 +1094,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.44 $
+$Revision: 1.45 $
 
 =head1 COPYRIGHT
 

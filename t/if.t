@@ -15,7 +15,7 @@
 # TODO: this should test the binary comparison and boolean operators
 #    more thoroughly, including parenthesised sub-expressions, etc.
 #
-# $Id: if.t,v 1.10 1999/11/25 17:51:25 abw Exp $
+# $Id: if.t,v 1.11 2000/03/06 20:10:34 abw Exp $
 #
 #========================================================================
 
@@ -161,3 +161,4 @@ something in the way she moves
 [% END %]
 -- expect --
 nothing will come of nothing
+

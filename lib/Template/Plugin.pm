@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugin.pm,v 1.10 2000/02/29 18:12:25 abw Exp $
+# $Id: Plugin.pm,v 1.11 2000/03/20 08:02:26 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use strict;
 use vars qw( $VERSION $DEBUG $PLUGIN_NAMES $JOINT $ERROR $AUTOLOAD );
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 # this maps standard library plugins to lower case names for convenience
@@ -39,6 +39,8 @@ $PLUGIN_NAMES = {
     'format'   => 'Format',
     'cgi'      => 'CGI',
     'dbi'      => 'DBI',
+    'url'      => 'URL',
+    'table'    => 'Table',
     'datafile' => 'Datafile',
 };
 
@@ -393,7 +395,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.10 $
+$Revision: 1.11 $
 
 =head1 COPYRIGHT
 

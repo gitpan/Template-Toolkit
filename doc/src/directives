@@ -7,6 +7,9 @@
               [%      hash.var %]
               [% "value: $var" %]
 
+  CALL      - as above without printing result
+	      [%  CALL variable %]
+
   SET       - assign a value to a variable
 	      [% SET variable = value %]
               [%     variable = other_variable

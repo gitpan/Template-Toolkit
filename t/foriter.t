@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foriter.t,v 1.9 2000/02/15 14:53:44 abw Exp $
+# $Id: foriter.t,v 1.11 2000/03/20 08:01:36 abw Exp $
 #
 #========================================================================
 
@@ -38,6 +38,12 @@ my $params = {
     'days'   => \@days,
     'months' => \&months,
     'format' => \&format,
+    'people' => [ 
+	  { id => 'abw', code => 'abw', name => 'Andy Wardley' },
+	  { id => 'aaz', code => 'zaz', name => 'Azbaz Azbaz Zazbazzer' },
+	  { id => 'bcd', code => 'dec', name => 'Binary Coded Decimal' },
+	  { id => 'efg', code => 'zzz', name => 'Extra Fine Grass' },
+    ],
 };
 
 test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1, DEBUG => 1 }, 
@@ -71,7 +77,7 @@ charlie
 delta
 
 -- test --
-[% FOREACH item = [ d C a c b ](order => 'sorted') %]
+[% FOREACH item = [ d C a c b ] order => 'sorted' %]
 $item
 [% END %]
 -- expect --
@@ -82,7 +88,7 @@ charlie
 delta
 
 -- test --
-[% FOREACH item = [ d a c b ](order => 'reverse') %]
+[% FOREACH item = [ d a c b ] order => 'reverse' %]
 $item
 [% END %]
 -- expect --
@@ -95,10 +101,10 @@ alpha
 [% CATCH undef %]
 ERROR: [% e.info +%]
 [% END %]
-[% FOREACH item = [ a b c ] (order => 'sideways') %]
+[% FOREACH item = [ a b c ] order => 'sideways' %]
 $item
 [% END %]
-[% FOREACH item = [ a b c ] (order => inverted) %]
+[% FOREACH item = [ a b c ] order => inverted %]
 $item
 [% END %]
 -- expect --
@@ -125,8 +131,8 @@ harry
 tom
 
 -- test --
-%% ulist = [ b c d a 'Andy' ]( order  => 'sorted', 
-			       action => format('[- %-7s -]') ) %%
+[% ulist = [ b c d a 'Andy' ]( order  => 'sorted', 
+			       action => format('[- %-7s -]') ) %]
 [% FOREACH item = ulist %]
 $item
 [% END %]
@@ -152,7 +158,7 @@ List of 4 items:
 That's all folks
 
 -- test --
-[% iterator = [ d b c a ](order => 'sorted') %]
+[% iterator = [ d b c a ]( order => 'sorted' ) %]
 [% FOREACH item = iterator %]
 [% "List of $iterator.size items:\n----------------\n" IF iterator.first %]
  * [% item +%]
@@ -229,11 +235,43 @@ name: [% name +%]
 id: 12345
 name: Original
 
+-- test --
+[% "$p.id($p.code): $p.name\n"
+       FOREACH p = [ people.1 people.2 ] order='sorted' field='id' %]
 
+-- expect --
+aaz(zaz): Azbaz Azbaz Zazbazzer
+bcd(dec): Binary Coded Decimal
 
+-- test --
+[% "$p.id($p.code): $p.name\n"
+       FOREACH p = people order='sorted' field='code' %]
 
+-- expect --
+abw(abw): Andy Wardley
+bcd(dec): Binary Coded Decimal
+aaz(zaz): Azbaz Azbaz Zazbazzer
+efg(zzz): Extra Fine Grass
 
+-- test --
+[% "$p.id($p.code): $p.name\n"
+       FOREACH p = people { order='reverse' field='code' } %]
 
+-- expect --
+efg(zzz): Extra Fine Grass
+aaz(zaz): Azbaz Azbaz Zazbazzer
+bcd(dec): Binary Coded Decimal
+abw(abw): Andy Wardley
+
+-- test --
+[% "$p.id($p.code): $p.name\n"
+       FOREACH p = people, order='sorted', field='code' %]
+
+-- expect --
+abw(abw): Andy Wardley
+bcd(dec): Binary Coded Decimal
+aaz(zaz): Azbaz Azbaz Zazbazzer
+efg(zzz): Extra Fine Grass
 
 
 

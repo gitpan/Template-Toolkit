@@ -9,8 +9,82 @@
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes,v 1.103 2000/03/01 14:22:20 abw Exp $
+# $Id: Changes,v 1.108 2000/03/20 16:31:22 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 1.05  2000/03/20 16:31:05
+#------------------------------------------------------------------------
+
+* Added the CALL directive, identical to GET in every way except
+  that it doesn't print the value returned by evaluating the variable.
+  This allows you to call sub-routines or methods and effectively
+  ignore the return value.  Errors and exceptions returned are still
+  raised automatically.
+
+* Added the 'html_para', 'html_break', 'truncate' and 'repeat' filters 
+  kindly provided by Leslie Michael Orchard, or minor adaptations 
+  thereof.  Also added 'replace' and 'remove' filters as suggested by 
+  Neil Bowers.  Updated documentation and test suite accordingly.
+
+* Added the 'URL' plugin for constructing a URL from a base part and
+  variable set of parameters. Based on a suggestion by Andrew Brindeew
+  <abr@df.ru>.  Added t/url.t and updated docs.
+
+* Added the 'Table' plugin which allows you to slice up a data set 
+  into rows and columns.  Specify either a fixed number of 'rows' or 
+  'cols' with an optional 'overlap' and then call the col() or row()
+  method to request a specific row or cols() or rows() to return all
+  cols/rows as list references.  See t/table.t for examples and 
+  documentation in Template::Plugin::Table.
+
+* Added get_all() method to Template::Iterator to return all remaining
+  data.  This allows it to be passed to the Table plugin (and others)
+  which can then easily extract all remaining data from it.  Here's a
+  short example showing how you might integrate the results of a DBI
+  query (iterator) into a table:
+
+    [% USE DBI(dsn,user,pass) -%]
+    [% USE table( DBI.query('SELECT * FROM alphabet ORDER BY letter'),
+                            rows=8 overlap=1 pad=0) -%]
+    [% FOREACH row = table.cols -%]
+    [% row.first.letter %] - [% row.last.letter +%]:
+       [% FOREACH item = row %][% item.name %] [% END %]
+    [% END %]
+
+  Producing output something like this:
+
+    a - h:
+      alpha bravo charlie delta echo foxtrot golf hotel 
+    h - o:
+      hotel india juliet kilo lima mike november oscar 
+    o - v:
+      oscar papa quebec romeo sierra tango umbrella victor 
+    v - z:
+      victor whisky x-ray yankee zulu 
+
+* Added the facility to specify iterator options directly in FOREACH
+  directives.  These are simply added after the list name or list
+  construction.  e.g.
+
+    [% FOREACH name = list order = 'sorted' %]
+    [% FOREACH name = [ 'tom' 'dick' 'harry' ] order = 'sorted' %]
+
+  It was previously possible to specify parenthesised iterator options
+  when creating anonymous lists (e.g. "[ ... ](order=>'sorted')" ).
+  This is still supported for backwards compatibility but is no longer
+  documented.  The new syntax is now preferred.  Added new parameter
+  'field' which names a key within the data items (presumably hashes)
+  which should be used as the sort key.  See examples in t/
+
+    [% FOREACH p = people order='sorted' field='surname' %]  
+
+* Removed a rogue debug statement printed when calling a code based 
+  CATCH handler.
+
+* Applied a patch sent by Swen Thuemmler to fix a problem in the Template
+  DESTROY method reporting 'Can't call method "old" on an undefined value...'
+  when a $SIG{__DIE__} handler is defined.
 
 #------------------------------------------------------------------------
 # Version 1.04  2000/03/01 14:22:01

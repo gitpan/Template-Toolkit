@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.28 2000/02/29 18:12:24 abw Exp $
+# $Id: Directive.pm,v 1.30 2000/03/20 08:02:20 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.28 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.30 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -45,12 +45,13 @@ $DEBUG = 0;
 my %param_tbl = (
     'Text'      => [ qw( TEXT                   ) ],
     'Get'       => [ qw( TERM                   ) ],
+    'Call'      => [ qw( TERM                   ) ],
     'Set'       => [ qw( ARGS                   ) ],
     'Include'   => [ qw( FILE ARGS              ) ],
     'Process'   => [ qw( FILE ARGS              ) ],
     'Use'       => [ qw( NAME ARGS ALIAS        ) ],
     'If'        => [ qw( EXPR BLOCK ELSE        ) ],
-    'For'       => [ qw( ITEM LIST BLOCK        ) ],
+    'For'       => [ qw( ITEM LIST PARAMS BLOCK ) ],
     'While'     => [ qw( EXPR BLOCK             ) ],
     'Filter'    => [ qw( NAME ARGS ALIAS BLOCK  ) ],
     'Block'     => [ qw( CONTENT                ) ],
@@ -182,6 +183,24 @@ sub process {
 	if defined($value);
 
     return Template::Constants::STATUS_OK;
+}
+
+
+#------------------------------------------------------------------------
+# CALL				                          [% CALL term %]
+#------------------------------------------------------------------------
+
+package Template::Directive::Call;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
+
+sub process {
+    my ($self, $context) = @_;
+    my ($ident, $value, $error);
+
+    ($value, $error) = $context->_evaluate($self->{ TERM });
+
+    return $error || Template::Constants::STATUS_OK;
 }
 
 
@@ -355,7 +374,7 @@ use vars qw( @ISA );
 
 sub process {
     my ($self, $context) = @_;
-    my ($item, $list) = @$self{ qw( ITEM LIST ) };
+    my ($item, $params, $list) = @$self{ qw( ITEM PARAMS LIST ) };
     my ($iterator, $value, $error, $loopsave);
     my $LOOPVAR = 'loop';
 
@@ -365,6 +384,12 @@ sub process {
     ($list, $error) = $context->_evaluate($list);
     return $error if $error;
 
+    if ($params && @$params) {
+	($params, $error) = $context->_evaluate($params);
+	return $error if $error;
+	$params = pop @$params;
+    }
+
     # do nothing if there's nothing to do
     return Template::Constants::STATUS_OK		    ## RETURN ##
 	unless defined $list;
@@ -372,7 +397,10 @@ sub process {
     # the target may already be an iterator, otherwise we create one
     $iterator = UNIVERSAL::isa($list, 'Template::Iterator')
 	? $list
-	: Template::Iterator->new($list);
+	: Template::Iterator->new($list, $params);
+
+    return (undef, $context->throw($Template::Iterator::ERROR))
+	unless $iterator;
 
     # initialise iterator
     ($value, $error) = $iterator->get_first();
@@ -811,7 +839,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.28 $
+$Revision: 1.30 $
 
 =head1 COPYRIGHT
 

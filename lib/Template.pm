@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.48 2000/02/17 12:32:03 abw Exp $
+#   $Id: Template.pm,v 1.51 2000/03/20 16:21:42 abw Exp $
 #
 #========================================================================
  
@@ -34,7 +34,7 @@ use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '1.04';
+$VERSION     = '1.05';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;
@@ -199,7 +199,7 @@ sub AUTOLOAD {
 
 sub DESTROY {
     my $self = shift;
-    $self->{ CONTEXT }->old();
+    $self->{ CONTEXT }->old() if $self->{ CONTEXT };
     undef %$self;
 }
 

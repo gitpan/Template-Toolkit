@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: RSS.pm,v 1.4 2000/03/01 13:39:09 abw Exp $
+# $Id: RSS.pm,v 1.5 2000/03/03 11:07:16 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use vars qw( @ISA $VERSION );
 use base qw( Template::Plugin );
 use XML::RSS;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my ($class, $context, $filename) = @_;
@@ -65,6 +65,13 @@ Template::Plugin::XML::RSS - Template Toolkit plugin to the XML::RSS module
        [% item.title %]
        [% item.link  %]
     [% END %]
+
+=head1 PRE-REQUISITES
+
+This plugin requires that the XML::Parser and XML::RSS modules be 
+installed.  These are available from CPAN:
+
+    http://www.cpan.org/modules/by-module/XML
 
 =head1 DESCRIPTION
 
@@ -148,7 +155,7 @@ Schwartz <merlyn@stonehenge.com>.
 
 =head1 REVISION
 
-$Revision: 1.4 $
+$Revision: 1.5 $
 
 =head1 COPYRIGHT
 

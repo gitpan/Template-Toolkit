@@ -31,14 +31,3 @@ presentation layer.  The module is available from CPAN in
 
   http://www.cpan.org/modules/by-module/DbFramework/
 
-The XML::RSS plugin is a simple interface to Jonathan Eisenzopf's
-E<lt>eisen@pobox.comE<gt> XML::RSS module.  An RSS (Rich Site Summary)
-file is typically used to store short news 'headlines' describing
-different links within a site.  This plugin allows you to parse RSS
-files and format the contents accordingly using templates.  The
-XML::RSS module and plugin are available from CPAN:
-
-  http://www.cpan.org/modules/by-module/XML
-  http://www.cpan.org/authors/id/ABW
-
-

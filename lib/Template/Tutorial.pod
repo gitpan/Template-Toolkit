@@ -24,7 +24,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Tutorial.pod,v 1.2 2000/02/29 14:46:21 abw Exp $
+#   $Id: Tutorial.pod,v 1.18 2000/03/20 16:30:31 abw Exp $
 #
 #========================================================================
 
@@ -749,7 +749,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 VERSION
 
-This is version 1.04 of the Template Toolkit.  
+This is version 1.05 of the Template Toolkit.  
 
 Please consult the F<Changes> file for information about visible changes
 in the Template Toolkit between releases.  The F<TODO> file contains 

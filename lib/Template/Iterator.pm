@@ -10,17 +10,19 @@
 #
 #   An iterator is an object which provides a consistent way to
 #   navigate through data which may have a complex underlying form.
-#   This implementation uses the first() and next() methods to iterate
-#   through a dataset.  The first() method is called once to perform
-#   any data initialisation and return the first value, then next() is
-#   called repeatedly to return successive values.  Both these methods
-#   return a pair of values which are the data item itself and a
-#   status code.  The default implementation handles iteration through
-#   an array (list) of elements which is passed by reference to the
-#   constructor.  An empty list is used if none is passed.  The module
-#   may be sub-classed to provide custom implementations which iterate
-#   through any kind of data in any manner as long as it can conforms
-#   to the first()/next() interface.
+#   This implementation uses the get_first() and get_next() methods to
+#   iterate through a dataset.  The get_first() method is called once
+#   to perform any data initialisation and return the first value,
+#   then get_next() is called repeatedly to return successive values.
+#   Both these methods return a pair of values which are the data item
+#   itself and a status code.  The default implementation handles
+#   iteration through an array (list) of elements which is passed by
+#   reference to the constructor.  An empty list is used if none is
+#   passed.  The module may be sub-classed to provide custom
+#   implementations which iterate through any kind of data in any
+#   manner as long as it can conforms to the get_first()/get_next()
+#   interface.  The object also implements the get_all() method for
+#   returning all remaining elements in the list as a hash reference.
 #
 #   For further information on iterators see "Design Patterns", by the 
 #   "Gang of Four" (Erich Gamma, Richard Helm, Ralph Johnson, John 
@@ -30,15 +32,14 @@
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Iterator.pm,v 1.8 1999/09/14 23:07:02 abw Exp $
+# $Id: Iterator.pm,v 1.10 2000/03/20 08:02:25 abw Exp $
 #
 #============================================================================
 
@@ -47,12 +48,12 @@ package Template::Iterator;
 require 5.004;
 
 use strict;
-use vars qw( $VERSION $DEBUG $AUTOLOAD );
+use vars qw( $VERSION $DEBUG $ERROR $AUTOLOAD );
 use Template::Constants qw( :status :error );
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 
@@ -71,20 +72,71 @@ $DEBUG   = 0;
 #------------------------------------------------------------------------
 
 sub new {
-    my ($class, $data, $params) = @_;
-    my $self = { };
-
-    $data   ||= [ ];
-    $params ||= { };
-
-    @$self{ map { uc } keys %$params } = values %$params;
+    my $class = shift;
+    my $data  = shift || [ ];
 
     # coerce any non-list data into an array reference
     $data  = [ $data ] 
 	unless UNIVERSAL::isa($data, 'ARRAY');
 
+    my $self = bless {
+	_DATA  => $data,
+    }, $class;
+
+    $self->init(@_);
+}
+
+
+
+sub init {
+    my $self   = shift;
+    my $params = shift || { };
+    my $data   = $self->{ _DATA };
+    my ($order, $error);
+
+    @$self{ map { uc } keys %$params } = values %$params;
+
+    # an ORDER parameter may be defined as a code ref for calling or
+    # one of the strings 'sorted' or 'reverse'
+    if (defined($order = $self->{ ORDER })) {
+	my $field = $self->{ FIELD };
+
+	if (ref($order) eq 'CODE') {
+	    ($data, $error) = &$order($data);
+	    return $self->fail($error) if $error;	## RETURN ##
+	} 
+	elsif ($order eq 'sorted') {
+	    $data = [ $self->sort($data, $field) ];
+	}
+	elsif ($order eq 'reverse') {
+	    $data = [ reverse $self->sort($data, $field) ];
+	}
+	else {
+	    return $self->fail("invalid iterator order: $order");
+	}
+    }
     $self->{ _DATA } = $data;
-    bless $self, $class;
+
+    return $self;
+}
+
+
+sub error {
+    my $self = shift;
+    if (@_) {
+	$self->{ ERROR } = join('', @_);
+	return undef;
+    }
+    else {
+	return $self->{ ERROR };
+    }
+}
+
+
+sub fail {
+    my ($class, $error) = @_;
+    $ERROR = $error;
+    return undef;
 }
 
 
@@ -108,29 +160,9 @@ sub new {
 sub get_first {
     my $self  = shift;
     my $data  = $self->{ _DATA };
-    my ($order, $error);
 
 
-    # an ORDER parameter may be defined as a code ref for calling or
-    # one of the strings 'sorted' or 'reverse'
-    if (defined($order = $self->{ ORDER })) {
-	if (ref($order) eq 'CODE') {
-	    ($data, $error) = &$order($data);
-	} 
-	elsif ($order eq 'sorted') {
-	    $data = $self->sort($data);
-	}
-	elsif ($order eq 'reverse') {
-	    $data = $self->sort($data, 1);
-	}
-	else {
-	    $error = Template::Exception->new(ERROR_UNDEF, 
-					   "invalid iterator order: $order");
-	}
-	return (undef, $error) if $error;
-    }
-
-    $self->{ _DATASET } = $data;
+    $self->{ _DATASET } = $self->{ _DATA };
     my $size = scalar @$data;
     my $index = 0;
     
@@ -176,12 +208,49 @@ sub get_next {
 	return $self->do_iteration($self->{ _DATASET }->[ $index ]);  
     }
     else {
-	# clear index and indicate data finished
-	undef $self->{ _INDEX };
+	# all done
 	return (undef, STATUS_DONE);			    ## RETURN ##
     }
 }
 
+
+#------------------------------------------------------------------------
+# get_all()
+#
+# Method which returns all remaining items in the iterator as a Perl list
+# reference.  May be called at any time in the life-cycle of the iterator.
+# The get_first() method will be called automatically if necessary, and
+# then subsequent get_next() calls are made, storing each returned 
+# result until the list is exhausted.  This brute force approach is 
+# inelegant but ensures that any ACTION triggers are called for each 
+# item.  It could probably be optimised away by simply returning the 
+# remaining items in a list if ACTION (or some general flag) is undefined.
+#------------------------------------------------------------------------
+
+sub get_all {
+    my $self = shift;
+    my (@data, $value, $error);
+
+    # call get_first() if necessary
+    unless (defined $self->{ _INDEX }) {
+	($value, $error) = $self->get_first();
+	push(@data, $value)
+	    unless $error;
+    }
+    
+    # get remaining items in set
+    while (! $error) {
+	($value, $error) = $self->get_next();
+	push(@data, $value)
+	    unless $error;
+    }
+
+    $error = STATUS_OK
+	if $error =~ /^\d+/ && $error == STATUS_DONE;
+
+    return $error ? (undef, $error) : \@data;
+}
+    
 
 
 #------------------------------------------------------------------------
@@ -206,30 +275,29 @@ sub do_iteration {
 
 
 #------------------------------------------------------------------------
-# sort(\@data, $reverse)
+# sort(\@data, $field)
 # 
 # Default sorting method for base class iterator which sorts the values
 # passed by list reference into alphanumerical order.  Sorting is 
 # handle case-insensitivity using a Schwartzian Transform to create 
-# a lower-case folded comparitor for the sort sub.  The $reverse flag
-# may be set true to indicate that the set order should be reversed.
+# a lower-case folded comparitor for the sort sub.  If the $field flag
+# is set then the data list is assumed to contain hash references 
+# whose named field should be used as the comparitor string.
 #------------------------------------------------------------------------ 
 
 sub sort {
-    my ($self, $data, $reverse) = @_;
+    my ($self, $data, $field) = @_;
     $data = $self->{ _DATA } unless $data;
 
-    return $reverse 
-	?  [ map  { $_->[0] }
-	     sort { $b->[1] cmp $a->[1] }
-	     map  { [ $_, lc $_ ] } 
-	     @$data 
-	   ]
-        :  [ map  { $_->[0] }
-	     sort { $a->[1] cmp $b->[1] }
-	     map  { [ $_, lc $_ ] } 
-	     @$data 
-	   ]
+    return $field
+	?  map  { $_->[0] }
+	   sort { $a->[1] cmp $b->[1] }
+	   map  { [ $_, lc $_->{ $field } ] } 
+	   @$data 
+        :  map  { $_->[0] }
+	   sort { $a->[1] cmp $b->[1] }
+	   map  { [ $_, lc $_ ] } 
+           @$data
 }
 
 
@@ -340,7 +408,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.8 $
+$Revision: 1.10 $
 
 =head1 COPYRIGHT
 

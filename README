@@ -4,16 +4,16 @@ NAME
 OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
     The Template Toolkit module bundle is available from CPAN as:
 
-        /authors/id/ABW/Template-Toolkit-1.04.tar.gz
+        /authors/id/ABW/Template-Toolkit-1.05.tar.gz
 
     Unpack the archive to create an installation directory.
     Something like this:
 
-        zcat Template-Toolkit-1.04.tar.gz | tar xvf -
+        zcat Template-Toolkit-1.05.tar.gz | tar xvf -
 
     'cd' into that directory, make, test and install the modules:
 
-        cd Template-Toolkit-1.04
+        cd Template-Toolkit-1.05
         perl Makefile.PL
         make
         make test
@@ -64,165 +64,6 @@ TOOLKIT CONTENTS
         perldoc tpage
         perldoc ttree
 
-OVERVIEW
-    The Template Toolkit is a collection of Perl modules which
-    collectively implement a fast, powerful and generic template
-    processing system. In this context, a template is a text
-    document which contains embedded processing "directives". These
-    instruct the template processor to perform certain actions such
-    as; inserting the value of a variable; processing and including
-    another template file or user-defined block; testing some
-    condition and generating output of one kind or another
-    accordingly; iterating through a set of values; and so on.
-    Anything not marked as a template directive is treated as plain
-    text and gets passed through unaltered. By default, directives
-    look something like this:
-
-       [% INCLUDE header %]
-
-    The "mini-language" that the toolkit uses is designed to be
-    clear, concise, regular in structure and simple in syntax. It is
-    a specialised language which boasts many powerful features for
-    constructing dynamic content but it is *not* a general purpose
-    programming language. Instead, it supports a plugin interface
-    which allows separate modules of application specific code to be
-    written in the language of choice (i.e. Perl, C, C++, etc) and
-    then loaded, used and re-used as required.
-
-    This gives you the facility to add any programmable
-    functionality you require but without having to write the code
-    directly into the document. In other words, it promotes the
-    separation of application code (the *implementation*) from the
-    user interface (the *presentation*). It tries to keep templates
-    clutter-free, concentrating on what the document looks like, and
-    hides away the implementation specific details of how the
-    various items of content are stored, retrieved or calculated.
-
-    Development and subsequent maintenance become easier and less
-    error prone when the "back-end" is separated from the "front-
-    end". You (or your web designer) can first decide how the
-    page(s) should look by creating the output templates, perhaps by
-    re-using other common elements that you've already defined for
-    your web site such as headers, footers, menus, etc. Then, you
-    (or your progammer) can create any Perl code required to
-    required to generate the dynamic parts of the content, perhaps
-    by using CPAN modules, one of the existing Template Toolkit
-    "plugins" or by re-using some code you've previously written for
-    another web application running on your site.
-
-    The important thing is that the code is developed *separately*
-    from the template documents. This is a key feature of the
-    Template Toolkit with the emphasis being on moving code *out* of
-    documents, rather than moving it *in*. It doesn't matter if you
-    put every function in a separate file or every bit of
-    application code into one big module - just tell the Template
-    Toolkit where to find the code and leave it to handle the rest.
-    The new functionality is then available without distraction or
-    discourse in any and all of your template documents.
-
-    This isn't the only way to do it. There are times when the "best
-    solution" in terms of getting the job done quickly and
-    efficiently is to simply embed Perl code directly into the
-    document. The Template Toolkit has an option (EVAL_PERL -
-    disabled by default) to allow Perl code to be embedded into
-    special 'PERL' sections which are then evaluated when the
-    template is processed. These Perl code fragments have full
-    access to the Template Toolkit interface and may read or update
-    variables, process other template files, load plugins, and so
-    on.
-
-    If you prefer the embedded Perl approach and have a need to get
-    some functionality into a document with the minimum fuss, setup
-    time and effort, then you might want to consider using a
-    dedicated embedded Perl processor. In those cases, Mark-Jason
-    Dominus' Text::Template module, available from CPAN, comes
-    highly recommended.
-
-    In many ways, this is like CGI scripting in reverse. Instead of
-    embedding HTML within the Perl script, you are embeddding Perl
-    within the HTML document. The Template Toolkit tries to better
-    separate the two in attempt to create a more structured approach
-    to constructing dynamic content. There's a slight startup cost
-    to using this approach because, like life in general, it often
-    takes a little longer to get yourself properly organised. The
-    payoff comes in terms of scalability and subsequent ease of re-
-    use - the more you add, the more you benefit from having
-    structure. That's not to say that you can't use it in many
-    interesting ways with just a single document, but if you only
-    have a single document to worry about then the chances are that
-    you haven't got a lot to worry about.
-
-    So rather than emphasing the raw programming power embeddable
-    within any *single document*, it focuses on tools and techniques
-    to help better partition and subsequently re-integrate the
-    different components that constitute the *many* documents in a
-    system. It offers speed and simplicity in constructing document
-    systems and delegates "real programming" to a more powerful,
-    general purpose language - Perl.
-
-    There are many benefits to be gained from keeping Perl code
-    separate from template documents. You could, for example, write
-    a single web application with a dozen different sets of
-    templates to represent alternate user interfaces. These would
-    represent multiple "views" on the same underlying "model" and
-    might differ in layout or design style, contain text only or go
-    hard on the graphics, contain HTML frames or not, show "novice"
-    or "expert" functionality, allow per-user customisation, present
-    an internationalised or localised interface, and so on. On the
-    other side of the same coin, you could change your underlying
-    code to implement a faster algorithm or more efficient storage
-    method, but you wouldn't have to change the template files. They
-    still get their "content" from the same "place" and don't need
-    to concern themselves with what happens inside each black box.
-
-    The end result is that complex, dynamic content systems can be
-    built easily and quickly from a number of small, reusable
-    components. Some of these components are template files
-    representing user interface "chunks" and others may be data
-    structures, library code, user-defined sub-routines or objects
-    that implement various functionalities of the system. The
-    Template Toolkit's role is to help pull all the different pieces
-    together as quickly and simply as possible, hiding as many of
-    the unnecessary details as it can.
-
-    The Template Toolkit is ideally suited for generating web
-    content, but it is by no means limited or specific to this or
-    any other application area. The plugin interface means that it
-    doesn't have to be - it can just concentrate on the task of
-    constructing documents and doesn't care if you subsequently use
-    it to generate HTML, XML, LaTeX, RTF or plain text documents
-    from a command-line, CGI script or an in-server web process such
-    as Apache/mod_perl using data extracted from a CGI form, defined
-    in a file, retrieved from a database or based on what Jim
-    Morrison told you in a dream. You choose what do to with it and
-    how to do it. Simply load additional functionality as you need
-    it from CPAN modules, Template Toolkit plugins, generic web
-    applications such as chat rooms, FAQ lists, bulletin boards,
-    etc., or any other code you can beg, borrow or write yourself.
-
-    It is worth noting that there is nothing to stop you from
-    adopting a well structured approach to content construction
-    using Text::Template or one of the other fine template
-    processing modules available. Many people do indeed develop
-    content using these tools in such a way as to promote
-    reusability and maintainability every bit as much as the
-    Template Toolkit does. The benefit of using the toolkit is that
-    much of this is done for you. You get to reap the benefits of
-    template caching (resulting in fast runtime processing),
-    automatic error detection and handling, variable localisation
-    and namespacing, dynamic loading of external modules, and so on,
-    without having to code it yourself or even worry about the
-    specifics of implementation. The details are hidden away, the
-    directive syntax is simplified and you can get a lot done very
-    quickly with the minimum of fuss.
-
-    The Template Toolkit is a direct descendant of, and replacement
-    for the Text::MetaText module. It has been designed and rebuilt
-    from scratch based on several years of experience gained from
-    developing, supporting and using Text::MetaText and other
-    template processing applications and tools. It is an Open Source
-    project in which contribution and collaboration are encouraged.
-
 FEATURES
     -   Fast, flexible, generic and open template processing system.
 
@@ -256,8 +97,8 @@ FEATURES
         plugin components. The Template module can be used directly
         from CGI scripts, Apache/mod_perl handlers, or any other
         Perl code as a simple front-end to the Toolkit. Plugin
-        modules are available for interfacing to CGI, DBI, XML, DOM,
-        etc.
+        modules are available for building tables, constructing
+        URL's, interfacing to CGI, DBI, XML, DOM, etc.
 
     -   Template documents parsed by a fast LALR(1) parser which is
         generated from a YACC-like grammar. Parse::Yapp is used to
@@ -393,7 +234,7 @@ AUTHOR
         http://www.cre.canon.co.uk/perl
 
 VERSION
-    This is version 1.04 of the Template Toolkit.
+    This is version 1.05 of the Template Toolkit.
 
     Please consult the Changes file for information about visible
     changes in the Template Toolkit between releases. The TODO file

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: code.t,v 1.9 2000/02/29 18:12:26 abw Exp $
+# $Id: code.t,v 1.11 2000/03/20 08:07:03 abw Exp $
 #
 #========================================================================
 
@@ -226,8 +226,8 @@ aaa
 alpha + bravo + charlie
 
 -- test -- 
-[% call = 'joint';
-   ${call}(a c) 
+[% subname = 'joint';
+   ${subname}(a c) 
 %]
 -- expect --
 alpha + charlie
@@ -243,6 +243,12 @@ alpha + charlie
    * Larry
 
 -- test --
+[% people.join('...') %]
+
+-- expect --
+Tom...Dick...Larry
+
+-- test --
 before
 [% halt %]
 after
@@ -256,3 +262,5 @@ Feeling [% fine %].
 
 -- expect --
 Feeling .
+
+

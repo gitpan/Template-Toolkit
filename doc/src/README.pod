@@ -1,6 +1,6 @@
 [% INCLUDE $s FOREACH s = [
      'name' 'installing', 'prereq', 'contents', 
-     'overview' 'features' 'example' 'maillist' 
+     'features' 'example' 'maillist' 
      'author' 'version' 'copyright' 
    ]
 %]
