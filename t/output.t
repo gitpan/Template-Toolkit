@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: output.t,v 2.0 2000/08/10 14:56:28 abw Exp $
+# $Id: output.t,v 2.1 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
@@ -47,7 +47,7 @@ close(FP);
 
 ok( 1 );
 
-ok( $out eq "This is the foo file, a is alpha\n" );
+match( $out, "This is the foo file, a is alpha" );
 
 unlink($file1);
 
@@ -71,7 +71,7 @@ close(FP);
 
 ok( 1 );
 
-ok( $out eq "This is the foo file, a is alpha\n" );
+match( $out, "This is the foo file, a is alpha" );
 
 unlink($file2);
 

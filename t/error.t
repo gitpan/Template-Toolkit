@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: error.t,v 2.1 2000/11/01 12:01:45 abw Exp $
+# $Id: error.t,v 2.2 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
@@ -30,10 +30,14 @@ my $template = Template->new({
     },
 });
 
+
 ok( ! $template->process('badinc') );
 my $error = $template->error();
 ok( $error );
 ok( ref $error eq 'Template::Exception' );
 ok( $error->type eq 'file' );
 ok( $error->info eq 'nosuchfile: not found' );
+
+
+
 

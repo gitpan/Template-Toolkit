@@ -4,14 +4,9 @@
 %]
 
 <p>
-This is the latest experiment: a rounded bar at the top, with a square
-box dropping down from it like some futuristic scroll.
+[% PROCESS splash/about/dropbox %]
 </p>
 
-[% PROCESS splash/config %]
-
-[% PROCESS example/switch50
-   count = 5
-%]
+[% PROCESS example/split50 count=5 %]
 
 [% END %]

@@ -16,7 +16,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Simple.pm,v 2.2 2001/03/30 08:09:25 abw Exp $
+# $Id: Simple.pm,v 2.9 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use XML::Simple;
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.9 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -107,7 +107,8 @@ was written by Grant McLean E<lt>grantm@web.co.nzE<gt>.
 
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.08, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 

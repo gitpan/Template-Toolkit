@@ -20,7 +20,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Test.pm,v 2.5 2001/03/30 08:09:23 abw Exp $
+# $Id: Test.pm,v 2.12 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use vars qw( @ISA @EXPORT $VERSION $DEBUG $EXTRA $PRESERVE $loaded %callsign);
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.12 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 @ISA     = qw( Exporter );
 @EXPORT  = qw( ntests ok match flush test_expect callsign banner );
@@ -167,10 +167,10 @@ sub test_expect {
     my ($input, @tests);
     my ($output, $expect, $match);
     my $ttprocs;
-    local $/ = undef;
 
     # read input text
     eval {
+        local $/ = undef;
 	$input = ref $src ? <$src> : $src;
     };
     if ($@) {
@@ -611,9 +611,13 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.11, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -626,5 +630,3 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template|Template>
-
-

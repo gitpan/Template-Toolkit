@@ -31,7 +31,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 2.9 2001/03/30 08:09:23 abw Exp $
+# $Id: Parser.pm,v 2.17 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -54,7 +54,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.9 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.17 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 $ERROR   = '';
 
@@ -101,7 +101,8 @@ $DEFAULT_STYLE = {
 
 sub new {
     my $class  = shift;
-    my $config = UNIVERSAL::isa($_[0], 'HASH') ? shift(@_) : { @_ };
+    my $config = $_[0] && UNIVERSAL::isa($_[0], 'HASH') ? shift(@_) : { @_ };
+
     my ($tagstyle, $start, $end, $defaults, $grammar, $hash, $key, $udef);
 
     my $self = bless { 
@@ -301,9 +302,14 @@ sub split_text {
 	    my $space = $postchomp == &Template::Constants::CHOMP_COLLAPSE 
 		? ' ' : '';
 
-	    # only chomp newline if it's not the last character
-	    $chomp and $text =~ s/^([ \t]*)\n(.|\n)/(($1||$2) ? $space : '') . $2/e
-		   and $postlines++;
+	    $postlines++ 
+		if $chomp and $text =~ s/ 
+		    ^
+		    ([ \t]*)\n    # whitespace to newline
+		    (?:(.|\n)|$)      # any char (not EOF)
+		    / 
+		    (($1||$2) ? $space : '') . (defined $2 ? $2 : '')
+		    /ex;
 	}
 
 	# any text preceding the directive can now be added
@@ -1257,9 +1263,13 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.16, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
  
 

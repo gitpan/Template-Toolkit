@@ -15,7 +15,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: leak.t,v 2.2 2001/03/29 23:00:54 abw Exp $
+# $Id: leak.t,v 2.3 2001/04/04 10:06:26 abw Exp $
 #
 #========================================================================
 
@@ -90,6 +90,7 @@ my $ttvars = {
     holler => sub { Holler->new(@_) },
     trace  => sub { $Holler::TRACE },
     clear  => \&Holler::clear,
+    post56 => ( $^V && eval '$^V ge v5.6.0' ),
 };
 
 test_expect(\*DATA, $ttcfg, $ttvars);
@@ -201,8 +202,15 @@ Goodbye destroyed
         USE holler('macro plugin'); 
     END 
 -%]
-[% clear; leak; trace %]
+[% IF post56;
+	clear; leak; trace;
+    ELSE;
+       "Perl version < 5.6.0, skipping this test";
+    END
+-%]
 -- expect --
+-- process --
+[% IF post56 -%]
 <leak1>
 </leak1>
 <leak2>
@@ -213,6 +221,9 @@ macro plugin created
 Hello destroyed
 Goodbye destroyed
 macro plugin destroyed
+[% ELSE -%]
+Perl version < 5.6.0, skipping this test
+[% END -%]
 
 -- test --
 [% PERL %]

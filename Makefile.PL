@@ -5,19 +5,59 @@ select STDERR;
 $| = 1;
 select STDOUT;
 
+use vars qw( $TT_INST_ROOT $TT_IMAGES $TT_RUN_DBI
+	     $TT_BUILD_DOCS $TT_SPLASH_DOCS $TT_EXAMPLES
+	     $TT_LATEX_PATH $TT_PDFLATEX_PATH $TT_DVIPS_PATH $TT_LATEX_ENABLE
+	     $TT_SPLASH_THEME );
+
+$TT_INST_ROOT     = '/usr/local/tt2';
+$TT_IMAGES        = '/tt2/images';
+$TT_RUN_DBI       = 'y';
+$TT_BUILD_DOCS    = 'y';
+$TT_SPLASH_DOCS   = 'y';
+$TT_EXAMPLES      = 'y';
+$TT_SPLASH_THEME  = 'default';
+$TT_LATEX_ENABLE  = '';
+
+my $TT_SPLASH_FG    = '';
+my $TT_SPLASH_BG    = '';
+
+my $DEFAULTS_FILE   = '.defaults.cfg';
 my $DBI_CONFIG_FILE = 't/dbi_test.cfg';
-my $TT_INST_ROOT    = '/usr/local/tt2';   # should be more platform general
-my $TT_IMAGES       = '/tt2/images';      # and honour existing installation
-my $TT_BUILD_DOCS   = 'y';
-my $TT_SPLASH_DOCS  = 'y';
-my $TT_EXAMPLES     = 'y';
 my $TT_DOCS_CFG     = 'docs/ttree.cfg';
 my $TT_EXAMPLE_CFG  = 'examples/ttree.cfg';
+my $MAKE            = 'make';
+
+my $WIN32 = ($^O =~ /win/i);
+my $FLAVOUR = $WIN32 ? 'Win32' : 'Unix';
+my $DEFAULTS = '';
+
+if ($WIN32) {
+    $TT_INST_ROOT = 'C:/Program Files/Template Toolkit 2';
+    $MAKE         = 'nmake';
+}
+
+if (-f $DEFAULTS_FILE) {
+    require $DEFAULTS_FILE;
+    $DEFAULTS = " read from '$DEFAULTS_FILE'";
+}
+
+my $SPLASH_STYLES = {
+    default => [ 'lilac',  'mauve'   ],
+    aqua    => [ 'aqua',   'marine'  ],
+    grey    => [ 'grey75', 'grey50'  ],
+    blue    => [ 'grey75', 'blue75'  ],
+    red     => [ 'grey75', 'red75'   ],
+    green   => [ 'grey75', 'green75' ],
+#    weedz   => [ 'bud',    'leaf'    ],
+};
 
 print <<EOF;
 
-                    Template Toolkit Version 2.01
+                    Template Toolkit Version 2.03
                     =============================
+
+Using $FLAVOUR defaults$DEFAULTS.
 EOF
 
 #------------------------------------------------------------------------
@@ -65,6 +105,20 @@ from CPAN:
 EOF
 }
 
+eval "use File::Spec";
+if ($@ or $File::Spec::VERSION < 0.6) {
+    die(<<EOF);
+
+The Template Toolkit requires that the File::Spec module (version 0.6
+or later) first be installed.  This is used by the File plugin.  It is
+available from CPAN:
+
+    http://search.cpan.org/search?dist=File-Spec
+
+EOF
+}
+
+
 #------------------------------------------------------------------------
 # detect additional modules required by plugins (just for fun)
 #------------------------------------------------------------------------
@@ -81,10 +135,15 @@ available on your system.
 EOF
 
 foreach my $mods ( [ Text::Autoformat => \&check_taf ],
-		   [ XML::DOM   => \&check_dom   ],
-		   [ XML::RSS   => \&check_rss   ],
-		   [ XML::XPath => \&check_xpath ],
-		   [ DBI        => \&dbi_config  ] ) {
+		   [ GD          => undef         ],
+		   [ GD::Text    => undef         ],
+		   [ GD::Graph   => undef         ],
+		   [ GD::Graph3d => undef         ],
+                   [ Date::Calc  => undef         ],
+		   [ XML::DOM    => \&check_dom   ],
+		   [ XML::RSS    => \&check_rss   ],
+		   [ XML::XPath  => \&check_xpath ],
+		   [ DBI         => \&dbi_config  ] ) {
     my ($module, $code) = ref $mods ? @$mods : ($mods, 0);
 
     printf("  %-16s ", $module);
@@ -101,6 +160,57 @@ foreach my $mods ( [ Text::Autoformat => \&check_taf ],
 	yep("version $ver installed");
     }
 }
+
+#------------------------------------------------------------------------
+# prompt for installation of latex filter
+#------------------------------------------------------------------------
+$TT_LATEX_PATH    ||= findProgram($ENV{PATH}, "latex")    || '';
+$TT_PDFLATEX_PATH ||= findProgram($ENV{PATH}, "pdflatex") || '';
+$TT_DVIPS_PATH    ||= findProgram($ENV{PATH}, "dvips")    || '';
+
+print <<EOF;
+
+TT2 supports PDF, DVI and PostScript output using the latex filter,
+implemented with the programs pdflatex, latex and dvips.
+
+Because the latex filter runs latex and pdflatex, template authors could
+use this feature to include any arbitrary file in their latex input, or
+also open an arbitrary output file, independent of the ABSOLUTE or
+RELATIVE configuration settings. This might create a security concern at
+your site. If you don't trust your template authors then don't enable
+the latex filter.
+
+I found the following locations for pdflatex, latex and dvips:
+  + pdflatex => $TT_PDFLATEX_PATH
+  + latex    => $TT_LATEX_PATH
+  + dvips    => $TT_DVIPS_PATH
+
+EOF
+
+if ( $TT_LATEX_PATH eq "" || $TT_PDFLATEX_PATH eq "" || $TT_DVIPS_PATH eq "" ) {
+    $TT_LATEX_ENABLE = 'n';
+}
+$TT_LATEX_ENABLE ||= 'y';
+$TT_LATEX_ENABLE = (
+    prompt('Do you want to enable the latex filter?',
+                                $TT_LATEX_ENABLE) =~ /^y/i
+);
+if ( $TT_LATEX_ENABLE ) {
+    if (prompt('Are the pdflatex, latex and dvips paths ok?', 'y') !~ /^y/i) {
+        $TT_PDFLATEX_PATH = prompt('pdflatex path', $TT_PDFLATEX_PATH);
+        $TT_LATEX_PATH    = prompt('latex path',    $TT_LATEX_PATH);
+        $TT_DVIPS_PATH    = prompt('dvips path',    $TT_DVIPS_PATH);
+    }
+} else {
+    #
+    # Empty paths will cause the latex filter to throw an error
+    #
+    $TT_PDFLATEX_PATH = $TT_LATEX_PATH = $TT_DVIPS_PATH = "";
+}
+
+fix_file('lib/Template/Config.pm', '$PDFLATEX_PATH', $TT_PDFLATEX_PATH);
+fix_file('lib/Template/Config.pm', '$LATEX_PATH',    $TT_LATEX_PATH);
+fix_file('lib/Template/Config.pm', '$DVIPS_PATH',    $TT_DVIPS_PATH);
 
 #------------------------------------------------------------------------
 # prompt for installation of optional libraries and other components
@@ -131,13 +241,12 @@ if (prompt('Do you want to install these components?', 'y') =~ /^y/i) {
     print <<EOF;
 
 You can chose any directory for the installation of the additional
-Template Toolkit components.  The proposed default, $TT_INST_ROOT,
-assumes a Unix flavour to your operating system (suggestions for suitable
-defaults for other platforms welcome), but something like '/home/abw/tt2'
-or 'C:/Program Files/tt2' may be more appropriate and would be equally valid.
+Template Toolkit components.  The proposed default assumes a $FLAVOUR
+flavour to your operating system (suggestions for suitable defaults
+for other platforms welcome).
 
 EOF
-    $TT_INST_ROOT = prompt('Template Toolkit installation directory',
+    $TT_INST_ROOT = prompt('Installation directory',
 			   $TT_INST_ROOT);
 }
 else {
@@ -152,6 +261,7 @@ fix_file('lib/Template/Config.pm', '$INSTDIR', $TT_INST_ROOT);
 #------------------------------------------------------------------------
 
 if ($TT_INST_ROOT) {
+
     print <<EOF;
 
 The Splash! template library uses a number of (very) small images to
@@ -159,6 +269,24 @@ build user interface components.  These will be installed into the
 directory:
 
     $TT_INST_ROOT/images  
+EOF
+
+    if ($WIN32) {
+	# default images value for Win32 to browse via file system
+	$TT_IMAGES = "$TT_INST_ROOT/images";
+
+	print <<EOF;
+
+If you want to use the Splash! library then you'll need to make sure
+you can access these images via your browser.  If you want to deliver
+pages via a web server then you'll need to specify the URL that can be
+use to access these images.  In the general case you can accept the
+default and access the images via the filesystem.
+
+EOF
+    }
+    else {
+	print <<EOF;
 
 If you want to use the Splash! library then you'll need to copy these
 images, define an alias (e.g. in the httpd.conf) or create a symbolic
@@ -174,6 +302,7 @@ accept the default below and read the Template::Library::Splash
 manpage at your leisure to find out more).
 
 EOF
+    }
 
     $TT_IMAGES = prompt('URL base for TT2 images?', $TT_IMAGES);
     $TT_IMAGES =~ s[/$][]g;	# just in case
@@ -221,10 +350,10 @@ EOF
     if ($TT_BUILD_DOCS) {
 	print <<EOF;
 
-If you want to build the HTML documentation using then the Splash!
-library then you'll need to make sure you correctly defined the URL
-for the Splash!  images above.  Otherwise, answer 'n' to the next
-question to use plain HTML.
+If you want to build the HTML documentation using the Splash! library
+then you'll need to make sure you correctly defined the URL for the
+Splash!  images above.  Otherwise, answer 'n' to the next question to
+use plain HTML.
 
 EOF
 	$TT_SPLASH_DOCS = ( 
@@ -233,8 +362,36 @@ EOF
 	);
 
 	if ($TT_SPLASH_DOCS) {
+	    my $splash_style = '';
+	    print <<EOF;
+
+Which Splash! colour scheme would you like to use to build the
+documentation?  Acceptable values are:
+
+EOF
+	    print "  Name     Colours\n  -------------------------\n";
+	    foreach my $t ('default', 
+			    grep { ! /^default$/ } sort keys %$SPLASH_STYLES) {
+		my $v = $SPLASH_STYLES->{ $t };
+		local $" = '/';
+		printf("  %-8s @$v\n", $t);
+	    } 
+	    print "\n";
+	
+	    while (! $splash_style) {
+		$TT_SPLASH_THEME = prompt("Enter name of colour scheme: ", $TT_SPLASH_THEME);
+		print("! No such scheme\n"), $TT_SPLASH_THEME = 'default'
+		    unless ($splash_style = $SPLASH_STYLES->{ $TT_SPLASH_THEME });
+	    }
+	    ($TT_SPLASH_BG, $TT_SPLASH_FG) = @$splash_style;
+
 	    $style = 'splash';
-	    $style_cfg = "\npre_process  = splash/config";
+	    $style_cfg = <<EOF;
+
+pre_process  = splash/config
+define splash_fg = '$TT_SPLASH_FG'
+define splash_bg = '$TT_SPLASH_BG'
+EOF
 	}
     }
 
@@ -257,6 +414,8 @@ $style_cfg
 pre_process  = config
 pre_process  = header
 post_process = footer
+recurse
+verbose
 EOF
     close(FP);
 
@@ -298,14 +457,39 @@ src  = $TT_INST_ROOT/examples/src
 dest = $TT_INST_ROOT/examples/html
 lib  = $TT_INST_ROOT/examples/lib
 lib  = $TT_INST_ROOT/templates
+define splash_fg = '$TT_SPLASH_FG'
+define splash_bg = '$TT_SPLASH_BG'
 pre_process = config
-ignore = ^(CVS|RCS)\$
+recurse
+verbose
 EOF
 
     close(FP);
 }
+    #--------------------------------------------------------------------
+    # write configuration defaults to file
+    #--------------------------------------------------------------------
+    open(FP, "> $DEFAULTS_FILE") || die "$DEFAULTS_FILE: $!\n";
+    my ($ttdbi, $ttdocs, $ttsplash, $ttex, $ttlatex) = map { $_ ? 'y' : 'n' } 
+	( $TT_RUN_DBI, $TT_BUILD_DOCS, $TT_SPLASH_DOCS, $TT_EXAMPLES,
+            $TT_LATEX_ENABLE );
+    print FP <<EOF;
+\$TT_INST_ROOT     = '$TT_INST_ROOT';
+\$TT_IMAGES        = '$TT_IMAGES';
+\$TT_RUN_DBI       = '$ttdbi';
+\$TT_BUILD_DOCS    = '$ttdocs';
+\$TT_SPLASH_DOCS   = '$ttsplash';
+\$TT_EXAMPLES      = '$ttex';
+\$TT_SPLASH_THEME  = '$TT_SPLASH_THEME';
+\$TT_LATEX_ENABLE  = '$ttlatex';
+\$TT_LATEX_PATH    = '$TT_LATEX_PATH';
+\$TT_PDFLATEX_PATH = '$TT_PDFLATEX_PATH';
+\$TT_DVIPS_PATH    = '$TT_DVIPS_PATH';
+EOF
+    close(FP);
 
 print "\n";
+
 
 #------------------------------------------------------------------------ 
 # build options and write Makefile
@@ -314,19 +498,24 @@ print "\n";
 package MY;
 
 sub postamble {
-    return '' unless $TT_INST_ROOT;
+    return '' unless $main::TT_INST_ROOT;
     my $amble =<<'EOF';
 tt2_install ::
-	@$(PERL) bin/tt2inst -v $(TT_INST_ROOT)
+	@$(PERL) bin/tt2inst -v "$(TT_INST_ROOT)"
+
+tt2_splash ::
+	@$(PERL) -I lib bin/gifsplash -v
 
 EOF
-    $amble .=<<EOF if $TT_BUILD_DOCS;
+    $amble .=<<EOF if $main::TT_BUILD_DOCS;
 tt2_html_docs ::
-	\@\$(PERL) bin/ttree -v -f \$(TT_INST_ROOT)/$TT_DOCS_CFG
+	\@\$(PERL) bin/ttree -v -f "\$(TT_INST_ROOT)/$TT_DOCS_CFG"
+
 EOF
-    $amble .=<<EOF if $TT_EXAMPLES;
+    $amble .=<<EOF if $main::TT_EXAMPLES;
 tt2_examples ::
-	\@\$(PERL) bin/ttree -v -f \$(TT_INST_ROOT)/$TT_EXAMPLE_CFG
+	\@\$(PERL) bin/ttree -v -f "\$(TT_INST_ROOT)/$TT_EXAMPLE_CFG"
+
 EOF
     return $amble;
 }
@@ -334,19 +523,19 @@ EOF
 sub install {
     my $class = shift;
     my $basic = $class->SUPER::install(@_);
-    my $add   = 'tt2_install';
-    $add .= ' tt2_html_docs' if $TT_BUILD_DOCS;
-    $add .= ' tt2_examples' if $TT_EXAMPLES;
+    my $add   = 'tt2_install tt2_splash';
+    $add .= ' tt2_html_docs' if $main::TT_BUILD_DOCS;
+    $add .= ' tt2_examples' if $main::TT_EXAMPLES;
     $basic =~ s/^(install\s+::\s+.*)$/$1 $add/m
-	if $TT_INST_ROOT;
+	if $main::TT_INST_ROOT;
     $basic;
 }
 
 sub constants {
     my $class = shift;
     my $basic = $class->SUPER::constants(@_);
-    $basic = "TT_INST_ROOT = $TT_INST_ROOT\n$basic"
-	if $TT_INST_ROOT;
+    $basic = "TT_INST_ROOT = $main::TT_INST_ROOT\n$basic"
+	if $main::TT_INST_ROOT;
     $basic;
 }
 
@@ -375,11 +564,13 @@ if ($ExtUtils::MakeMaker::VERSION >= 5.43) {
 
 WriteMakefile( %opts );
 
-print <<EOF;
+if ($WIN32) {
+    print <<EOF;
 
-Configuration complete.  You should now run 'make', 'make test' and then
-'make install'.  See the README file for further information.
+Configuration complete.  You should now run '$MAKE', '$MAKE test' and 
+then '$MAKE install'.   See the README file for further information.
 EOF
+}
 
 print <<EOF if $TT_BUILD_DOCS;
 
@@ -503,15 +694,15 @@ sub check_xpath {
 #------------------------------------------------------------------------
 
 sub dbi_config {
-    my ($dsn, $user, $pass, $run);
-    $run = 1;
+    my ($dsn, $user, $pass);
 
     print "[X] version $DBI::VERSION installed, configuring tests\n\n";
 
     if (prompt("Do you want to run the DBI tests?\n" .
 	       "It requires access to an existing test database.",
-	       "y") =~ /y/i) {
+	       $TT_RUN_DBI) =~ /y/i) {
 
+	$TT_RUN_DBI = 1;
 	my ($driver, $dbname);
 	my @drivers = DBI->available_drivers();
 	local $" = ', ';
@@ -557,13 +748,13 @@ EOF
 	$pass = '' unless defined $pass;
     }
     else {
-	$run = 0;
+        $TT_RUN_DBI = 0;
     }
 
     print "\nwriting $DBI_CONFIG_FILE\n";
     open(CFGFILE, ">$DBI_CONFIG_FILE") || die "$DBI_CONFIG_FILE: $!\n";
     print CFGFILE <<EOF;
-\$run  = $run;
+\$run  = $TT_RUN_DBI;
 \$dsn  = '$dsn';
 \$user = '$user';
 \$pass = '$pass';
@@ -601,4 +792,26 @@ sub fix_file {
     close(FP);
 }
 
-
+#
+# findProgram($path, $prog)
+#
+# Find a program, $prog, by traversing the given directory path, $path.
+# Returns full path if the program is found.
+#
+# Written by Craig Barratt, Richard Tietjen add fixes for Win32.
+#
+sub findProgram {
+    my($path, $prog) = @_;
+    my $sep = $WIN32 ? qr/;/ : qr/:/;
+    foreach my $dir ( split($sep, $path) ) {
+        my $file = File::Spec->catfile($dir, $prog);
+        if ( !$WIN32 ) {
+            return $file if ( -x $file );
+        } else {
+            # Windows executables end in .xxx, exe precedes .bat and .cmd
+            foreach my $dx ( qw/exe bat cmd/ ) {
+                return "$file.$dx" if ( -x "$file.$dx" );
+            }
+        }
+    }
+}

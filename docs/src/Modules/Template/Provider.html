@@ -12,24 +12,24 @@
         page = 'Provider'
 %]
 [%  WRAPPER toc;
-	INCLUDE tocitem title='SYNOPSIS';
-	INCLUDE tocitem title='DESCRIPTION';
-	INCLUDE tocitem title='PUBLIC METHODS'
-                         subs=['new(\%options) ', 'fetch($name)', 'store($name, $template)', 'include_path(\@newpath))'];
-	INCLUDE tocitem title='AUTHOR';
-	INCLUDE tocitem title='VERSION';
-	INCLUDE tocitem title='COPYRIGHT';
-	INCLUDE tocitem title='SEE ALSO';
+	INCLUDE tocitem title="SYNOPSIS";
+	INCLUDE tocitem title="DESCRIPTION";
+	INCLUDE tocitem title="PUBLIC METHODS"
+                         subs=["new(\\%options) ", "fetch($name)", "store($name, $template)", "include_path(\\@newpath))"];
+	INCLUDE tocitem title="AUTHOR";
+	INCLUDE tocitem title="VERSION";
+	INCLUDE tocitem title="COPYRIGHT";
+	INCLUDE tocitem title="SEE ALSO";
     END
 %]
 <!-- Pod to HTML conversion by the Template Toolkit version 2 -->
 [% WRAPPER section
-    title='SYNOPSIS'
+    title="SYNOPSIS"
 -%]<pre>    $provider = Template::Provider-&gt;new(\%options);</pre>
 <pre>    ($template, $error) = $provider-&gt;fetch($name);</pre>
 [%- END %]
 [% WRAPPER section
-    title='DESCRIPTION'
+    title="DESCRIPTION"
 -%]<p>
 The Template::Provider is used to load, parse, compile and cache template
 documents.  This object may be sub-classed to provide more specific 
@@ -51,9 +51,9 @@ This documentation needs work.
 </p>
 [%- END %]
 [% WRAPPER section
-    title='PUBLIC METHODS'
+    title="PUBLIC METHODS"
 -%][% WRAPPER subsection
-   title = 'new(\%options) '
+   title = "new(\\%options) "
 -%]<p>
 Constructor method which instantiates and returns a new Template::Provider
 object.  The optional parameter may be a hash reference containing any of
@@ -69,8 +69,7 @@ template files are located.  When a template is requested that isn't
 defined locally as a BLOCK, each of the INCLUDE_PATH directories is
 searched in turn to locate the template file.  Multiple directories
 can be specified as a reference to a list or as a single string where
-each directory is delimited by ':'. The DELIMITER option can be set
-to redefine the delimiter value.
+each directory is delimited by ':'.
 </p>
 <pre>    my $provider = Template::Provider-&gt;new({
         INCLUDE_PATH =&gt; '/usr/local/templates',
@@ -84,22 +83,40 @@ to redefine the delimiter value.
         INCLUDE_PATH =&gt; [ '/usr/local/templates', 
                           '/tmp/my/templates' ],
     });</pre>
-
+<p>
+On Win32 systems, a little extra magic is invoked, ignoring delimiters
+that have ':' followed by a '/' or '\'.  This avoids confusion when using
+directory names like 'C:\Blah Blah'.
+</p>
 
 
 <li><b>DELIMITER</b><br>
 <p>
 Used to provide an alternative delimiter character sequence for 
-separating paths specified in the INCLUDE_PATH.  May be useful for 
-operating systems that permit the use of ':' in file names.
+separating paths specified in the INCLUDE_PATH.  The default
+value for DELIMITER is ':'.
 </p>
 <pre>    # tolerate Silly Billy's file system conventions
     my $provider = Template::Provider-&gt;new({
-	DELIMITER    =&gt; ' ',
-        INCLUDE_PATH =&gt; 'C:/HERE/NOW D:/THERE/THEN',
+	DELIMITER    =&gt; '; ',
+        INCLUDE_PATH =&gt; 'C:/HERE/NOW; D:/THERE/THEN',
     });</pre>
 <pre>    # better solution: install Linux!  :-)</pre>
-
+<p>
+On Win32 systems, the default delimiter is a little more intelligent,
+splitting paths only on ':' characters that aren't followed by a '/'.
+This means that the following should work as planned, splitting the 
+INCLUDE_PATH into 2 separate directories, C:/foo and C:/bar.
+</p>
+<pre>    # on Win32 only
+    my $provider = Template::Provider-&gt;new({
+	INCLUDE_PATH =&gt; 'C:/Foo:C:/Bar'
+    });</pre>
+<p>
+However, if you're using Win32 then it's recommended that you
+explicitly set the DELIMITER character to something else (e.g. ';')
+rather than rely on this subtle magic.
+</p>
 
 
 <li><b>ABSOLUTE</b><br>
@@ -114,7 +131,12 @@ name will cause a 'file' exception to be raised.
     });</pre>
 <pre>    # this is why it's disabled by default
     [% tt_start_tag %] INSERT /etc/passwd [% tt_end_tag %]</pre>
-
+<p>
+On Win32 systems, the regular expression for matching absolute 
+pathnames is tweaked slightly to also detect filenames that start
+with a driver letter and colon, such as:
+</p>
+<pre>    C:/Foo/Bar</pre>
 
 
 <li><b>RELATIVE</b><br>
@@ -129,7 +151,6 @@ encountered.
 	RELATIVE =&gt; 1,
     });</pre>
 <pre>    [% tt_start_tag %] INCLUDE ../logs/error.log [% tt_end_tag %]</pre>
-
 
 
 <li><b>DEFAULT</b><br>
@@ -148,7 +169,6 @@ DEFAULT template is not used when templates are specified with
 absolute or relative filenames, or as a reference to a input file
 handle or text string.
 </p>
-
 
 
 <li><b>CACHE_SIZE</b><br>
@@ -175,7 +195,6 @@ The CACHE_SIZE can be set to 0 to disable caching altogether.
 <pre>    my $provider = Template::Provider-&gt;new({
 	CACHE_SIZE =&gt; 0,   # don't cache any compiled templates
     });</pre>
-
 
 
 <li><b>COMPILE_EXT</b><br>
@@ -209,7 +228,6 @@ time and resources required to reload templates.  Compiled templates can
 be reloaded by a simple call to Perl's require(), leaving Perl to handle
 all the parsing and compilation.  This is a Good Thing.
 </p>
-
 
 
 <li><b>COMPILE_DIR</b><br>
@@ -254,7 +272,27 @@ would create the following directory structure:
 Files loaded from different INCLUDE_PATH directories will have their
 compiled forms save in the relevant COMPILE_DIR directory.
 </p>
-
+<p>
+On Win32 platforms a filename may by prefixed by a drive letter and
+colon.  e.g.
+</p>
+<pre>    C:/My Templates/header</pre>
+<p>
+The colon will be silently stripped from the filename when it is added
+to the COMPILE_DIR value(s) to prevent illegal filename being generated.
+Any colon in COMPILE_DIR elements will be left intact.  For example:
+</p>
+<pre>    # Win32 only
+    my $provider = Template::Provider-&gt;new({
+	DELIMITER    =&gt; ';',
+	COMPILE_DIR  =&gt; 'C:/TT2/Cache',
+	INCLUDE_PATH =&gt; 'C:/TT2/Templates;D:/My Templates',
+    });</pre>
+<p>
+This would create the following cache directories:
+</p>
+<pre>    C:/TT2/Cache/C/TT2/Templates
+    C:/TT2/Cache/D/My Templates</pre>
 
 
 <li><b>TOLERANT</b><br>
@@ -274,7 +312,6 @@ comply, then a '&lt;resource&gt; not found' exception is raised.
 </p>
 
 
-
 <li><b>PARSER</b><br>
 <p>
 The Template::Parser module implements a parser object for compiling
@@ -288,12 +325,10 @@ an alternate parser object.
 	PARSER =&gt; MyOrg::Template::Parser-&gt;new({ ... }),
     });</pre>
 
-
 </ul>
-
 [%- END %]
 [% WRAPPER subsection
-   title = 'fetch($name)'
+   title = "fetch($name)"
 -%]<p>
 Returns a compiled template for the name specified.  If the template 
 cannot be found then (undef, STATUS_DECLINED) is returned.  If an error
@@ -304,7 +339,7 @@ returning an error.
 </p>
 [%- END %]
 [% WRAPPER subsection
-   title = 'store($name, $template)'
+   title = "store($name, $template)"
 -%]<p>
 Stores the compiled template, $template, in the cache under the name, 
 $name.  Susbequent calls to fetch($name) will return this template in
@@ -312,7 +347,7 @@ preference to any disk-based file.
 </p>
 [%- END %]
 [% WRAPPER subsection
-   title = 'include_path(\@newpath))'
+   title = "include_path(\\@newpath))"
 -%]<p>
 Accessor method for the INCLUDE_PATH setting.  If called with an
 argument, this method will replace the existing INCLUDE_PATH with
@@ -321,7 +356,7 @@ the new value.
 [%- END %]
 [%- END %]
 [% WRAPPER section
-    title='AUTHOR'
+    title="AUTHOR"
 -%]<p>
 Andy Wardley &lt;abw@kfs.org&gt;
 </p>
@@ -330,13 +365,14 @@ Andy Wardley &lt;abw@kfs.org&gt;
 </p>
 [%- END %]
 [% WRAPPER section
-    title='VERSION'
+    title="VERSION"
 -%]<p>
-Template Toolkit version 2.01, released on 30th March 2001.
+2.12, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 </p>
 [%- END %]
 [% WRAPPER section
-    title='COPYRIGHT'
+    title="COPYRIGHT"
 -%]<pre>  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.</pre>
 <p>
@@ -345,7 +381,7 @@ modify it under the same terms as Perl itself.
 </p>
 [%- END %]
 [% WRAPPER section
-    title='SEE ALSO'
+    title="SEE ALSO"
 -%]<p>
 [% ttlink('Template', 'Template') -%], [% ttlink('Template::Parser', 'Template::Parser') -%], [% ttlink('Template::Context', 'Template::Context') -%]
 </p>

@@ -92,9 +92,13 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.10, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -107,5 +111,3 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<tpage|Template::Tools::tpage>
-
-

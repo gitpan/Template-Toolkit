@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: file.t,v 2.1 2000/12/15 16:01:11 abw Exp $
+# $Id: file.t,v 2.3 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
@@ -21,6 +21,12 @@ use Template::Test;
 use Template::Plugin::File;
 $^W = 1;
 
+if ($^O =~ /win/i) {
+    print "1..0\n";
+    exit(0);
+}
+
+#
 my $dir  = -d 't' ? 't/test' : 'test';
 my $file = "$dir/src/foo";
 my @stat;
@@ -148,6 +154,15 @@ foo
 [% USE f = File(file) -%]
 [% f.path %]
 [% f.mtime %]
+-- expect --
+-- process --
+[% dir %]/src/foo
+[% mtime %]
+
+-- test --
+[% USE file(file) -%]
+[% file.path %]
+[% file.mtime %]
 -- expect --
 -- process --
 [% dir %]/src/foo

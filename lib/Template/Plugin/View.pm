@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: View.pm,v 2.4 2001/03/30 08:09:23 abw Exp $
+#   $Id: View.pm,v 2.11 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -25,10 +25,11 @@ package Template::Plugin::View;
 require 5.004;
 
 use strict;
+use Template::Plugin;
 use vars qw( $VERSION );
 use base qw( Template::Plugin );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.11 $ =~ /(\d+)\.(\d+)/);
 
 use Template::View;
 
@@ -95,9 +96,13 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.10, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -110,5 +115,3 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Plugin|Template::Plugin>, L<Template::View|Template::View>
-
-

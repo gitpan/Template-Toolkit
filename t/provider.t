@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: provider.t,v 2.3 2001/03/22 12:23:15 abw Exp $
+# $Id: provider.t,v 2.4 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
@@ -171,8 +171,7 @@ __DATA__
 Error: [% error.type %] - [% error.info.split(': ').1 %]
 [% END %]
 -- expect --
-This is the foo file, a is 
-Error: file - not found
+This is the foo file, a is Error: file - not found
 
 
 -- test --
@@ -183,13 +182,12 @@ Error: file - not found
 Error: [% error.type %] - [% error.info.split(': ').1 %]
 [% END %]
 -- expect --
-This is the foo file, a is 
-Error: file - not found
+This is the foo file, a is Error: file - not found
 
 
 -- test --
 [% TRY %]
-[% INSERT foo -%]
+[% INSERT foo +%]
 [% INSERT $absfile %]
 [% CATCH file %]
 Error: [% error %]
@@ -197,7 +195,7 @@ Error: [% error %]
 -- expect --
 -- process --
 [% TAGS [* *] %]
-This is the foo file, a is [% a %]
+This is the foo file, a is [% a -%]
 Error: file error - [* absfile *]: not found
 
 #------------------------------------------------------------------------
@@ -211,8 +209,7 @@ Error: file error - [* absfile *]: not found
 Error: [% error.type %] - [% error.info %]
 [% END %]
 -- expect --
-This is the foo file, a is 
-Error: file - foo: not found
+This is the foo file, a is Error: file - foo: not found
 
 -- test --
 [% TRY %]
@@ -222,19 +219,18 @@ Error: file - foo: not found
 Error: [% error.type %] - [% error.info.split(': ').1 %]
 [% END %]
 -- expect --
-This is the foo file, a is 
-Error: file - absolute paths are not allowed (set ABSOLUTE option)
+This is the foo file, a is Error: file - absolute paths are not allowed (set ABSOLUTE option)
 
 
 -- test --
 foo: [% TRY; INSERT foo;      CATCH; "$error\n"; END %]
-rel: [% TRY; INSERT $relfile; CATCH; "$error\n"; END %]
+rel: [% TRY; INSERT $relfile; CATCH; "$error\n"; END +%]
 abs: [% TRY; INSERT $absfile; CATCH; "$error\n"; END %]
 -- expect --
 -- process --
 [% TAGS [* *] %]
 foo: file error - foo: not found
-rel: This is the foo file, a is [% a %]
+rel: This is the foo file, a is [% a -%]
 abs: file error - [* absfile *]: absolute paths are not allowed (set ABSOLUTE option)
 
 #------------------------------------------------------------------------
@@ -248,8 +244,7 @@ abs: file error - [* absfile *]: absolute paths are not allowed (set ABSOLUTE op
 Error: [% error.type %] - [% error.info %]
 [% END %]
 -- expect --
-This is the foo file, a is 
-Error: file - foo: not found
+This is the foo file, a is Error: file - foo: not found
 
 -- test --
 [% TRY %]
@@ -259,8 +254,7 @@ Error: file - foo: not found
 Error: [% error.type %] - [% error.info.split(': ').1 %]
 [% END %]
 -- expect --
-This is the foo file, a is 
-Error: file - relative paths are not allowed (set RELATIVE option)
+This is the foo file, a is Error: file - relative paths are not allowed (set RELATIVE option)
 
 
 -- test --
@@ -272,7 +266,7 @@ abs: [% TRY; INSERT $absfile; CATCH; "$error\n"; END %]
 [% TAGS [* *] %]
 foo: file error - foo: not found
 rel: file error - [* relfile *]: relative paths are not allowed (set RELATIVE option)
-abs: This is the foo file, a is [% a %]
+abs: This is the foo file, a is [% a -%]
 
 
 

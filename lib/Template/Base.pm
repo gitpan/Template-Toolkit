@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Base.pm,v 2.7 2001/03/30 08:09:20 abw Exp $
+#   $Id: Base.pm,v 2.14 2001/06/15 14:30:56 abw Exp $
 #
 #========================================================================
  
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.7 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.14 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -61,7 +61,7 @@ sub new {
     # fold all remaining args into a hash, or use provided hash ref
 #    local $" = ', ';
 #    print STDERR "args: [@_]\n";
-    $cfg  = UNIVERSAL::isa($_[0], 'HASH') ? shift : { @_ };
+    $cfg  = defined $_[0] && UNIVERSAL::isa($_[0], 'HASH') ? shift : { @_ };
 
     my $self = bless {
 	map { ($_ => shift @args) } @$argnames,
@@ -210,9 +210,13 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.13, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -225,5 +229,3 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template|Template>
-
-

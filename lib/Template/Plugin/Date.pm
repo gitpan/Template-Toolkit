@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Date.pm,v 2.4 2001/03/30 08:09:23 abw Exp $
+# $Id: Date.pm,v 2.11 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 
 use POSIX ();
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.11 $ =~ /(\d+)\.(\d+)/);
 $FORMAT  = '%H:%M:%S %d-%b-%Y';    # default strftime() format
 
 
@@ -114,6 +114,41 @@ sub format {
     return $datestr;
 }
 
+sub calc {
+    my $self = shift;
+    eval {
+	require "Date/Calc.pm";
+    };
+    $self->throw("failed to load Date::Calc: $@")
+	if $@;
+    return Template::Plugin::Date::Calc->new('no context');
+}
+
+package Template::Plugin::Date::Calc;
+use base qw( Template::Plugin );
+use vars qw( $AUTOLOAD );
+
+sub AUTOLOAD {
+    my $self = shift;
+    my $method = $AUTOLOAD;
+
+    $method =~ s/.*:://;
+    return if $method eq 'DESTROY';
+
+    my $sub = \&{"Date::Calc::$method"};
+    $self->throw("no such Date::Calc method: $method")
+	unless $sub;
+
+    &$sub(@_);
+}
+
+sub throw {
+    my $self = shift;
+    die Template::Exception->new('date', join(', ', @_));
+}
+
+    
+    
 1;
 
 __END__
@@ -229,6 +264,12 @@ epoch.
 
     [% date.format(date.now, '%A') %]
 
+The calc() method can be used to create an interface to the Date::Calc
+module (if installed on your system).
+
+    [% calc = date.calc %]
+    [% calc.Monday_of_Week(22, 2001).join('/') %]
+
 =head1 AUTHORS
 
 Thierry-Michel Barral E<lt>kktos@electron-libre.comE<gt> wrote the original
@@ -239,9 +280,10 @@ fixups/enhancements, a test script and documentation.
 
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.10, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
- 
+
 
 =head1 COPYRIGHT
 

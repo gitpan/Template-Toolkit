@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: chomp.t,v 2.1 2001/03/22 12:23:14 abw Exp $
+# $Id: chomp.t,v 2.2 2001/06/14 13:20:12 abw Exp $
 # 
 #========================================================================
 
@@ -23,10 +23,56 @@ use Template::Constants qw( :chomp );
 
 $^W = 1;
 
+#$Template::Directive::PRETTY = 1;
+#$Template::Parser::DEBUG = 1;
 
 match( CHOMP_NONE, 0 );
 match( CHOMP_ALL, 1 );
 match( CHOMP_COLLAPSE, 2 );
+
+my $foo = "[% foo %]\n";
+my $bar = "[% bar -%]\n";
+my $baz = "[% foo +%]\n";
+my $tt2 = Template->new({
+    BLOCKS => {
+	foo => $foo,
+	bar => $bar,
+	baz => $baz,
+    },
+});
+my $vars = {
+    foo => 3.14,
+    bar => 2.718,
+};
+
+my $out;
+ok( $tt2->process('foo', $vars, \$out), $tt2->error() );
+match( $out, "3.14\n" );
+$out = '';
+ok( $tt2->process('bar', $vars, \$out), $tt2->error() );
+match( $out, "2.718" );
+$out = '';
+ok( $tt2->process('baz', $vars, \$out), $tt2->error() );
+match( $out, "3.14\n" );
+
+$tt2 = Template->new({
+    POST_CHOMP => 1,
+    BLOCKS => {
+	foo => $foo,
+	bar => $bar,
+	baz => $baz,
+    },
+});
+
+$out = '';
+ok( $tt2->process('foo', $vars, \$out), $tt2->error() );
+match( $out, "3.14" );
+$out = '';
+ok( $tt2->process('bar', $vars, \$out), $tt2->error() );
+match( $out, "2.718" );
+$out = '';
+ok( $tt2->process('baz', $vars, \$out), $tt2->error() );
+match( $out, "3.14\n" );
 
 my $tt = [
     tt_pre_none  => Template->new(PRE_CHOMP  => CHOMP_NONE),

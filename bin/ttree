@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 2.6 2001/03/30 08:09:20 abw Exp $
+# $Id: ttree,v 2.12 2001/06/15 14:30:55 abw Exp $
 #
 #========================================================================
 
@@ -39,7 +39,7 @@ use File::Basename;
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 2.6 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 2.12 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
@@ -187,7 +187,7 @@ sub process_tree {
 	# check against ignore list
 	foreach $check (@$ignore) {
 	    if ($path =~ /$check/) {
-		printf "  - %-32s (ignored, matches /$check/)\n", $file
+		printf "  - %-32s (ignored, matches /$check/)\n", $path
 		    if $verbose;
 		next FILE;
 	    }
@@ -338,6 +338,7 @@ sub read_config {
         'template_pre_process|pre_process|preprocess=s@',
         'template_post_process|post_process|postprocess=s@',
         'template_process|process=s',
+        'template_recursion|recursion',
         'template_default|default=s',
         'template_error|error=s',
         'template_start_tag|start_tag|starttag=s',
@@ -356,7 +357,7 @@ sub read_config {
 			   ACTION => sub { 
 			       my ($state, $item, $file) = @_;
 			       $file = $state->cfg . "/$file" 
-				   unless $file =~ /^[\.\/]/;
+				   unless $file =~ /^[\.\/]|(?:\w:)/;
 			       $config->file($file) }  
 			   }
     );
@@ -481,8 +482,8 @@ Options:
    -p      (--preserve)     Preserve file ownership and permission
    -n      (--nothing)      Do nothing, just print summary (enables -v)
    -v      (--verbose)      Verbose mode
-   -d      (--debug)        Debug mode
    -h      (--help)         This help
+   -dbg    (--debug)        Debug mode
    -s DIR  (--src=DIR)      Source directory
    -d DIR  (--dest=DIR)     Destination directory
    -c DIR  (--cfg=DIR)      Location of configuration files
@@ -621,9 +622,13 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.10, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -636,5 +641,3 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<tpage|Template::Tools::tpage>
-
-

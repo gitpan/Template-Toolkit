@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: wrapper.t,v 2.3 2000/12/15 16:01:11 abw Exp $
+# $Id: wrapper.t,v 2.4 2001/04/04 10:06:27 abw Exp $
 #
 #========================================================================
 
@@ -177,4 +177,12 @@ outer [[% title %]]: [% content %]
 -- expect --
 outer [bar]: The title is foo
 
+-- test--
+[% BLOCK a; "<a>$content</a>"; END; 
+   BLOCK b; "<b>$content</b>"; END;
+   BLOCK c; "<c>$content</c>"; END;
+   WRAPPER a + b + c; 'FOO'; END;
+%]
+-- expect --
+<a><b><c>FOO</c></b></a>
 

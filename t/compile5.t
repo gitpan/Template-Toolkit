@@ -14,7 +14,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile5.t,v 2.0 2000/08/10 14:56:18 abw Exp $
+# $Id: compile5.t,v 2.1 2001/04/06 09:10:12 abw Exp $
 #
 #========================================================================
 
@@ -36,7 +36,8 @@ my $ttcfg = {
 };
 
 # check compiled template files exist
-my ($foo, $bar) = map { "$cdir/$dir/src/$_.ttc" } qw( foo complex );
+my ($foo, $bar) = map { $dir =~ s[:][]g if ($^O =~ /win/i);
+			"$cdir/$dir/src/$_.ttc" } qw( foo complex );
 ok( -f $foo );
 ok( -f $bar );
 

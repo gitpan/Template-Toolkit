@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: directry.t,v 2.2 2001/03/22 12:23:14 abw Exp $
+# $Id: directry.t,v 2.4 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
@@ -20,6 +20,11 @@ use lib qw( ./lib ../lib );
 use Template::Test;
 use Cwd;
 $^W = 1;
+
+if ($^O =~ /win/i) {
+    print "1..0\n";
+    exit(0);
+}
 
 #$Template::Test::PRESERVE = 1;
 my $cwd = getcwd();
@@ -70,6 +75,12 @@ Directory error on /no/such/place
 -- process --
 [% dir %]
 
+-- test --
+[% USE directory(dir) -%]
+[% directory.path %]
+-- expect --
+-- process --
+[% dir %]
 
 -- test --
 [% USE d = Directory(dir) -%]

@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: pod.t,v 2.2 2001/03/30 08:07:06 abw Exp $
+# $Id: pod.t,v 2.4 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
@@ -150,7 +150,4 @@ This is the second subsection.  bar-&gt;baz();
 
 <p>
 This is the end.  Beautiful friend, the end.
-
 </p>
-
-

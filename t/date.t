@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: date.t,v 2.3 2000/11/01 12:01:44 abw Exp $
+# $Id: date.t,v 2.4 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
@@ -22,6 +22,12 @@ use Template::Test;
 use Template::Plugin::Date;
 use POSIX;
 $^W = 1;
+
+eval "use Date::Calc";
+
+my $got_date_calc = 0;
+$got_date_calc++ unless $@;
+
 
 $Template::Test::DEBUG = 0;
 
@@ -52,6 +58,7 @@ my $params = {
 	&POSIX::setlocale(&POSIX::LC_ALL, $old_locale);
 	return $datestr;
     },
+    date_calc => $got_date_calc,
 };
 
 test_expect(\*DATA, { POST_CHOMP => 1 }, $params);
@@ -185,4 +192,18 @@ Bad date: bad time/date string:  expects 'h:m:s d:m:y'  got: 'some stupid date'
 -- expect --
 -- process --
 input text [% now('%Y') %]
+
+-- test --
+[% IF date_calc -%]
+[% USE date; calc = date.calc; calc.Monday_of_Week(22, 2001).join('/') %]
+[% ELSE -%]
+not testing
+[% END -%]
+-- expect --
+-- process --
+[% IF date_calc -%]
+2001/5/28
+[% ELSE -%]
+not testing
+[% END -%]
 

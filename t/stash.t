@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.3 2001/03/22 12:23:15 abw Exp $
+# $Id: stash.t,v 2.4 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
+use lib qw( ./lib ../lib );
 use Template::Constants qw( :status );
 use Template;
 use Template::Stash;
@@ -57,7 +57,7 @@ my $ttlist = [
     'warn'    => Template->new(DEBUG => 1),
 ];
 
-test_expect(\*DATA, $ttlist);
+test_expect(\*DATA, $ttlist, $data);
 
 __DATA__
 -- test --
@@ -70,3 +70,77 @@ a:
 [% TRY; a; CATCH; "ERROR: $error"; END %]
 -- expect --
 ERROR: undef error - a is undefined
+
+-- test --
+-- use default --
+[% myitem = 'foo' -%]
+1: [% myitem %]
+2: [% myitem.item %]
+3: [% myitem.item.item %]
+-- expect --
+1: foo
+2: foo
+3: foo
+
+-- test --
+[% myitem = 'foo' -%]
+[% "* $item\n" FOREACH item = myitem -%]
+[% "+ $item\n" FOREACH item = myitem.list %]
+-- expect --
+* foo
++ foo
+
+-- test --
+[% myitem = 'foo' -%]
+[% myitem.hash.value %]
+-- expect --
+foo
+
+-- test --
+[% myitem = 'foo'
+   mylist = [ 'one', myitem, 'three' ]
+   global.mylist = mylist
+-%]
+[% mylist.item %]
+0: [% mylist.item(0) %]
+1: [% mylist.item(1) %]
+2: [% mylist.item(2) %]
+-- expect --
+one
+0: one
+1: foo
+2: three
+
+-- test --
+[% "* $item\n" FOREACH item = global.mylist -%]
+[% "+ $item\n" FOREACH item = global.mylist.list -%]
+-- expect --
+* one
+* foo
+* three
++ one
++ foo
++ three
+
+-- test --
+[% "* $item.key => $item.value\n" FOREACH item = global.mylist.hash -%]
+-- expect --
+* 0 => one
+* 1 => foo
+* 2 => three
+
+-- test --
+[% myhash = { msg => 'Hello World', things => global.mylist, a => 'alpha' };
+   global.myhash = myhash 
+-%]
+* [% myhash.item('msg') %]
+-- expect --
+* Hello World
+
+-- test --
+[% "* $item.key => $item.value.item\n" 
+    FOREACH item = global.myhash.list.sort('key') -%]
+-- expect --
+* a => alpha
+* msg => Hello World
+* things => one

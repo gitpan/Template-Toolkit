@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: File.pm,v 2.4 2001/03/30 08:09:23 abw Exp $
+#   $Id: File.pm,v 2.11 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -28,12 +28,13 @@ use strict;
 use Cwd;
 use File::Spec;
 use File::Basename;
+use Template::Plugin;
 
 use vars qw( $VERSION );
 use base qw( Template::Plugin );
 use vars qw( @STAT_KEYS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.11 $ =~ /(\d+)\.(\d+)/);
 
 @STAT_KEYS = qw( dev ino mode nlink uid gid rdev size 
 		 atime mtime ctime blksize blocks );
@@ -100,8 +101,8 @@ sub new {
 	    || return $class->throw("$abs: $!");
 	@$self{ @STAT_KEYS } = @stat;
 	unless ($config->{ noid }) {
-	    $self->{ user  } = getpwuid( $self->{ uid }) || $self->{ uid };
-	    $self->{ group } = getgrgid( $self->{ gid }) || $self->{ gid };
+	    $self->{ user  } = eval { &getpwuid( $self->{ uid }) || $self->{ uid } };
+	    $self->{ group } = eval { getgrgid( $self->{ gid }) || $self->{ gid } };
 	}
 	$self->{ isdir } = -d $abs;
     }
@@ -198,9 +199,11 @@ e.g.
     [% File.mode %]
     ...
 
-In addition, the 'user' and 'group' items are set to contain the 
-user and group names as returned by calls to getpwuid() and getgrgid()
-for the file 'uid' and 'gid' elements, respectively.  
+In addition, the 'user' and 'group' items are set to contain the user
+and group names as returned by calls to getpwuid() and getgrgid() for
+the file 'uid' and 'gid' elements, respectively.  On Win32 platforms
+on which getpwuid() and getgrid() are not available, these values are
+undefined.
 
     [% USE File('/tmp/foo.html') %]
     [% File.uid %]	# e.g. 500
@@ -397,7 +400,8 @@ for VIEW support, and made a few other minor tweaks.
 
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.10, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 
 

@@ -17,7 +17,7 @@
 #
 #------------------------------------------------------------------------------
 #
-# $Id: DBI.pm,v 2.6 2001/03/27 11:58:53 abw Exp $
+# $Id: DBI.pm,v 2.11 2001/06/15 14:30:56 abw Exp $
 # 
 #==============================================================================
 
@@ -33,8 +33,7 @@ use DBI;
 use vars qw( $VERSION $DEBUG );
 use base qw( Template::Plugin );
 
-#$VERSION = sprintf("%d.%02d", q$Revision: 2.6 $ =~ /(\d+)\.(\d+)/) - 1;
-$VERSION = 1.03;
+$VERSION = 1.04;
 $DEBUG   = 0 unless defined $DEBUG;
 
 
@@ -623,21 +622,20 @@ The DBI plugin was written by Simon A Matthews,
 E<lt>sam@knowledgepool.comE<gt>, with contributions from Andy Wardley
 E<lt>abw@kfs.orgE<gt>.
 
+=head1 VERSION
+
+1.04, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
+
+
+
 =head1 HISTORY
 
 =over 4
 
-=item 1.01  2000/11/03  abw
+=item 1.04  2001/04/06  abw
 
-Modified connect method to pass all named arguments to DBI.  e.g.
-
-    [% USE DBI(dsn, user, pass, ChopBlanks=1) %]
-
-=item 1.02  2000/11/14  abw
-
-Added prev() and next() methods to Template::Plugin::DBI:Iterator to
-return the previous and next items in the iteration set or undef if
-not available.
+Removed duplicated $VERSION number.
 
 =item 1.03  2000/11/31  sam
 
@@ -649,6 +647,18 @@ being called by a subclassed object.
 
 Fixed the return value in the DBI plugin when connect is called more than
 once in the lifetime of the plugin.
+
+=item 1.02  2000/11/14  abw
+
+Added prev() and next() methods to Template::Plugin::DBI:Iterator to
+return the previous and next items in the iteration set or undef if
+not available.
+
+=item 1.01  2000/11/03  abw
+
+Modified connect method to pass all named arguments to DBI.  e.g.
+
+    [% USE DBI(dsn, user, pass, ChopBlanks=1) %]
 
 =back
 

@@ -25,7 +25,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 2.9 2001/03/27 11:58:52 abw Exp $
+# $Id: Directive.pm,v 2.11 2001/06/15 13:51:55 abw Exp $
 #
 #============================================================================
 
@@ -38,7 +38,7 @@ use vars qw( $VERSION $DEBUG $PRETTY $WHILE_MAX );
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.9 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.11 $ =~ /(\d+)\.(\d+)/);
 
 $WHILE_MAX = 1000 unless defined $WHILE_MAX;
 $PRETTY    = 0 unless defined $PRETTY;
@@ -159,7 +159,7 @@ sub text {
 sub quoted {
     my ($class, $items) = @_;
     return '' unless @$items;
-    return $items->[0] if scalar @$items == 1;
+    return ("('' . " . $items->[0] . ')') if scalar @$items == 1;
     return '(' . join(' . ', @$items) . ')';
 #    my $r = '(' . join(' . ', @$items) . ' . "")';
 #    print STDERR "[$r]\n";
@@ -387,7 +387,7 @@ sub foreach {
 
     my ($loop_save, $loop_set, $loop_restore, $setiter);
     if ($target) {
-	$loop_save    = '$oldloop = ' . &ident($class, ["'loop'"]);
+	$loop_save    = 'eval { $oldloop = ' . &ident($class, ["'loop'"]) . ' }';
 	$loop_set     = "\$stash->{'$target'} = \$value";
 	$loop_restore = "\$stash->set('loop', \$oldloop)";
     }

@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 2.12 2001/03/30 08:09:20 abw Exp $
+# $Id: Context.pm,v 2.19 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -36,7 +36,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.12 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.19 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -100,14 +100,26 @@ sub template {
 
 	# now it's time to ask the providers, so we look to see if any 
 	# prefix is specified to indicate the desired provider set.
-	if ($name =~ s/^(\w+)://o) {
-	    $providers = $self->{ PREFIX_MAP }->{ $1 } 
+	$prefix = undef;
+
+	if ($^O =~ /win/i) {
+	    $prefix = $1	# let C:/foo through
+		if $name =~ s/^(\w{2,})://o;
+	}
+	else {
+	    $prefix = $1 
+		if $name =~ s/^(\w+)://o;
+	}
+
+	if (defined $prefix) {
+	    $providers = $self->{ PREFIX_MAP }->{ $prefix } 
 		|| return $self->throw(Template::Constants::ERROR_FILE,
-				      "no providers for template prefix '$1'");
-#	    print STDERR "prefix identified: $1\n";
+				      "no providers for template prefix '$prefix'");
+#	    print STDERR "prefix identified: $prefix\n";
 	}
     }
-    $providers = $self->{ LOAD_TEMPLATES } 
+    $providers = $self->{ PREFIX_MAP }->{ default }
+	      || $self->{ LOAD_TEMPLATES }
         unless $providers;
 
     # finally we try the regular template providers which will 
@@ -257,7 +269,7 @@ sub process {
     foreach $name (@$template) {
 	$compiled = shift @compiled;
 	my $element = ref $compiled eq 'CODE' 
-	    ? { (name => (ref $name ? () : $name), modtime => time()) }
+	    ? { (name => (ref $name ? '' : $name), modtime => time()) }
 	: $compiled;
 	$stash->set('component', $element);
 	
@@ -420,7 +432,7 @@ sub insert {
     my $files = ref $file eq 'ARRAY' ? $file : [ $file ];
 
     FILE: foreach $file (@$files) {
-	if ($file =~ s/^(\w+)://o) {
+	if ($file =~ s/^(\w{2,})://o) {
 	    $providers = $self->{ PREFIX_MAP }->{ $1 } 
 		|| return $self->throw(Template::Constants::ERROR_FILE,
 				      "no providers for file prefix '$1'");
@@ -1402,9 +1414,13 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.18, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -1417,5 +1433,3 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template|Template>, L<Template::Document|Template::Document>, L<Template::Exception|Template::Exception>, L<Template::Filters|Template::Filters>, L<Template::Plugins|Template::Plugins>, L<Template::Provider|Template::Provider>, L<Template::Service|Template::Service>, L<Template::Stash|Template::Stash>
-
-

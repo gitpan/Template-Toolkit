@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: RSS.pm,v 2.3 2001/03/30 08:09:25 abw Exp $
+# $Id: RSS.pm,v 2.10 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use XML::RSS;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.10 $ =~ /(\d+)\.(\d+)/);
 
 sub load {
     return $_[0];
@@ -168,7 +168,8 @@ E<lt>eisen@pobox.comE<gt>.
 
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.09, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 

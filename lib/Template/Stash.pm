@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 2.13 2001/03/30 08:09:23 abw Exp $
+# $Id: Stash.pm,v 2.20 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.13 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.20 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -50,6 +50,9 @@ $ROOT_OPS = {
 };
 
 $SCALAR_OPS = {
+    'item'    => sub {   $_[0] },
+    'list'    => sub { [ $_[0] ] },
+    'hash'    => sub { { value => $_[0] } },
     'length'  => sub { length $_[0] },
     'defined' => sub { return 1 },
     'repeat'  => sub { 
@@ -81,9 +84,21 @@ $SCALAR_OPS = {
 };
 
 $HASH_OPS = {
+    'item'   => sub { my ($hash, $item) = @_; 
+		      $item = '' unless defined $item;
+		      $hash->{ $item };
+		  },
+    'hash'   => sub { $_[0] },
     'keys'   => sub { [ keys   %{ $_[0] } ] },
     'values' => sub { [ values %{ $_[0] } ] },
     'each'   => sub { [        %{ $_[0] } ] },
+    'list'   => sub { my ($hash, $what) = @_;  $what ||= '';
+		      return ($what eq 'keys')   ? [   keys %$hash ]
+			   : ($what eq 'values') ? [ values %$hash ]
+			   : ($what eq 'each')   ? [ values %$hash ]
+			   : [ map { { key => $_ , value => $hash->{ $_ } } }
+			       keys %$hash ];
+		},
     'import' => sub { my ($hash, $imp) = @_;
 		      $imp = {} unless ref $imp eq 'HASH';
 		      @$hash{ keys %$imp } = values %$imp;
@@ -101,6 +116,10 @@ $HASH_OPS = {
 };
 
 $LIST_OPS = {
+    'item'    => sub { $_[0]->[ $_[1] || 0 ] },
+    'list'    => sub { $_[0] },
+    'hash'    => sub { my $list = shift; my $n = 0; 
+		       return { map { ($n++, $_) } @$list }; },
     'push'    => sub { my $list = shift; push(@$list, shift); return '' },
     'pop'     => sub { my $list = shift; pop(@$list) },
     'unshift' => sub { my $list = shift; unshift(@$list, shift); return '' },
@@ -770,9 +789,13 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.19, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -785,5 +808,3 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template|Template>, L<Template::Context|Template::Context>
-
-

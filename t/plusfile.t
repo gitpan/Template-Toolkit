@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: plusfile.t,v 2.1 2001/03/22 12:23:15 abw Exp $
+# $Id: plusfile.t,v 2.3 2001/06/14 13:20:12 abw Exp $
 #
 #========================================================================
 
@@ -88,8 +88,7 @@ My content
 -- test --
 [% INSERT foo+bar/baz %]
 -- expect --
-This is the foo file, a is [% a %]
-[% DEFAULT word = 'qux' -%]
+This is the foo file, a is [% a -%][% DEFAULT word = 'qux' -%]
 This is file baz
 The word is '[% word %]'
 
@@ -99,7 +98,7 @@ The word is '[% word %]'
 -%]
 [% INSERT "$file1" + "$file2" %]
 -- expect --
-This is the foo file, a is [% a %]
-[% DEFAULT word = 'qux' -%]
+This is the foo file, a is [% a -%][% DEFAULT word = 'qux' -%]
 This is file baz
 The word is '[% word %]'
+

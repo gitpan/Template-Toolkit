@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: xpath.t,v 2.3 2000/10/09 14:46:27 abw Exp $
+# $Id: xpath.t,v 2.5 2001/06/14 13:20:12 abw Exp $
 # 
 #========================================================================
 
@@ -45,11 +45,11 @@ __END__
      USE xpath = XML.XPath('no_such_file');
      xpath.findvalue('/foo/bar');
    CATCH;
-     error.info.split(':').0;
+     "ok";
    END
 %]
 -- expect --
-Couldn't open no_such_file
+ok
 
 -- test --
 [% USE xpath = XML.XPath(xmlfile) -%]
@@ -88,3 +88,51 @@ page: The Baz Page
 
 
   This is the bar section, here is some italic text
+
+-- test --
+[% xmltext = BLOCK -%]
+<foo>
+<bar baz="10">
+  <list>
+  <item>one</item>
+  <item>two</item>
+  </list>
+</bar>
+</foo>
+[% END -%]
+[% VIEW xview notfound='xmlstring' -%]
+[% BLOCK foo -%]
+FOO {
+[%- item.content(view) -%]
+}
+[% END -%]
+[% BLOCK bar -%]
+  BAR(baz="[% item.getAttribute('baz') %]") {
+[%- item.content(view) -%]
+}
+[% END -%]
+[% BLOCK list -%]
+  LIST:
+[%- item.content(view) -%]
+[% END -%]
+[% BLOCK item -%]
+    * [% item.content(view) -%]
+[% END -%]
+[% BLOCK xmlstring; item.toString; END %]
+[% BLOCK text; item; END %]
+[% END -%]
+
+[%- USE xpath = XML.XPath(xmltext);
+    foo = xpath.findnodes('/foo');
+    xview.print(foo);
+-%]
+-- expect --
+FOO {
+  BAR(baz="10") {
+    LIST:
+      * one
+      * two
+  
+}
+
+}

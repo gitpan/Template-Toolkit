@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: URL.pm,v 2.5 2001/03/30 08:09:23 abw Exp $
+# $Id: URL.pm,v 2.12 2001/06/15 14:30:56 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use vars qw( @ISA $VERSION );
 use Template::Plugin;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 2.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.12 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -194,9 +194,13 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+2.11, distributed as part of the
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -209,5 +213,3 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Plugin|Template::Plugin>
-
-

@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 2.8 2001/03/30 08:09:20 abw Exp $
+#   $Id: Template.pm,v 2.12 2001/06/15 14:30:56 abw Exp $
 #
 #========================================================================
  
@@ -39,7 +39,7 @@ use File::Path;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '2.01';
+$VERSION     = '2.03';
 $ERROR       = '';
 $DEBUG       = 0;
 
@@ -129,7 +129,7 @@ sub _init {
 #------------------------------------------------------------------------
 
 sub _output {
-    my ($where, $text) = @_;
+    my ($where, $text, $binmode) = @_;
     my $reftype;
     my $error = 0;
     
@@ -161,6 +161,7 @@ sub _output {
 	    ($error = $@) =~ s/ at \S+ line \d+\n?$//;
 	}
 	elsif (open(FP, ">$where")) { 
+	    binmode FP if $binmode;
 	    print FP $text;
 	    close FP;
 	}
@@ -883,9 +884,12 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
+
+
+
 =head1 VERSION
 
-Template Toolkit version 2.01, released on 30th March 2001.
+Template Toolkit version 2.03, released on 15 June 2001.
 
 =head1 COPYRIGHT
 
@@ -894,6 +898,4 @@ Template Toolkit version 2.01, released on 30th March 2001.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-
-
 
