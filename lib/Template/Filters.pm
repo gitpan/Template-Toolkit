@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filters.pm,v 2.34 2001/11/06 15:00:19 abw Exp $
+# $Id: Filters.pm,v 2.45 2002/01/22 18:09:36 abw Exp $
 #
 #============================================================================
 
@@ -28,10 +28,10 @@ require 5.004;
 
 use strict;
 use base qw( Template::Base );
-use vars qw( $VERSION $DEBUG $FILTERS $URI_ESCAPES );
+use vars qw( $VERSION $DEBUG $FILTERS $URI_ESCAPES $PLUGIN_FILTER );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.34 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.45 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -51,6 +51,8 @@ $FILTERS = {
     'html_break' => \&html_break,
     'upper'      => sub { uc $_[0] },
     'lower'      => sub { lc $_[0] },
+    'ucfirst'    => sub { ucfirst $_[0] },
+    'lcfirst'    => sub { lcfirst $_[0] },
     'stderr'     => sub { print STDERR @_; return '' },
     'trim'       => sub { for ($_[0]) { s/^\s+//; s/\s+$// }; $_[0] },
     'null'       => sub { return '' },
@@ -75,6 +77,8 @@ $FILTERS = {
     'latex'      => [ \&latex_filter_factory,    1 ],
 };
 
+# name of module implementing plugin filters
+$PLUGIN_FILTER = 'Template::Plugin::Filter';
 
 
 #========================================================================
@@ -99,11 +103,27 @@ sub fetch {
     my ($self, $name, $args, $context) = @_;
     my ($factory, $is_dynamic, $filter, $error);
 
-    # retrieve the filter factory
-    return (undef, Template::Constants::STATUS_DECLINED)
-	unless ($factory = $self->{ FILTERS }->{ $name }
-			|| $FILTERS->{ $name });
+    # allow $name to be specified as a reference to 
+    # a plugin filter object;  any other ref is 
+    # assumed to be a coderef and hence already a filter;
+    # non-refs are assumed to be regular name lookups
 
+    if (ref $name) {
+	if (UNIVERSAL::isa($name, $PLUGIN_FILTER)) {
+	    $factory = $name->factory()
+		|| return $self->error($name->error());
+	}
+	else {
+	    return $name;
+	}
+    }
+    else {
+	return (undef, Template::Constants::STATUS_DECLINED)
+	    unless ($factory = $self->{ FILTERS }->{ $name }
+		    || $FILTERS->{ $name });
+    }
+
+    # factory can be an [ $code, $dynamic ] or just $code
     if (ref $factory eq 'ARRAY') {
 	($factory, $is_dynamic) = @$factory;
     }
@@ -266,6 +286,23 @@ sub html_break  {
 sub html_filter_factory {
     my $context = shift;
     my $opts = @_ && ref $_[-1] eq 'HASH' ? pop @_ : { };
+
+    # if Apache::Util is installed then we use it
+    eval { 
+	require Apache::Util;
+        Apache::Util::escape_html('');
+    };
+    return \&Apache::Util::escape_html
+	unless $@ || $opts->{ entity };
+
+    # otherwise if HTML::Entities is installed then we use that
+    eval {
+	require HTML::Entities;
+    };
+    return \&HTML::Entities::encode_entities
+	unless $@ || $opts->{ entity };
+
+    # failing that, we fall back on the existing usage
     return sub {
 	my $text = shift;
 	for ($text) {
@@ -882,6 +919,26 @@ output:
 
     hello world
 
+=head2 ucfirst
+
+Folds the first character of the input to UPPER CASE.
+
+    [% "hello" | FILTER ucfirst %]
+
+output:
+
+    Hello
+
+=head2 lcfirst
+
+Folds the first character of the input to lower case.
+
+    [% "HELLO" | FILTER lcfirst %]
+
+output:
+
+    hELLO
+
 =head2 trim
 
 Trims any leading or trailing whitespace from the input text.  Particularly 
@@ -913,7 +970,7 @@ output:
 =head2 html
 
 Converts the characters 'E<lt>', 'E<gt>' and '&' to '&lt;', '&gt;' and
-'&amp', respectively, protecting them from being interpreted as
+'&amp;', respectively, protecting them from being interpreted as
 representing HTML tags or entities.
 
     [% FILTER html %]
@@ -923,6 +980,14 @@ representing HTML tags or entities.
 output:
 
     Binary "&lt;=&gt;" returns -1, 0, or 1 depending on...
+
+If the Apache::Util or HTML::Entities modules are installed on your
+system then these will instead be used to encode the text via the
+escape_html() or encode_entities() subroutines respectively.  Both
+these modules correctly handle the full gamut of HTML entities and
+will additionally escape characters like 'é' to '&eacute;'.  For
+further information, see
+http://www.w3.org/TR/REC-html40/sgml/entities.html.
 
 =head2 html_para
 
@@ -1231,8 +1296,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.34, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.45, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 
@@ -1244,4 +1309,4 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template|Template>, L<Template::Context|Template::Context>
+L<Template|Template>, L<Template::Context|Template::Context>, L<Template::Manual::Filters|Template::Manual::Filters>

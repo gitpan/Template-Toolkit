@@ -27,7 +27,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Provider.pm,v 2.34 2001/11/06 15:00:19 abw Exp $
+# $Id: Provider.pm,v 2.44 2002/01/22 18:09:38 abw Exp $
 #
 #============================================================================
 
@@ -44,7 +44,7 @@ use Template::Document;
 use File::Basename;
 use File::Spec;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.34 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.44 $ =~ /(\d+)\.(\d+)/);
 
 # maximum time between performing stat() on file to check staleness
 $STAT_TTL = 1 unless defined $STAT_TTL;
@@ -352,7 +352,7 @@ sub _fetch {
 
     if (defined $size && ! $size) {
 	# caching disabled so load and compile but don't cache
-	if ($compiled && -f $compiled && (stat($name))[9] < (stat($compiled))[9]) {
+	if ($compiled && -f $compiled && (stat($name))[9] <= (stat($compiled))[9]) {
 	    $data = $self->_load_compiled($compiled);
 	    $error = $self->error() unless $data;
 	}
@@ -372,7 +372,7 @@ sub _fetch {
     }
     else {
 	# nothing in cache so try to load, compile and cache
-	if ($compiled && -f $compiled && (stat($name))[9] < (stat($compiled))[9]) {
+	if ($compiled && -f $compiled && (stat($name))[9] <= (stat($compiled))[9]) {
 	    $data = $self->_load_compiled($compiled);
 	    $error = $self->error() unless $data;
 	}
@@ -441,7 +441,7 @@ sub _fetch_path {
 		$compiled = $self->_compiled_filename($path)
 		    if $compext || $compdir;
 
-		if ($compiled && -f $compiled && (stat($path))[9] < (stat($compiled))[9]) {
+		if ($compiled && -f $compiled && (stat($path))[9] <= (stat($compiled))[9]) {
 		    if ($data = $self->_load_compiled($compiled)) {
 			# store in cache
 			$data  = $self->store($path, $data);
@@ -1238,8 +1238,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.34, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.44, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

@@ -12,21 +12,26 @@
         page = 'Config'
 %]
 [%  WRAPPER toc;
-		INCLUDE tocitem 
-			title = 'DESCRIPTION'
- 			subs  = [ 'Template Style and Parsing Options',
-			          'Template Files and Blocks',
-			          'Template Variables',
-			          'Runtime Processing Options',
-			          'Caching and Compiling Options',
-			          'Plugins and Filters',
-			          'Compatibility, Customisation and Extension' ];
-		INCLUDE tocitem 
-			title = 'AUTHOR';
-		INCLUDE tocitem 
-			title = 'VERSION';
-		INCLUDE tocitem 
-			title = 'COPYRIGHT';
+	PROCESS tocitem 
+	        title ='DESCRIPTION'
+                subs  = [
+                    'Template Style and Parsing Options',
+		    'Template Files and Blocks',
+		    'Template Variables',
+		    'Runtime Processing Options',
+		    'Caching and Compiling Options',
+		    'Plugins and Filters',
+		    'Compatibility, Customisation and Extension'
+		];
+	PROCESS tocitem 
+	        title ='AUTHOR'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='VERSION'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='COPYRIGHT'
+                subs  = [];
     END
 %]
 <!-- Pod to HTML conversion by the Template Toolkit version 2 -->
@@ -1531,7 +1536,7 @@ Andy Wardley &lt;abw@kfs.org&gt;
 [% WRAPPER section
     title='VERSION'
 -%]<p>
-Template Toolkit version 2.06, released on 07 November 2001.
+Template Toolkit version 2.06d, released on 22 January 2002.
 </p>
 [%- END %]
 [% WRAPPER section

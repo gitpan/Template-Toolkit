@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: datafile.t,v 2.3 2001/03/22 12:23:14 abw Exp $
+# $Id: datafile.t,v 2.4 2001/12/13 17:49:32 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
+use lib qw( ./lib ./blib/lib ./blib/arch ../lib ../blib/lib ../blib/arch );
 use Template qw( :status );
 use Template::Test;
 $^W = 1;

@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Service.pm,v 2.36 2001/11/06 15:00:19 abw Exp $
+# $Id: Service.pm,v 2.46 2002/01/22 18:09:38 abw Exp $
 #
 #============================================================================
 
@@ -34,7 +34,7 @@ use Template::Base;
 use Template::Config;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.36 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.46 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 
 
@@ -106,6 +106,7 @@ sub process {
     }
 
     $context->delocalise();
+    delete $params->{ template };
 
     if ($error) {
 #	$error = $error->as_string if ref $error;
@@ -709,8 +710,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.34, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.44, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

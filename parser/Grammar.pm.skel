@@ -26,7 +26,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm.skel,v 2.7 2001/09/06 13:59:08 abw Exp $
+# $Id: Grammar.pm.skel,v 2.8 2001/11/29 16:44:36 abw Exp $
 #
 #========================================================================
 
@@ -37,7 +37,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.7 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.8 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, %CMPOP, $LEXTABLE, $RULES, $STATES);
 my ($factory, $rawstart);
@@ -84,6 +84,7 @@ $LEXTABLE = {
     '!'       => 'NOT',
     '|'	      => 'FILTER',
     '.'       => 'DOT',
+    '_'       => 'CAT',
     '..'      => 'TO',
 #    ':'       => 'MACRO',
     '='       => 'ASSIGN',

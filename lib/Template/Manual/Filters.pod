@@ -81,6 +81,26 @@ output:
 
     hello world
 
+=head2 ucfirst
+
+Folds the first character of the input to UPPER CASE.
+
+    [% "hello" | FILTER ucfirst %]
+
+output:
+
+    Hello
+
+=head2 lcfirst
+
+Folds the first character of the input to lower case.
+
+    [% "HELLO" | FILTER lcfirst %]
+
+output:
+
+    hELLO
+
 =head2 trim
 
 Trims any leading or trailing whitespace from the input text.  Particularly 
@@ -112,7 +132,7 @@ output:
 =head2 html
 
 Converts the characters 'E<lt>', 'E<gt>' and '&' to '&lt;', '&gt;' and
-'&amp', respectively, protecting them from being interpreted as
+'&amp;', respectively, protecting them from being interpreted as
 representing HTML tags or entities.
 
     [% FILTER html %]
@@ -122,6 +142,14 @@ representing HTML tags or entities.
 output:
 
     Binary "&lt;=&gt;" returns -1, 0, or 1 depending on...
+
+If the Apache::Util or HTML::Entities modules are installed on your
+system then these will instead be used to encode the text via the
+escape_html() or encode_entities() subroutines respectively.  Both
+these modules correctly handle the full gamut of HTML entities and
+will additionally escape characters like 'é' to '&eacute;'.  For
+further information, see
+http://www.w3.org/TR/REC-html40/sgml/entities.html.
 
 =head2 html_para
 
@@ -430,7 +458,7 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.06, released on 07 November 2001.
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

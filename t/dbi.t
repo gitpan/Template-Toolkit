@@ -4,22 +4,18 @@
 #
 # Test script for the DBI plugin.
 #
-# The DBI plugin and test scripts were written by Simon Matthews 
-# <sam@knowledgepool.com> with some minor modifications by Andy 
-# Wardley <abw@kfs.org> for inclusion in the Template Toolkit from
-# version 2.00 onwards.
-#
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dbi.t,v 2.8 2001/08/29 08:46:13 abw Exp $
+# $Id: dbi.t,v 2.12 2001/12/21 10:03:43 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ./lib ../lib ./blib/lib ../blib/lib );
-use vars qw( $DEBUG $run $dsn $user $pass );
+use lib qw( . ./t ./lib ../lib ./blib/lib ./blib/arch ../blib/lib ../blib/arch );
+use vars qw( $DEBUG $PK $run $dsn $user $pass );
 use Template::Test;
+use Template::Stash;
 
 $^W = 1;
 $DEBUG = 0;
@@ -29,6 +25,10 @@ eval "use DBI";
 if ($@) {
     exit(0);
 }
+eval "use Tie::DBI";
+my $tiedbi = $@ ? 0 : 1;
+
+# warn "Tie::DBI not found, skipping those tests\n" unless $tiedbi;
 
 # load the configuration file created by Makefile.PL which defines
 # the $run, $dsn, $user and $pass variables.
@@ -36,6 +36,16 @@ require 'dbi_test.cfg';
 unless ($run) {
     exit(0);
 }
+
+# new feature in DBI plugin v2.30+ is to allow user to drop initial 'dbi:'
+my $short_dsn = $dsn;
+$short_dsn =~ s/^dbi://i;
+
+# another hack: if we want to test Tie::DBI updates then we have to build
+# database with primary keys to force uniqueness.  However, different database
+# have different ways of defining primary keys, so we're only going to test
+# it on mysql 
+$PK = ($short_dsn =~ /^mysql/i) ? 'PRIMARY KEY' : '';
 
 my $attr = { 
     PrintError => 0,
@@ -67,14 +77,21 @@ EOF
 init_database($dbh);
 
 my $vars = {
-    dbh  => $dbh,
-    dsn  => $dsn,
-    user => $user,
-    pass => $pass,
-    attr => $attr,
+    dbh    => $dbh,
+    dsn    => $dsn,
+    user   => $user,
+    pass   => $pass,
+    attr   => $attr,
+    short  => $short_dsn,
+    mysql  => $PK ? 1 : 0,
+    tiedbi => $tiedbi,
 };
 
-test_expect(\*DATA, undef, $vars);
+# NOTE: Template::Stash::XS does not handle tied hashes so we must force
+# the use of the regular Template::Stash
+my $stash = Template::Stash->new($vars);
+
+test_expect(\*DATA, { STASH => $stash }, $vars);
 
 cleanup_database($dbh);
 
@@ -92,32 +109,39 @@ sub init_database {
     sql_query($dbh, 'DROP TABLE grp', 1);
 
     # create some tables
-    sql_query($dbh, 'CREATE TABLE grp ( 
-                         id Char(16), 
+    sql_query($dbh, "CREATE TABLE grp ( 
+                         id Char(16) $PK, 
                          name Char(32) 
-                     )');
+                     )");
 
-    sql_query($dbh, 'CREATE TABLE usr  ( 
-                         id Char(16), 
+    sql_query($dbh, "CREATE TABLE usr  ( 
+                         id Char(16) $PK, 
                          name Char(32),
                          grp Char(16)
-                     )');
+                     )");
 
     # add some records to the 'grp' table
     sql_query($dbh, "INSERT INTO grp 
                      VALUES ('foo', 'The Foo Group')");
     sql_query($dbh, "INSERT INTO grp 
                      VALUES ('bar', 'The Bar Group')");
+    sql_query($dbh, "INSERT INTO grp 
+                     VALUES ('baz', 'The Baz Group')");
 
     # add some records to the 'usr' table
     sql_query($dbh, "INSERT INTO usr 
 		     VALUES ('abw', 'Andy Wardley', 'foo')");
     sql_query($dbh, "INSERT INTO usr 
 		     VALUES ('sam', 'Simon Matthews', 'foo')");
+
     sql_query($dbh, "INSERT INTO usr 
 		     VALUES ('hans', 'Hans von Lengerke', 'bar')");
     sql_query($dbh, "INSERT INTO usr 
 		     VALUES ('mrp', 'Martin Portman', 'bar')");
+
+    sql_query($dbh, "INSERT INTO usr 
+		     VALUES ('craig', 'Craig Barratt', 'baz')");
+
 }
 
 
@@ -210,6 +234,17 @@ __END__
 -- expect --
 * Andy Wardley
 
+
+-- test --
+[% USE dbi -%]
+[% dbi.connect(database=dsn, user=user, pass=pass ChopBlanks=1) -%]
+[% FOREACH user = dbi.query("SELECT name FROM usr WHERE id='abw'") -%]
+* [% user.name %]
+[% END %]
+
+-- expect --
+* Andy Wardley
+
 -- test --
 [% USE DBI -%]
 [% TRY;
@@ -220,6 +255,21 @@ __END__
 %]
 -- expect --
 DBI error - data source not defined
+
+
+#------------------------------------------------------------------------
+# test short form of dsn, e.g. 'mysql:dbase' instead of 'dbi:mysql:dbase'
+#------------------------------------------------------------------------
+
+-- test --
+[% USE dbi -%]
+[% dbi.connect(short, user, pass) -%]
+[% FOREACH user = dbi.query("SELECT name FROM usr WHERE id='abw'") -%]
+* [% user.name %]
+[% END %]
+
+-- expect --
+* Andy Wardley
 
 
 #------------------------------------------------------------------------
@@ -261,9 +311,10 @@ DBI error - data source not defined
 [% END %]
 -- expect --
 1: abw - Andy Wardley
-2: hans - Hans von Lengerke
-3: mrp - Martin Portman
-4: sam - Simon Matthews
+2: craig - Craig Barratt
+3: hans - Hans von Lengerke
+4: mrp - Martin Portman
+5: sam - Simon Matthews
 
 -- test --
 # DBI plugin before TT 2.00 used 'count' instead of 'number'
@@ -273,9 +324,10 @@ DBI error - data source not defined
 [% END %]
 -- expect --
 1: abw - Andy Wardley
-2: hans - Hans von Lengerke
-3: mrp - Martin Portman
-4: sam - Simon Matthews
+2: craig - Craig Barratt
+3: hans - Hans von Lengerke
+4: mrp - Martin Portman
+5: sam - Simon Matthews
 
 
 #------------------------------------------------------------------------
@@ -298,7 +350,9 @@ Group [% loop.number %]: [% group.name %] ([% group.id %])
 Group 1: The Bar Group (bar)
   #1: Hans von Lengerke (hans)
   #2: Martin Portman (mrp)
-Group 2: The Foo Group (foo)
+Group 2: The Baz Group (baz)
+  #1: Craig Barratt (craig)
+Group 3: The Foo Group (foo)
   #1: Andy Wardley (abw)
   #2: Simon Matthews (sam)
 
@@ -315,8 +369,9 @@ Group 2: The Foo Group (foo)
 [% loop.next ? " [$loop.next.id]" : " [no next]" %]
 [% END %]
 -- expect --
-[no prev] abw - Andy Wardley [hans]
-[abw] hans - Hans von Lengerke [mrp]
+[no prev] abw - Andy Wardley [craig]
+[abw] craig - Craig Barratt [hans]
+[craig] hans - Hans von Lengerke [mrp]
 [hans] mrp - Martin Portman [sam]
 [mrp] sam - Simon Matthews [no next]
 
@@ -406,7 +461,9 @@ Group [% groups.count %] : [% group.name %]
 Group 1 : The Bar Group
   User 0 : Hans von Lengerke (hans)
   User 1 : Martin Portman (mrp)
-Group 2 : The Foo Group
+Group 2 : The Baz Group
+  User 0 : Craig Barratt (craig)
+Group 3 : The Foo Group
   User 0 : Andy Wardley (abw)
   User 1 : Simon Matthews (sam)
 
@@ -466,6 +523,9 @@ Group 2 : The Foo Group
 <person id="abw">
   <name>Andy Wardley</name>
 </person>
+<person id="craig">
+  <name>Craig Barratt</name>
+</person>
 <person id="hans">
   <name>Hans von Lengerke</name>
 </person>
@@ -484,6 +544,7 @@ Group 2 : The Foo Group
 <person>Simon Matthews</person>
 <person>Martin Portman</person>
 <person>Hans von Lengerke</person>
+<person>Craig Barratt</person>
 <person>Andy Wardley</person>
 
 -- test --
@@ -495,7 +556,129 @@ rest: [% p.name %]
 [% END %]
 -- expect --
 first: Andy Wardley
+rest: Craig Barratt
 rest: Hans von Lengerke
 rest: Martin Portman
 rest: Simon Matthews
 
+#------------------------------------------------------------------------
+# test tie() method to interface to Tie::DBI
+#------------------------------------------------------------------------
+
+-- test --
+[% IF tiedbi -%]
+[% USE dbi(dsn, user, pass, attr) -%]
+[% people = dbi.tie('usr', 'id') -%]
+[% people.abw.name %]
+[% ELSE -%]
+Skipping Tie::DBI tests
+[%- END %]
+-- expect --
+-- process --
+[% IF tiedbi -%]
+Andy Wardley
+[% ELSE -%]
+Skipping Tie::DBI tests
+[%- END %]
+
+-- test --
+[% IF tiedbi -%]
+[% USE dbi(dsn, user, pass, attr) -%]
+[% people = dbi.tie('usr', 'id') -%]
+[% FOREACH id = people.keys.sort -%]
+[% id %]: [% people.${id}.name +%]
+[% END %]
+[% ELSE -%]
+Skipping Tie::DBI tests
+[%- END %]
+-- expect --
+-- process --
+[% IF tiedbi -%]
+abw: Andy Wardley
+craig: Craig Barratt
+hans: Hans von Lengerke
+mrp: Martin Portman
+sam: Simon Matthews
+[% ELSE -%]
+Skipping Tie::DBI tests
+[%- END %]
+
+-- test --
+[% IF tiedbi -%]
+[% USE dbi(dsn, user, pass, attr) -%]
+[% people = dbi.tie('usr', 'id') -%]
+dave: [[% people.dave.name %]]
+[% TRY; people.dave = { name = 'Dave Hodgkinson' }; CATCH; "ok\n"; END -%]
+dave: [[% people.dave.name %]]
+[% ELSE -%]
+Skipping Tie::DBI tests
+[%- END %]
+-- expect --
+-- process --
+[% IF tiedbi -%]
+dave: []
+ok
+dave: []
+[% ELSE -%]
+Skipping Tie::DBI tests
+[%- END %]
+
+-- test --
+[% IF tiedbi -%]
+[% USE dbi(dsn, user, pass, attr) -%]
+[% people = dbi.tie('usr', 'id', clobber=1) -%]
+dave: [[% people.dave.name %]]
+[% IF mysql -%]
+[% people.dave = { name = 'Dave Hodgkinson', grp = 'bar' } -%]
+dave: [[% people.dave.name %] | [% people.dave.grp %]]
+[% people.dave.grp = 'foo' -%]
+[% people.dave.name = 'Davey Boy' -%]
+dave: [[% people.dave.name %] | [% people.dave.grp %]]
+[%- END %]
+[% ELSE -%]
+Skipping Tie::DBI tests
+[%- END %]
+-- expect --
+-- process --
+[% IF tiedbi -%]
+dave: []
+[% IF mysql -%]
+dave: [Dave Hodgkinson | bar]
+dave: [Davey Boy | foo]
+[%- END %]
+[% ELSE -%]
+Skipping Tie::DBI tests
+[%- END %]
+
+
+#------------------------------------------------------------------------
+# test size() and max() methods
+#------------------------------------------------------------------------
+
+-- test --
+[% USE dbi(dsn, user, pass, attr) -%]
+[% users = dbi.query('SELECT * FROM usr ORDER BY id') -%]
+size: [% users.size +%]
+ max: [% users.max +%]
+-- expect --
+size: 6
+ max: 5
+
+-- test --
+[% USE dbi(dsn, user, pass, attr) -%]
+There are [% dbi.query('SELECT * FROM usr').size -%] users
+-- expect --
+There are 6 users
+
+-- test --
+[% USE dbi(dsn, user, pass, attr) -%]
+[% FOREACH user = dbi.query('SELECT * FROM usr ORDER BY id') -%]
+[% loop.count %]/[%loop.size %] ([% loop.index %]/[% loop.max %]) [% user.name %]
+[% END %]
+-- expect --
+1/6 (0/5) Andy Wardley
+2/6 (1/5) Craig Barratt
+3/6 (2/5) Davey Boy
+4/6 (3/5) Hans von Lengerke
+5/6 (4/5) Martin Portman
+6/6 (5/5) Simon Matthews

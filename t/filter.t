@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 2.12 2001/08/21 17:39:22 abw Exp $
+# $Id: filter.t,v 2.14 2002/01/17 11:49:54 abw Exp $
 #
 #========================================================================
 
@@ -428,6 +428,15 @@ The cat...
 The cat sat on the mat
 
 Mary ...
+
+-- test --
+[% 'Hello World' | truncate(8) +%]
+[% 'Hello World' | truncate(10) +%]
+[% 'Hello World' | truncate(20) +%]
+-- expect --
+Hello...
+Hello W...
+Hello World
 
 -- test --
 [% "foo..." FILTER repeat(5) %]
@@ -861,3 +870,12 @@ guitar&amp;file.html
 -- expect --
 guitar&amp;amp;file.html
 
+-- test --
+[% 'foobar' | ucfirst %]
+-- expect --
+Foobar
+
+-- test --
+[% 'FOOBAR' | lcfirst %]
+-- expect --
+fOOBAR

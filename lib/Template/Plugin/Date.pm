@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Date.pm,v 2.32 2001/11/06 15:00:19 abw Exp $
+# $Id: Date.pm,v 2.41 2002/01/22 18:09:42 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 
 use POSIX ();
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.32 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.41 $ =~ /(\d+)\.(\d+)/);
 $FORMAT  = '%H:%M:%S %d-%b-%Y';    # default strftime() format
 
 
@@ -282,8 +282,8 @@ fixups/enhancements, a test script and documentation.
 
 =head1 VERSION
 
-2.32, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.41, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 
 
@@ -296,5 +296,5 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template::Plugin|Template::Plugin>, L<CPAN::POSIX|CPAN::POSIX>
+L<Template::Plugin|Template::Plugin>, L<POSIX|POSIX>
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Iterator.pm,v 2.29 2001/11/06 15:00:20 abw Exp $
+# $Id: Iterator.pm,v 2.38 2002/01/22 18:09:43 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use Template::Iterator;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.29 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.38 $ =~ /(\d+)\.(\d+)/);
 
 #------------------------------------------------------------------------
 # new($context, \@data, \%args)
@@ -92,8 +92,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.29, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.38, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

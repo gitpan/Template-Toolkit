@@ -20,7 +20,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Test.pm,v 2.31 2001/11/06 15:00:19 abw Exp $
+# $Id: Test.pm,v 2.42 2002/01/22 18:09:38 abw Exp $
 #
 #============================================================================
 
@@ -29,14 +29,18 @@ package Template::Test;
 require 5.004;
 
 use strict;
-use vars qw( @ISA @EXPORT $VERSION $DEBUG $EXTRA $PRESERVE $loaded %callsign);
+use vars qw( @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS 
+	     $VERSION $DEBUG $EXTRA $PRESERVE 
+	     $loaded %callsign);
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.31 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.42 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 @ISA     = qw( Exporter );
 @EXPORT  = qw( ntests ok match flush test_expect callsign banner );
+@EXPORT_OK = ( 'assert' );
+%EXPORT_TAGS = ( all => [ @EXPORT_OK, @EXPORT ] );
 $| = 1;
 
 $EXTRA    = 0;   # any extra tests to come after test_expect()
@@ -97,6 +101,25 @@ sub ok {
 	push(@results, $result);
     }
     return $result;
+}
+
+
+#------------------------------------------------------------------------
+# assert($truth, $error)
+#
+# Test value for truth, die if false.
+#------------------------------------------------------------------------
+
+sub assert {
+    my ($ok, $err) = @_;
+    return ok(1) if $ok;
+
+    # failed
+    my ($pkg, $file, $line) = caller();
+    $err ||= "assert failed";
+    $err .= " at $file line $line\n";
+    ok(0);
+    die $err;
 }
 
 
@@ -616,8 +639,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.31, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.42, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

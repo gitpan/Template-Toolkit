@@ -9,7 +9,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dumper.t,v 2.1 2000/10/03 11:46:24 abw Exp $
+# $Id: dumper.t,v 2.2 2001/11/29 16:55:09 abw Exp $
 #
 #========================================================================
 
@@ -20,7 +20,6 @@ use Template::Test;
 $^W = 1;
 
 my $params = {
-    'foo' => 'bar',
     'baz' => 'boo',
 };
 
@@ -39,12 +38,11 @@ Dumper
 
 -- test --
 [% USE Dumper -%]
-[% Dumper.dump({ foo = 'bar', bar = 'baz'}, 'hello' ) -%]
+[% Dumper.dump({ foo = 'bar' }, 'hello' ) -%]
 
 -- expect --
 $VAR1 = {
-          'foo' => 'bar',
-          'bar' => 'baz'
+          'foo' => 'bar'
         };
 $VAR2 = 'hello';
 
@@ -55,7 +53,6 @@ $VAR2 = 'hello';
 
 -- expect --
 $VAR1 = {
-          'foo' => 'bar',
           'baz' => 'boo'
         };
 
@@ -65,7 +62,6 @@ $VAR1 = {
 
 -- expect --
 $VAR1 = {<br>
-          'foo' =&gt; 'bar',<br>
           'baz' =&gt; 'boo'<br>
         };<br>
 
@@ -75,7 +71,6 @@ $VAR1 = {<br>
 
 -- expect --
 > $frank1 = {
->   'foo' => 'bar',
 >   'baz' => 'boo'
 > };
 
@@ -85,7 +80,6 @@ $VAR1 = {<br>
 
 -- expect --
 >> $bob1 = {
->>   'foo' => 'bar',
 >>   'baz' => 'boo'
 >> };
 

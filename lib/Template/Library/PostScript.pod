@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   2.30
+#   2.40
 #
 #========================================================================
 
@@ -54,8 +54,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.30, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.40, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

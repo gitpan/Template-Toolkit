@@ -65,7 +65,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.22 2001/11/06 15:00:22 abw Exp $
+# $Id: Context.pm,v 1.31 2002/01/22 18:09:49 abw Exp $
 #
 #============================================================================
 
@@ -76,7 +76,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.31 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -867,8 +867,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.22, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+1.31, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

@@ -26,7 +26,7 @@
 *
 *---------------------------------------------------------------------
 *
-* $Id: Stash.xs,v 1.5 2001/10/23 12:33:43 abw Exp $
+* $Id: Stash.xs,v 1.8 2002/01/21 10:30:39 abw Exp $
 *
 *=====================================================================*/
 
@@ -92,7 +92,7 @@ static SV*	scalar_dot_defined(SV*, AV*);
 static SV*	scalar_dot_length(SV*, AV*);
 
 static char rcsid[] = 
-	"$Id: Stash.xs,v 1.5 2001/10/23 12:33:43 abw Exp $";
+	"$Id: Stash.xs,v 1.8 2002/01/21 10:30:39 abw Exp $";
 
 /* dispatch table for XS versions of special "virtual methods",
  * names must be in alphabetical order 		
@@ -531,11 +531,13 @@ static SV *dotop(SV *root, SV *key_sv, AV *args, int flags) {
 		}
 
 	    } 
-	    else if ((SvTYPE(SvRV(root)) == SVt_PVAV)
-		     && (list_op(root, item, args, &result) == TT_RET_UNDEF)) {
-		if (flags & TT_DEBUG_FLAG)
-		    result = (SV *) mk_mortal_av(&PL_sv_undef, NULL, ERRSV);
+	    else if (SvTYPE(SvRV(root)) == SVt_PVAV) {
+		if ((list_op(root, item, args, &result) == TT_RET_UNDEF)
+		    && (flags & TT_DEBUG_FLAG))
+		  result = (SV *) mk_mortal_av(&PL_sv_undef, NULL, ERRSV);
 	    }
+	    else 
+		scalar_op(root, item, args, &result);
 	}
     }
 
@@ -563,16 +565,14 @@ static SV *dotop(SV *root, SV *key_sv, AV *args, int flags) {
 	    svp = av_fetch(array, 0, FALSE);
 	    if (svp && (*svp != &PL_sv_undef)) {
 		return result;
-	    } else if (len > 1 && (svp = av_fetch(array, 1, FALSE)) &&
-			(*svp != &PL_sv_undef)) {
-		die_object(*svp);
 	    }
 	}
     } 
 
     if ((flags & TT_DEBUG_FLAG) 
-	&& (!result || !SvOK(result) || (result == &PL_sv_undef)))
+	&& (!result || !SvOK(result) || (result == &PL_sv_undef))) {
 	croak("%s is undefined\n", item);
+}
 
     return result;
 }

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: CGI.pm,v 2.30 2001/11/06 15:00:19 abw Exp $
+# $Id: CGI.pm,v 2.39 2002/01/22 18:09:41 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use CGI;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.30 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.39 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my $class   = shift;
@@ -107,8 +107,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.30, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.39, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 
@@ -120,4 +120,4 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template::Plugin|Template::Plugin>, L<CPAN::CGI|CPAN::CGI>
+L<Template::Plugin|Template::Plugin>, L<CGI|CGI>

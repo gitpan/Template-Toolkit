@@ -192,17 +192,17 @@ tt2_install ::
 	@$(PERL) bin/tt2inst -v "$(TT_PREFIX)"
 
 tt2_splash ::
-	@$(PERL) -I lib bin/gifsplash -v
+	@$(PERL) -I$(INST_LIB) -I$(INST_ARCHLIB) bin/gifsplash -v -i "$(TT_PREFIX)"
 
 EOF
     $amble .=<<EOF if $main::TT_BUILD_DOCS;
 tt2_html_docs ::
-	\@\$(PERL) bin/ttree -v -f "\$(TT_PREFIX)/$TT_DOCS_CFG"
+	\@\$(PERL) -I\$(INST_LIB) -I\$(INST_ARCHLIB) bin/ttree -v -f "\$(TT_PREFIX)/$TT_DOCS_CFG"
 
 EOF
     $amble .=<<EOF if $main::TT_EXAMPLES;
 tt2_examples ::
-	\@\$(PERL) bin/ttree -v -f "\$(TT_PREFIX)/$TT_EXAMPLE_CFG"
+	\@\$(PERL) -I\$(INST_LIB) -I\$(INST_ARCHLIB) bin/ttree -v -f "\$(TT_PREFIX)/$TT_EXAMPLE_CFG"
 
 EOF
     return $amble;
@@ -237,10 +237,23 @@ my %opts = (
     'EXE_FILES'    => [ 'bin/tpage', 'bin/ttree' ],
     'PMLIBDIRS'    => [ 'lib' ], 
     'DIR'          => [ ],
-    'PREREQ_PM'    => { 'AppConfig' => 1.52 },
+    'PREREQ_PM'    => { 
+	'AppConfig'  => 1.52,
+	'File::Spec' => 0.6,
+    },
     'dist'         => {
 	'COMPRESS' => 'gzip',
 	'SUFFIX'   => 'gz',
+    },
+    'clean'        => {
+	'FILES'    => join(' ', qw( docs/ttree.cfg 
+				    examples/ttree.cfg 
+				    t/dbi_test.cfg 
+				    t/test/src/baz.ttc
+				    t/test/src/complex.org 
+				    t/test/src/complex.ttc
+				    t/test/src/evalperl.ttc
+				    t/test/src/foo.ttc )),
     },
 );
 
@@ -345,7 +358,7 @@ EOF
 sub mandatory_modules {
     eval "use AppConfig";
     if ($@ or $AppConfig::VERSION < 1.52) {
-	die(<<EOF);
+	warn(<<EOF);
 
 The Template Toolkit requires that the AppConfig module (version 1.52
 or later) first be installed.  This is used by the 'ttree' program for
@@ -359,7 +372,7 @@ EOF
 
     eval "use File::Spec";
     if ($@ or $File::Spec::VERSION < 0.6) {
-	die(<<EOF);
+	warn(<<EOF);
 
 The Template Toolkit requires that the File::Spec module (version 0.6
 or later) first be installed.  This is used by the File plugin.  It is
@@ -401,6 +414,7 @@ EOF
 		       [ 'GD::Graph3d' => undef         ],
 		       [ 'Date::Calc'  => undef         ],
 		       [ 'Pod::POM'    => undef         ],
+		       [ 'Tie::DBI'    => undef         ],
 		       [ 'XML::DOM'    => \&check_dom   ],
 		       [ 'XML::RSS'    => \&check_rss   ],
 		       [ 'XML::XPath'  => \&check_xpath ],
@@ -441,8 +455,9 @@ XS Stash: TT2 now twice as fast!
 
 We have a new high speed version of the Template::Stash. It's 
 a Perl XS module which can evaluate templates about twice as fast as 
-the pure-Perl version.  It is still officially "experimental" but 
-is thought to be generally stable and reliable.
+the pure-Perl version.  It is stable and reliable but be warned that
+it doesn't yet support access to tied hashes (e.g. Tie::DBI) so for
+certain applications you may need to explicitly use the regular stash.
 
 You can choose to build the XS stash module and enable it by default
 so that it is used automatically for all templates.  If you build it
@@ -454,9 +469,10 @@ this:
 
     my \$tt = new Template ({ STASH => new Template::Stash::XS, ... });
 
-You can also enable the XS stash by setting the \$STASH package
-variable in the Template/Config.pm module.  See 'perldoc
-Template::Config' for further details.
+You can also enable the XS stash (or the regular stash if you opt to
+use the XS stash by default) by setting the \$STASH package variable
+in the Template/Config.pm module.  See 'perldoc Template::Config' for
+further details.
 
 EOF
 
@@ -895,7 +911,7 @@ EOF
 sub build_docs {
     return <<EOF;
 echo "Building documentation for version \$(VERSION)" ;           \\
-\$(PERL) bin/ttree -f ./docs/ttdist.cfg --define version=\$(VERSION) -a;  \\
+\$(PERL) -I\$(INST_ARCHLIB) -I\$(INST_LIB) bin/ttree -f ./docs/ttdist.cfg --define version=\$(VERSION) -a;  \\
 EOF
 }
 

@@ -12,24 +12,33 @@
         page = 'Web'
 %]
 [%  WRAPPER toc;
-		INCLUDE tocitem 
-			title = 'DESCRIPTION';
-		INCLUDE tocitem 
-			title = 'INTRODUCTION';
-		INCLUDE tocitem 
-			title = 'GENERATING STATIC PAGES';
-		INCLUDE tocitem 
-			title = 'DYNAMIC CONTENT GENERATION VIA CGI SCRIPT';
-		INCLUDE tocitem 
-			title = 'DYNAMIC CONTENT GENERATION VIA APACHE/MOD_PERL HANDLER';
-		INCLUDE tocitem 
-			title = 'USING PLUGINS TO EXTEND FUNCTIONALITY';
-		INCLUDE tocitem 
-			title = 'AUTHOR';
-		INCLUDE tocitem 
-			title = 'VERSION';
-		INCLUDE tocitem 
-			title = 'COPYRIGHT';
+	PROCESS tocitem 
+	        title ='DESCRIPTION'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='INTRODUCTION'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='GENERATING STATIC PAGES'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='DYNAMIC CONTENT GENERATION VIA CGI SCRIPT'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='DYNAMIC CONTENT GENERATION VIA APACHE/MOD_PERL HANDLER'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='USING PLUGINS TO EXTEND FUNCTIONALITY'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='AUTHOR'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='VERSION'
+                subs  = [];
+	PROCESS tocitem 
+	        title ='COPYRIGHT'
+                subs  = [];
     END
 %]
 <!-- Pod to HTML conversion by the Template Toolkit version 2 -->
@@ -460,7 +469,7 @@ CGI object and a 'get_user_projects' sub-routine.
 	INCLUDE_PATH =&gt; '/home/abw/websrc/src:/home/abw/websrc/lib',
 	PRE_PROCESS  =&gt; 'config',
     });</pre>
-<pre>    $template-&gt;process($userinfo, $vars)
+<pre>    $template-&gt;process($file, $vars)
 	|| die $template-&gt;error();</pre>
 <p>
 Here's a sample template file that we might create to build the output
@@ -774,7 +783,7 @@ Andy Wardley &lt;abw@kfs.org&gt;
 [% WRAPPER section
     title='VERSION'
 -%]<p>
-Template Toolkit version 2.06, released on 07 November 2001.
+Template Toolkit version 2.06d, released on 22 January 2002.
 </p>
 [%- END %]
 [% WRAPPER section

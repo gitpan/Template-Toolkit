@@ -14,7 +14,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile5.t,v 2.3 2001/09/12 14:53:07 abw Exp $
+# $Id: compile5.t,v 2.4 2001/11/09 14:03:14 abw Exp $
 #
 #========================================================================
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Table.pm,v 2.31 2001/11/06 15:00:20 abw Exp $
+# $Id: Table.pm,v 2.40 2002/01/22 18:09:43 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use vars qw( @ISA $VERSION $AUTOLOAD );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.31 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.40 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -394,6 +394,21 @@ the data across.
     .  .
     .
 
+Example code to do so would be much like the following:
+
+    [% USE table(alphabet, rows=3) %]
+    [% FOREACH cols = table.cols %]
+      [% FOREACH item = cols %]
+        [% item %]
+      [% END %]
+    [% END %]
+
+    a  b  c
+    d  e  f
+    g  h  i
+    j  .  .
+    .
+
 In addition to a list reference, the Table plugin constructor may be 
 passed a reference to a Template::Iterator object or subclass thereof.
 The get_all() method is first called on the iterator to return all 
@@ -423,8 +438,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.31, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.40, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vars.t,v 2.4 2001/06/14 13:20:12 abw Exp $
+# $Id: vars.t,v 2.6 2002/01/21 10:30:38 abw Exp $
 #
 #========================================================================
 
@@ -80,6 +80,7 @@ my $params = {
     'people'   => sub { return qw( Tom Dick Larry ) },
     'gee'      =>  'g',
     "letter$a" => "'$a'",
+    'yankee'   => \&yankee,
     _private   => 123,
 
     # don't define a 'z' - DEFAULT test relies on its non-existance
@@ -119,6 +120,13 @@ sub belief {
     my $b = join(' and ', @beliefs);
     $b = '<nothing>' unless length $b;
     return "Oh I believe in $b.";
+}
+
+sub yankee {
+    my $a = [];
+    $a->[1] = { a => 1 };
+    $a->[3] = { a => 2 };
+    return $a;
 }
 
 __DATA__
@@ -275,6 +283,16 @@ after
 
 -- expect --
 before
+
+-- test --
+[% FOREACH k = yankee -%]
+[% loop.count %]. [% IF k; k.a; ELSE %]undef[% END %]
+[% END %]
+-- expect --
+1. undef
+2. 1
+3. undef
+4. 2
 
 
 #------------------------------------------------------------------------
@@ -533,3 +551,26 @@ Mithrandir, Olorin, Incanus
 -- expect --
 d: 2
 e: 3
+
+
+# these tests check that the incorrect precedence in the parser has now
+# been fixed, thanks to Craig Barrat.
+-- test --
+[%  1 || 0 && 0  # should be 1 || (0&&0), not (1||0)&&0 %]
+-- expect --
+1
+
+-- test --
+[%  1 + !0 + 1  # should be 1 + (!0) + 0, not 1 + !(0 + 1) %]
+-- expect --
+3
+
+-- test --
+[% "x" _ "y" == "y"; ','  # should be ("x"_"y")=="y", not "x"_("y"=="y") %]
+-- expect --
+,
+
+-- test --
+[% "x" _ "y" == "xy"      # should be ("x"_"y")=="xy", not "x"_("y"=="xy") %]
+-- expect --
+1

@@ -7,7 +7,7 @@
 # TODO
 #
 # DESCRIPTION
-#   TODO list for the Template Toolkit version 2.06, containing
+#   TODO list for the Template Toolkit version 2.06d, containing
 #   known bugs, limitations, planned enhancements, long term visions 
 #   and a few whacky ideas.
 #
@@ -15,12 +15,14 @@
 #   Andy Wardley   &lt;abw@kfs.org&gt;
 #
 #------------------------------------------------------------------------
-# $Id: TODO.tt2,v 1.11 2001/08/21 17:46:31 abw Exp $
+# $Id: TODO.tt2,v 1.13 2001/12/14 11:08:33 abw Exp $
 #========================================================================
 
 #------------------------------------------------------------------------
 # Miscellaneous
 #------------------------------------------------------------------------
+
+* mylist.sort.uniq
 
 * Errors thrown via the Error module are not correctly caught.  I looked
   at this briefly but the problem wasn't immediately obvious and needs some
@@ -147,7 +149,7 @@
 # Stash
 #------------------------------------------------------------------------
 
-* The XS Stash may have problems trying to access tied hashes.  Also note
+* The XS Stash does not work with tied hashes (e.g. DBI.tie).  Also note
   that enabling the XS Stash cause all the Template::* modules to be 
   installed in an architecture-dependant directory.  For info, see
   http://www.tt2.org/pipermail/templates/2001-September/001568.html

@@ -7,7 +7,7 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for the Template Toolkit version 2.06, detailing
+#   Revision history for the Template Toolkit version 2.06d, detailing
 #   significant changes between versions, most recent first.  Some 
 #   way down the file you'll find a section detailing major changes from 
 #   version 1.* to 2.* and a list of &quot;Gotchas!&quot; that you might have to 
@@ -16,9 +16,131 @@
 # AUTHOR
 #   Andy Wardley   &lt;abw@kfs.org&gt;
 #
+# NOTE
+#   This file is built from a source template distributed as part of 
+#   the docsrc bundle (docsrc/src/Release/Changes) which is available 
+#   from http://www.template-toolkit.org/download.html#docsrc.
+#   Any changes you make here may be lost!
+#
 #------------------------------------------------------------------------
-# $Id: Changes.tt2,v 1.25 2001/11/06 15:00:18 abw Exp $
+# $Id: Changes.tt2,v 1.41 2002/01/22 18:09:32 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 2.06d - 22nd January 2002               ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Applied a patch to the DBI plugin from Simon Matthews to stop it 
+  from closing a DBH which was passed in open from an external source.
+
+* Applied another patch from Simon to fix a bug with compiled templates
+  which were never being loaded due to a '&lt;' comparison of timestamps
+  rather than '&lt;='.  See
+  http://tt2.org/pipermail/templates/2002-January/002361.html
+
+* Applied a patch from Doug Steinwand which fixes a minor bug in the 
+  XS Stash as reported by Andrey Brindeew:
+  http://tt2.org/pipermail/templates/2002-January/002475.html
+
+* Changed URL plugin to accept multiple values for CGI parameters, e.g.
+  [% tt_start_tag %] USE URL('/cgi-bin/foo', items=[10,20]) [% tt_end_tag %] generates a URL like:
+  /cgi-bin/foo?item=10&amp;amp;item=20
+
+* Applied a patch from David D. Kilzer to Makefile.PL to add -I flags
+  to the various invocations of perl that we missed, and also to add
+  a clean/FILES target for WriteMakefile().  See.
+  http://tt2.org/pipermail/templates/2002-January/002431.html
+
+* Fixed Makefile.PL to warn, not die, about mandatory modules, leaving
+  it to the definitions in the PREREQ_PM which the CPAN module can 
+  understand.  Thanks to Leon for waving the flag.
+
+* Applied Leon's doc patch to the Table plugin to demonstrate 
+  row/column transposition.
+
+* Added ucfirst and lcfirst filters to fold first character to upper
+  or lower case respectively.  Thanks to Paul Makepeace for the patch.
+
+* Fixed truncate method of String plugin to not append suffix if the 
+  string is already shorter than the required length.  Thanks to 
+  Yann Kerherv&eacute; for the patch.
+
+
+#------------------------------------------------------------------------
+# Version 2.06c - 20th December 2001              ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Changed both Perl and XS Stash modules to try to apply a SCALAR_OPS
+  virtual method to a blessed object as a last-ditch chance if all else
+  fails.  Thanks to Tony Bowden for reporting the problem.  See
+  http://tt2.org/pipermail/templates/2001-December/002263.html
+
+* Added tie() method to DBI plugin which interfaces to the Tie::DBI 
+  module, based on some plugin code sent to me courtesy of Dave 
+  Hodgkinson.  Also made various minor cleanups to DBI code and updated 
+  documentation and tests.  Incidentally, this tickled the missing 
+  feature in the XS stash which doesn't yet support tied hashes.
+
+* Applied a patch from Christian Schaffner which fixes a problem in 
+  the Makefile.PL for installation via the fink package manager under 
+  Mac OS X.
+
+* Fixed up some of the ugliness in the docsrc tools.
+
+
+#------------------------------------------------------------------------
+# Version 2.06b - 2nd December 2001               ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Added the Template::Plugin::Filter module to make plugin filters 
+  easier to write and rewrote the Template::Plugin::XML::Style to use
+  it.
+
+* Added the Template::Plugin::String module which provides a nice
+  object oriented approach to string manipulation.  
+
+* Added the '_' string concatenation operator.  [% tt_start_tag %] foo = bar _ baz [% tt_end_tag %]
+
+* Applied Craig's suggested fixes to the parser to correct potential
+  precendence problems and added tests to the test suite.  See:
+  http://tt2.org/pipermail/templates/2001-November/002138.html
+
+* Applied Leon's patch to Template::Service to delete the 'template'
+  entry added to the variable hash at the end of processing.
+
+* Fixed an obscured bug/oversight in Template::Plugins which tested
+  generated plugin objects for truth rather than definedness to see if
+  the plugin returned was valid.  This can cause problems if your 
+  object has an overloaded stringification operator which gets called
+  (but shouldn't) and could return an untrue (but correct) value.
+
+* Fixed t/dumper.t to only have one entry in each hash to avoid hash 
+  ordering problems.  Thanks to Randal for reporting the problem.
+
+* Added the assert() subroutine to Template::Test.
+
+* Added some more content to the FAQ.
+  
+
+#------------------------------------------------------------------------
+# Version 2.06a - 19th November 2001              ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Added the XML::Style plugin for doing simple XML stylesheet like 
+  transformations and t/xmlstyle.t.
+
+* Fixed a bug in the DBI plugin where nested loops could cause the inner
+  query to overwrite the _STH of the outer query causing the outer loop
+  to end prematurely.  Thanks to Dave Hodgkinson, Craig Barratt and Simon
+  Matthews for working on the problem and solution.  For more info, see
+  http://tt2.org/pipermail/templates/2001-November/002067.html
+
+* Applied a patch from Aleksey Nogin to Makefile.PL to call bin/gifsplash
+  with the '-i' option.  This fixes the problem reported by Kenny Flegal:
+  http://www.tt2.org/pipermail/templates/2001-November/002028.html
+
+* Applied a patch from Stas Bekman to add 'align' to template/html/row.
+  
 
 #------------------------------------------------------------------------
 # Version 2.06 - 7th Nov 2001

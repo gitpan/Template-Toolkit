@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 2.38 2001/11/06 15:00:19 abw Exp $
+# $Id: Context.pm,v 2.47 2002/01/22 18:09:36 abw Exp $
 #
 #============================================================================
 
@@ -36,7 +36,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.38 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.47 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -181,15 +181,19 @@ sub filter {
     my ($self, $name, $args, $alias) = @_;
     my ($provider, $filter, $error);
 
+#    print STDERR "looking for filter $name\n";
+
     # use any cached version of the filter if no params provided
     return $filter 
 	if ! $args && ! ref $name
 	    && ($filter = $self->{ FILTER_CACHE }->{ $name });
 
+#    print STDERR "filter $name not in CACHE\n";
+
     # request the named filter from each of the FILTERS providers in turn
     foreach my $provider (@{ $self->{ LOAD_FILTERS } }) {
-	$filter = $name, last 
-	    if ref $name;
+#	$filter = $name, last 
+#	    if ref $name;
 
 	($filter, $error) = $provider->fetch($name, $args, $self);
 	last unless $error;
@@ -204,9 +208,17 @@ sub filter {
     return $self->error("$name: filter not found")
 	unless $filter;
 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # commented out by abw on 19 Nov 2001 to fix problem with xmlstyle
+    # plugin which may re-define a filter by calling define_filter()
+    # multiple times.  With the automatic aliasing/caching below, any
+    # new filter definition isn't seen.  Don't think this will cause
+    # any problems as filters explicitly supplied with aliases will
+    # still work as expected.
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # alias defaults to name if undefined
-    $alias = $name
-	unless defined($alias) or ref($name) or $args;
+    # $alias = $name
+    #     unless defined($alias) or ref($name) or $args;
 
     # cache FILTER if alias is valid
     $self->{ FILTER_CACHE }->{ $alias } = $filter
@@ -1419,8 +1431,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.38, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.47, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 

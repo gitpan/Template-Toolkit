@@ -20,7 +20,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.34 2001/11/06 15:00:19 abw Exp $
+# $Id: Document.pm,v 2.43 2002/01/22 18:09:36 abw Exp $
 #
 #============================================================================
 
@@ -34,7 +34,7 @@ use base qw( Template::Base );
 use Template::Constants;
 use Fcntl qw(O_WRONLY O_CREAT O_TRUNC);
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.34 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.43 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -450,8 +450,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.34, distributed as part of the
-Template Toolkit version 2.06, released on 07 November 2001.
+2.43, distributed as part of the
+Template Toolkit version 2.06d, released on 22 January 2002.
 
 =head1 COPYRIGHT
 
