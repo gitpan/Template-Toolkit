@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: pie.pm,v 1.47 2002/11/04 19:47:40 abw Exp $
+# $Id: pie.pm,v 1.50 2003/04/24 09:14:45 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Graph::pie Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.47 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.50 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -113,8 +113,8 @@ The GD::Graph module was written by Martien Verbruggen.
 
 =head1 VERSION
 
-1.47, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+1.50, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 

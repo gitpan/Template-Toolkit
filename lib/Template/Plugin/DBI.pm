@@ -19,7 +19,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: DBI.pm,v 2.53 2002/11/04 19:47:05 abw Exp $
+#   $Id: DBI.pm,v 2.57 2003/05/26 16:24:44 darren Exp $
 # 
 #==============================================================================
 
@@ -35,7 +35,7 @@ use DBI;
 use vars qw( $VERSION $DEBUG $QUERY $ITERATOR );
 use base qw( Template::Plugin );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.53 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.57 $ =~ /(\d+)\.(\d+)/);
 $DEBUG    = 0 unless defined $DEBUG;
 $QUERY    = 'Template::Plugin::DBI::Query';
 $ITERATOR = 'Template::Plugin::DBI::Iterator';
@@ -270,16 +270,15 @@ sub query {
 
 
 #------------------------------------------------------------------------
-# do($sql)
+# do($sql, \%attr, @bind)
 #
 # Prepares and executes a SQL statement.
 #------------------------------------------------------------------------
 
 sub do {
     my $self = shift;
-    my $sql  = shift || return '';
 
-    return $self->dbh->do($sql) 
+    return $self->dbh->do(@_)
 	|| $self->_throw("DBI do failed: $DBI::errstr");
 }
 
@@ -930,8 +929,8 @@ Andy Wardley, Craig Barratt, Dave Hodgkinson and Rafael Kitover.
 
 =head1 VERSION
 
-2.53, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.57, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 
 

@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------------
 #
-# $Id: Dumper.pm,v 2.55 2002/11/04 19:47:09 abw Exp $
+# $Id: Dumper.pm,v 2.59 2003/07/01 12:46:34 darren Exp $
 # 
 #==============================================================================
 
@@ -30,11 +30,13 @@ use strict;
 use Template::Plugin;
 use Data::Dumper;
 
-use vars qw( $VERSION $DEBUG $AUTOLOAD );
+use vars qw( $VERSION $DEBUG @DUMPER_ARGS $AUTOLOAD );
 use base qw( Template::Plugin );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.55 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.59 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
+@DUMPER_ARGS = qw( Indent Pad Varname Purity Useqq Terse Freezer
+                   Toaster Deepcopy Quotekeys Bless Maxdepth );
 
 #==============================================================================
 #                      -----  CLASS METHODS -----
@@ -50,7 +52,7 @@ sub new {
     $params ||= { };
 
 
-    foreach my $arg (qw( Indent Pad Varname )) {
+    foreach my $arg (@DUMPER_ARGS) {
 	no strict 'refs';
 	if (defined ($val = $params->{ lc $arg })
 	    or defined ($val = $params->{ $arg })) {
@@ -159,8 +161,8 @@ Simon Matthews E<lt>sam@knowledgepool.comE<gt>
 
 =head1 VERSION
 
-2.55, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.59, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 
 

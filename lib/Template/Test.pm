@@ -20,7 +20,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Test.pm,v 2.60 2002/11/04 19:46:05 abw Exp $
+# $Id: Test.pm,v 2.64 2003/04/29 12:29:49 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use vars qw( @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.60 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.64 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 @ISA     = qw( Exporter );
 @EXPORT  = qw( ntests ok is match flush skip_all test_expect callsign banner );
@@ -48,6 +48,10 @@ $NO_FLUSH = 0;
 $EXTRA    = 0;   # any extra tests to come after test_expect()
 $PRESERVE = 0	 # don't mangle newlines in output/expect
     unless defined $PRESERVE;
+
+# always set binmode on Win32 machines so that any output generated
+# is true to what we expect 
+$Template::BINMODE = ($^O eq 'MSWin32') ? 1 : 0;
 
 my @results = ();
 my ($ntests, $ok_count);
@@ -681,12 +685,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.60, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.64, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

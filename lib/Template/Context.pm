@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 # 
 # REVISION
-#   $Id: Context.pm,v 2.76 2003/03/18 13:10:38 abw Exp $
+#   $Id: Context.pm,v 2.81 2003/07/24 11:32:35 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.76 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.81 $ =~ /(\d+)\.(\d+)/);
 $DEBUG_FORMAT = "\n## \$file line \$line : [% \$text %] ##\n";
 
 
@@ -145,7 +145,7 @@ sub template {
                         $self->throw($template);
                     }
                     else {
-                        $self->throw( Template::Constants::ERROR_FILE => $template );
+                        $self->throw( Template::Constants::ERROR_FILE, $template );
                     }
 		}
 		# DECLINE is ok, carry on
@@ -645,6 +645,17 @@ sub reset {
 
 sub stash {
     return $_[0]->{ STASH };
+}
+
+
+#------------------------------------------------------------------------
+# define_vmethod($type, $name, \&sub)
+#
+# Passes $type, $name, and &sub on to stash->define_vmethod().
+#------------------------------------------------------------------------
+sub define_vmethod {
+    my $self = shift;
+    $self->stash->define_vmethod(@_);
 }
 
 
@@ -1522,12 +1533,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.76, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.81, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

@@ -14,7 +14,7 @@ $| = 1;
 select STDOUT;
 
 use vars qw( $TT_VERSION $TT_PREFIX $TT_IMAGES $TT_RUN_DBI
-	     $TT_BUILD_DOCS $TT_SPLASH_DOCS $TT_EXAMPLES
+	     $TT_BUILD_DOCS $TT_SPLASH_DOCS $TT_EXAMPLES $TT_EXTRAS
 	     $TT_LATEX_ENABLE $TT_LATEX_PATH $TT_PDFLATEX_PATH $TT_DVIPS_PATH 
 	     $TT_XS_ENABLE $TT_XS_DEFAULT
 	     $TT_SPLASH_THEME $TT_QUIET $TT_ACCEPT $TT_YES );
@@ -69,6 +69,7 @@ arguments to 'perl Makefile.PL'.  e.g.
   TT_SPLASH      use Splash! for docs    (y)
   TT_THEME       Splash! theme           (default)
   TT_EXAMPLES    build HTML examples     (y)
+  TT_EXTRAS      install optional extras (y)
   TT_XS_ENABLE   Enable XS Stash         (y)
   TT_XS_DEFAULT  Use XS Stash by default (y)
   TT_DBI         run DBI tests           (y if DBI installed)
@@ -102,6 +103,7 @@ $TT_RUN_DBI       = 'y';
 $TT_BUILD_DOCS    = 'y';
 $TT_SPLASH_DOCS   = 'y';
 $TT_EXAMPLES      = 'y';
+$TT_EXTRAS        = 'y';
 $TT_SPLASH_THEME  = 'default';
 $TT_XS_ENABLE     = 'y';
 $TT_XS_DEFAULT    = 'y';
@@ -138,6 +140,7 @@ $TT_RUN_DBI       = $ttconfig{ TT_DBI        } if defined $ttconfig{ TT_DBI     
 $TT_BUILD_DOCS    = $ttconfig{ TT_DOCS       } if defined $ttconfig{ TT_DOCS       };
 $TT_SPLASH_DOCS   = $ttconfig{ TT_SPLASH     } if defined $ttconfig{ TT_SPLASH     };
 $TT_EXAMPLES      = $ttconfig{ TT_EXAMPLES   } if defined $ttconfig{ TT_EXAMPLES   };
+$TT_EXTRAS        = $ttconfig{ TT_EXTRAS     } if defined $ttconfig{ TT_EXTRAS     };
 $TT_LATEX_ENABLE  = $ttconfig{ TT_LATEX      } if defined $ttconfig{ TT_LATEX      };
 $TT_XS_ENABLE     = $ttconfig{ TT_XS_ENABLE  } if defined $ttconfig{ TT_XS_ENABLE  };
 $TT_XS_DEFAULT    = $ttconfig{ TT_XS_DEFAULT } if defined $ttconfig{ TT_XS_DEFAULT };
@@ -145,7 +148,7 @@ $TT_QUIET         = $ttconfig{ TT_QUIET      } if defined $ttconfig{ TT_QUIET   
 $TT_ACCEPT        = $ttconfig{ TT_ACCEPT     } if defined $ttconfig{ TT_ACCEPT     };
 
 foreach ($TT_RUN_DBI, $TT_BUILD_DOCS, $TT_SPLASH_DOCS, $TT_EXAMPLES, 
-	 $TT_LATEX_ENABLE, $TT_XS_ENABLE, $TT_XS_DEFAULT ) {
+	 $TT_EXTRAS, $TT_LATEX_ENABLE, $TT_XS_ENABLE, $TT_XS_DEFAULT ) {
     $_ = 'n' if ! $_;
 }
 $TT_ACCEPT = 0 if $TT_ACCEPT eq 'n';
@@ -271,15 +274,13 @@ if ($ExtUtils::MakeMaker::VERSION >= 5.43) {
 
 WriteMakefile( %opts );
 
-if ($WIN32) {
     print <<EOF;
 
 Configuration complete.  You should now run '$MAKE', '$MAKE test' and 
 then '$MAKE install'.   See the README file for further information.
 EOF
-}
 
-message(<<EOF) if $TT_BUILD_DOCS;
+message(<<EOF) if $TT_PREFIX;
 
 
 Installation Notes
@@ -374,10 +375,10 @@ EOF
     }
 
     eval "use File::Spec";
-    if ($@ or $File::Spec::VERSION < 0.6) {
+    if ($@ or $File::Spec::VERSION < 0.8) {
 	warn(<<EOF);
 
-The Template Toolkit requires that the File::Spec module (version 0.6
+The Template Toolkit requires that the File::Spec module (version 0.8
 or later) first be installed.  This is used by the File plugin.  It is
 available from CPAN:
 
@@ -385,8 +386,20 @@ available from CPAN:
 
 EOF
     }
-}
 
+    eval "use File::Temp";
+    if ($@ or $File::Temp::VERSION < 0.12) {
+        warn(<<EOF);
+
+The Template Toolkit requires that the File::Temp module (version 0.12
+or later) first be installed.  This is used by the Template::Document
+class for storing compiled templates.  It is available from CPAN:
+
+    http://search.cpan.org/search?dist=File-Temp
+
+EOF
+    }
+}
 
 
 #------------------------------------------------------------------------
@@ -485,15 +498,21 @@ EOF
 			      $TT_XS_ENABLE) =~ /^y/i);
 
     if ($TT_XS_ENABLE) {
-	
-	$TT_XS_DEFAULT = (ttprompt('Do you want to use the XS Stash for all Templates?', 
+        $TT_XS_DEFAULT =
+            (ttprompt('Do you want to use the XS Stash for all Templates?',
 				   $TT_XS_DEFAULT) =~ /^y/i); 
+    }
+    else {
+        # If the XS stash is disabled, we cannot use it as the default stash.
+        $TT_XS_DEFAULT = 0;
+    }
 
+    # Actually, we would have to fix 'Config.pm' only if the XS stash is
+    # disabled. But this way, we are sure the correct module is used.
 	fix_file(catfile('lib','Template','Config.pm'),
 		 '$STASH', 
 		 $TT_XS_DEFAULT ? 'Template::Stash::XS' : 'Template::Stash');
     }
-}
 
 
 #------------------------------------------------------------------------
@@ -591,7 +610,9 @@ specify a separate directory for them.
 
 EOF
 
-    if (ttprompt('Do you want to install these components?', 'y') =~ /^y/i) {
+    if ($TT_EXTRAS = (
+        ttprompt('Do you want to install these components?',
+            $TT_EXTRAS) =~ /^y/i)) {
 	message(<<EOF);
 
 You can chose any directory for the installation of the additional
@@ -879,18 +900,19 @@ EOF
 
 sub write_defaults {
     open(FP, "> $DEFAULTS_FILE") || die "$DEFAULTS_FILE: $!\n";
-    my ( $ttdbi, $ttdocs, $ttsplash, $ttex, 
+    my ( $ttdbi, $ttdocs, $ttsplash, $ttexamples, $ttextras,
 	 $ttlatex, $ttxs_enable, $ttxs_default ) 
 	    = map { $_ ? 'y' : 'n' } 
        ( $TT_RUN_DBI, $TT_BUILD_DOCS, $TT_SPLASH_DOCS, $TT_EXAMPLES, 
-	 $TT_LATEX_ENABLE, $TT_XS_ENABLE, $TT_XS_DEFAULT );
+     $TT_EXTRAS, $TT_LATEX_ENABLE, $TT_XS_ENABLE, $TT_XS_DEFAULT );
     print FP <<EOF;
 \$TT_PREFIX        = '$TT_PREFIX';
 \$TT_IMAGES        = '$TT_IMAGES';
 \$TT_RUN_DBI       = '$ttdbi';
 \$TT_BUILD_DOCS    = '$ttdocs';
 \$TT_SPLASH_DOCS   = '$ttsplash';
-\$TT_EXAMPLES      = '$ttex';
+\$TT_EXAMPLES      = '$ttexamples';
+\$TT_EXTRAS        = '$ttextras';
 \$TT_SPLASH_THEME  = '$TT_SPLASH_THEME';
 \$TT_LATEX_ENABLE  = '$ttlatex';
 \$TT_LATEX_PATH    = '$TT_LATEX_PATH';

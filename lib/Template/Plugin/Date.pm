@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Date.pm,v 2.63 2002/11/04 19:47:07 abw Exp $
+# $Id: Date.pm,v 2.66 2003/04/24 09:14:43 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 
 use POSIX ();
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.63 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.66 $ =~ /(\d+)\.(\d+)/);
 $FORMAT  = '%H:%M:%S %d-%b-%Y';    # default strftime() format
 @LOCALE_SUFFIX = qw( .ISO8859-1 .ISO_8859-15 .US-ASCII .UTF-8 );
 
@@ -343,8 +343,8 @@ cute Date::Calc sub-plugin.
 
 =head1 VERSION
 
-2.63, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.66, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 
 

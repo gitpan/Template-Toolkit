@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: date.t,v 2.9 2002/08/16 08:40:02 abw Exp $
+# $Id: date.t,v 2.11 2003/04/30 10:39:34 abw Exp $
 #
 #========================================================================
 
@@ -190,7 +190,10 @@ In French, today's day is: [% nowloc(time, '%A', 'fr_FR') +%]
 [% day.format('4:20:00 9-13-2000') %]
 
 -- expect --
-Tuesday
+-- process --
+[% USE date(time='4:20:00 9-13-2000', format='%s');
+   nowloc(date.format, '%A', 'en_GB') 
+%]
 
 -- test --
 [% TRY %]

@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Service.pm,v 2.65 2002/11/04 19:46:04 abw Exp $
+# $Id: Service.pm,v 2.70 2003/04/29 12:39:37 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Config;
 use Template::Exception;
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.65 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.70 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 
 
@@ -101,7 +101,18 @@ sub process {
 	    last SERVICE
 		unless defined ($procout = $self->_recover(\$error));
 	}
-	$output .= $procout if defined $procout;
+
+        if (defined $procout) {
+            # WRAPPER
+            eval {
+                foreach $name (reverse @{ $self->{ WRAPPER } }) {
+                    $self->debug("WRAPPER: $name") if $self->{ DEBUG };
+                    $procout = $context->process($name, { content => $procout });
+                }
+            };
+            last SERVICE if ($error = $@);
+            $output .= $procout;
+        }
 
 	# POST_PROCESS
 	eval {
@@ -148,7 +159,7 @@ sub _init {
 
     # coerce PRE_PROCESS, PROCESS and POST_PROCESS to arrays if necessary, 
     # by splitting on non-word characters
-    foreach $item (qw( PRE_PROCESS PROCESS POST_PROCESS )) {
+    foreach $item (qw( PRE_PROCESS PROCESS POST_PROCESS WRAPPER )) {
 	$data = $config->{ $item };
         $self->{ $item } = [ ], next unless (defined $data);
 	$data = [ split($delim, $data || '') ]
@@ -157,7 +168,7 @@ sub _init {
     }
     # unset PROCESS option unless explicitly specified in config
     $self->{ PROCESS } = undef
-	unless exists $config->{ PROCESS };
+	unless defined $config->{ PROCESS };
     
     $self->{ ERROR      } = $config->{ ERROR } || $config->{ ERRORS };
     $self->{ AUTO_RESET } = defined $config->{ AUTO_RESET }
@@ -738,12 +749,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.67, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.70, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

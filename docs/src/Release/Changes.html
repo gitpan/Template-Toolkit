@@ -7,7 +7,7 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for the Template Toolkit version 2.09, detailing
+#   Revision history for the Template Toolkit version 2.10, detailing
 #   significant changes between versions, most recent first.  Some 
 #   way down the file you'll find a section detailing major changes from 
 #   version 1.* to 2.* and a list of &quot;Gotchas!&quot; that you might have to 
@@ -23,18 +23,95 @@
 #   Any changes you make here may be lost!
 #
 #------------------------------------------------------------------------
-# $Id: Changes.tt2,v 1.84 2003/04/23 12:52:50 abw Exp $
+# $Id: Changes.tt2,v 1.95 2003/07/24 15:47:57 abw Exp $
 #========================================================================
 
 #------------------------------------------------------------------------
-# Version 2.09 - April 23rd 2003
+# Version 2.10 - 24th July 2003
+#------------------------------------------------------------------------
+
+* Merged in Darren's branch to add the define_vmethod() methods to
+  Template::Context and Template::Stash.
+
+* Applied patch from Axel Gerstmair for minor fixes to Makefile.PL, 
+  t/gd.t and t/date.t.
+  http://template-toolkit.org/pipermail/templates/2003-April/004545.html
+
+* Added undefined() method to the Stash which get() calls if a variable
+  value is undefined.  Currently just returns '' to implement existing 
+  behaviour, but it provides a method hook for subclasses to redefine.
+
+* Fixed a minor bug which prevented the Stash from being subclassable
+  by removing references to __PACKAGE__
+
+
+#------------------------------------------------------------------------
+# Version 2.09c - 29th April 2003                 ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* applied patch from Ivan Kurmanov &lt;kurmanov@openlib.org&gt; to XPath plugin
+  to add handling for comments.
+
+* modified grammar to allow 'IN' as an alternate for '=' in FOREACH 
+  directives, thus allowing [% tt_start_tag %] FOREACH item IN [ foo, bar, baz ] [% tt_end_tag %]
+  http://template-toolkit.org/pipermail/templates/2003-April/004519.html
+
+* changed test for PROCESS option in Template::Service init from 'exists' 
+  to 'defined' so that PROCESS set to undef Does The Right Thing.
+  http://template-toolkit.org/pipermail/templates/2003-April/004536.html
+
+* changed Template::process() method to accept a hash reference or list
+  of output options following any filename.  This can now be used to 
+  explicitly set binary mode (or not) for the output of a file.  Also
+  changed Template::_output() method to expect a reference to text rather 
+  than a duplicated text string (for efficiency) and also the new hash 
+  reference of options.  Also changed the redirect and stdout filters
+  accordingly.
+
+* disabled the mandatory binmode setting on all files created under 
+  MSWin32.  See previous item for details on how binmode can now be 
+  set explicitly, or link below for description of problem.
+  http://template-toolkit.org/pipermail/templates/2003-April/004499.html
+
+* applied patch from Axel Gerstmair to Makefile.PL to add TT_EXTRAS item.
+  http://template-toolkit.org/pipermail/templates/2003-April/004543.html
+
+
+#------------------------------------------------------------------------
+# Version 2.09b - 24th April 2003                 ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* fixed bug introduced in 2.08e which caused some exception handling to
+  fail under Perl 5.6.1 and earlier.
+  http://template-toolkit.org/pipermail/templates/2003-April/004502.html
+
+* applied patch from Tatsuhiko Miyagawa to gd.t test to change size test
+  from 6500 to 6000.
+
+* applied patch from Axel Gerstmair to the Image plugin.
+  http://template-toolkit.org/pipermail/templates/2003-April/004496.html
+
+
+#------------------------------------------------------------------------
+# Version 2.09a - 23rd April 2003                 ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* added WRAPPER configuration item, documentation and tests.  Also added 
+  'wrapper' configuration item to ttree.  See Template::Manual::Config
+
+* applied patch from Axel Gerstmair to fix File::Spec and File::Temp
+  versions in Makefile.PL.
+  http://template-toolkit.org/pipermail/templates/2003-April/004480.html
+
+#------------------------------------------------------------------------
+# Version 2.09 - 23rd April 2003
 #------------------------------------------------------------------------
 
 * Bumped version number for release.
 
 
 #------------------------------------------------------------------------
-# Version 2.08e - March 18th 2003                 ## DEVELOPER RELEASE ##
+# Version 2.08e - 18th March 2003                 ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * changed Template::Provider and Template::Context to propagate nested
@@ -49,7 +126,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.08d - March 18th 2003                 ## DEVELOPER RELEASE ##
+# Version 2.08d - 18th March 2003                 ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Made Template::Exception DTRT with overloading (mark)
@@ -63,7 +140,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.08c - November 4th 2002               ## DEVELOPER RELEASE ##
+# Version 2.08c - 4th November 2002               ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Applied a patch from Bradley Baetz to work around a bug in Perl when 
@@ -75,7 +152,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.08b - November 1st 2002               ## DEVELOPER RELEASE ##
+# Version 2.08b - 1st November 2002               ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Applied two patches from Leon to fix bug in constant folding with
@@ -104,7 +181,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.08a - August 14th 2002                ## DEVELOPER RELEASE ##
+# Version 2.08a - 14th August 2002                ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Totally re-implemented the handling of the DEBUG parameter.  Added 
@@ -125,7 +202,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.08 - July 30th 2002
+# Version 2.08 - 30th July 2002
 #------------------------------------------------------------------------
 
 * Applied two minor patches from Leon to remove 'use warnings' from 2
@@ -133,7 +210,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.07c - July 22nd 2002                  ## DEVELOPER RELEASE ##
+# Version 2.07c - 22nd July 2002                  ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Fixed a bug in Date plugin introduced in last version which caused
@@ -175,7 +252,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.07b - July 7th 2002                   ## DEVELOPER RELEASE ##
+# Version 2.07b - 7th July 2002                   ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Added the CONSTANTS, CONSTANTS_NAMESPACE and NAMESPACE options, the
@@ -185,7 +262,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.07a - July 5th 2002                   ## DEVELOPER RELEASE ##
+# Version 2.07a - 5th July 2002                   ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Changed the Perl and XS stashes to automatically promote a scalar
@@ -227,7 +304,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.07 - April 17th 2002 
+# Version 2.07 - 17th April 2002 
 #------------------------------------------------------------------------
 
 * Changed example in synopsis of Template::Plugin::XML::Style to one 
@@ -238,7 +315,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.06g - April 15th 2002                 ## DEVELOPER RELEASE ##
+# Version 2.06g - 15th April 2002                 ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Fixed a bug in ttree which prevented it from passing the recurse option
@@ -258,7 +335,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.06f - March 13th 2002                 ## DEVELOPER RELEASE ##
+# Version 2.06f - 13th March 2002                 ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Fixed a bug in both the Perl and XS Stash modules which resulted in 
@@ -278,7 +355,7 @@
 
 
 #------------------------------------------------------------------------
-# Version 2.06e - March 12th 2002                 ## DEVELOPER RELEASE ##
+# Version 2.06e - 12th March 2002                 ## DEVELOPER RELEASE ##
 #------------------------------------------------------------------------
 
 * Fixed a minor bug in t/tiedhash.t which was trying to use the XS stash

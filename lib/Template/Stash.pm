@@ -7,10 +7,10 @@
 #   variables for the Template Toolkit. 
 #
 # AUTHOR
-#   Andy Wardley   <abw@kfs.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
 #   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 2.72 2003/03/17 22:24:10 abw Exp $
+# $Id: Stash.pm,v 2.78 2003/07/24 12:13:32 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.72 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.78 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -251,6 +251,37 @@ sub hash_import {
 }
 
 
+#------------------------------------------------------------------------
+# define_vmethod($type, $name, \&sub)
+#
+# Defines a virtual method of type $type (SCALAR, HASH, or LIST), with
+# name $name, that invokes &sub when called.  It is expected that &sub
+# be able to handle the type that it will be called upon.
+#------------------------------------------------------------------------
+
+sub define_vmethod {
+    my ($class, $type, $name, $sub) = @_;
+    my $op;
+    $type = lc $type;
+
+    if ($type =~ /^scalar|item$/) {
+        $op = $SCALAR_OPS;
+    }
+    elsif ($type eq 'hash') {
+        $op = $HASH_OPS;
+    }
+    elsif ($type =~ /^list|array$/) {
+        $op = $LIST_OPS;
+    }
+    else {
+        die "invalid vmethod type: $type\n";
+    }
+
+    $op->{ $name } = $sub;
+
+    return 1;
+}
+
 
 #========================================================================
 #                      -----  CLASS METHODS -----
@@ -386,7 +417,7 @@ sub get {
 	$result = $self->_dotop($root, $ident, $args);
     }
 
-    return defined $result ? $result : '';
+    return defined $result ? $result : $self->undefined($ident, $args);
 }
 
 
@@ -502,6 +533,19 @@ sub update {
 }
 
 
+#------------------------------------------------------------------------
+# undefined($ident, $args)
+#
+# Method called when a get() returns an undefined value.  Can be redefined
+# in a subclass to implement alternate handling.
+#------------------------------------------------------------------------
+
+sub undefined {
+    my ($self, $ident, $args);
+    return '';
+}
+
+
 #========================================================================
 #                  -----  PRIVATE OBJECT METHODS -----
 #========================================================================
@@ -532,7 +576,7 @@ sub update {
 sub _dotop {
     my ($self, $root, $item, $args, $lvalue) = @_;
     my $rootref = ref $root;
-    my $atroot  = ($rootref eq __PACKAGE__);
+    my $atroot  = ($root eq $self);
     my ($value, @result);
 
     $args ||= [ ];
@@ -681,6 +725,7 @@ sub _dotop {
 sub _assign {
     my ($self, $root, $item, $args, $value, $default) = @_;
     my $rootref = ref $root;
+    my $atroot  = ($root eq $self);
     my $result;
     $args ||= [ ];
     $default ||= 0;
@@ -694,7 +739,7 @@ sub _assign {
     return undef						## RETURN
 	unless $root and defined $item and $item !~ /^[\._]/;
     
-    if ($rootref eq 'HASH' || $rootref eq __PACKAGE__) {
+    if ($rootref eq 'HASH' || $atroot) {
 #	if ($item eq 'IMPORT' && UNIVERSAL::isa($value, 'HASH')) {
 #	    # import hash entries into root hash
 #	    @$root{ keys %$value } = values %$value;
@@ -875,7 +920,7 @@ element, or 0 if none.
 
     [% foo.bar(10).baz(20) %]
 
-    $stash->get([ 'foo', 0, 'bar', [ 10 ], 'baz', [ 20 ]);
+    $stash->get([ 'foo', 0, 'bar', [ 10 ], 'baz', [ 20 ] ]);
 
 =head2 set($variable, $value, $default)
 
@@ -939,12 +984,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.72, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.78, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

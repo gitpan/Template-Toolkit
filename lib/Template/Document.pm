@@ -20,7 +20,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.62 2002/11/04 19:45:57 abw Exp $
+# $Id: Document.pm,v 2.65 2003/04/24 09:14:38 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use vars qw( $VERSION $ERROR $COMPERR $DEBUG $AUTOLOAD );
 use base qw( Template::Base );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.62 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.65 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -447,7 +447,7 @@ An autoload method returns METADATA items.
 
 This package subroutine is provided to effect persistance of compiled
 templates.  If the COMPILE_EXT option (to indicate a file extension
-for saving compiled templates) then the Template::Parser module call
+for saving compiled templates) then the Template::Parser module calls
 this subroutine before calling the new() constructor.  At this stage,
 the parser has a representation of the template as text strings
 containing Perl code.  We can write that to a file, enclosed in a
@@ -466,12 +466,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.62, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.65, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

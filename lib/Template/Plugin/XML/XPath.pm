@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: XPath.pm,v 2.60 2003/04/11 12:28:27 darren Exp $
+# $Id: XPath.pm,v 2.64 2003/04/28 17:21:49 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use XML::XPath;
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.60 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.64 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -156,6 +156,16 @@ sub present {
     $view->view('text', $self->string_value);
 }
 
+
+#========================================================================
+package XML::XPath::Node::Comment;
+#========================================================================
+
+sub present  { return ''; }
+sub starttag { return ''; }
+sub endtag   { return ''; }
+
+
 1;
 
 __END__
@@ -257,12 +267,12 @@ The XML::XPath module is by Matt Sergeant E<lt>matt@sergeant.orgE<gt>.
 
 =head1 VERSION
 
-2.60, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.64, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 2.8 2002/05/03 13:56:34 abw Exp $
+# $Id: foreach.t,v 2.9 2003/04/29 12:49:31 abw Exp $
 # 
 #========================================================================
 
@@ -611,3 +611,16 @@ last outer
 -%]
 -- expect --
 1
+
+-- test --
+[% FOREACH prime IN [2, 3, 5, 7, 11, 13];
+     "$prime\n";
+    END
+-%]
+-- expect --
+2
+3
+5
+7
+11
+13

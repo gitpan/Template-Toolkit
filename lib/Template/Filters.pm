@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filters.pm,v 2.65 2002/11/04 19:45:59 abw Exp $
+# $Id: Filters.pm,v 2.72 2003/07/01 12:43:55 darren Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $FILTERS $URI_ESCAPES $PLUGIN_FILTER );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.65 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.72 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -538,25 +538,27 @@ EOF
 
 
 #------------------------------------------------------------------------
-# redirect_filter_factory($context, $file)    [% Filter redirect(file) %]
+# redirect_filter_factory($context, $file)    [% FILTER redirect(file) %]
 #
 # Create a filter to redirect the block text to a file.
 #------------------------------------------------------------------------
 
 sub redirect_filter_factory {
-    my ($context, $file, $binmode) = @_;
+    my ($context, $file, $options) = @_;
     my $outpath = $context->config->{ OUTPUT_PATH };
 
     return (undef, Template::Exception->new('redirect', 
                                             'OUTPUT_PATH is not set'))
         unless $outpath;
 
+    $options = { binmode => $options } unless ref $options;
+
     sub {
         my $text = shift;
         my $outpath = $context->config->{ OUTPUT_PATH }
             || return '';
         $outpath .= "/$file";
-        my $error = Template::_output($outpath, $text, $binmode);
+        my $error = Template::_output($outpath, \$text, $options);
         die Template::Exception->new('redirect', $error)
             if $error;
         return '';
@@ -565,24 +567,27 @@ sub redirect_filter_factory {
 
 
 #------------------------------------------------------------------------
-# stdout_filter_factory($context, $binmode)    [% Filter stdout(binmode) %]
+# stdout_filter_factory($context, $binmode)    [% FILTER stdout(binmode) %]
 #
 # Create a filter to print a block to stdout, with an optional binmode.
 #------------------------------------------------------------------------
 
 sub stdout_filter_factory {
-    my ($context, $binmode) = @_;
+    my ($context, $options) = @_;
+
+    $options = { binmode => $options } unless ref $options;
 
     sub {
         my $text = shift;
-        binmode STDOUT if ( $binmode );
+        binmode(STDOUT) if $options->{ binmode };
         print STDOUT $text;
         return '';
     }
 }
 
+
 #------------------------------------------------------------------------
-# latex_filter_factory($context, $outputType)   [% Filter latex(outputType) %]
+# latex_filter_factory($context, $outputType)   [% FILTER latex(outputType) %]
 #
 # Return a filter sub that converts a (hopefully) complete LaTeX source
 # file to either "ps", "dvi", or "pdf".  Output type should be "ps", "dvi"
@@ -764,7 +769,7 @@ Template::Filters - Post-processing filters for template blocks
 
 =head1 DESCRIPTION
 
-The Template::Plugins module implements a provider for creating and/or
+The Template::Filters module implements a provider for creating and/or
 returning subroutines that implement the standard filters.  Additional 
 custom filters may be provided via the FILTERS options.
 
@@ -1065,7 +1070,7 @@ these modules are installed on your system then the text will be
 encoded (via the escape_html() or encode_entities() subroutines
 respectively) to convert all extended characters into their
 appropriate HTML entities (e.g. converting 'é' to '&eacute;').  If
-neither module is available on your system then an 'html_all' exception
+neither module is available on your system then an 'html_entity' exception
 will be thrown reporting an appropriate message.   
 
 For further information on HTML entity encoding, see
@@ -1216,7 +1221,7 @@ output:
 
     The_cat_sat_on_the_mat
 
-=head2 redirect(file)
+=head2 redirect(file, options)
 
 The 'redirect' filter redirects the output of the block into a separate
 file, specified relative to the OUTPUT_PATH configuration item.
@@ -1235,6 +1240,22 @@ or more succinctly, using side-effect notation:
     %]
 
 A 'file' exception will be thrown if the OUTPUT_PATH option is undefined.
+
+An optional 'binmode' argument can follow the filename to explicitly set
+the output file to binary mode.
+
+    [% PROCESS my/png/generator 
+         FILTER redirect("images/logo.png", binmode=1) %]
+
+For backwards compatibility with earlier versions, a single true/false
+value can be used to set binary mode.
+
+    [% PROCESS my/png/generator 
+         FILTER redirect("images/logo.png", 1) %]
+
+For the sake of future compatibility and clarity, if nothing else, we
+would strongly recommend you explicitly use the named 'binmode' option
+as shown in the first example.
 
 =head2 eval / evaltt
 
@@ -1285,11 +1306,18 @@ as well as
 The 'evalperl' filter is provided as an alias for 'perl' for backwards
 compatibility.
 
-=head2 stdout(binmode)
+=head2 stdout(options)
 
 The stdout filter prints the output generated by the enclosing block to
-STDOUT.  If binmode is set, binary mode on STDOUT is turned on (see the
-binmode perl function.
+STDOUT.  The 'binmode' option can be passed as either a named parameter
+or a single argument to set STDOUT to binary mode (see the
+binmode perl function).
+
+    [% PROCESS something/cool
+           FILTER stdout(binmode=1) # recommended %]
+
+    [% PROCESS something/cool
+           FILTER stdout(1)         # alternate %]
 
 The stdout filter can be used to force binmode on STDOUT, or also inside
 redirect, null or stderr blocks to make sure that particular output goes
@@ -1394,12 +1422,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.65, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.72, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

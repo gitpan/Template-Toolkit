@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugin.pm,v 2.57 2002/11/04 19:46:03 abw Exp $
+# $Id: Plugin.pm,v 2.60 2003/04/24 09:14:38 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Base;
 use vars qw( $VERSION $DEBUG $ERROR $AUTOLOAD );
 use base qw( Template::Base );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.57 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.60 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 
@@ -368,7 +368,7 @@ MyClient object, primed to communicate with the creating MyServer.
 
 As of version 2.01, the Template::Plugin module no longer provides an
 AUTOLOAD method to delegate to other objects or classes.  This was a
-badly designed featured that caused more trouble than good.  You can
+badly designed feature that caused more trouble than good.  You can
 easily add your own AUTOLOAD method to perform delegation if you
 require this kind of functionality.
 
@@ -383,12 +383,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.57, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.60, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

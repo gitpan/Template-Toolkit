@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Template.pm,v 2.60 2003/04/23 12:44:32 abw Exp $
+#   $Id: Template.pm,v 2.68 2003/04/29 12:38:58 abw Exp $
 #
 #========================================================================
  
@@ -38,10 +38,15 @@ use File::Path;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '2.09';
+$VERSION     = '2.10';
 $ERROR       = '';
 $DEBUG       = 0;
-$BINMODE     = ($^O eq 'MSWin32') ? 1 : 0;
+
+# we used to default to binary mode for all win32 files but that make
+# line endings strange, so we're turning it off and letting users set
+# it explicitly as an argument to process()
+# $BINMODE     = ($^O eq 'MSWin32') ? 1 : 0;
+$BINMODE     = 0 unless defined $BINMODE;
 
 # preload all modules if we're running under mod_perl
 Template::Config->preload() if $ENV{ MOD_PERL };
@@ -56,8 +61,17 @@ Template::Config->preload() if $ENV{ MOD_PERL };
 #------------------------------------------------------------------------
 
 sub process {
-    my ($self, $template, $vars, $outstream) = @_;
+    my ($self, $template, $vars, $outstream, @opts) = @_;
     my ($output, $error);
+    my $options = (@opts == 1) && UNIVERSAL::isa($opts[0], 'HASH')
+        ? shift(@opts) : { @opts };
+
+    $options->{ binmode } = $BINMODE 
+        unless defined $options->{ binmode };
+
+    # we're using this for testing in t/output.t and t/filter.t so 
+    # don't remove it if you don't want tests to fail...
+    $self->DEBUG("set binmode\n") if $DEBUG && $options->{ binmode };
 
     $output = $self->{ SERVICE }->process($template, $vars);
     
@@ -70,7 +84,7 @@ sub process {
 
 	# send processed template to output stream, checking for error
 	return ($self->error($error))
-	    if ($error = &_output($outstream, $output, $BINMODE));
+	    if ($error = &_output($outstream, \$output, $options));
 
 	return 1;
     }
@@ -146,30 +160,30 @@ sub _init {
 #------------------------------------------------------------------------
 
 sub _output {
-    my ($where, $text, $binmode) = @_;
+    my ($where, $textref, $options) = @_;
     my $reftype;
     my $error = 0;
     
     # call a CODE reference
     if (($reftype = ref($where)) eq 'CODE') {
-	&$where($text);
+	&$where($$textref);
     }
     # print to a glob (such as \*STDOUT)
     elsif ($reftype eq 'GLOB') {
-	print $where $text;
+	print $where $$textref;
     }   
     # append output to a SCALAR ref
     elsif ($reftype eq 'SCALAR') {
-	$$where .= $text;
+	$$where .= $$textref;
     }
     # push onto ARRAY ref
     elsif ($reftype eq 'ARRAY') {
-	push @$where, $text;
+	push @$where, $$textref;
     }
     # call the print() method on an object that implements the method
     # (e.g. IO::Handle, Apache::Request, etc)
     elsif (UNIVERSAL::can($where, 'print')) {
-	$where->print($text);
+	$where->print($$textref);
     }
     # a simple string is taken as a filename
     elsif (! $reftype) {
@@ -182,8 +196,8 @@ sub _output {
 	    ($error = $@) =~ s/ at \S+ line \d+\n?$//;
 	}
 	elsif (open(FP, ">$where")) { 
-	    binmode FP if $binmode;
-	    print FP $text;
+	    binmode FP if $options->{ binmode };
+	    print FP $$textref;
 	    close FP;
 	}
 	else {
@@ -293,7 +307,7 @@ folded into a hash array by the constructor.
     my $tt = Template->new(INCLUDE_PATH => '/tmp', POST_CHOMP => 1)
 	|| die $Template::ERROR, "\n";
 
-=head2 process($template, \%vars, $output)
+=head2 process($template, \%vars, $output, %options)
 
 The process() method is called to process a template.  The first
 parameter indicates the input template as one of: a filename relative
@@ -371,6 +385,21 @@ In an Apache/mod_perl handler:
 
 	return OK;
     }
+
+After the optional third output argument can come an optional
+reference to a hash or a list of (name, value) pairs providing further
+options for the output.  The only option currently supported is
+"binmode" which, when set to any true value will ensure that files
+created (but not any existing file handles passed) will be set to
+binary mode.
+
+    # either: hash reference of options
+    $tt->process($infile, $vars, $outfile, { binmode => 1 })
+        || die $tt->error(), "\n";
+
+    # or: list of name, value pairs
+    $tt->process($infile, $vars, $outfile, binmode => 1)
+        || die $tt->error(), "\n";
 
 The OUTPUT configuration item can be used to specify a default output 
 location other than \*STDOUT.  The OUTPUT_PATH specifies a directory
@@ -909,11 +938,11 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.09, released on 23 April 2003.
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

@@ -14,7 +14,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Directory.pm,v 2.56 2002/11/04 19:47:08 abw Exp $
+#   $Id: Directory.pm,v 2.59 2003/04/24 09:14:43 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ use Template::Plugin::File;
 use vars qw( $VERSION );
 use base qw( Template::Plugin::File );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.59 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -394,8 +394,8 @@ for VIEW support, and made a few other minor tweaks.
 
 =head1 VERSION
 
-2.56, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+2.59, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 
 

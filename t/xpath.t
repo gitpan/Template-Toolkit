@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: xpath.t,v 2.9 2002/08/12 11:07:18 abw Exp $
+# $Id: xpath.t,v 2.10 2003/04/11 12:28:28 darren Exp $
 # 
 #========================================================================
 
@@ -52,6 +52,28 @@ ok
 
 -- test --
 [% USE xpath = XML.XPath(xmlfile) -%]
+[% FOREACH page = xpath.findnodes('/website/section/page') -%]
+page: [% page.getAttribute('title') %]
+[% END %]
+-- expect --
+page: The Foo Page
+page: The Bar Page
+page: The Baz Page
+
+
+-- test --
+[% USE xpath = XML.XPath(file => xmlfile) -%]
+[% FOREACH page = xpath.findnodes('/website/section/page') -%]
+page: [% page.getAttribute('title') %]
+[% END %]
+-- expect --
+page: The Foo Page
+page: The Bar Page
+page: The Baz Page
+
+
+-- test --
+[% USE xpath = XML.XPath(filename => xmlfile) -%]
 [% FOREACH page = xpath.findnodes('/website/section/page') -%]
 page: [% page.getAttribute('title') %]
 [% END %]
@@ -169,3 +191,24 @@ FOO {
   </list>
 </bar>
 </foo>
+
+-- test --
+[% xmltext = BLOCK -%]
+<greeting type="hello" what="world" />
+[% END -%]
+[% USE xp = XML.XPath(xml => xmltext);
+   xp.find("/greeting[@type='hello']/@what") %]
+-- expect --
+world
+
+
+-- test --
+[% xmltext = BLOCK -%]
+<hello>world</hello>
+[% END -%]
+[% USE xp = XML.XPath(text => xmltext);
+   xp.find("/hello"); %]
+-- expect --
+world
+
+

@@ -13,7 +13,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Image.pm,v 1.4 2002/11/07 15:02:44 darren Exp $
+#   $Id: Image.pm,v 1.8 2003/04/24 09:14:43 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use File::Spec;
 use base qw( Template::Plugin );
 use vars qw( $VERSION $AUTOLOAD );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
 
 BEGIN {
     if (eval { require Image::Info; }) {
@@ -43,7 +43,12 @@ BEGIN {
             my @stuff = Image::Size::imgsize($file);
             return { "width"  => $stuff[0],
                      "height" => $stuff[1],
-                     "error"  => $stuff[2]
+                     "error"  =>
+                        # imgsize returns either a three letter file type
+                        # or an error message as third value
+                        (defined($stuff[2]) && length($stuff[2]) > 3
+                            ? $stuff[2]
+                            : undef),
                    };
         }
     }
@@ -394,12 +399,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.04, distributed as part of the
-Template Toolkit version 2.09, released on 23 April 2003.
+1.08, distributed as part of the
+Template Toolkit version 2.10, released on 24 July 2003.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
