@@ -2,145 +2,88 @@
 #
 # t/ref.t
 #
-# Template script testing the reference operator, '\'.
+# Template script testing variable references.
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: ref.t,v 1.1 2000/02/01 12:33:31 abw Exp $
-# 
+# $Id: ref.t,v 2.1 2000/09/08 08:10:52 abw Exp $
+#
 #========================================================================
 
 use strict;
 use lib qw( ../lib );
-use Template qw( :ops );
+use Template::Constants qw( :status );
+use Template;
 use Template::Test;
-use Template::Context;
-#$Template::Context::DEBUG = 1;
-
 $^W = 1;
 
-$Template::Test::DEBUG = 0;
+#$Template::Test::DEBUG = 0;
+#$Template::Context::DEBUG = 0;
+#$Template::Parser::DEBUG = 1;
+#$Template::Directive::PRETTY= 1;
 
-my $vars = {
-    'a'   => 'alpha',
-    'b'   => 'bravo',
-    'c'   => 'charlie',
-    'foo' => sub { my $x = shift || '<undef>'; 
-		   return "foo($x)" },
-    'bar' => sub { my $x = shift || '<undef>'; $x = &$x if ref($x) eq 'CODE'; 
-		   return "bar($x)" },
-    'baz' => 'baz',
-    'comment' => \&html_comment,
-    'magic'   => \&do_magic,
-    'format'  => \&sprintf_format,
-    'joint'   => \&connect,
+local $" = ', ';
+my $replace = { 
+    a => sub { return "a sub [@_]" },
+    j => { k => 3, l => 5, m => { n => sub { "nsub [@_]" } } },
+    z => sub { my $sub = shift; return "z called " . &$sub(10, 20, 30) },
 };
 
-sub html_comment {
-    my $text = shift || '';
-    $text =~ s/^(.*)$/<!-- $1 -->/mg;
-    return $text;
-}
-
-sub sprintf_format {
-    my $format = shift || '%s';
-    my $text   = shift || '';
-    $text = sprintf($format, $text);
-    return $text;
-}
-
-sub do_magic {
-    my ($data, $callback) = @_;
-#    print "data: [@$data]\n";
-    @$data = sort @$data;
-#    print "sorted data: [@$data]\n";
-#    print "callback: $callback\n";
-    @$data = map { &$callback($_) } @$data if ref($callback) eq 'CODE';
-#    print "mapped data: [@$data]\n";
-
-    return $data;
-}
-
-sub connect {
-    return join('+', @_);
-}
-
-test_expect(\*DATA, undef, $vars);
+test_expect(\*DATA, undef, $replace);
 
 __DATA__
 -- test --
-[% z = \comment -%]
-a: [% z %]
-b: [% z() %]
-c: [% z(10) %]
-
+a: [% a %]
+a(5): [% a(5) %]
+a(5,10): [% a(5,10) %]
 -- expect --
-a: <!--  -->
-b: <!--  -->
-c: <!-- 10 -->
+a: a sub []
+a(5): a sub [5]
+a(5,10): a sub [5, 10]
 
 -- test --
-[% z = \comment() -%]
-a: [% z %]
-b: [% z() %]
-c: [% z(10) %]
-
+[% b = \a -%]
+b: [% b %]
+b(5): [% b(5) %]
+b(5,10): [% b(5,10) %]
 -- expect --
-a: <!--  -->
-b: <!--  -->
-c: <!-- 10 -->
+b: a sub []
+b(5): a sub [5]
+b(5,10): a sub [5, 10]
 
 -- test --
-[% z = \comment(a) -%]
-a: [% z %]
-b: [% z(b) %]
-
+[% c = \a(10,20) -%]
+c: [% c %]
+c(30): [% c(30) %]
+c(30,40): [% c(30,40) %]
 -- expect --
-a: <!-- alpha -->
-b: <!-- alpha -->
+c: a sub [10, 20]
+c(30): a sub [10, 20, 30]
+c(30,40): a sub [10, 20, 30, 40]
 
 -- test --
-[% "$item\n" FOREACH item = magic([c b a], \comment) %]
-
+[% z(\a) %]
 -- expect --
-<!-- alpha -->
-<!-- bravo -->
-<!-- charlie -->
+z called a sub [10, 20, 30]
 
 -- test --
-[% p FOREACH p = magic([c b a], \format("** %-10s **\n")) %]
-
+[% f = \j.k -%]
+f: [% f %]
 -- expect --
-** alpha      **
-** bravo      **
-** charlie    **
+f: 3
 
 -- test --
-[% MACRO table_row(data) BLOCK -%]
-<td>[% data %]</td>
-[% END -%]
-[% ok = magic([c b a], \table_row) %]
-
+[% f = \j.m.n -%]
+f: [% f %]
+f(11): [% f(11) %]
 -- expect --
-<td>alpha</td>
-<td>bravo</td>
-<td>charlie</td>
+f: nsub []
+f(11): nsub [11]
 
-
--- test --
-[% joint(a, b) %]
--- expect  --
-alpha+bravo
-
--- test --
-[% "$p\n" FOREACH p = magic([b, a], \joint(c)) %]
--- expect --
-charlie+alpha
-charlie+bravo
 

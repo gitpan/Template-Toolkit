@@ -8,7 +8,7 @@
 #   from which row and column permutations can be fetched.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
 #   Copyright (C) 2000 Andy Wardley.  All Rights Reserved.
@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Table.pm,v 1.2 2000/03/27 12:33:31 abw Exp $
+# $Id: Table.pm,v 2.0 2000/08/10 14:56:09 abw Exp $
 #
 #============================================================================
 
@@ -28,11 +28,10 @@ require 5.004;
 
 use strict;
 use vars qw( @ISA $VERSION $AUTOLOAD );
+use base qw( Template::Plugin );
 use Template::Plugin;
-use CGI;
 
-@ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -403,11 +402,11 @@ remaining items.  These are then available via the usual Table interface.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
+Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 1.2 $
+$Revision: 2.0 $
 
 =head1 COPYRIGHT
 

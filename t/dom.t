@@ -4,15 +4,15 @@
 #
 # Test the XML::DOM plugin.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dom.t,v 1.1 2000/03/01 13:39:09 abw Exp $
+# $Id: dom.t,v 2.0 2000/08/10 14:56:22 abw Exp $
 # 
 #========================================================================
 
@@ -30,7 +30,7 @@ if ($@) {
 }
 
 # account for script being run in distribution root or 't' directory
-my $file = abs_path( -d 't' ? 't/test' : 'test' );
+my $file = abs_path( -d 't' ? 't/test/xml' : 'test/xml' );
 $file .= '/testfile.xml';   
 
 test_expect(\*DATA, undef, { 'xmlfile' => $file });

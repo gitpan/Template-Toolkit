@@ -5,29 +5,29 @@
 # Template script testing the conditional binary operators: and/&&, or/||,
 # not/!, <, >, <=, >= , == and !=.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# TODO: this should test the binary comparison and boolean operators
-#    more thoroughly, including parenthesised sub-expressions, etc.
-#
-# $Id: binop.t,v 1.7 1999/11/26 07:53:35 abw Exp $
+# $Id: binop.t,v 2.2 2000/09/12 15:25:22 abw Exp $
 #
 #========================================================================
 
 use strict;
 use lib qw( ../lib );
 use Template::Test;
+use Template::Parser;
 $^W = 1;
 
 $Template::Test::DEBUG = 0;
+$Template::Parser::DEBUG = 0;
 
-my $params = {
+my $counter  = 0;
+my $params   = {
     'yes'    => 1,
     'no'     => 0,
     'true'   => 'this is true',
@@ -36,23 +36,15 @@ my $params = {
     'sad'    => '',
     'ten'    => 10,
     'twenty' => 20,
-    'alpha'  => \&alpha,
-    'omega'  => \&omega,
+    'alpha'  => sub { return ++$counter },
+    'omega'  => sub { $counter += 10; return 0 },
+    'count'  => sub { return $counter },
+    'reset'  => sub { return $counter == 0 },
 };
 
 my $template = Template->new({ INTERPOLATE => 1, POST_CHOMP => 1 });
 
 test_expect(\*DATA, $template, $params);
-
-sub alpha {
-    $template->output("alpha\n");
-    1;
-}
-
-sub omega {
-    $template->output("omega\n");
-    0;
-}
 
 
 
@@ -135,6 +127,11 @@ no
 [% ELSE %]
 yes
 [% END %]
+-- expect --
+yes
+
+-- test --
+[% "yes" UNLESS no %]
 -- expect --
 yes
 
@@ -251,17 +248,15 @@ yep
 #------------------------------------------------------------------------
 
 -- test --
-
 [% IF alpha AND omega %]
 alpha and omega are true
 [% ELSE %]
 alpha and/or omega are not true
 [% END %]
-
+count: [% count %]
 -- expect --
-alpha
-omega
 alpha and/or omega are not true
+count: 11
 
 -- test --
 [% IF omega AND alpha %]
@@ -269,10 +264,10 @@ omega and alpha are true
 [% ELSE %]
 omega and/or alpha are not true
 [% END %]
-
+count: [% count %]
 -- expect --
-omega
 omega and/or alpha are not true
+count: 21
 
 -- test --
 [% IF alpha OR omega %]
@@ -280,10 +275,10 @@ alpha and/or omega are true
 [% ELSE %]
 neither alpha nor omega are true
 [% END %]
-
+count: [% count %]
 -- expect --
-alpha
 alpha and/or omega are true
+count: 22
 
 -- test --
 [% IF omega OR alpha %]
@@ -291,11 +286,10 @@ alpha and/or omega are true
 [% ELSE %]
 neither alpha nor omega are true
 [% END %]
-
+count: [% count %]
 -- expect --
-omega
-alpha
 alpha and/or omega are true
+count: 33
 
 -- test --
 [% small = 5
@@ -303,8 +297,8 @@ alpha and/or omega are true
    big   = 10
    both  = small + big
    less  = big - mid
-   half  = big div small
-   left  = big mod mid
+   half  = big / small
+   left  = big % mid
    mult  = big * small
 %]
 both: [% both +%]
@@ -313,7 +307,7 @@ half: [% half +%]
 left: [% left +%]
 mult: [% mult +%]
 maxi: [% mult + 2 * 2 +%]
-mega: [% mult * 2 + 2 * 3 %] *NOT* 106
+mega: [% mult * 2 + 2 * 3 %]
 
 -- expect --
 both: 15
@@ -321,5 +315,13 @@ less: 3
 half: 2
 left: 3
 mult: 50
-maxi: 104
-mega: 306 *NOT* 106
+maxi: 54
+mega: 106
+
+-- test --
+[% 10 mod 4 +%] [% 10 MOD 4 +%]
+[% 10 div 3 %] [% 10 DIV 3 %]
+-- expect --
+2 2
+3 3
+

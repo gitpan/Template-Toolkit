@@ -2,17 +2,18 @@
 #
 # t/error.t
 #
-# Template script testing error reporting via the ERROR directive
+# Test that errors are propagated back to the caller as a 
+# Template::Exception object.
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: error.t,v 1.3 1999/11/25 17:51:23 abw Exp $
+# $Id: error.t,v 2.0 2000/08/10 14:56:22 abw Exp $
 #
 #========================================================================
 
@@ -22,21 +23,17 @@ use Template::Constants qw( :status );
 use Template::Test;
 $^W = 1;
 
-$Template::Test::DEBUG = 0;
 
-test_expect(\*DATA, { POST_CHOMP => 1 }, callsign());
+my $template = Template->new({
+    BLOCKS => {
+	badinc => "[% INCLUDE nosuchfile %]",
+    },
+});
 
-
-__DATA__
-Foo
-[% ERROR "! The cat sat on the mat\n! " %]
-[% ERROR a %]
-Bar
--- expect --
-Foo
-Bar
--- error --
-! The cat sat on the mat
-! alpha
-
+ok( ! $template->process('badinc') );
+my $error = $template->error();
+ok( $error );
+ok( ref $error eq 'Template::Exception' );
+ok( $error->type eq 'file' );
+ok( $error->info eq 'nosuchfile: not found' );
 

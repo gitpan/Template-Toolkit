@@ -2,89 +2,193 @@
 #
 # t/context.t
 #
-# Test script for Template::Context.pm.
+# Test the Template::Context.pm module.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# TODO: this only tests output(), error() and redirect().  Should really
-#   test process(), throw() and possibly _runop() for completeness but 
-#   these get so thoroughly tested by so many things that any problems 
-#   there would show up immediately and blow smoke.
-#
-# $Id: context.t,v 1.9 2000/05/19 10:56:31 abw Exp $
+# $Id: context.t,v 2.0 2000/08/10 14:56:19 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
-use Template::Constants qw( :template :status );
-use Template::Context;
+use lib qw( ./lib ../lib );
 use Template::Test;
-$^W = 1;
 
 $Template::Test::DEBUG = 0;
 
-# number of tests
-ntests(13);
+ntests(55);
 
-my ($output, $error);
-my $context = Template::Context->new({
-    OUTPUT     => \$output,
-    ERROR      => \$error,
-    PRE_DEFINE => { 'a' => 'alpha', 'b' => 'bravo' },
+# script may be being run in distribution root or 't' directory
+my $dir   = -d 't' ? 't/test' : 'test';
+my $tt = Template->new({
+    INCLUDE_PATH => "$dir/src:$dir/lib",	
+    TRIM         => 1,
+    POST_CHOMP   => 1,
 });
 
-#1 - loaded OK
-ok($context);
+my $ttperl = Template->new({
+    INCLUDE_PATH => "$dir/src:$dir/lib",
+    TRIM         => 1,
+    EVAL_PERL    => 1,
+    POST_CHOMP   => 1,
+});
 
-#2-3 - test output and error methods
-$context->output("Hello");
-ok( $output eq "Hello" );
-$context->error("World");
-ok( $error eq "World" );
-$output = $error = "";
+#------------------------------------------------------------------------
+# misc
+#------------------------------------------------------------------------
 
-#4-6 - test redirection of output 
-my $old_handler = $context->redirect(TEMPLATE_OUTPUT, \$error);
-ok( $old_handler );
-$context->output("Hello");
-ok( $error eq "Hello" );
-$context->error(" World");
-ok( $error eq "Hello World" );
+# test we created a context object and check internal values
+my $context = $tt->service->context();
+ok( $context );
+ok( $context eq $tt->context() );
+ok( $context->trim() );
+ok( ! $context->eval_perl() );
 
-$output = $error = '';
+ok( $context = $ttperl->service->context() );
+ok( $context->trim() );
+ok( $context->eval_perl() );
 
-#7-9 - re-install previous handler and test
-my $new_handler = $context->redirect(TEMPLATE_OUTPUT, $old_handler);
-ok( $new_handler );
-$context->output("Hello");
-ok( $output eq "Hello" );
-$context->error("World");
-ok( $error eq "World" );
+#------------------------------------------------------------------------
+# template()
+#------------------------------------------------------------------------
 
-$output = $error = '';
+banner('testing template()');
 
-#10-12 - once last switch-around
-$context->redirect(TEMPLATE_OUTPUT, $new_handler);
-$context->output("Hello");
-ok( $error eq "Hello" );
-$context->redirect(TEMPLATE_OUTPUT, $old_handler);
-$context->output("World");
-ok( $output eq "World" );
+# test we can fetch a template via template()
+my $template = $context->template('header');
+ok( $template );
+ok( UNIVERSAL::isa($template, 'Template::Document') );
+
+# test that non-existance of a template is reported
+$template = $context->template('no_such_template');
+ok( ! $template );
+ok( $context->error() eq 'no_such_template: not found' );
+
+# check that template() returns CODE and Template::Document refs intact
+my $code = sub { return "this is a hard-coded template" };
+$template = $context->template($code);
+ok( $template eq $code );
+
+my $doc = "this is a document";
+$doc = bless \$doc, 'Template::Document';
+$template = $context->template($doc);
+ok( $template eq $doc );
+ok( $$doc = 'this is a document' );
+
+# check the use of visit() and leave() to add temporary BLOCK lookup 
+# tables to the context's search space
+my $blocks1 = {
+    some_block_1 => 'hello',
+};
+my $blocks2 = {
+    some_block_2 => 'world',
+};
+
+ok( ! $context->template('some_block_1') );
+$context->visit($blocks1);
+ok(   $context->template('some_block_1') eq 'hello' );
+ok( ! $context->template('some_block_2') );
+$context->visit($blocks2);
+ok(   $context->template('some_block_1') eq 'hello' );
+ok(   $context->template('some_block_2') eq 'world' );
+$context->leave();
+ok(   $context->template('some_block_1') eq 'hello' );
+ok( ! $context->template('some_block_2') );
+$context->leave();
+ok( ! $context->template('some_block_1') );
+ok( ! $context->template('some_block_2') );
+
+# test that reset() clears all blocks
+$context->visit($blocks1);
+ok(   $context->template('some_block_1') eq 'hello' );
+ok( ! $context->template('some_block_2') );
+$context->visit($blocks2);
+ok(   $context->template('some_block_1') eq 'hello' );
+ok(   $context->template('some_block_2') eq 'world' );
+$context->reset();
+ok( ! $context->template('some_block_1') );
+ok( ! $context->template('some_block_2') );
+
+#------------------------------------------------------------------------
+# plugin()
+#------------------------------------------------------------------------
+
+banner('testing plugin()');
+
+my $plugin = $context->plugin('Table', [ [1,2,3,4], { rows => 2 } ]);
+ok( $plugin );
+ok( ref $plugin eq 'Template::Plugin::Table' );
+
+my $row = $plugin->row(0);
+ok( $row && ref $row eq 'ARRAY' );
+ok( $row->[0] == 1 );
+ok( $row->[1] == 3 );
+
+$plugin = $context->plugin('no_such_plugin');
+ok( ! $plugin );
+ok( $context->error() eq 'no_such_plugin: plugin not found' );
+
+#------------------------------------------------------------------------
+# filter()
+#------------------------------------------------------------------------
+
+banner('testing filter()');
+
+my $filter = $context->filter('html');
+ok( $filter );
+ok( ref $filter eq 'CODE' );
+ok( &$filter('<input/>') eq '&lt;input/&gt;' );
+
+$filter = $context->filter('replace', [ 'foo', 'bar' ]);
+ok( $filter );
+ok( ref $filter eq 'CODE' );
+ok( &$filter('this is foo, so it is') eq 'this is bar, so it is' );
+
+# check filter got cached
+$filter = $context->filter('replace');
+ok( $filter );
+ok( ref $filter eq 'CODE' );
+ok( &$filter('this is foo, so it is') eq 'this is bar, so it is' );
+
+
+#------------------------------------------------------------------------
+# include() and process()
+#------------------------------------------------------------------------
+
+banner('testing include()');
+
+$context = $tt->context();
+ok( $context );
 
 my $stash = $context->stash();
 ok( $stash );
-ok( UNIVERSAL::isa($stash, 'Template::Stash') );
 
+$stash->set('a', 'alpha');
+ok( $stash->get('a') eq 'alpha' );
 
+my $text = $context->include('baz');
+ok( $text eq 'This is the baz file, a: alpha' );
 
+$text = $context->include('baz', { a => 'bravo' });
+ok( $text eq 'This is the baz file, a: bravo' );
 
+# check stash hasn't been altered
+ok( $stash->get('a') eq 'alpha' );
 
+$text = $context->process('baz');
+ok( $text eq 'This is the baz file, a: alpha' );
+
+# check stash *has* been altered
+ok( $stash->get('a') eq 'charlie' );
+
+$text = $context->process('baz', { a => 'bravo' });
+ok( $text eq 'This is the baz file, a: bravo' );
+ok( $stash->get('a') eq 'charlie' );
 
 

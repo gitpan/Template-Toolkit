@@ -8,7 +8,7 @@
 #   list object containing hashes representing records in the file.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Datafile.pm,v 1.2 2000/03/28 14:17:47 abw Exp $
+# $Id: Datafile.pm,v 2.0 2000/08/10 14:56:06 abw Exp $
 #
 #============================================================================
 
@@ -30,8 +30,9 @@ require 5.004;
 use strict;
 use vars qw( @ISA $VERSION );
 use base qw( Template::Plugin );
+use Template::Plugin;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
 
 
 sub new {
@@ -52,7 +53,9 @@ sub new {
 	|| return $class->fail("$filename: $!");
 
     # first line of file should contain field definitions
-    $line = <FD>;
+    while (! $line || $line =~ /^#/) {
+	$line = <FD>;
+    }
     (@fields = split(/\s*$delim\s*/, $line)) 
 	|| return $class->fail("first line of file must contain field names");
 
@@ -144,11 +147,11 @@ Doesn't permit use of ':' in a field.  Some escaping mechanism is required.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>cre.canon.co.ukE<gt>
+Andy Wardley E<lt>kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 1.2 $
+$Revision: 2.0 $
 
 =head1 COPYRIGHT
 

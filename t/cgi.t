@@ -6,13 +6,13 @@
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: cgi.t,v 1.2 2000/03/01 14:22:05 abw Exp $
+# $Id: cgi.t,v 2.1 2000/08/17 08:59:34 abw Exp $
 # 
 #========================================================================
 
@@ -22,30 +22,65 @@ use Template;
 use Template::Test;
 $^W = 1;
 
+#$Template::Parser::DEBUG = 1;
+#$Template::Parser::PRETTY = 1;
+#$Template::Stash::DEBUG = 1;
+
 eval "use CGI";
 if ($@) {
     print "1..0\n";
     exit(0);
 }
 
+my $cgi = CGI->new('');
+$cgi = join("\n", $cgi->checkbox_group(
+		-name     => 'words',
+                -values   => [ 'eenie', 'meenie', 'minie', 'moe' ],
+	        -defaults => [ 'eenie', 'meenie' ],
+)); 
 
-test_expect(\*DATA);
+
+test_expect(\*DATA, undef, { cgicheck => $cgi });
 
 __END__
 -- test --
-[% USE cgi = CGI('id=abw&name=Andy+Wardley') -%]
-[% FOREACH x = cgi.checkbox_group(
+[% USE cgi = CGI('id=abw&name=Andy+Wardley'); global.cgi = cgi -%]
+name: [% global.cgi.param('name') %]
+-- expect --
+name: Andy Wardley
+
+-- test --
+name: [% global.cgi.param('name') %]
+
+-- expect --
+name: Andy Wardley
+
+-- test --
+[% FOREACH key = global.cgi.param.sort -%]
+   * [% key %] : [% global.cgi.param(key) %]
+[% END %]
+-- expect --
+   * id : abw
+   * name : Andy Wardley
+
+-- test --
+[% FOREACH key = global.cgi.param().sort -%]
+   * [% key %] : [% global.cgi.param(key) %]
+[% END %]
+-- expect --
+   * id : abw
+   * name : Andy Wardley
+
+-- test --
+[% FOREACH x = global.cgi.checkbox_group(
 		name     => 'words'
                 values   => [ 'eenie', 'meenie', 'minie', 'moe' ]
 	        defaults => [ 'eenie', 'meenie' ] )   -%]
 [% x %]
 [% END %]
-name: [% cgi.param('name') %]
 
 -- expect --
-<INPUT TYPE="checkbox" NAME="words" VALUE="eenie" CHECKED>eenie
-<INPUT TYPE="checkbox" NAME="words" VALUE="meenie" CHECKED>meenie
-<INPUT TYPE="checkbox" NAME="words" VALUE="minie">minie
-<INPUT TYPE="checkbox" NAME="words" VALUE="moe">moe
+-- process --
+[% cgicheck %]
 
-name: Andy Wardley
+

@@ -1,7 +1,0 @@
-This directory is used as an output location by some of the tests.
-Any files created here can be deleted.  This file can be deleted,
-too.  In fact, it's only here to force ExtUtils::MakeMaker to create
-the directory...
-
-A
-

@@ -2,116 +2,81 @@
 #
 # t/output.t
 #
-# Template script testing the OUTPUT option.
+# Test the OUTPUT and OUTPUT_PATH options of the Template.pm module.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: output.t,v 1.3 1999/11/25 17:51:27 abw Exp $
+# $Id: output.t,v 2.0 2000/08/10 14:56:28 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
-use Template qw( :template );
+use lib  qw( ./lib ../lib );
 use Template::Test;
-$^W = 1;
 
-$Template::Test::DEBUG = 0;
+ntests(8);
 
-# sample data
-my ($a, $b, $c, $d, $e ) = 
-	qw( alpha bravo charlie delta echo );
+my $dir   = -d 't' ? 't/test' : 'test';
+my $f1    = 'foo.bar';
+my $f2    = 'foo.baz';
+my $file1 = "$dir/tmp/$f1";
+my $file2 = "$dir/tmp/$f2";
 
-my $params = { 
-    'a' => $a,
-    'b' => $b,
-    'c' => $c,	
-    'd' => $d,
-    'e' => $e,
-};
+#------------------------------------------------------------------------
 
-# determine output path so that this script can be run from the 't' 
-# sub-directory as well as from the distribution root via 'make test'
-my $output;
-my $dir = 'test/dest';
-if (-d $dir) {
-    $output = $dir;
-}
-elsif (-d "t/$dir") {
-    $output = "t/$dir";
-}
-else {
-    warn "Cannot determine output path\n";
-}
-pre_ok( $output );
+my $tt = Template->new({
+    INCLUDE_PATH => "$dir/src:$dir/lib",
+    OUTPUT_PATH  => "$dir/tmp",
+}) || die Template->error();
 
-#---- create template processor -----
-my $config = {
-    INCLUDE_PATH => [ qw( t/test/lib t/test/dest test/lib test/dest . ) ],
-    OUTPUT_PATH  => $output,
-};
-my $tproc = Template->new($config);
+unlink($file1) if -f $file1;
 
+ok( $tt->process('foo', &callsign, $f1) );
+ok( -f $file1 );
 
-#----- first test -----
-$tproc->redirect(TEMPLATE_OUTPUT, "testfile1.atml");
+open(FP, $file1) || die "$file1: $!\n";
+local $/ = undef;
+my $out = <FP>;
+close(FP);
 
-my $input =<<EOF;
-This is a test file created by t/output.t
-[% a %]
-[% b %]
-[% TAGS [** **] -%]
-[% c %]
-[% d %]
-The end
-EOF
+ok( 1 );
 
-my $ok = $tproc->process(\$input, $params);
-pre_ok( $ok );
-warn $tproc->error() . "\n"
-    unless $ok;
+ok( $out eq "This is the foo file, a is alpha\n" );
 
-$tproc->redirect(TEMPLATE_OUTPUT);
+unlink($file1);
+
+#------------------------------------------------------------------------
+
+$tt = Template->new({
+    INCLUDE_PATH => "$dir/src:$dir/lib",
+    OUTPUT_PATH  => "$dir/tmp",
+    OUTPUT       => $f2,
+}) || die Template->error();
+
+unlink($file2) if -f $file2;
+
+ok( $tt->process('foo', &callsign) );
+ok( -f $file2 );
+
+open(FP, $file2) || die "$file2: $!\n";
+local $/ = undef;
+$out = <FP>;
+close(FP);
+
+ok( 1 );
+
+ok( $out eq "This is the foo file, a is alpha\n" );
+
+unlink($file2);
 
 
-#----- second test -----
-$input = "This is another test file created by t/output.t";
-$ok = $tproc->process(\$input, $params, "testfile2.atml");
-pre_ok( $ok );
-warn $tproc->error() . "\n"
-    unless $ok;
 
 
-#----- expect test -----
-test_expect(\*DATA, $tproc, $params);
 
-__DATA__
-Next test
-[% INCLUDE testfile1.atml -%]
-End of next test.
--- expect --
-Next test
-This is a test file created by t/output.t
-alpha
-bravo
-charlie
-delta
-The end
-End of next test.
 
--- test --
-Second test
-[% INCLUDE testfile2.atml %]
-End of second test.
-Rain stopped play.
--- expect --
-Second test
-This is another test file created by t/output.t
-End of second test.
-Rain stopped play.

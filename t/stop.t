@@ -2,51 +2,129 @@
 #
 # t/stop.t
 #
-# Template script testing the STOP directive.
+# Test the [% STOP %] directive.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stop.t,v 1.7 1999/11/25 17:51:30 abw Exp $
+# $Id: stop.t,v 2.0 2000/08/10 14:56:32 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
-use Template qw( :status );
+use lib  qw( ./lib ../lib );
+use vars qw( $DEBUG );
 use Template::Test;
-$^W = 1;
+use Template::Parser;
+use Template::Exception;
 
-$Template::Test::DEBUG = 0;
+#$Template::Parser::DEBUG = 1;
+$DEBUG = 1;
 
-test_expect(\*DATA);
+my $ttblocks = {
+    header => sub { "This is the header\n" },
+    footer => sub { "This is the footer\n" },
+    halt1  => sub { die Template::Exception->new('stop', 'big error') },
+};
+my $ttvars = {
+    halt   => sub { die Template::Exception->new('stop', 'big error') },
+};
+    
+my $ttbare = Template->new(BLOCKS => $ttblocks);
+my $ttwrap = Template->new({
+    PRE_PROCESS  => 'header',
+    POST_PROCESS => 'footer',
+    BLOCKS       => $ttblocks,
+});
+    
 
-__DATA__
-line 1
-[% INCLUDE 'first_block' %]
-line 2
-[% RETURN %]
+test_expect(\*DATA, [ bare => $ttbare, wrapped => $ttwrap ], $ttvars);
 
-[% BLOCK first_block -%]
-first block line 1
+__END__
+
+-- test --
+This is some text
 [% STOP %]
-first block line 2
+More text
+-- expect --
+This is some text
+
+-- test --
+This is some text
+[% halt %]
+More text
+-- expect --
+This is some text
+
+-- test --
+This is some text
+[% INCLUDE halt1 %]
+More text
+-- expect --
+This is some text
+
+-- test --
+This is some text
+[% INCLUDE myblock1 %]
+More text
+[% BLOCK myblock1 -%]
+This is myblock1
+[% STOP %]
+more of myblock1
 [% END %]
 -- expect --
-line 1
-first block line 1
+This is some text
+This is myblock1
+
+-- test --
+This is some text
+[% INCLUDE myblock2 %]
+More text
+[% BLOCK myblock2 -%]
+This is myblock2
+[% halt %]
+more of myblock2
+[% END %]
+-- expect --
+This is some text
+This is myblock2
 
 
+#------------------------------------------------------------------------
+# ensure 'stop' exceptions get ignored by TRY...END blocks
+#------------------------------------------------------------------------
+-- test --
+before
+[% TRY -%]
+trying
+[% STOP -%]
+tried
+[% CATCH -%]
+caught [[% error.type %]] - [% error.info %]
+[% END %]
+after
+
+-- expect --
+before
+trying
 
 
+#------------------------------------------------------------------------
+# ensure PRE_PROCESS and POST_PROCESS templates get added with STOP
+#------------------------------------------------------------------------
 
-
-
-
-
+-- test --
+-- use wrapped --
+This is some text
+[% STOP %]
+More text
+-- expect --
+This is the header
+This is some text
+This is the footer
 

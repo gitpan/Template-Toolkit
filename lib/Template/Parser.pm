@@ -3,17 +3,17 @@
 # Template::Parser
 #
 # DESCRIPTION
-#   Perl 5 module implementing a LALR(1) parser and assocated support 
-#   methods to parse a template document into an internal "compiled"
-#   format.  Much of the parser DFA code (see _parse() method) is based
+#   This module implements a LALR(1) parser and assocated support 
+#   methods to parse template documents into the appropriate "compiled"
+#   format.  Much of the parser DFA code (see _parse() method) is based 
 #   on Francois Desarmenien's Parse::Yapp module.  Kudos to him.
 # 
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley <abw@kfs.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -28,10 +28,10 @@
 #      You may use and distribute them under the terms of either
 #      the GNU General Public License or the Artistic License, as
 #      specified in the Perl README file.
-#
+# 
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 1.26 2000/05/19 10:56:31 abw Exp $
+# $Id: Parser.pm,v 2.3 2000/09/08 08:10:50 abw Exp $
 #
 #============================================================================
 
@@ -40,11 +40,11 @@ package Template::Parser;
 require 5.004;
 
 use strict;
-use vars qw( $VERSION $DEBUG $DEFAULTS );
+use vars qw( $VERSION $DEBUG $ERROR );
+use base qw( Template::Base );
 
-use Template::Constants qw( :debug :error :status );
-use Template::Utils;
 use Template::Directive;
+use Template::Grammar;
 
 # parser state constants
 use constant CONTINUE => 0;
@@ -52,38 +52,25 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/);
-$DEBUG = 0;
+$VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
+$DEBUG   = 0 unless defined $DEBUG;
+$ERROR   = '';
 
 
 #========================================================================
-#                       -----  CONFIGURATION -----
+#                        -- COMMON TAG STYLES --
 #========================================================================
 
 my $TAG_STYLE   = {
-    'default'   => [ '[\[%]%', '%[\]%]' ],
+    'default'   => [ '\[%',    '%\]'    ],
     'template'  => [ '\[%',    '%\]'    ],
-    'percent'   => [ '%%',     '%%'     ],
+    'template1' => [ '[\[%]%', '%[\]%]' ],
+    'metatext'  => [ '%%',     '%%'     ],
     'html'      => [ '<!--',   '-->'    ],
+    'mason'     => [ '<%',     '>'      ],
     'asp'       => [ '<%',     '%>'     ],
     'php'       => [ '<\?',    '\?>'    ],
 };
-
-# default config for parser base class
-$DEFAULTS = {
-    START_TAG   => undef,
-    END_TAG     => undef,
-    TAG_STYLE   => 'default',
-    CASE        => 0,
-    INTERPOLATE => 0,
-    PRE_CHOMP   => 0,
-    POST_CHOMP  => 0,
-    GRAMMAR     => undef,
-    USER_DIR    => { },
-    USER_BLOCK  => { },
-    'ERROR'     => '',
-};
-
 
 
 #========================================================================
@@ -98,17 +85,27 @@ $DEFAULTS = {
 
 sub new {
     my $class  = shift;
-    my $config = shift || { };
+    my $config = ref $_[0] eq 'HASH' ? shift(@_) : { @_ };
     my ($tagstyle, $start, $end, $defaults, $grammar, $hash, $key, $udef);
 
-    # look for hash of defaults in class package or used base defaults
-    {  
-	no strict 'refs';
-	$defaults = ${"$class\::DEFAULTS"}
-		  || $DEFAULTS;
-    }
+    my $self = bless { 
+	START_TAG   => undef,
+	END_TAG     => undef,
+	TAG_STYLE   => 'default',
+	ANYCASE     => 0,
+	INTERPOLATE => 0,
+	PRE_CHOMP   => 0,
+	POST_CHOMP  => 0,
+	V1DOLLAR    => 0,
+	EVAL_PERL   => 0,
+	GRAMMAR     => undef,
+	_ERROR      => '',
+    }, $class;
 
-    my $self = Template::Utils::update_hash({ }, $config, $defaults);
+    # update self with any relevant keys in config
+    foreach $key (keys %$self) {
+	$self->{ $key } = $config->{ $key } if defined $config->{ $key };
+    }
 
     $grammar = $self->{ GRAMMAR } ||= do {
 	require Template::Grammar;
@@ -118,11 +115,10 @@ sub new {
 
     # determine START_TAG and END_TAG for specified (or default) TAG_STYLE
     $tagstyle = $self->{ TAG_STYLE } || 'default';
-    unless (defined ($start = $TAG_STYLE->{ $tagstyle })) {
-	warn "Invalid tag style: $tagstyle\n";
-	$start = $TAG_STYLE->{'default'};
-    }
+    return $class->error("Invalid tag style: $tagstyle")
+	unless defined ($start = $TAG_STYLE->{ $tagstyle });
     ($start, $end) = @$start;
+
     $self->{ START_TAG } ||= $start;
     $self->{   END_TAG } ||= $end;
 
@@ -130,78 +126,45 @@ sub new {
     @$self{ qw( LEXTABLE STATES RULES ) } 
 	= @$grammar{ qw( LEXTABLE STATES RULES ) };
     
-    # build lookup table for user defined directives
-    $hash = $self->{ USER_DIR };
-    foreach $key (%$hash) {
-	$udef->{ $key } = [ 'UDIR', $hash->{ $key } ],
-    }
-    $hash = $self->{ USER_BLOCK };
-    foreach $key (%$hash) {
-	$udef->{ $key } = [ 'UBLOCK', $hash->{ $key } ],
-    }
-    $self->{ UDEF } = $udef;
-
-    bless $self, $class;
+    return $self;
 }
 
 
-
 #------------------------------------------------------------------------
-# parse($text, $cache)
+# parse($text)
 #
-# Parses the text string, $text and returns a Template::Directive::Block
-# object which represents the root node of the "compiled" template.
-# The process() method may then be called on the block, passing in a 
-# valid Template::Context reference, to process the template.
-#
-# The second parameter may contain a reference to a Template::Cache 
-# object.  BLOCK definitions within the file will be parsed and compiled
-# to the same internal form.  If the template parses successfully, the
-# $cache->store($block, $name) method will be called for each defined 
-# block.  This step is skipped if $cache is undefined.  
-#
-# NOTE: callers that pass a global or shared cache object into this 
-# method should be aware that BLOCK definitions within the template 
-# will overwrite any existing block definitions in the cache.  For example,
-# The "%% BLOCK header %% ...blah...blah... %% END %%" definition will 
-# cause any subsequent "%% INCLUDE header %%" to get this block.  This 
-# may not be what you expected.  I'm looking at improving the overall 
-# caching and template retrieval strategy so this may get better in time.
-# Ideas welcome.
-#
-# Returns a reference to a Template::Directive::Block which represents
-# the compiled template.  On error, undef is returned and the internal 
-# ERROR string is set and may be retrieved via the error() method.
+# Parses the text string, $text and returns a hash array representing
+# the compiled template block(s) as Perl code, in the format expected
+# by Template::Document.
 #------------------------------------------------------------------------
 
 sub parse {
-    my ($self, $text, $cache) = @_;
+    my $self = shift;
+    my $text = shift;
     my ($tokens, $block);
 
     # store for blocks defined in the template (see define_block())
     my $defblock = $self->{ DEFBLOCK } = { };
+    my $metadata = $self->{ METADATA } = [ ];
 
-    $self->{'ERROR'} = '';
+    $self->{ _ERROR }  = '';
 
     # split file into TEXT/DIRECTIVE chunks
     $tokens = $self->split_text($text)
 	|| return undef;				    ## RETURN ##
 
-#    local $" = '] [';
-#    print "token: [ @$tokens ]\n";
-
     # parse chunks
     $block = $self->_parse($tokens)
 	|| return undef;				    ## RETURN ##
 
-    # store any defined blocks in the cache
-    if (defined $cache) {
-	while (my ($name, $blkdef) = (each %$defblock)) {
-	    $cache->store($blkdef, $name);
-	}
-    }
+    print STDERR "compiled main template document block:\n$block\n"
+	if $DEBUG;
 
-    return $block;					    ## RETURN ##
+    return {
+	BLOCK     => $block,
+	DEFBLOCKS => $defblock,
+	METADATA  => { @$metadata },
+    };
 }
 
 
@@ -209,41 +172,20 @@ sub parse {
 #------------------------------------------------------------------------
 # split_text($text)
 #
-# Called by the parse() method to split the input text into chunks
-# of raw text which should be parsed through the template processor 
-# intact (TEXT), and template processor directives, embedded within 
-# specific tags which indicate some action (DIRECTIVE).  
-#
-# The method constructs a list in which a pair of consecutive  elements
-# is used to represent each chunk.  The first element contains the 
-# text string 'TEXT' or 'DIRECTIVE' to indicate the chunk type.  The 
-# second contains the text of the chunk itself.
-#
-# Each time a directive is encountered, its line number is added to 
-# the end of the $self->{ LINE_NOS } list (an empty one is created if
-# necessary). 
-#
-# Returns a reference to the list of chunks (each one being 2 elements) 
-# identified in the input text.  On error, the internal ERROR string 
-# is set and undef is returned.
+# Split input template text into directives and raw text chunks.
 #------------------------------------------------------------------------
 
 sub split_text {
     my ($self, $text) = @_;
-    my ($pre, $dir, $prelines, $dirlines, $postlines, $linenos, $chomp);
+    my ($pre, $dir, $prelines, $dirlines, $postlines, $chomp, $tags, @tags);
     my ($start, $end, $prechomp, $postchomp, $interp ) = 
 	@$self{ qw( START_TAG END_TAG PRE_CHOMP POST_CHOMP INTERPOLATE ) };
 
     my @tokens = ();
-    my $line   = 1;
+    my $line = 1;
 
     return \@tokens					    ## RETURN ##
 	unless defined $text && length $text;
-    
-    $self->{ LINE_NOS } = $linenos  = [];
-
-#    $start = quotemeta($start);
-#    $end   = quotemeta($end);
 
     # extract all directives from the text
     while ($text =~ s/
@@ -259,20 +201,14 @@ sub split_text {
 	$pre = '' unless defined $pre;
 	$dir = '' unless defined $dir;
 	
-# DEBUG
-#	my ($cp, $cd) = ($pre, $dir);
-#	foreach ($cp, $cd) { s/\n/\\n/g };
-#	print "[$cp] [$cd]\n";
-
 	$postlines = 0;                      # denotes lines chomped
-
 	$prelines  = ($pre =~ tr/\n//);      # NULL - count only
-	$dirlines  = ($dir =~ tr/\n//);      # ditto 
+	$dirlines  = ($dir =~ tr/\n//);      # ditto
 
 	# the directive CHOMP options may modify the preceeding text
 	for ($dir) {
 	    # remove leading whitespace and check for a '-' chomp flag
-	    s/^([-+#])?\s*//s;
+	    s/^([-+\#])?\s*//s;
 	    if ($1 && $1 eq '#') {
 		# comment out entire directive
 		$dir = '';
@@ -280,12 +216,12 @@ sub split_text {
 	    else {
 		$chomp = ($1 && $1 eq '+') ? 0 : ($1 || $prechomp);
 
-		# chomp off whitespace and newline preceeding directive
-		$chomp and $pre =~ s/(\n|^)[ \t]*\Z//m
-		       and $1 eq "\n"
-		       and $prelines++;
+    		# chomp off whitespace and newline preceeding directive
+    		$chomp and $pre =~ s/(\n|^)[ \t]*\Z//m
+    		       and $1 eq "\n"
+    		       and $prelines++;
 	    }
-
+    
 	    # remove trailing whitespace and check for a '-' chomp flag
 	    s/\s*([-+])?\s*$//s;
 	    $chomp = ($1 && $1 eq '+') ? 0 : ($1 || $postchomp);
@@ -297,9 +233,9 @@ sub split_text {
 
 	# any text preceeding the directive can now be added
 	if (length $pre) {
-	    push(@tokens, $interp 
-		      ? (@{ $self->interpolate_text($pre, $line) })
-		      : ('TEXT', $pre) );
+	    push(@tokens, $interp
+		 ? [ $pre, $line, 'ITEXT' ]
+		 : ('TEXT', $pre) );
 	    $line += $prelines;
 	}
 	
@@ -307,7 +243,6 @@ sub split_text {
 	if (length $dir) {
 	    # the TAGS directive is a compile-time switch
 	    if ($dir =~ /TAGS\s+(.*)/i) {
-		my $tags;
 		my @tags = split(/\s+/, $1);
 		if (scalar @tags > 1) {
 		    ($start, $end) = map { quotemeta($_) } @tags;
@@ -320,17 +255,13 @@ sub split_text {
 		}
 	    }
 	    else {
-		push(@tokens, 'DIRECTIVE', $dir);
-		push(@$linenos, $line);
+		# DIRECTIVE is pushed as [ $dirtext, $line_no(s), \@tokens ]
+		push(@tokens, [ $dir, 
+				($dirlines 
+				 ? sprintf("%d-%d", $line, $line + $dirlines)
+				 : $line),
+				$self->tokenise_directive($dir) ]);
 	    }
-
-	    # this is the fancy way but is temporarily removed because "n-n"
-	    # line numbers are not numeric and confuse interpolate_text()
-	    # push(@$linenos, 
-	    #	 $dirlines ? sprintf("%d-%d", $line, $line + $dirlines)
-	    #	           : $line
-	    #	 );
-
 	}
 
 	# update line counter to include directive lines and any extra
@@ -340,8 +271,8 @@ sub split_text {
 
     # anything remaining in the string is plain text 
     push(@tokens, $interp 
-	    ? (@{ $self->interpolate_text($text, $line) })
-	    : ('TEXT', $text))
+	 ? [ $text, $line, 'ITEXT' ]
+	 : ( 'TEXT', $text) )
 	if length $text;
 
     return \@tokens;					    ## RETURN ##
@@ -353,21 +284,14 @@ sub split_text {
 # interpolate_text($text, $line)
 #
 # Examines $text looking for any variable references embedded like
-# $this or like ${ this }.  The text string is split into a list 
-# of TEXT elements or DIRECTIVE elements, as per split_text().
-# This method also updates LINE_NOS, using the starting offset of
-# $line if specified.
-#
-# A reference to the list is returned.
+# $this or like ${ this }.
 #------------------------------------------------------------------------
 
 sub interpolate_text {
     my ($self, $text, $line) = @_;
-    my $linenos = $self->{ LINE_NOS } ||= [ ];
     my @tokens  = ();
     my ($pre, $var, $dir);
 
-    $line ||= 1;
 
     while ($text =~ 
 	   /
@@ -385,34 +309,17 @@ sub interpolate_text {
 
 	# preceeding text
 	if ($pre) {
-# DEBUG
-#	    my $copypre = $pre;
-#	    $copypre =~ s/\n/\\n/g;
-#	    print "INTERP: pre: [ $copypre ]\n";
-
 	    $line += $pre =~ tr/\n//;
 	    $pre =~ s/\\\$/\$/g;
 	    push(@tokens, 'TEXT', $pre);
 	}
 	# $variable reference
         if ($var) {
-# DEBUG 
-#	    my $copyvar = $var;
-#	    $copyvar =~ s/\n/\\n/g;
-#	    print "INTERP: var: [ $copyvar ]\n";
-
-	    push(@$linenos, $line);
 	    $line += $dir =~ tr/\n/ /;
-
-	    push(@tokens, 'DIRECTIVE', $var);
+	    push(@tokens, [ $dir, $line, $self->tokenise_directive($var) ]);
 	}
 	# other '$' reference - treated as text
 	elsif ($dir) {
-# DEBUG
-#	    my $copydir = $dir;
-#	    $copydir =~ s/\n/\\n/g;
-#	    print "INTERP: ign: [ $copydir ]\n";
-
 	    $line += $dir =~ tr/\n//;
 	    push(@tokens, 'TEXT', $dir);
 	}
@@ -442,56 +349,48 @@ sub interpolate_text {
 # from O'Reilly, ISBN 1-56592-257-3
 #
 # Returns a reference to the list of chunks (each one being 2 elements) 
-# identified in the directive text.  On error, the internal ERROR string 
+# identified in the directive text.  On error, the internal _ERROR string 
 # is set and undef is returned.
 #------------------------------------------------------------------------
 
 sub tokenise_directive {
-    my ($self, $text) = @_;
+    my ($self, $text, $line) = @_;
     my ($token, $uctoken, $type, $lookup);
-    my ($lextable, $case) = @$self{ qw( LEXTABLE CASE ) };
+    my ($lextable, $anycase, $start, $end) = 
+	@$self{ qw( LEXTABLE ANYCASE START_TAG END_TAG ) };
     my @tokens = ( );
-
-
-    if ($text =~ /^(\S+)\s*(.*)/) {
-	$token = $1;
-	if (uc $token eq 'DEBUG') {
-	    # return 2 lexer token pairs; the 'DEBUG' identitifer and the text
-	    return [ 'DEBUG', 'DEBUG', 'TEXT', $2 ];	    ## RETURN ##
-	}
-	elsif ($lookup = $self->{ UDEF }->{ $token }) {
-	    return [ $lookup->[0], &{$lookup->[1]}($text) ];
-	}
-    }
-
-#    $self->_debug("TOKENISE: $text\n");
 
     while ($text =~ 
 	    / 
-		# a quoted phrase matches in $2
-		(["'])                   # $1 - opening quote, " or '
-		(                        # $2 - quoted text buffer
+		# strip out any comments
+	        (\#[^\n]*)
+	   |
+		# a quoted phrase matches in $3
+		(["'])                   # $2 - opening quote, " or '
+		(                        # $3 - quoted text buffer
 		    (?:                  # repeat group (no backreference)
 			\\\\             # an escaped backslash \\
 		    |                    # ...or...
-			\\\1             # an escaped quote \" or \' (match $1)
+			\\\2             # an escaped quote \" or \' (match $1)
 		    |                    # ...or...
 			.                # any other character
+		    |	\n
 		    )*?                  # non-greedy repeat
-		)                        # end of $2
-		\1                       # match opening quote
+		)                        # end of $3
+		\2                       # match opening quote
 	    |
-		# strip out any comments in $3
-	        (\#[^\n]*)
-	   |
 		# an unquoted number matches in $4
-		(-?\d+)                  # numbers
+		(-?\d+(?:\.\d+)?)       # numbers
 	    |
-		# an identifier matches in $5
+		# filename matches in $5
+	    	( \/?\w+(?:(?:\/|::)\w*)+ | \/\w+)
+	    |
+		# an identifier matches in $6
 		(\w+)                    # variable identifier
 	    |   
-		# an unquoted word or symbol matches in $6
-		(   [(){}\[\];,\/\\]     # misc parenthesis and symbols
+		# an unquoted word or symbol matches in $7
+		(   [(){}\[\]:;,\/\\]    # misc parenthesis and symbols
+#		|   \->                  # arrow operator (for future?)
 		|   \+\-\*               # math operations
 		|   \$\{?                # dollar with option left brace
 		|   =>			 # like '='
@@ -499,33 +398,50 @@ sub tokenise_directive {
 		|   &&? | \|\|?          # boolean ops
 		|   \.\.?                # n..n sequence
  		|   \S+                  # something unquoted
-		)                        # end of $5
+		)                        # end of $7
 	    /gmxo) {
 
 	# ignore comments to EOL
-	next if $3;
+	next if $1;
 
 	# quoted string
-	if (defined ($token = $2)) {
+	if (defined ($token = $3)) {
             # double-quoted string may include $variable references
-	    if ($1 eq '"' && $token =~ /[\$\\]/) {
-		$type = 'QUOTED';
-		$token =~ s/\\([\\"])/$1/g;
-		$token =~ s/\\n/\n/g;
+	    if ($2 eq '"') {
+	        if ($token =~ /[\$\\]/) {
+		    $type = 'QUOTED';
+		    # unescape " and \ but leave \$ escaped so that 
+		    # interpolate_text() doesn't incorrectly treat it
+		    # as a variable reference
+#		    $token =~ s/\\([\\"])/$1/g;
+		    $token =~ s/\\([^\$n])/$1/g;
+		    $token =~ s/\\n/\n/g;
+		    push(@tokens, ('"') x 2,
+				  @{ $self->interpolate_text($token) },
+				  ('"') x 2);
+		    next;
+		}
+                else {
+	            $type = 'LITERAL';
+		    $token =~ s['][\\']g;
+		    $token = "'$token'";
+		}
 	    } 
 	    else {
 		$type = 'LITERAL';
-		# unescape escaped characters
-		$token =~ s/\\([\\'])/$1/g;
+		$token = "'$token'";
 	    }
 	}
 	# number
 	elsif (defined ($token = $4)) {
-	    $type = 'LITERAL';
+	    $type = 'NUMBER';
 	}
 	elsif (defined($token = $5)) {
+	    $type = 'FILENAME';
+	}
+	elsif (defined($token = $6)) {
 	    # reserved words may be in lower case unless case sensitive
-	    $uctoken = $case ? $token : uc $token;
+	    $uctoken = $anycase ? uc $token : $token;
 	    if (defined ($type = $lextable->{ $uctoken })) {
 		$token = $uctoken;
 	    }
@@ -533,9 +449,9 @@ sub tokenise_directive {
 		$type = 'IDENT';
 	    }
 	}
-	elsif (defined ($token = $6)) {
+	elsif (defined ($token = $7)) {
 	    # reserved words may be in lower case unless case sensitive
-	    $uctoken = $case ? $token : uc $token;
+	    $uctoken = $anycase ? uc $token : $token;
 	    unless (defined ($type = $lextable->{ $uctoken })) {
 		$type = 'UNQUOTED';
 	    }
@@ -543,12 +459,15 @@ sub tokenise_directive {
 
 	push(@tokens, $type, $token);
 
-#	print("  [ $type, $token ]\n");
+#	print(STDERR " +[ $type, $token ]\n")
+#	    if $DEBUG;
     }
+
+#    print STDERR "tokenise directive() returning:\n  [ @tokens ]\n"
+#	if $DEBUG;
 
     return \@tokens;					    ## RETURN ##
 }
-
 
 
 #------------------------------------------------------------------------
@@ -568,21 +487,28 @@ sub define_block {
     my $defblock = $self->{ DEFBLOCK } 
         || return undef;
 
+    print STDERR "compiled block '$name':\n$block\n"
+	if $DEBUG;
+
     $defblock->{ $name } = $block;
+    
+    return undef;
 }
 
 
-
 #------------------------------------------------------------------------
-# error()
-#
-# Simple accessor method to return the internal ERROR string.
+# add_metadata(\@setlist)
 #------------------------------------------------------------------------
 
-sub error {
-    $_[0]->{'ERROR'};
+sub add_metadata {
+    my ($self, $setlist) = @_;
+    my $metadata = $self->{ METADATA } 
+        || return undef;
+
+    push(@$metadata, @$setlist);
+    
+    return undef;
 }
-
 
 
 #========================================================================
@@ -599,20 +525,20 @@ sub error {
 # This is the main parser DFA loop.  See embedded comments for 
 # further details.
 #
-# On error, undef is returned and the internal ERROR field is set to 
+# On error, undef is returned and the internal _ERROR field is set to 
 # indicate the error.  This can be retrieved by calling the error() 
 # method.
 #------------------------------------------------------------------------
 
 sub _parse {
     my ($self, $tokens) = @_;
-    my ($token, $value, $dirtext, $dirtoks, $dirno, $line, $linenos);
+    my ($token, $value, $text, $line, $inperl);
     my ($state, $stateno, $status, $action, $lookup, $coderet, @codevars);
     my ($lhs, $len, $code);	    # rule contents
     my $stack = [ [ 0, undef ] ];   # DFA stack
 
 # DEBUG
-   local $" = ', ';
+#   local $" = ', ';
 
     # retrieve internal rule and state tables
     my ($states, $rules) = @$self{ qw( STATES RULES ) };
@@ -620,13 +546,9 @@ sub _parse {
     # call the grammar set_factory method to install emitter factory
     $self->{ GRAMMAR }->install_factory($self->{ FACTORY });
 
-    # when we report errors, we want to be able to report the line offset
-    # in the file or text where the error occured.  split_text() obliges us
-    # by creating a LINE_NOS member referencing a list of the line
-    # offset for each directive in the text.
-    $linenos = $self->{ LINE_NOS };
-    $line    = 0;
-    $self->{ LINE } = \$line;
+    $line = $inperl = 0;
+    $self->{ LINE   } = \$line;
+    $self->{ INPERL } = \$inperl;
 
     $status = CONTINUE;
 
@@ -638,55 +560,36 @@ sub _parse {
 	# see if any lookaheads exist for the current state
 	if (exists $state->{'ACTIONS'}) {
 
-	    # get next token/value pair from the lexer
-	    defined($token) or	do {
-		($token, $value) = splice(@$tokens, 0, 2);
+	    # get next token and expand any directives (i.e. token is an 
+	    # array ref) onto the front of the token list
+	    while (! defined $token && @$tokens) {
+		$token = shift(@$tokens);
+		if (ref $token) {
+		    ($text, $line, $token) = @$token;
+		    if (ref $token) {
+			unshift(@$tokens, @$token, (';') x 2);
+			$token = undef;  # force redo
+		    }
+		    elsif ($token eq 'ITEXT') {
+			if ($inperl) {
+			    # don't perform interpolation in PERL blocks
+			    $token = 'TEXT';
+			    $value = $text;
+			}
+			else {
+			    unshift(@$tokens, 
+				    @{ $self->interpolate_text($text, $line) });
+			    $token = undef; # force redo
+			}
+		    }
+		}
+		else {
+		    $value = shift(@$tokens);
+		}
 	    };
+	    # clear undefined token to avoid 'undefined variable blah blah'
+	    # warnings and let the parser logic pick it up in a minute
 	    $token = '' unless defined $token;
-
-# DEBUG
-#	     my $v = $value;
-#	     $v = '' unless defined $v;
-#	     $v =~ s/\n/\\n/g;
-#	     print "token: [$token] value: [$v]\n";
-#	     print "stack: [@$tokens]\n";
-# /DEBUG
-	    # if the token is a directive, we call call the lexer to
-	    # tokenise it
-	    if ($token eq 'DIRECTIVE') {
-
-		# get the line number of the directive
-		$line = shift @$linenos
-		    || 0;
-
-		# save directive text for error reporting on failure
-		$dirtext = $value;
-
-		$dirtoks = $self->tokenise_directive($value)
-		    || return undef;			    ## RETURN ##
-
-# DEBUG
-#		print STDERR "directive @ $line\ndirtoks: @$dirtoks\n"
-#		    if $DEBUG;
-# /DEBUG
-		# push tokens into front of existing token list,
-		# adding a 'SEPARATOR' token - this is a hack to 
-		# simulate the 'THEN' after an 'IF', for example
-		unshift(@$tokens, @$dirtoks, ';', ';');
-
-		($token, $value) = ();
-		redo;					    ## REDO ##
-	    }
-	    elsif ($token eq 'QUOTED') {
-		# $line may be slightly wrong, but it's our best guess
-		# and we should never need to access these line nos
-		unshift(@$tokens, 
-			'"', '"',
-			@{ $self->interpolate_text($value, $line) },
-			'"', '"');
-		($token, $value) = ();
-		redo;					    ## REDO ##
-	    }
 
 	    # get the next state for the current lookahead token
 	    $action = defined ($lookup = $state->{'ACTIONS'}->{ $token })
@@ -700,21 +603,6 @@ sub _parse {
 	    $action = $state->{'DEFAULT'};
 	}
 
-# DEBUG
-#	$self->_debug(DEBUG_PARSE, 
-#	 print(
-#		 "  State #$stateno",
-#		 "  Token: ", 
-#		     defined $token ? "[$token]" : "<undef>",
-#		 "  Value: ",
-#		     defined $value ? "[$value]" : "<undef>",
-#		 "  Action: ",
-#		     $action > 0 
-#			 ? "shift -> $action"
-#			 : "reduce -> $action",
-#		 "\n");
-# /DEBUG
-
 	# ERROR: no ACTION
 	last unless defined $action;
 
@@ -723,25 +611,15 @@ sub _parse {
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	if ($action > 0) {
 	    push(@$stack, [ $action, $value ]);
-# DEBUG
-#	 $self->_debug(DEBUG_PARSE, 
-#		 "  Shift $action, $value\n");
-# /DEBUG
-
 	    $token = $value = undef;
 	    redo;
 	};
-
 
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	# reduce (-ive ACTION)
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	($lhs, $len, $code) = @{ $rules->[ -$action ] };
 
-# DEBUG
-#	 $self->_debug(DEBUG_PARSE, 
-#		 "  Reduce stack by $len from rule '$lhs'\n");
-# /DEBUG
 	# no action imples ACCEPTance
 	$action
 	    or $status = ACCEPT;
@@ -781,181 +659,55 @@ sub _parse {
 	unless defined $value;
 
     # munge text of last directive to make it readable
-    $dirtext =~ s/\n/\\n/g;
+#    $text =~ s/\n/\\n/g;
 
-    return $self->_parse_error("unexpected end of directive\n -- $dirtext")
+    return $self->_parse_error("unexpected end of directive", $text)
 	if $value eq ';';   # end of directive SEPARATOR
 
-    return $self->_parse_error("unexpected token ($value)\n -- $dirtext");
+    return $self->_parse_error("unexpected token ($value)", $text);
 }
 
 
 
 #------------------------------------------------------------------------
-# _parse_error($msg)
+# _parse_error($msg, $dirtext)
 #
 # Method used to handle errors encountered during the parse process
 # in the _parse() method.  
 #------------------------------------------------------------------------
 
 sub _parse_error {
-    my ($self, $msg) = @_;
+    my ($self, $msg, $text) = @_;
     my $line = $self->{ LINE };
-
     $line = ref($line) ? $$line : $line;
     $line = 'unknown' unless $line;
 
-    $self->{'ERROR'} = "line $line: $msg";
+    $msg .= "\n  [% $text %]"
+	if defined $text;
 
-    return undef;
+    return $self->error("line $line: $msg");
 }
 
 
-sub _debug {
-    my $self = shift;
-    my $level = shift;
-    local $" = '';
-    print STDERR "DEBUG: @_"
-	if $DEBUG;
-}
+#------------------------------------------------------------------------
+# _dump()
+# 
+# Debug method returns a string representing the internal state of the 
+# object.
+#------------------------------------------------------------------------
 
-sub dump_args {
+sub _dump {
     my $self = shift;
-    my $args = shift || [];
-
-    foreach my $arg (@$args) {
-	print $arg;
-	print "  [@$arg]" if ref($arg) eq 'ARRAY';
-	print "\n";
+    my $output = "$self:\n";
+    foreach my $key (qw( START_TAG END_TAG TAG_STYLE ANYCASE INTERPOLATE 
+			 PRE_CHOMP POST_CHOMP V1DOLLAR ) ) {
+	
+	$output .= sprintf("%-12s => %s\n", $key, $self->{ $key });
     }
-    $args;
+    return $output;
 }
+    
+
 
 1;
-
-
-__END__
-
-
-=head1 NAME
-
-Template::Parser - module implementing LALR(1) parser for compiling template documents
-
-=head1 SYNOPSIS
-
-    use Template::Parser;
-
-    my $parser   = Template::Parser->new();
-    my $template = $parser->parse($text);
-
-    die $parser->error()
-	unless defined $template;
-
-=head1 DESCRIPTION
-
-The Template::Parser module implements a LALR(1) parser and associated methods
-for parsing template documents into an internal compiled format.
-
-=head1 PUBLIC METHODS
-
-=head2 new(\%params)
-
-The new() constructor creates and returns a reference to a new 
-Template::Parser object.  A reference to a hash may be supplied as a 
-parameter to provide configuration values.  These may include:
-
-=over
-
-=item START_TAG, END_TAG, TAG_STYLE
-
-The START_TAG and END_TAG options are used to specify the character 
-sequences that mark the start and end of a template directive.
-
-=item INTERPOLATE
-
-The INTERPOLATE flag, when set to any true value will cause variable 
-references in plain text (i.e. not surrounded by START_TAG and END_TAG)
-to be recognised and interpolated accordingly.  Variables should be
-prefixed by a '$' to identify them and may contain only alphanumeric
-characters, underscores or periods.  Curly braces can be used to 
-explicitly specify the variable name where it may be ambiguous.
-
-=item PRE_CHOMP, POST_CHOMP
-
-These values set the chomping options for the parser.  With POST_CHOMP
-set true, any whitespace after a directive up to and including the newline
-will be deleted.  This has the effect of joining a line that ends with 
-a directive onto the start of the next line.
-
-With PRE_CHOMP set true, the newline and whitespace preceeding a directive
-at the start of a line will be deleted.  This has the effect of 
-concatenating a line that starts with a directive onto the end of the 
-previous line.
-
-=item GRAMMAR
-
-The GRAMMAR configuration item can be used to specify an alternate 
-grammar for the parser.  If not specified, an instance of the default
-Template::Grammar will be created and used automatically.  
-
-    use Template::Parser;
-    use MyTemplate::MyGrammar;
-
-    my $parser = Template::Parser->new({ 
-       	GRAMMAR = MyTemplate::MyGrammar->new();
-    });
-
-=back
-
-=head2 parse($text)
-
-The parse() method parses the text passed in the first parameter and returns
-a reference to a Template::Directive::Block object which contains the 
-compiled representation of the template text.  On error, undef is returned.
-
-Example:
-
-    $parser->parse($text)
-	|| die $parser->error();
-
-=head2 error()
-
-Returns a string indicating the most recent parser error.
-
-=head1 AUTHOR
-
-Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
-
-=head1 REVISION
-
-$Revision: 1.26 $
-
-=head1 COPYRIGHT
-
-Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-
-This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
-
-The Template::Parser module is derived from a standalone parser generated
-by version 0.16 of the Parse::Yapp module.  The following copyright notice 
-appears in the Parse::Yapp documentation.  
-
-    The Parse::Yapp module and its related modules and shell
-    scripts are copyright (c) 1998 Francois Desarmenien,
-    France. All rights reserved.
-
-    You may use and distribute them under the terms of either
-    the GNU General Public License or the Artistic License, as
-    specified in the Perl README file.
-
-=head1 SEE ALSO
-
-L<Template|Template>, 
-L<Template::Grammar|Template::Grammar>, 
-L<Template::Directive|Template::Directive>
-
-=cut
-
 

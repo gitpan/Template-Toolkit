@@ -2,81 +2,356 @@
 #
 # t/directive.t
 #
-# Template script testing general directives.
+# Test basic directive layout and processing options.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: directive.t,v 1.7 1999/11/25 17:51:23 abw Exp $
-# 
+# $Id: directive.t,v 2.0 2000/08/10 14:56:20 abw Exp $
+#
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
-use Template qw( :status );
+use lib qw( ./lib ../lib );
 use Template::Test;
 $^W = 1;
 
-$Template::Test::DEBUG = 0;
+my $ttobjs = [ 
+    tt   => Template->new(),
+    pre  => Template->new( PRE_CHOMP => 1 ),
+    post => Template->new( POST_CHOMP => 1 ),
+    trim => Template->new( INCLUDE_PATH => -d 't' ? 't/test/lib' : 'test/lib',
+			   TRIM => 1 ),
+];
 
-my ($a, $b, $c, $d ) = 
-	qw( alpha bravo charlie delta );
-my $params = {
-    'a'    => $a,
-    'b'    => $b,
-    'c'    => $c,
-    'd'    => $d,
-};
-
-
-test_expect(\*DATA, { INTERPOLATE => 1 }, $params);
+test_expect(\*DATA, $ttobjs, callsign);
 
 __DATA__
-[%a%] [% a %] [%			a		%]
+#------------------------------------------------------------------------
+# basic directives
+#------------------------------------------------------------------------
+-- test --
+[% a %]
+[%a%]
 -- expect --
-alpha alpha alpha
+alpha
+alpha
+
+-- test --
+pre [% a %]
+pre[% a %]
+-- expect --
+pre alpha
+prealpha
+
+-- test --
+[% a %] post
+[% a %]post
+-- expect --
+alpha post
+alphapost
+
+-- test --
+pre [% a %] post
+pre[% a %]post
+-- expect --
+pre alpha post
+prealphapost
+
+-- test --
+[% a %][%b%][% c %]
+-- expect --
+alphabravocharlie
+
+-- test --
+[% 
+a %][%b
+%][%
+c
+%][%
+         d
+%]
+-- expect --
+alphabravocharliedelta
+
+#------------------------------------------------------------------------
+# comments
+#------------------------------------------------------------------------
+-- test --
+[%# this is a comment which should
+    be ignored in totality
+%]hello world
+-- expect --
+hello world
+
+-- test -- 
+[% # this is a one-line comment
+   a
+%]
+-- expect --
+alpha
+
+-- test -- 
+[% # this is a two-line comment
+   a =
+   # here's the next line
+   b
+-%]
+[% a %]
+-- expect --
+bravo
+
+-- test --
+[% a = c   # this is a comment on the end of the line
+   b = d   # so is this
+-%]
+a: [% a %]
+b: [% b %]
+-- expect --
+a: charlie
+b: delta
+
+#------------------------------------------------------------------------
+# manual chomping
+#------------------------------------------------------------------------
 
 -- test --
 [% a %]
 [% b %]
-[% c -%]
-[% d %]
 -- expect --
 alpha
 bravo
-charliedelta
 
 -- test --
-Defining blocks and handler
-[% BLOCK foo -%]
-This is foo
-[% END -%]
-[% block Bar -%]
-This is Bar
-[% END -%]
-[% CATCH file -%]
-This is what happens when it all goes rightly wrong
-[% END -%]
-Done
+[% a -%]
+[% b %]
 -- expect --
-Defining blocks and handler
-Done
+alphabravo
 
 -- test --
+[% a -%]
+     [% b %]
+-- expect --
+alpha     bravo
+
+-- test --
+[% a %]
+[%- b %]
+-- expect --
+alphabravo
+
+-- test --
+[% a %]
+     [%- b %]
+-- expect --
+alphabravo
+
+-- test --
+start
+[% a %]
+[% b %]
+end
+-- expect --
+start
+alpha
+bravo
+end
+
+-- test --
+start
+[%- a %]
+[% b -%]
+end
+-- expect --
+startalpha
+bravoend
+
+-- test --
+start
+[%- a -%]
+[% b -%]
+end
+-- expect --
+startalphabravoend
+
+-- test --
+start
+[%- a %]
+[%- b -%]
+end
+-- expect --
+startalphabravoend
+
+#------------------------------------------------------------------------
+# PRE_CHOMP enabled 
+#------------------------------------------------------------------------
+
+-- test --
+-- use pre --
+start
+[% a %]
+mid
+[% b %]
+end
+-- expect --
+startalpha
+midbravo
+end
+
+-- test --
+start
+     [% a %]
+mid
+	[% b %]
+end
+-- expect --
+startalpha
+midbravo
+end
+
+-- test --
+start
+[%+ a %]
+mid
+[% b %]
+end
+-- expect --
+start
+alpha
+midbravo
+end
+
+-- test --
+start
+   [%+ a %]
+mid
+[% b %]
+end
+-- expect --
+start
+   alpha
+midbravo
+end
+
+-- test --
+start
+   [%- a %]
+mid
+   [%- b %]
+end
+-- expect --
+startalpha
+midbravo
+end
+
+#------------------------------------------------------------------------
+# POST_CHOMP enabled 
+#------------------------------------------------------------------------
+
+-- test --
+-- use post --
+start
+[% a %]
+mid
+[% b %]
+end
+-- expect --
+start
+alphamid
+bravoend
+
+-- test --
+start
+     [% a %]
+mid
+	[% b %]        
+end
+-- expect --
+start
+     alphamid
+	bravoend
+
+-- test --
+start
+[% a +%]
+mid
+[% b %]
+end
+-- expect --
+start
+alpha
+mid
+bravoend
+
+-- test --
+start
+[% a +%]   
+[% b +%]
+end
+-- expect --
+start
+alpha   
+bravo
+end
+
+-- test --
+start
+[% a -%]
+mid
+[% b -%]
+end
+-- expect --
+start
+alphamid
+bravoend
+
+
+#------------------------------------------------------------------------
+# TRIM enabled
+#------------------------------------------------------------------------
+-- test --
+-- use trim --
+
+[% INCLUDE trimme %]
+
+
+-- expect --
+I am a template element file which will get TRIMmed
+
+
+-- test --
+[% BLOCK foo %]
+
+this is block foo
+
+[% END -%]
+
+[% BLOCK bar %]
+
+this is block bar
+
+[% END %]
+
 [% INCLUDE foo %]
-[% include foo %]
-[% InClUde foo %]
-[% INCLUde FOO %]
+[% INCLUDE bar %]
+end
 -- expect --
-This is foo
+this is block foo
+this is block bar
+end
 
-This is foo
+-- test --
+[% r; r = s; "-"; r %].
+-- expect --
+romeo-sierra.
 
-This is foo
+-- test --
+[% IF a; b; ELSIF c; d; ELSE; s; END %]
+-- expect --
+bravo
 
-This is what happens when it all goes rightly wrong

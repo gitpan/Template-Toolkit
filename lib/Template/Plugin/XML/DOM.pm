@@ -7,7 +7,7 @@
 #   Simple Template Toolkit plugin interfacing to the XML::DOM.pm module.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
 #   Copyright (C) 2000 Andy Wardley.  All Rights Reserved.
@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: DOM.pm,v 1.1 2000/03/01 13:07:03 abw Exp $
+# $Id: DOM.pm,v 2.0 2000/08/10 14:56:10 abw Exp $
 #
 #============================================================================
 
@@ -26,11 +26,12 @@ package Template::Plugin::XML::DOM;
 require 5.004;
 
 use strict;
-use vars qw( @ISA $VERSION );
+use vars qw( $VERSION );
 use base qw( Template::Plugin );
+use Template::Plugin;
 use XML::DOM;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my ($class, $context, $filename) = @_;
@@ -115,7 +116,7 @@ library.
 
 =head1 REVISION
 
-$Revision: 1.1 $
+$Revision: 2.0 $
 
 =head1 COPYRIGHT
 

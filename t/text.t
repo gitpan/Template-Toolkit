@@ -2,36 +2,56 @@
 #
 # t/text.t
 #
-# Template script testing the TEXT directive.
+# Test general text blocks, ensuring all characters can be used.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: text.t,v 1.5 1999/11/25 17:51:31 abw Exp $
-# 
+# $Id: text.t,v 2.0 2000/08/10 14:56:34 abw Exp $
+#
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
-use Template qw( :status );
+use lib qw( ./lib ../lib );
 use Template::Test;
 $^W = 1;
 
 $Template::Test::DEBUG = 0;
 
-test_expect(\*DATA);
+ok(1);
+
+my $tt = [
+    basic  => Template->new(),
+    interp => Template->new(INTERPOLATE => 1),
+];
+
+test_expect(\*DATA, $tt, callsign);
 
 __DATA__
-This will become a Text directive
-This line will also be part of the same text directive
-[% a = "more text" -%]
-This will be a new text directive
+-- test --
+This is a text block "hello" 'hello' 1/3 1\4 <html> </html>
+$ @ { } @{ } ${ } # ~ ' ! % *foo
+$a ${b} $c
 -- expect --
-This will become a Text directive
-This line will also be part of the same text directive
-This will be a new text directive
+This is a text block "hello" 'hello' 1/3 1\4 <html> </html>
+$ @ { } @{ } ${ } # ~ ' ! % *foo
+$a ${b} $c
+
+-- test --
+-- use interp --
+This is a text block "hello" 'hello' 1/3 1\4 <html> </html>
+\$ @ { } @{ } \${ } # ~ ' ! % *foo
+$a ${b} $c
+-- expect --
+This is a text block "hello" 'hello' 1/3 1\4 <html> </html>
+$ @ { } @{ } ${ } # ~ ' ! % *foo
+alpha bravo charlie
+
+
+
+

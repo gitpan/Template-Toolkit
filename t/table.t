@@ -11,13 +11,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: table.t,v 1.2 2000/05/19 10:56:31 abw Exp $
+# $Id: table.t,v 2.0 2000/08/10 14:56:33 abw Exp $
 #
 #========================================================================
 
 use strict;
 use lib qw( ../lib );
-use Template qw( :status );
 use Template::Test;
 $^W = 1;
 

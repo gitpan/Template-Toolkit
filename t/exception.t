@@ -1,98 +1,47 @@
 #============================================================= -*-perl-*-
 #
-# t/exception.t
+# t/except.t
 #
-# Test script for Template::Exception.pm
+# Test the Template::Exception module.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: exception.t,v 1.5 1999/08/10 11:09:12 abw Exp $
+# $Id: exception.t,v 2.0 2000/08/10 14:56:24 abw Exp $
 #
 #========================================================================
 
 use strict;
-use vars qw($loaded $ntests);
-$^W = 1;
-
-my $DEBUG = 0;
-
-BEGIN { 
-    $ntests = 15;
-    $| = 1; 
-    print "1..$ntests\n"; 
-}
-
-END {
-    ok(0) unless $loaded;
-}
-
-my $ok_count = 1;
-sub ok {
-    shift or print "not ";
-    print "ok $ok_count\n";
-    ++$ok_count;
-}
-
+use lib qw( ./lib ../lib );
+use Template::Test;
 use Template::Exception;
-use Template::Context;
-use Template::Constants qw( :status );
-$loaded = 1;
-$^W = 1;
-ok(1);
 
+my $text = 'the current output buffer';
 
-# create some sample data
-my @efields = ( 'file', 'some kind of file error' );
-my @cfields = ( 'barf', 'catch this barf' );
-my $e = Template::Exception->new(@efields);
+my $e1 = Template::Exception->new('e1.type', 'e1.info');
+my $e2 = Template::Exception->new('e2.type', 'e2.info', \$text);
 
-#2 - check exceptions got created
-ok( $e );
+ok( $e1 );
+ok( $e2 );
+ok( $e1->type() eq 'e1.type' );
+ok( $e2->info() eq 'e2.info' );
 
-#3-4 - check internal data
-ok( $e->{ TYPE } eq $efields[0] );
-ok( $e->{ INFO } eq $efields[1] );
+my @ti = $e1->type_info();
+ok( $ti[0] eq 'e1.type' );
+ok( $ti[1] eq 'e1.info' );
 
-#5-6 - check via explicit public interface
-ok( $e->type() eq $efields[0] );
-ok( $e->info() eq $efields[1] );
+ok( $e2->as_string() eq 'e2.type error - e2.info' );
+ok( $e2->text() eq 'the current output buffer' );
 
-#7 - create a dummy context for testing exception process() method
-my $context = Template::Context->new({ 
-    CATCH => { 
-	$cfields[0] => \&catch_exception,
-    },
-});
-ok( $context );
+my $prepend = 'text to prepend ';
+$e2->text(\$prepend);
+ok( $e2->text() eq 'text to prepend the current output buffer' );
 
-#8-10 - call context throw to raise an exception
-my $x = $context->throw( $e ); 
-ok( $x );
-ok( $x->type eq $e->type );
-ok( $x->info eq $x->info );
-
-#11-13 - call context throw to raise an exception from type and info
-my $y = $context->throw( @efields ); 
-ok( $y );
-ok( $y->type eq $efields[0] );
-ok( $y->info eq $efields[1] );
-
-#14-15 - call context throw to raise an exception
-my $z = $context->throw( @cfields );    # calls ok()  # 11
-ok( $z == STATUS_OK );
-
-sub catch_exception {
-    my ($context, $type, $info) = @_;
-    print "catching exception [ $type ] $info\n"
-	if $DEBUG;
-    ok( 1 );
-    return STATUS_OK;
-}
-
-
+my @handlers = ('something', 'e2', 'e1.type');
+ok( $e1->select_handler(@handlers) eq 'e1.type' );
+ok( $e2->select_handler(@handlers) eq 'e2' );

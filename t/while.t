@@ -2,36 +2,42 @@
 #
 # t/while.t
 #
-# Template script testing the WHILE directive.
+# Test the WHILE directive
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: while.t,v 1.2 1999/11/25 17:51:32 abw Exp $
-# 
+# $Id: while.t,v 2.1 2000/09/12 15:25:25 abw Exp $
+#
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
-use Template qw( :status );
-use Template::Directive;
+use lib qw( ./lib ../lib );
 use Template::Test;
+use Template::Parser;
+use Template::Directive;
 $^W = 1;
 
 $Template::Test::DEBUG = 0;
+#$Template::Parser::DEBUG = 1;
+#$Template::Directive::PRETTY = 1;
 
 # set low limit on WHILE's maximum iteration count
-$Template::Directive::While::MAXITER = 100;
+$Template::Directive::WHILE_MAX = 100;
+
+my $config = {
+    INTERPOLATE => 1, 
+    POST_CHOMP  => 1,
+};
 
 my @list = ( 'x-ray', 'yankee', 'zulu', );
 my @pending;
-
-my $params  = {
+my $replace  = {
     'a'     => 'alpha',
     'b'     => 'bravo',
     'c'     => 'charlie',
@@ -43,9 +49,7 @@ my $params  = {
     'true'  => 1,
 };
 
-test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1 }, $params);
-
-
+test_expect(\*DATA, $config, $replace);
 
 __DATA__
 before
@@ -103,14 +107,23 @@ Reset list
 * zulu
 
 -- test --
+[% TRY %]
 [% WHILE true %].[% END %]
+[% CATCH +%]
+error: [% error.info %]
+[% END %]
 -- expect --
-....................................................................................................
--- error --
-Runaway WHILE loop terminated (> 100 iterations)
+...................................................................................................
+error: WHILE loop terminated (> 100 iterations)
 
 
-
-
-
-
+-- test --
+[% reset %]
+[% WHILE (item = next) %]
+[% NEXT IF item == 'yankee' -%]
+* [% item +%]
+[% END %]
+-- expect --
+Reset list
+* x-ray
+* zulu

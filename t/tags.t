@@ -5,21 +5,20 @@
 # Template script testing TAGS parse-time directive to switch the
 # tokens that mark start and end of directive tags.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: tags.t,v 1.3 2000/05/19 10:56:31 abw Exp $
+# $Id: tags.t,v 2.1 2000/09/08 08:10:53 abw Exp $
 # 
 #========================================================================
 
 use strict;
 use lib qw( ../lib );
-use Template qw( :status );
 use Template::Test;
 $^W = 1;
 
@@ -33,8 +32,13 @@ my $params = {
     'e'  => 'echo',
 };
 
+my $tt = [
+    basic => Template->new(INTERPOLATE => 1),
+    htags => Template->new(TAG_STYLE => 'html'),
+    stags => Template->new(START_TAG => '\[\*',  END_TAG => '\*\]'),
+];
 
-test_expect(\*DATA, { INTERPOLATE => 1 }, $params);
+test_expect(\*DATA, $tt, $params);
 
 __DATA__
 [%a%] [% a %] [% a %]
@@ -74,41 +78,130 @@ charlie
 echo
 
 -- test --
-[% TAGS (+ +) -%]
+[% TAGS default -%]
 [% a %]
-[% b %]
+%% b %%
 (+ c +)
 -- expect --
-[% a %]
-[% b %]
-charlie
+alpha
+%% b %%
+(+ c +)
 
 -- test --
-[% tags (+ +) -%]
+# same as 'default'
+[% TAGS template -%]
 [% a %]
-[% b %]
+%% b %%
 (+ c +)
 -- expect --
+alpha
+%% b %%
+(+ c +)
+
+-- test --
+[% TAGS metatext -%]
 [% a %]
-[% b %]
-charlie
+%% b %%
+<* c *>
+-- expect --
+[% a %]
+bravo
+<* c *>
+
+-- test --
+[% TAGS template1 -%]
+[% a %]
+%% b %%
+(+ c +)
+-- expect --
+alpha
+bravo
+(+ c +)
 
 -- test --
 [% TAGS html -%]
-<!-- a -->
-<!-- TAGS asp -->
-<% b %>
-<% TAGS php %>
-<? c ?>
-<? TAGS template ?>
-[% d %]
+[% a %]
+%% b %%
+<!-- c -->
 -- expect --
-alpha
-
-bravo
-
+[% a %]
+%% b %%
 charlie
 
+-- test --
+[% TAGS asp -%]
+[% a %]
+%% b %%
+<!-- c -->
+<% d %>
+<? e ?>
+-- expect --
+[% a %]
+%% b %%
+<!-- c -->
 delta
+<? e ?>
+
+-- test --
+[% TAGS php -%]
+[% a %]
+%% b %%
+<!-- c -->
+<% d %>
+<? e ?>
+-- expect --
+[% a %]
+%% b %%
+<!-- c -->
+<% d %>
+echo
+
+#------------------------------------------------------------------------
+# test processor with pre-defined TAG_STYLE
+#------------------------------------------------------------------------
+-- test --
+-- use htags --
+[% TAGS ignored -%]
+[% a %]
+<!-- c -->
+more stuff
+-- expect --
+[% TAGS ignored -%]
+[% a %]
+charlie
+more stuff
+
+#------------------------------------------------------------------------
+# test processor with pre-defined START_TAG and END_TAG
+#------------------------------------------------------------------------
+-- test --
+-- use stags --
+[% TAGS ignored -%]
+<!-- also totally ignored and treated as text -->
+[* a *]
+blah [* b *] blah
+-- expect --
+[% TAGS ignored -%]
+<!-- also totally ignored and treated as text -->
+alpha
+blah bravo blah
 
 
+#------------------------------------------------------------------------
+# XML style tags
+#------------------------------------------------------------------------
+
+-- test --
+-- use basic --
+[% TAGS <tt: > -%]
+<tt:a=10->
+a: <tt:a>
+<tt:FOR a = [ 1, 3, 5, 7 ]->
+<tt:a>
+<tt:END->
+-- expect --
+a: 10
+1
+3
+5
+7

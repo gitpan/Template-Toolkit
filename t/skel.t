@@ -2,75 +2,56 @@
 #
 # t/skel.t
 #
-# Skeleton test file.  You can copy this and modify appropriately to 
-# create new test scripts.
+# Skeleton test script.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: skel.t,v 1.8 2000/06/14 13:31:33 abw Exp $
-# 
+# $Id: skel.t,v 2.2 2000/09/12 15:25:24 abw Exp $
+#
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
-use Template;
+use lib qw( ./lib ../lib );
 use Template::Test;
 $^W = 1;
 
 $Template::Test::DEBUG = 0;
+#$Template::Parser::DEBUG = 1;
+#$Template::Directive::PRETTY = 1;
 
-# configuration for Template processor (optional)
-my $config  = {
-    INTERPOLATE => 1, 
+ok(1);
+
+my $config = {
+    POST_CHOMP => 1,
+    EVAL_PERL => 1,
 };
 
-# sample data (optional)
-my $params  = {
-    'a'     => 'alpha',
-    'b'     => 'bravo',
-    'c'     => 'charlie',
+my $replace = {
+    a => 'alpha',
+    b => 'bravo',
 };
 
-
-# The first parameter to test_expect() is the input source.  The second
-# optional parameter may be a reference to a Template object or a HASH
-# ref containing configuration options which should be used to instantiate
-# a new Template object.  The third parameter, also optional may contain
-# a reference to a HASH of variables to be defined when processing.
-
-test_expect(\*DATA, $config, $params);
-
-# could also be called as:
-#   test_expect(\*DATA);
-#   test_expect(\*DATA, $template);
-#   test_expect(\*DATA, $config);
-#   test_expect(\*DATA, undef, $params);
-#   test_expect(\$mytext);    # ...or any other supported input source
-#   etc., etc.
+test_expect(\*DATA, $config, $replace);
 
 __DATA__
-# Any line with a '#' in the first character is a comment and will be
-# ignored by the test_expect() sub.  Each test is split into a 
-# '-- test --' and '-- expect --' section.  Each test section is fed
-# into the template processor and the output compared against that 
-# which was expected.  Trailing blank lines are generally stripped from 
-# the input, output and expected texts.
-
+# this is the first test
 -- test --
 [% a %]
 -- expect --
 alpha
 
+# this is the second test
 -- test --
 [% b %]
-$c
 -- expect --
 bravo
-charlie
+
+
+
 

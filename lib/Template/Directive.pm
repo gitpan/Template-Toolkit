@@ -1,25 +1,31 @@
-#============================================================= -*-Perl-*-
+#================================================================= -*-Perl-*- 
 #
 # Template::Directive
 #
 # DESCRIPTION
-#   Object classes defining directives that represent the high-level
-#   opcodes of the template processor.  All are derived from a common
-#   Template::Directive base class.
+#   Factory module for constructing templates from Perl code.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
+#
+# WARNING
+#   Much of this module is hairy, even furry in places.  It needs
+#   a lot of tidying up and may even be moved into a different place 
+#   altogether.  The generator code is often inefficient, particulary in 
+#   being very anal about pretty-printing the Perl code all neatly, but 
+#   at the moment, that's still high priority for the sake of easier
+#   debugging.
 #
 # COPYRIGHT
-#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.30 2000/03/20 08:02:20 abw Exp $
+# $Id: Directive.pm,v 2.3 2000/09/12 15:25:19 abw Exp $
 #
 #============================================================================
 
@@ -28,831 +34,841 @@ package Template::Directive;
 require 5.004;
 
 use strict;
-use vars qw( $VERSION $DEBUG );
+use vars qw( $VERSION $DEBUG $PRETTY $WHILE_MAX );
 use Template::Constants;
 use Template::Exception;
 
+$VERSION = sprintf("%d.%02d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/);
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.30 $ =~ /(\d+)\.(\d+)/);
-$DEBUG = 0;
+$WHILE_MAX = 1000 unless defined $WHILE_MAX;
+$PRETTY    = 0 unless defined $PRETTY;
+my $OUTPUT = '$output .= ';
 
+
+sub pad {
+    my ($text, $pad) = @_;
+    $pad = ' ' x ($pad * 4);
+    $text =~ s/^(?!#line)/$pad/gm;
+    $text;
+}
 
 #========================================================================
-#                      -----  CONFIGURATION -----
-#========================================================================
-
-# table defining parameters for each directive type
-my %param_tbl = (
-    'Text'      => [ qw( TEXT                   ) ],
-    'Get'       => [ qw( TERM                   ) ],
-    'Call'      => [ qw( TERM                   ) ],
-    'Set'       => [ qw( ARGS                   ) ],
-    'Include'   => [ qw( FILE ARGS              ) ],
-    'Process'   => [ qw( FILE ARGS              ) ],
-    'Use'       => [ qw( NAME ARGS ALIAS        ) ],
-    'If'        => [ qw( EXPR BLOCK ELSE        ) ],
-    'For'       => [ qw( ITEM LIST PARAMS BLOCK ) ],
-    'While'     => [ qw( EXPR BLOCK             ) ],
-    'Filter'    => [ qw( NAME ARGS ALIAS BLOCK  ) ],
-    'Block'     => [ qw( CONTENT                ) ],
-    'Catch'     => [ qw( ETYPE BLOCK            ) ],
-    'Throw'     => [ qw( ETYPE INFO             ) ],
-    'Error'     => [ qw( INFO                   ) ],
-    'Return'    => [ qw( RETVAL                 ) ],
-    'Perl'      => [ qw( PERLCODE               ) ],    
-    'Macro'     => [ qw( NAME DIRECTIVE ARGS    ) ],    
-    'Userdef'   => [ qw( HANDLER BLOCK          ) ],
-);
-
-my $PKGVAR = 'PARAMS';
-
-
-
-#------------------------------------------------------------------------
-# create($type, \@params) 
+# FACTORY METHODS
 #
-# This is the base class factory method which is called to instantiate
-# Template::Directive objects.  A string representing the directive type
-# is passed in as the first parameter (e.g. 'text', 'include') along 
-# with any additional parameters specific to the directive.  The method 
-# indexes into %param_tbl to find the information required to construct
-# an object of the specific type and then does so.  There is no need for 
-# any directive-specific construction.  This approach is significantly
-# faster than deriving all directives from a common base class whose
-# shared new() constructor performs this task. .  
+# These methods are called by the parser to construct directive instances.
+#========================================================================
+
+#------------------------------------------------------------------------
+# template($block)
 #------------------------------------------------------------------------
 
-sub create {
-    my $class = shift;
-    my $type  = shift;
-    my ($self, $accept);
+sub template {
+    my ($class, $block) = @_;
+    $block = pad($block, 2) if $PRETTY;
 
-    # look for parameter acceptance list in %param_tbl
-    $accept = $param_tbl{ $type };
-    die "not accepted ($type)\n" unless $accept;
-    $self = bless { TYPE => $type }, "$class\::$type";
-
-    foreach my $key (@$accept) {
-	$self->{ $key } = shift;
+    return <<EOF;
+sub {
+    my \$context = shift;
+    my \$stash   = \$context->stash;
+    my \$output  = '';
+    my \$error;
+    
+    eval { BLOCK: {
+$block
+    } };
+    if (\$@) {
+        \$error = \$context->catch(\$@, \\\$output);
+	die \$error unless \$error->type eq 'return';
     }
 
-    $self;
+    return \$output;
 }
-
-
-#========================================================================
-#                       ----- DEBUG METHODS -----
-#========================================================================
-#------------------------------------------------------------------------
-# _report(@msg)
-#
-# Formats and outputs the debug messages passed by parameter if $DEBUG
-# is set.
-#------------------------------------------------------------------------
-
-sub _report {
-    my $self = shift;
-
-    return unless $DEBUG;
-
-    my $type = $self->{ TYPE };
-    my $out = join("", @_);
-
-    $out =~ s/^/[%$type%] /gm;
-    $out .= "\n" unless $out =~ /\n$/;
-    print STDERR $out if $DEBUG;
-}
-
-
-
-#========================================================================
-#                    --- DIRECTIVE SUB-CLASSES ---
-#========================================================================
-
-#------------------------------------------------------------------------
-# TEXT
-#------------------------------------------------------------------------
-
-package Template::Directive::Text;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    $context->output($self->{ TEXT });
-    return Template::Constants::STATUS_OK;
+EOF
 }
 
 
 #------------------------------------------------------------------------
-# SET				                           [% SET args %]
+# anon_block($block)                            [% BLOCK %] ... [% END %]
 #------------------------------------------------------------------------
 
-package Template::Directive::Set;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
+sub anon_block {
+    my ($class, $block) = @_;
+    $block = pad($block, 2) if $PRETTY;
 
-sub process {
-    my ($self, $context) = @_;
-    my ($arg, $ident, $term, $value, $error);
+    return <<EOF;
 
-    local $" = ', ';
-
-    ($value, $error) = $context->_evaluate($self->{ ARGS });
-    return $error || Template::Constants::STATUS_OK;
-}
-
-
-#------------------------------------------------------------------------
-# GET				                           [% GET term %]
-#------------------------------------------------------------------------
-
-package Template::Directive::Get;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($ident, $value, $error);
-
-    ($value, $error) = $context->_evaluate($self->{ TERM });
-    return $error if $error;
-
-    # throw an exception if value is undefined
-    $context->output($value)
-	if defined($value);
-
-    return Template::Constants::STATUS_OK;
-}
-
-
-#------------------------------------------------------------------------
-# CALL				                          [% CALL term %]
-#------------------------------------------------------------------------
-
-package Template::Directive::Call;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($ident, $value, $error);
-
-    ($value, $error) = $context->_evaluate($self->{ TERM });
-
-    return $error || Template::Constants::STATUS_OK;
-}
-
-
-#------------------------------------------------------------------------
-# INCLUDE			                  [% INCLUDE file args %]
-#
-# The INCLUDE directive calls on the context process() method to 
-# process another template file or block.  Parameters may be defined
-# which get passed and used to update a local copy of the stash.
-# Variables passed to a INCLUDE'd template, or set within such a 
-# template are local to that template and do not affect variables
-# in the caller's namespace.
-#------------------------------------------------------------------------
- 
-package Template::Directive::Include;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($file, $value, $error);
-
-    # the file/block identifier might be a variable reference so must
-    # first be evaluated in context
-    if (ref($file = $self->{ FILE })) {
-	($file, $error) = $context->_evaluate($file);
-	return $error					    ## RETURN ##
-	    if $error;
+# BLOCK
+$OUTPUT do {
+    my \$output  = '';
+    my \$error;
+    
+    eval { BLOCK: {
+$block
+    } };
+    if (\$@) {
+        \$error = \$context->catch(\$@, \\\$output);
+        die \$error unless \$error->type eq 'return';
     }
-    return $context->throw(Template::Constants::ERROR_FILE, 
-			   'Undefined INCLUDE file/block name')
-	unless $file;
 
-    # localise variables and set parameters
-    $context->localise();
-    ($value, $error) = $context->_evaluate($self->{ ARGS });
-    return $error if $error;				    ## RETURN ##
-
-    # process file then restore previous variable context
-    $error = $context->process($file);
-    $context->delocalise();
-
-    $error;
+    \$output;
+};
+EOF
 }
 
 
-
 #------------------------------------------------------------------------
-# PROCESS                                      [% PROCESS ident params %]
-#
-# The PROCESS directive is similar to INCLUDE except that variables are
-# not localised.  This allows variables defined in a sub-template to
-# persist in the caller's namespace.  This is ideal for putting config
-# values in a separate file which can then be PROCESS'd.  The context's
-# 'private' _process() method is called, bypassing the 'public' process()
-# method which localises variables.  This is OK.  The Context object 
-# treats us as a friend and grants this behaviour.
+# block($blocktext)
 #------------------------------------------------------------------------
- 
-package Template::Directive::Process;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
 
-sub process {
-    my ($self, $context) = @_;
-    my ($file, $value, $error);
-
-    # the file/block identifier might be a variable reference so must
-    # first be evaluated in context
-    if (ref($file = $self->{ FILE })) {
-	($file, $error) = $context->_evaluate($file);
-	return $error					    ## RETURN ##
-	    if $error;
-    }
-    return $context->throw(Template::Constants::ERROR_FILE, 
-			   'Undefined PROCESS file/block name')
-	unless $file;
-
-    # update variables
-    ($value, $error) = $context->_evaluate($self->{ ARGS });
-    return $error if $error;				    ## RETURN ##
-
-    $context->process($file);
+sub block {
+    my ($class, $block) = @_;
+    return join("\n", @{ $block || [] });
 }
 
 
+#------------------------------------------------------------------------
+# textblock($text)
+#------------------------------------------------------------------------
+
+sub textblock {
+    my ($class, $text) = @_;
+    return "$OUTPUT " . &text($class, $text) . ';';
+}
+
 
 #------------------------------------------------------------------------
-# IF				            [% IF expr %] block [% END %]
-#
-# Iterates through the expression stored in $self->{ EXPR } and calls the 
-# process() method of the $self->{ BLOCK } if it evaluates true.  If it 
-# evaluates false, any block referenced in $self->{ ELSE } is processed.
+# text($text)
 #------------------------------------------------------------------------
- 
-package Template::Directive::If;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
 
-sub process {
-    my ($self, $context) = @_;
-    my $input = $self->{ EXPR };
-    my ($true, $else, $error);
-
-    ($true, $error) = $context->_evaluate($self->{ EXPR });
-    return $error if $error;
-
-    if ($true) {
-	return $self->{ BLOCK }->process($context);	    ## RETURN ##
+sub text {
+    my ($class, $text) = @_;
+    for ($text) {
+	s/(["\$\@\\])/\\$1/g;
+	s/\n/\\n/g;
     }
-    elsif (defined ($else = $self->{ ELSE })) {
-	return $else->process($context);		    ## RETURN ##
+    return '"' . $text . '"';
+}
+
+
+#------------------------------------------------------------------------
+# quoted(\@items)                                               "foo$bar"
+#------------------------------------------------------------------------
+
+sub quoted {
+    my ($class, $items) = @_;
+    return '' unless @$items;
+    return $items->[0] if scalar @$items == 1;
+    return '(' . join(' . ', @$items) . ')';
+}
+
+
+#------------------------------------------------------------------------
+# ident(\@ident)                                             foo.bar(baz)
+#------------------------------------------------------------------------
+
+sub ident {
+    my ($class, $ident) = @_;
+    return "''" unless @$ident;
+    if (scalar @$ident <= 2 && ! $ident->[1]) {
+	$ident = $ident->[0];
     }
     else {
-	return Template::Constants::STATUS_OK;		    ## RETURN ##
+	$ident = '[' . join(', ', @$ident) . ']';
     }
-
-    # not reached 
+    return "\$stash->get($ident)";
 }
 
-
-
 #------------------------------------------------------------------------
-# WHILE				         [% WHILE expr %] block [% END %]
-#
-# Iterates through the following block while the expression evaluates
-# true.
+# identref(\@ident)                                         \foo.bar(baz)
 #------------------------------------------------------------------------
- 
-package Template::Directive::While;
-use vars qw( @ISA $MAXITER );
-@ISA = qw( Template::Directive );
-$MAXITER = 1_000;
 
-sub process {
-    my ($self, $context) = @_;
-    my $expr = $self->{ EXPR };
-    my ($true, $error);
-
-    $error = Template::Constants::STATUS_OK;
-
-    # this is a hack to prevent runaways
-    my $failsafe = $MAXITER + 1;
-    for (;--$failsafe;) {
-	# test expression
-	($true, $error) = $context->_evaluate($self->{ EXPR });
-	return $error if $error;
-	last unless $true;
-
-	# run block
-	$error = $self->{ BLOCK }->process($context);
-	last if $error;
-    }
-    $context->error("Runaway WHILE loop terminated (> $MAXITER iterations)")
-	unless $failsafe;
-    
-    # STATUS_DONE indicates the iterator completed succesfully
-    return ! $error || $error == Template::Constants::STATUS_DONE
-	? Template::Constants::STATUS_OK
-	: $error;
-}
-
-
-#------------------------------------------------------------------------
-# FOR				  [% FOREACH item list %] block [% END %]
-#------------------------------------------------------------------------
- 
-package Template::Directive::For;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($item, $params, $list) = @$self{ qw( ITEM PARAMS LIST ) };
-    my ($iterator, $value, $error, $loopsave);
-    my $LOOPVAR = 'loop';
-
-
-    require Template::Iterator;
-
-    ($list, $error) = $context->_evaluate($list);
-    return $error if $error;
-
-    if ($params && @$params) {
-	($params, $error) = $context->_evaluate($params);
-	return $error if $error;
-	$params = pop @$params;
-    }
-
-    # do nothing if there's nothing to do
-    return Template::Constants::STATUS_OK		    ## RETURN ##
-	unless defined $list;
-
-    # the target may already be an iterator, otherwise we create one
-    $iterator = UNIVERSAL::isa($list, 'Template::Iterator')
-	? $list
-	: Template::Iterator->new($list, $params);
-
-    return (undef, $context->throw($Template::Iterator::ERROR))
-	unless $iterator;
-
-    # initialise iterator
-    ($value, $error) = $iterator->get_first();
-
-    if ($item) {
-	# loop has a target variable to which values will be assigned, so
-	# there's no need to localise the stash to prevent existing variables
-	# being overwritten.  However, we do need to take a copy of any 
-	# existing 'loop' variable which we will overwrite
-	$loopsave = $context->{ STASH }->get($LOOPVAR);
+sub identref {
+    my ($class, $ident) = @_;
+    return "''" unless @$ident;
+    if (scalar @$ident <= 2 && ! $ident->[1]) {
+	$ident = $ident->[0];
     }
     else {
-	# with a target variable, any hash values will be imported.  Thus we
-	# need to clone the stash to avoid variable trample
-	$context->localise();
+	$ident = '[' . join(', ', @$ident) . ']';
     }
-    
-    $context->{ STASH }->set($LOOPVAR => $iterator);
+    return "\$stash->getref($ident)";
+}
 
-    # loop
-    while (! $error) {
-	# if a loop variable hasn't been specified (e.g. %% FOREACH
-	# userlist %%) then we will automatically import the members
-	# of HASH references that get returned by each iteration.  We
-	# can only safely import hashes so that's all we try and do -
-	# anything else is gracefully ignored.  If a loop variable has
-	# been specified then we set that variable to each iterative
-	# item.  
-	if ($item) {
-	    # set target variable to iteration value
-	    $context->{ STASH }->set($item, $value);
+
+#------------------------------------------------------------------------
+# assign(\@ident, $value, $default)                             foo = bar
+#------------------------------------------------------------------------
+
+sub assign {
+    my ($class, $var, $val, $default) = @_;
+
+    if (ref $var) {
+	if (scalar @$var == 2 && ! $var->[1]) {
+	    $var = $var->[0];
 	}
-	elsif (ref($value) eq 'HASH') {
-	    # otherwise IMPORT a hash value
-	    $context->{ STASH }->set('IMPORT', $value);
-	}
-
-	# process block
-	last if ($error = $self->{ BLOCK }->process($context));
-
-	# get next iteration
-	($value, $error) = $iterator->get_next();
-    }
-
-    $context->{ STASH }->set($LOOPVAR => $loopsave);
-
-    # declone the stash (revert to parent context)
-    $context->delocalise()
-	unless $item;
-
-    # STATUS_DONE indicates the iterator completed succesfully
-    return $error == Template::Constants::STATUS_DONE
-	? Template::Constants::STATUS_OK
-	: $error;
-}
-
-
-#------------------------------------------------------------------------
-# FILTER		  [% FILTER alias = name(args) %] block [% END %]
-#------------------------------------------------------------------------
-
-package Template::Directive::Filter;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($name, $args, $alias, $block) 
-	= @$self{ qw( NAME ARGS ALIAS BLOCK ) };
-    my ($filter, $handler, $input, $output, $error);
-    
-    # evaluate ARGS
-    ($args, $error) = $context->_evaluate($args);
-    return $error if $error;
-
-    # ask the context for the requested filter
-    ($filter, $error) = $context->use_filter($name, $args, $alias)
-	unless $error;
-
-    return $error					    ## RETURN ##
-	if $error;
-
-    # install output handler to capture output, saving existing handler
-    $input = '';
-    $handler = 
-	$context->redirect(Template::Constants::TEMPLATE_OUTPUT, \$input);
-
-    # process contents of FILTER block
-    $error = $block->process($context);
-
-    # restore previous output handler
-    $context->redirect(Template::Constants::TEMPLATE_OUTPUT, $handler);
-
-    # filter output generated from processing block
-    ($output, $error) = &$filter($input)
-	unless $error;
-
-    # output the filtered text, or the original text if the filter failed
-    $context->output($error ? $input : $output);
-
-    return $error || Template::Constants::STATUS_OK;
-}
-
-
-#------------------------------------------------------------------------
-# USE			                     [% USE alias = name(args) %]
-#------------------------------------------------------------------------
- 
-package Template::Directive::Use;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($name, $args, $alias) =
-	@$self{ qw( NAME ARGS ALIAS ) };
-    my ($plugin, $error);
-
-    # evaluate ARGS
-    ($args, $error) = $context->_evaluate($args);
-    return $error if $error;
-    $args ||= [];
-
-    ($plugin, $error) = $context->use_plugin($name, $args);
-    return $error
-	if $error;
-
-    # default target ident to plugin name and convert illegal characters
-    $alias ||= $name;
-    $alias =~ s/\W+/_/g;
-
-    # bind plugin object into stash under identifier
-    $context->{ STASH }->set($alias, $plugin);
-
-    return Template::Constants::STATUS_OK;
-}
-
-
-#------------------------------------------------------------------------
-# BLOCK			                    [% BLOCK %] content [% END %]
-#------------------------------------------------------------------------
-
-package Template::Directive::Block;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my $error = Template::Constants::STATUS_OK;
-
-    foreach my $child (@{ $self->{ CONTENT } }) {
-	next unless defined $error;
-	$error = $child->process($context);
-
-	# the child process may return an exception that hasn't yet been 
-	# thrown through $context->throw() which may have a handler for it
-	$error = $context->throw($error)
-	    if ref($error) && ! $error->thrown();
-	last if $error;
-    }
-
-    return $error;
-}
-
-
-#------------------------------------------------------------------------
-# THROW			                          [% THROW etype einfo %]
-#------------------------------------------------------------------------
- 
-package Template::Directive::Throw;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($info, $error);
-
-    # evaluate info 
-    ($info, $error) = $context->_evaluate($self->{ INFO });
-    return $error					    ## RETURN ##
-	if $error;
-
-    return $context->throw($self->{ ETYPE } || 'default', $info);
-}
-
-
-#------------------------------------------------------------------------
-# CATCH			                [% CATCH etype %] block [% END %]
-#------------------------------------------------------------------------
- 
-package Template::Directive::Catch;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    return $context->catch($self->{ ETYPE } || 'default', $self->{ BLOCK });
-}
-
-
-#------------------------------------------------------------------------
-# ERROR			                                 [% ERROR info %]
-#------------------------------------------------------------------------
- 
-package Template::Directive::Error;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($value, $error) = $context->_evaluate($self->{ INFO });
-    $error ||= 0;
-    $context->error($value)
-	if !$error && defined $value;
-    return $error || Template::Constants::STATUS_OK;
-}
-
-
-#------------------------------------------------------------------------
-# RETURN		                              [% RETURN retval %]
-#------------------------------------------------------------------------
- 
-package Template::Directive::Return;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my $retval;
-
-    $retval = Template::Constants::STATUS_RETURN
-	unless defined ($retval = $self->{ RETVAL });
-
-    return $retval;
-}
-
-
-#------------------------------------------------------------------------
-# PERL			                    [% PERL %] perlcode [% END %]
-#------------------------------------------------------------------------
- 
-package Template::Directive::Perl;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my $block = $self->{ PERLCODE };
-    my $stash = $context->{ STASH };
-    my ($perlcode, $handler, $error);
-    
-    return $context->throw(Template::Constants::ERROR_PERL, 
-			   "EVAL_PERL is disabled, ignoring PERL section")
-	unless $context->{ EVAL_PERL };
-
-    # first we process the block contained within PERL...END to expand
-    # and directives contained within the block; we install an output 
-    # handler to capture all output from the block and then restore the 
-    # original handler
-
-    $perlcode = '';
-    $handler  = 
-	$context->redirect(Template::Constants::TEMPLATE_OUTPUT, \$perlcode);
-    $error = $block->process($context);
-    $context->redirect(Template::Constants::TEMPLATE_OUTPUT, $handler);
-    return $error if $error;
-
-    # we update the $context and $stash variables to ensure they contain
-    # the relevent references and then evaluate the Perl code
-
-    $Template::Perl::context = $context;
-    $Template::Perl::stash   = $stash;
-    eval {
-	eval "package Template::Perl; $perlcode";
-    };
-    return $context->throw(Template::Constants::ERROR_PERL, $@)
-	if $@;
-
-    return Template::Constants::STATUS_OK;
-}
-
-
-#------------------------------------------------------------------------
-# MACRO			                 [% MACRO name(args) directive %]
-#------------------------------------------------------------------------
- 
-package Template::Directive::Macro;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    my ($name, $directive, $args) =
-	@$self{ qw( NAME DIRECTIVE ARGS ) };
-
-
-    my $callback = sub {
-	my ($params, $error, $output);
-
-	# see if any mandatory arguments are expected
-	if ($args) {
-	    my %args;
-	    @args{@$args} = splice(@_, 0, scalar @$args);
-
-	    # hash may follow mandatory args
-	    $params = shift;
-	    $params = { } unless ref($params) eq 'HASH';
-	    $params = { %args, %$params };
-	}
-	# otherwise just look for a hash
 	else {
-	    $params = $_[0] if ref($_[0]) eq 'HASH';
+	    $var = '[' . join(', ', @$var) . ']';
 	}
-
-	# set passed variable values in a local context
-	$context->localise($params)
-	    if $params;
-
-	$error = $directive->process($context);
-
-	# restore original context
-	$context->delocalise()
-	    if $params;
-
-	return $error 
-	    ? (undef, $error)
-	    : '';
-    };
-    $context->{ STASH }->set($name, $callback);
-
-    return Template::Constants::STATUS_OK;
+    }
+    $val .= ', 1' if $default;
+    return "\$stash->set($var, $val)";
 }
 
 
 #------------------------------------------------------------------------
-# USERDEF/USERBLOCK	  [% USERDEF * %]/[% USERDEF * %] block [% END %]
+# args(\@args)                                        foo, bar, baz = qux
 #------------------------------------------------------------------------
- 
-package Template::Directive::Userdef;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
+
+sub args {
+    my ($class, $args) = @_;
+    my $hash = shift @$args;
+    push(@$args, '{ ' . join(', ', @$hash) . ' }')
+	if @$hash;
+
+    return '0' unless @$args;
+    return '[ ' . join(', ', @$args) . ' ]';
+}
+
+
+#------------------------------------------------------------------------
+# get($expr)                                                    [% foo %]
+#------------------------------------------------------------------------
+
+sub get {
+    my ($class, $expr) = @_;  
+    return "$OUTPUT $expr;";
+}
+
+
+#------------------------------------------------------------------------
+# call($expr)                                              [% CALL bar %]
+#------------------------------------------------------------------------
+
+sub call {
+    my ($class, $expr) = @_;  
+    $expr .= ';';
+    return $expr;
+}
+
+
+#------------------------------------------------------------------------
+# set(\@setlist)                               [% foo = bar, baz = qux %]
+#------------------------------------------------------------------------
+
+sub set {
+    my ($class, $setlist) = @_;
+    my $output;
+    while (my ($var, $val) = splice(@$setlist, 0, 2)) {
+	$output .= &assign($class, $var, $val) . ";\n";
+    }
+    chomp $output;
+    return $output;
+}
+
+
+#------------------------------------------------------------------------
+# default(\@setlist)                   [% DEFAULT foo = bar, baz = qux %]
+#------------------------------------------------------------------------
+
+sub default {
+    my ($class, $setlist) = @_;  
+    my $output;
+    while (my ($var, $val) = splice(@$setlist, 0, 2)) {
+	$output .= &assign($class, $var, $val, 1) . ";\n";
+    }
+    chomp $output;
+    return $output;
+}
+
+
+#------------------------------------------------------------------------
+# insert($file)                                         [% INSERT file %] 
+#------------------------------------------------------------------------
+
+sub insert {
+    my ($class, $nameargs) = @_;
+    my ($file, $args) = @$nameargs;
+    return "$OUTPUT \$context->insert($file);"; 
+}
+
+
+
+#------------------------------------------------------------------------
+# include(\@nameargs)                    [% INCLUDE template foo = bar %] 
+#          # => [ $file, \@args ]    
+#------------------------------------------------------------------------
+
+sub include {
+    my ($class, $nameargs) = @_;
+    my ($file, $args) = @$nameargs;
+    my $hash = shift @$args;
+    $file .= @$hash ? ', { ' . join(', ', @$hash) . ' }' : '';
+    return "$OUTPUT \$context->include($file);"; 
+}
+
+
+#------------------------------------------------------------------------
+# process(\@nameargs)                    [% PROCESS template foo = bar %] 
+#         # => [ $file, \@args ]
+#------------------------------------------------------------------------
 
 sub process {
-    my ($self, $context) = @_;
-    my ($handler, $block) = @$self{ qw( HANDLER BLOCK ) };
-    my ($text, $hsave, $error);
+    my ($class, $nameargs) = @_;
+    my ($file, $args) = @$nameargs;
+    my $hash = shift @$args;
+    $file .= @$hash ? ', { ' . join(', ', @$hash) . ' }' : '';
+    return "$OUTPUT \$context->process($file);"; 
+}
 
-    # if a BLOCK is defined we process it and capture the output for 
-    # feeding into the handler as input text
-    if ($block) {
-	# install output handler to capture output, saving existing handler
-	$text = '';
-	$hsave = 
-	    $context->redirect(Template::Constants::TEMPLATE_OUTPUT, \$text);
 
-	# process contents of FILTER block
-	$error = $block->process($context);
+#------------------------------------------------------------------------
+# if($expr, $block, $else)                             [% IF foo < bar %]
+#                                                         ...
+#                                                      [% ELSE %]
+#                                                         ...
+#                                                      [% END %]
+#------------------------------------------------------------------------
 
-	# restore previous output handler
-	$context->redirect(Template::Constants::TEMPLATE_OUTPUT, $hsave);
+sub if {
+    my ($class, $expr, $block, $else) = @_;
+    my @else = $else ? @$else : ();
+    $else = pop @else;
+    $block = pad($block, 1) if $PRETTY;
+
+    my $output = "if ($expr) {\n$block\n}\n";
+
+    foreach my $elsif (@else) {
+	($expr, $block) = @$elsif;
+	$block = pad($block, 1) if $PRETTY;
+	$output .= "elsif ($expr) {\n$block\n}\n";
+    }
+    if (defined $else) {
+	$else = pad($else, 1) if $PRETTY;
+	$output .= "else {\n$else\n}\n";
     }
 
-    $error ||= &$handler($context, $text);
-
-    return $error || Template::Constants::STATUS_OK;
+    return $output;
 }
 
 
-#========================================================================
-#               -----  Template::Directive::Debug  -----
-#========================================================================
- 
-package Template::Directive::Debug;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-
 #------------------------------------------------------------------------
-# process($context)
+# foreach($target, $list, $args, $block)    [% FOREACH x = [ foo bar ] %]
+#                                              ...
+#                                           [% END %]
 #------------------------------------------------------------------------
 
-sub process {
-    my ($self, $context) = @_;
-    my $stash = $context->{ STASH };
-    my $debug;
+sub foreach {
+    my ($class, $target, $list, $args, $block) = @_;
+    $args  = shift @$args;
+    $args  = @$args ? ', { ' . join(', ', @$args) . ' }' : '';
+
+    my ($loop_save, $loop_set, $loop_restore, $setiter);
+    if ($target) {
+	$loop_save    = '$oldloop = ' . &ident($class, ["'loop'"]);
+	$loop_set     = "\$stash->{'$target'} = \$value";
+	$loop_restore = "\$stash->set('loop', \$oldloop)";
+    }
+    else {
+	$loop_save    = '$stash = $context->localise()';
+#	$loop_set     = "\$stash->set('import', \$value) "
+#	                . "if ref \$value eq 'HASH'";
+	$loop_set     = "\$stash->get(['import', [\$value]]) "
+	                . "if ref \$value eq 'HASH'";
+	$loop_restore = '$stash = $context->delocalise()';
+    }
+    $block = pad($block, 3) if $PRETTY;
+
+    return <<EOF;
+
+# FOREACH 
+do {
+    my (\$value, \$error, \$oldloop);
+    my \$list = $list;
     
-    # debug stuff
-    $debug = $self->{ TEXT };
-
-    if ($debug =~ /stashdump/i) {
-	$context->output("Stash Dump:\n", $stash->_dump(), "\n");
+    unless (UNIVERSAL::isa(\$list, 'Template::Iterator')) {
+	\$list = Template::Config->iterator(\$list)
+	    || die \$Template::Config::ERROR, "\\n"; 
     }
 
-    return Template::Constants::STATUS_OK;
+    (\$value, \$error) = \$list->get_first();
+    $loop_save;
+    \$stash->set('loop', \$list);
+    eval {
+	while (! \$error) {
+	    $loop_set;
+$block;
+	    (\$value, \$error) = \$list->get_next();
+	}
+    };
+    $loop_restore;
+    die \$@ if \$@;
+    \$error = 0 if \$error eq Template::Constants::STATUS_DONE;
+    die \$error if \$error;
+};
+EOF
+}
+
+#------------------------------------------------------------------------
+# next()                                                       [% NEXT %]
+#
+# Next iteration of a FOREACH loop (experimental)
+#------------------------------------------------------------------------
+
+sub next {
+    return <<EOF;
+(\$value, \$error) = \$list->get_next();
+next;
+EOF
+}
+
+
+#------------------------------------------------------------------------
+# wrapper(\@nameargs, $block)            [% WRAPPER template foo = bar %] 
+#          # => [ $file, \@args ]    
+#------------------------------------------------------------------------
+
+sub wrapper {
+    my ($class, $nameargs, $block) = @_;
+    my ($file, $args) = @$nameargs;
+    my $hash = shift @$args;
+
+    $block = pad($block, 2) if $PRETTY;
+    push(@$hash, "'content'", '$content');
+    $file .= @$hash ? ', { ' . join(', ', @$hash) . ' }' : '';
+
+    return <<EOF;
+
+# WRAPPER
+$OUTPUT do {
+    my \$content = sub {
+	my \$output = '';
+$block
+        return \$output;
+    };
+    \$context->include($file); 
+};
+EOF
+}
+
+
+#------------------------------------------------------------------------
+# while($expr, $block)                                 [% WHILE x < 10 %]
+#                                                         ...
+#                                                      [% END %]
+#------------------------------------------------------------------------
+
+sub while {
+    my ($class, $expr, $block) = @_;
+    $block = pad($block, 2) if $PRETTY;
+
+    return <<EOF;
+
+# WHILE
+do {
+    my \$failsafe = $WHILE_MAX;
+    while (--\$failsafe && ($expr)) {
+$block
+    }
+    die "WHILE loop terminated (> $WHILE_MAX iterations)\\n"
+        unless \$failsafe;
+};
+EOF
+}
+
+
+#------------------------------------------------------------------------
+# switch($expr, \@case)                                    [% SWITCH %]
+#                                                          [% CASE foo %]
+#                                                             ...
+#                                                          [% END %]
+#------------------------------------------------------------------------
+
+sub switch {
+    my ($class, $expr, $case) = @_;
+    my @case = @$case;
+    my ($match, $block, $default);
+    my $caseblock = '';
+
+    $default = pop @case;
+
+    foreach $case (@case) {
+	$match = $case->[0];
+	$block = $case->[1];
+	$block = pad($block, 1) if $PRETTY;
+	$caseblock .= <<EOF;
+\$match = $match;
+\$match = [ \$match ] unless ref \$match eq 'ARRAY';
+if (grep(/^\$result\$/, \@\$match)) {
+$block
+    last SWITCH;
+}
+EOF
+    }
+
+    $caseblock .= $default
+	if defined $default;
+    $caseblock = pad($caseblock, 2) if $PRETTY;
+
+return <<EOF;
+
+# SWITCH
+do {
+    my \$result = $expr;
+    my \$match;
+    SWITCH: {
+$caseblock
+    }
+};
+EOF
+}
+
+
+#------------------------------------------------------------------------
+# try($block, \@catch)                                        [% TRY %]
+#                                                                ...
+#                                                             [% CATCH %] 
+#                                                                ...
+#                                                             [% END %]
+#------------------------------------------------------------------------
+
+sub try {
+    my ($class, $block, $catch) = @_;
+    my @catch = @$catch;
+    my ($match, $mblock, $default, $final, $n);
+    my $catchblock = '';
+    my $handlers = [];
+
+    $block = pad($block, 2) if $PRETTY;
+    $final = pop @catch;
+    $final = "# FINAL\n" . ($final ? "$final\n" : '')
+	   . 'die $error if $error;' . "\n" . '$output;';
+    $final = pad($final, 1) if $PRETTY;
+
+    $n = 0;
+    foreach $catch (@catch) {
+	$match = $catch->[0] || do {
+	    $default ||= $catch->[1];
+	    next;
+	};
+	$mblock = $catch->[1];
+	$mblock = pad($mblock, 1) if $PRETTY;
+	push(@$handlers, "'$match'");
+	$catchblock .= $n++ 
+	    ? "elsif (\$handler eq '$match') {\n$mblock\n}\n" 
+	       : "if (\$handler eq '$match') {\n$mblock\n}\n";
+    }
+    $catchblock .= "\$error = 0;";
+    $catchblock = pad($catchblock, 3) if $PRETTY;
+    if ($default) {
+	$default = pad($default, 1) if $PRETTY;
+	$default = "else {\n    # DEFAULT\n$default\n    \$error = '';\n}";
+    }
+    else {
+	$default = '# NO DEFAULT';
+    }
+    $default = pad($default, 2) if $PRETTY;
+
+    $handlers = join(', ', @$handlers);
+return <<EOF;
+
+# TRY
+$OUTPUT do {
+    my \$output = '';
+    my (\$error, \$handler);
+    eval {
+$block
+    };
+    if (\$@) {
+        \$error = \$context->catch(\$@, \\\$output);
+	die \$error if \$error->type =~ /^return|stop\$/;
+        \$stash->set('error', \$error);
+        \$stash->set('e', \$error);
+        if (defined (\$handler = \$error->select_handler($handlers))) {
+$catchblock
+        }
+$default
+    }
+$final
+};
+EOF
+}
+
+
+#------------------------------------------------------------------------
+# throw(\@nameargs)                           [% THROW foo "bar error" %]
+#       # => [ $type, \@args ]
+#------------------------------------------------------------------------
+
+sub throw {
+    my ($class, $nameargs) = @_;
+    my ($type, $args) = @$nameargs;
+    my $hash = shift(@$args);
+    my $info = shift(@$args);
+    
+    $args = join(', ', $info ? ($type, $info) : ($type, 'undef'));
+
+    return "\$context->throw($args, \\\$output);";
+}
+
+
+#------------------------------------------------------------------------
+# clear()                                                     [% CLEAR %]
+#
+# NOTE: this is redundant, being hard-coded (for now) into Parser.yp
+#------------------------------------------------------------------------
+
+sub clear {
+    return "\$output = '';";
+}
+
+#------------------------------------------------------------------------
+# break()                                                     [% BREAK %]
+#
+# NOTE: this is redundant, being hard-coded (for now) into Parser.yp
+#------------------------------------------------------------------------
+
+sub break {
+    return 'last;';
+}
+
+#------------------------------------------------------------------------
+# return()                                                   [% RETURN %]
+#------------------------------------------------------------------------
+
+sub return {
+    return "\$context->throw('return', '', \\\$output);";
+}
+
+#------------------------------------------------------------------------
+# stop()                                                       [% STOP %]
+#------------------------------------------------------------------------
+
+sub stop {
+    return "\$context->throw('stop', '', \\\$output);";
+}
+
+
+#------------------------------------------------------------------------
+# use(\@lnameargs)                         [% USE alias = plugin(args) %]
+#     # => [ $file, \@args, $alias ]
+#------------------------------------------------------------------------
+
+sub use {
+    my ($class, $lnameargs) = @_;
+    my ($file, $args, $alias) = @$lnameargs;
+    $alias ||= $file;
+    $args = &args($class, $args);
+    $file .= ", $args" if $args;
+    my $set = &assign($class, $alias, '$plugin'); 
+    return "# USE\n"
+	 . "\$stash->set($alias,\n"
+	 . "            \$context->plugin($file)\n"
+         . "         || \$context->throw(\$context->error) );";
+
+}
+
+
+#------------------------------------------------------------------------
+# perl($block)
+#------------------------------------------------------------------------
+
+sub perl {
+    my ($class, $block) = @_;
+    $block = pad($block, 1) if $PRETTY;
+
+    return <<EOF;
+
+# PERL
+$OUTPUT do {
+    my \$output = "package Template::Perl;\\n";
+
+$block
+
+    \$Template::Perl::context = \$context;
+    \$Template::Perl::stash   = \$stash;
+
+    my \$result = '';
+    tie *Template::Perl::PERLOUT, 'Template::TieString', \\\$result;
+    my \$save_stdout = select *Template::Perl::PERLOUT;
+
+    eval \$output;
+    select \$save_stdout;
+    \$context->throw(\$@) if \$@;
+    \$result;
+};
+EOF
+}
+
+
+#------------------------------------------------------------------------
+# no_perl()
+#------------------------------------------------------------------------
+
+sub no_perl {
+    my $class = shift;
+    return "\$context->throw('perl', 'EVAL_PERL not set');";
+}
+
+
+#------------------------------------------------------------------------
+# rawperl($block)
+#
+# NOTE: perhaps test context EVAL_PERL switch at compile time rather than
+# runtime?
+#------------------------------------------------------------------------
+
+sub rawperl {
+    my ($class, $block, $line) = @_;
+    for ($block) {
+	s/^\n+//;
+	s/\n+$//;
+    }
+    $block = pad($block, 1) if $PRETTY;
+    $line = $line ? " (starting line $line)" : '';
+
+    return <<EOF;
+# RAWPERL
+#line 1 "RAWPERL block$line"
+$block
+EOF
+}
+
+
+
+#------------------------------------------------------------------------
+# filter()
+#------------------------------------------------------------------------
+
+sub filter {
+    my ($class, $lnameargs, $block) = @_;
+    my ($name, $args, $alias) = @$lnameargs;
+    $args = &args($class, $args);
+    $args = $args ? "$args, $alias" : ", undef, $alias"
+	if $alias;
+    $name .= ", $args" if $args;
+    $block = pad($block, 1) if $PRETTY;
+ 
+    return <<EOF;
+
+# FILTER
+$OUTPUT do {
+    my \$output = '';
+    my \$filter = \$context->filter($name)
+              || \$context->throw(\$context->error);
+
+$block
+    
+    &\$filter(\$output);
+};
+EOF
+}
+
+
+#------------------------------------------------------------------------
+# capture($name, $block)
+#------------------------------------------------------------------------
+
+sub capture {
+    my ($class, $name, $block) = @_;
+
+    if (ref $name) {
+	if (scalar @$name == 2 && ! $name->[1]) {
+	    $name = $name->[0];
+	}
+	else {
+	    $name = '[' . join(', ', @$name) . ']';
+	}
+    }
+    $block = pad($block, 1) if $PRETTY;
+
+    return <<EOF;
+
+# CAPTURE
+\$stash->set($name, do {
+    my \$output = '';
+$block
+    \$output;
+});
+EOF
+
+}
+
+
+#------------------------------------------------------------------------
+# macro($name, $block, \@args)
+#------------------------------------------------------------------------
+
+sub macro {
+    my ($class, $ident, $block, $args) = @_;
+    $block = pad($block, 2) if $PRETTY;
+
+    if ($args) {
+	my $nargs = scalar @$args;
+	$args = join(', ', map { "'$_'" } @$args);
+	$args = $nargs > 1 
+	    ? "\@args{ $args } = splice(\@_, 0, $nargs)"
+	    : "\$args{ $args } = shift";
+
+	return <<EOF;
+
+# MACRO
+\$stash->set('$ident', sub {
+    my \$output = '';
+    my (%args, \$params);
+    $args;
+    \$params = shift;
+    \$params = { } unless ref(\$params) eq 'HASH';
+    \$params = { \%args, %\$params };
+
+    \$stash = \$context->localise(\$params);
+    eval {
+$block
+    };
+    \$stash = \$context->delocalise();
+    die \$@ if \$@;
+    return \$output;
+});
+EOF
+
+    }
+    else {
+	return <<EOF;
+
+# MACRO
+\$stash->set('$ident', sub {
+    my \$params = \$_[0] if ref(\$_[0]) eq 'HASH';
+    my \$output = '';
+
+    \$stash = \$context->localise(\$params);
+    eval {
+$block
+    };
+    \$stash = \$context->delocalise();
+    die \$@ if \$@;
+    return \$output;
+});
+EOF
+    }
+}
+
+
+#------------------------------------------------------------------------
+# simple package for tying $output variable to STDOUT, used by perl()
+#------------------------------------------------------------------------
+
+package Template::TieString;
+
+sub TIEHANDLE {
+    my ($class, $textref) = @_;
+    bless $textref, $class;
+}
+sub PRINT {
+    my $self = shift;
+    $$self .= join('', @_);
 }
 
 
 1;
 
 __END__
-
-=head1 NAME
-
-Template::Directive - Object class for defining directives that represent the opcodes of the Template processor.
-
-=head1 SYNOPSIS
-
-  use Template::Directive;
-
-  my $dir = Template::Directive->new(\@opcodes);
-  my $inc = Template::Directive::Include->new(\@ident, \@params);
-  my $if  = Template::Directive::If->new(\@expr, $true_block, $else_block);
-  my $for = Template::Directive::For->new(\@list, $block, $varname);
-  my $blk = Template::Directive::Block->new($content);
-  my $txt = Template::Directive::Text->new($text);
-  my $thr = Template::Directive::Throw->new($errtype, \@expr);
-  my $cth = Template::Directive::Catch->new($errtype, $block);
-  my $ret = Template::Directive::Return->new($retval);
-  my $dbg = Template::Directive::Debug->new($text);
-
-=head1 DESCRIPTION
-
-The Template::Directive module defines a class which represents the 
-basic operations of the Template Processor.  These are created and returned
-(in tree form) by the Template::Parser object as a product of parsing a 
-template file.  The process() method is called on the directives at the 
-time at which the "compiled" template is rendered for output.
-
-The derived classes of Template::Directive, as listed above, define
-specific operations of the template processor.  You don't really need to
-worry about them unless you plan to hack on the internals of the processor.
-
-=head1 AUTHOR
-
-Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
-
-=head1 REVISION
-
-$Revision: 1.30 $
-
-=head1 COPYRIGHT
-
-Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-
-This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
-
-=head1 SEE ALSO
-
-L<Template>, L<Template::Stash>, L<Template::Parser>, L<Template::Grammar>
-
-=cut
-
 

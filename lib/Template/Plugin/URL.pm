@@ -8,7 +8,7 @@
 #   and adaptable parameters.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
 #   Copyright (C) 2000 Andy Wardley.  All Rights Reserved.
@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: URL.pm,v 1.1 2000/03/20 08:02:27 abw Exp $
+# $Id: URL.pm,v 2.0 2000/08/10 14:56:09 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use CGI;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -174,11 +174,11 @@ as per regular Template Toolkit syntax.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
+Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 1.1 $
+$Revision: 2.0 $
 
 =head1 COPYRIGHT
 

@@ -6,13 +6,13 @@
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: format.t,v 1.8 2000/02/01 12:14:31 abw Exp $
+# $Id: format.t,v 2.0 2000/08/10 14:56:25 abw Exp $
 #
 #========================================================================
 
@@ -25,25 +25,15 @@ $^W = 1;
 $Template::Test::DEBUG = 0;
 
 my ($a, $b, $c, $d) = qw( alpha bravo charlie delta );
-my @days = qw( Monday Tuesday Wednesday Thursday Friday Saturday Sunday );
-my @months = qw( jan feb mar apr may jun jul aug sep oct nov dec );
-my $day = -1;
 my $params = { 
     'a'      => $a,
     'b'      => $b,
     'c'      => $c,
-    'C'      => uc $c,
     'd'      => $d,
-    'days'   => \@days,
-    'months' => \&months,
 };
 
 test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1 }, $params);
  
-
-sub months {
-    return \@months;
-}
 
 #------------------------------------------------------------------------
 # test input
@@ -53,8 +43,8 @@ __DATA__
 [% USE format %]
 [% bold = format('<b>%s</b>') %]
 [% ital = format('<i>%s</i>') %]
-[% bold('heading')  +%]
-[% $ital('author')  +%]
+[% bold('heading') +%]
+[% ital('author')  +%]
 ${ ital('affil.') }
 [% bold('footing')  +%]
 $bold
@@ -76,17 +66,6 @@ $bold
 <li> bravo
 <li> charlie
 <li> delta
-
--- test -- 
-[% USE fmt = format %]
-[% FOREACH user = [ c d a b ]( order = 'reverse' action = fmt('++ %s ++') )%]
-$user
-[% END %]
--- expect --
-++ delta ++
-++ charlie ++
-++ bravo ++
-++ alpha ++
 
 -- test --
 [% USE bold = format("<b>%s</b>") %]

@@ -8,7 +8,7 @@
 #   module.  RSS is the Rich Site Summary format.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
 #   Copyright (C) 2000 Andy Wardley.  All Rights Reserved.
@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: RSS.pm,v 1.7 2000/06/14 13:29:23 abw Exp $
+# $Id: RSS.pm,v 2.0 2000/08/10 14:56:11 abw Exp $
 #
 #============================================================================
 
@@ -27,11 +27,12 @@ package Template::Plugin::XML::RSS;
 require 5.004;
 
 use strict;
-use vars qw( @ISA $VERSION );
+use vars qw( $VERSION );
 use base qw( Template::Plugin );
+use Template::Plugin;
 use XML::RSS;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
 
 sub load {
     return $_[0];
@@ -159,7 +160,7 @@ Schwartz <merlyn@stonehenge.com>.
 
 =head1 REVISION
 
-$Revision: 1.7 $
+$Revision: 2.0 $
 
 =head1 COPYRIGHT
 

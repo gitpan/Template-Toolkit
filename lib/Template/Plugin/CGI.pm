@@ -7,7 +7,7 @@
 #   Simple Template Toolkit plugin interfacing to the CGI.pm module.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: CGI.pm,v 1.6 2000/03/01 14:22:05 abw Exp $
+# $Id: CGI.pm,v 2.0 2000/08/10 14:56:05 abw Exp $
 #
 #============================================================================
 
@@ -27,12 +27,12 @@ package Template::Plugin::CGI;
 require 5.004;
 
 use strict;
-use vars qw( @ISA $VERSION );
+use vars qw( $VERSION );
+use base qw( Template::Plugin );
 use Template::Plugin;
 use CGI;
 
-@ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my $class   = shift;
@@ -86,11 +86,11 @@ constructor:
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>cre.canon.co.ukE<gt>
+Andy Wardley E<lt>kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 1.6 $
+$Revision: 2.0 $
 
 =head1 COPYRIGHT
 

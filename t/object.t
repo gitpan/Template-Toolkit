@@ -3,21 +3,20 @@
 #
 # Template script testing code bindings to objects.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
+# Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: object.t,v 1.8 2000/02/29 18:12:26 abw Exp $
+# $Id: object.t,v 2.1 2000/09/12 15:25:23 abw Exp $
 #
 #========================================================================
 
 use strict;
 use lib qw( ../lib );
-use Template qw( :status );
 use Template::Exception;
 use Template::Test;
 $^W = 1;
@@ -31,20 +30,20 @@ $Template::Test::DEBUG = 0;
 
 package TestObject;
 
-use Template::Constants qw( :status );
-
 use vars qw( $AUTOLOAD );
 
 sub new {
-    my ($class, $context, $params) = @_;
+    my ($class, $params) = @_;
     $params ||= {};
 
     bless {
 	PARAMS  => $params,
-	CONTEXT => $context,
 	DAYS    => [ qw( Monday Tuesday Wednesday Thursday 
 			 Friday Saturday Sunday ) ],
 	DAY     => 0,
+        'public'   => 314,
+	'.private' => 425,
+	'_hidden'  => 537,
     }, $class;
 }
 
@@ -55,7 +54,6 @@ sub yesterday {
 
 sub today {
     my $self = shift;
-    my $when = shift || 'Now';
     return "Live for today and die for tomorrow.";
 }
 
@@ -74,31 +72,10 @@ sub belief {
     return "Oh I believe in $b.";
 }
 
-sub homer {
-    return "D'Oh";
-}
-
-sub items {
-    return ('foo', 'bar', 'baz');
-}
-
-sub halt {
-    return (undef, STATUS_STOP);
-}
-
-sub fail {
-    return undef;
-}
-
-sub puke {
-    return (undef, Template::Exception->new('barf', 'Veni, Vidi, Barfi'));
-}
-
-# throw an exception via the context
-sub context_throw {
+sub concat {
     my $self = shift;
-    my $context = $self->{ CONTEXT };
-    return (undef, $context->throw('barf', 'We came, we saw, we hurled'));
+    local $" = ', ';
+    $self->{ PARAMS }->{ args } = "ARGS: @_";
 }
 
 sub _private {
@@ -126,90 +103,26 @@ sub AUTOLOAD {
 }
 
 
-package TestObject2;
-
-sub new {
-    my ($class, $context, $params) = @_;
-    $params ||= {};
-
-    bless {
-	Help    => 'Help Yourself',
-    }, $class;
-}
-
-sub foo {
-    return 'bar';
-}
-
-
 #------------------------------------------------------------------------
 # main 
 #------------------------------------------------------------------------
 
 package main;
 
-# sample data
-my ($a, $b, $c, $d, $e, $f) = qw( alpha bravo charlie delta echo foxtrot);
-my $day = -1;
-
-# these are *additional* parameters for the object to store that provide 
-# access to other data and subs
-my $obj_params = { 
-    'a'      => $a,
-    'b'      => $b,
-    'w'      => 'whisky',
-    'creed'  => \&belief,
-    'day'    => {
-	'prev' => \&yesterday,
-	'this' => \&today,
-	'next' => \&tomorrow,
-    },
+my $objconf = { 
+    'a' => 'alpha',
+    'b' => 'bravo',
+    'w' => 'whisky',
 };
 
-my $tproc   = Template->new({ INTERPOLATE => 1, DEBUG => 1 });
-my $tobj    = TestObject->new($tproc->context(), $obj_params);
-my $tobj2   = TestObject2->new();
-my $params  = {
-    'e'     => $e,
-    'f'     => $f,
-    'thing' => $tobj,
-    'other' => $tobj2,
+my $replace = {
+    thing => TestObject->new($objconf),
+    %{ callsign() },
 };
 
-test_expect(\*DATA, $tproc, $params);
+test_expect(\*DATA, { INTERPOLATE => 1 }, $replace);
 
 
-#------------------------------------------------------------------------
-# subs
-#------------------------------------------------------------------------
-
-sub yesterday {
-    return "All my troubles seemed so far away...";
-}
-
-sub today {
-    my $when = shift || 'Now';
-    return "$when it looks as though they're here to stay.";
-}
-
-sub tomorrow {
-    my $dayno = shift;
-    my @days = qw( Monday Tuesday Wednesday Thursday Friday Saturday Sunday );
-    unless (defined $dayno) {
-	$day++;
-	$day %= 7;
-	$dayno = $day;
-    }
-    return $days[$dayno];
-}
-
-
-sub belief {
-    local $" = ', ';
-    my $b = join(' and ', @_);
-    $b = '<nothing>' unless length $b;
-    return "Oh I believe in $b.";
-}
 
 #------------------------------------------------------------------------
 # test input
@@ -217,11 +130,11 @@ sub belief {
 
 __DATA__
 # test method calling via autoload to get parameters
-[% thing.a %]
+[% thing.a %] [% thing.a %]
 [% thing.b %]
 $thing.w
 -- expect --
-alpha
+alpha alpha
 bravo
 whisky
 
@@ -233,22 +146,16 @@ whisky
 bravo
 
 -- test --
-[% thing.homer           %]
-[% thing.homer(900)      %]
-[% thing.homer(900, 800) %]
-[% thing.homer(thing.a thing.b thing.w)    %]
+[% thing.concat = thing.b -%]
+[% thing.args %]
 -- expect --
-D'Oh
-D'Oh
-D'Oh
-D'Oh
+ARGS: bravo
 
 -- test --
-$thing.homer
-${thing.homer}
+[% thing.concat(d) = thing.b -%]
+[% thing.args %]
 -- expect --
-D'Oh
-D'Oh
+ARGS: delta, bravo
 
 -- test --
 [% thing.yesterday %]
@@ -290,161 +197,30 @@ Monday
 Tuesday
 
 -- test --
-[% FOREACH [ 1 2 3 4 5 ] %]$thing.tomorrow [% END %]
+[% FOREACH [ 1 2 3 4 5 ] %]$thing.tomorrow [% END %].
 -- expect --
-Wednesday Thursday Friday Saturday Sunday 
-
-
-#------------------------------------------------------------------------
-# test that object returns hash references that contains code or code 
-# references themselves which should then get called by the context.
-#------------------------------------------------------------------------
--- test --
-[% thing.day.prev %]
-[% thing.day.this %]
-[% thing.creed(thing.a thing.b thing.w) %]
--- expect --
-All my troubles seemed so far away...
-Now it looks as though they're here to stay.
-Oh I believe in alpha and bravo and whisky.
-
--- test --
-Yesterday, $thing.day.prev
-$thing.day.this
-${thing.creed('yesterday')}
--- expect --
-Yesterday, All my troubles seemed so far away...
-Now it looks as though they're here to stay.
-Oh I believe in yesterday.
-
--- test --
-[% thing.creed('fish' 'chips') %]
-[% thing.creed %]
--- expect --
-Oh I believe in fish and chips.
-Oh I believe in <nothing>.
-
--- test --
-${thing.creed('fish' 'chips')}
-$thing.creed
--- expect --
-Oh I believe in fish and chips.
-Oh I believe in <nothing>.
-
--- test --
-[% thing.day.next %]
-$thing.day.next
--- expect --
-Monday
-Tuesday
-
--- test --
-[% FOREACH [ 1 2 3 4 5 ] %]$thing.day.next [% END %]
--- expect --
-Wednesday Thursday Friday Saturday Sunday 
-
-
-#------------------------------------------------------------------------
-# test error handling
-#------------------------------------------------------------------------
--- test --
-[% CATCH undef -%]ERROR: $e.info[% END -%]
-[% thing.fail %]
-$thing.fail
--- expect --
-ERROR: fail is undefined
-ERROR: fail is undefined
-
--- test -- 
-[% CATCH barf %]Yeeeuuuukkkk! [$e.info][% END -%] 
-[% thing.puke %]
--- expect -- 
-Yeeeuuuukkkk! [Veni, Vidi, Barfi]
-
--- test --
-[% CATCH barf %]THROWN! [$e.info][% END -%] 
-[% thing.context_throw %]
--- expect --
-THROWN! [We came, we saw, we hurled]
-
--- test --
-[% foo = thing.context_throw %]
-Hello
--- expect --
-THROWN! [We came, we saw, we hurled]
-Hello
-
--- test --
-[% thing.context_throw = 'aaa' %]
-[% thing.context_throw %]
--- expect --
-THROWN! [We came, we saw, we hurled]
-THROWN! [We came, we saw, we hurled]
+Wednesday Thursday Friday Saturday Sunday .
 
 
 #------------------------------------------------------------------------
 # test private methods do not get exposed
 #------------------------------------------------------------------------
 -- test --
-[% thing._private %]
+before[% thing._private %] mid [% thing._hidden %]after
 -- expect --
-ERROR: invalid member name '_private'
-
--- test --
-[% thing._private = 10 %]
--- expect --
-ERROR: invalid member name '_private'
-
+before mid after
 
 -- test --
 [% key = '_private' -%]
-[% thing.${key} %]
+[[% thing.$key %]]
 -- expect --
-ERROR: invalid member name '_private'
+[]
 
 -- test --
 [% key = '.private' -%]
-[% thing.${key} = 'foo' %]
+[[% thing.$key = 'foo' %]]
+[[% thing.$key %]]
 -- expect --
-ERROR: invalid member name '.private'
-
--- test --
-[% other.foo %]
-[% other.Help %]
-
-
--- expect --
-bar
-Help Yourself
-
-
-#------------------------------------------------------------------------
-# test that a regular list returned is converted to a list reference
-#------------------------------------------------------------------------
-
--- test --
-[% FOREACH item = thing.items -%]
-   * [% item %]
-[% END %]
-
--- expect --
-   * foo
-   * bar
-   * baz
-
--- test --
-before
-[% thing.halt %]
-after
-
--- expect --
-before
-
--- test --
-before
-[% thing.halt = 5 %]
-after
-
--- expect --
-before
+[]
+[]
 

@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 1.20 2000/06/14 13:39:05 abw Exp $
+# $Id: ttree,v 2.1 2000/09/12 15:25:15 abw Exp $
 #
 #========================================================================
 
@@ -39,7 +39,7 @@ use File::Basename;
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
@@ -82,26 +82,22 @@ my %ttopts   = $config->varlist('^template_', 1);
 my %ucttopts;
 @ucttopts{ map { uc } keys %ttopts } = values %ttopts;
 
+#print "TT config: ", join(', ', map { "$_ => $ucttopts{ $_ }"} 
+#			     keys %ucttopts), "\n";
+
+# get all template variable definitions
+my $replace = $config->get('define');
+
+#print "replace hash: ", join(', ', map { "$_ => $replace->{ $_ }"} 
+#			     keys %$replace), "\n";
+
 # now create complete parameter hash for creating template processor
 my $ttopts   = {
     %ucttopts,
+    RELATIVE     => 1,
     INCLUDE_PATH => [ @$libdir, '.' ],
     OUTPUT_PATH  => $destdir,
-    ERROR        => \&error,
 };
-
-my $ttdata = {
-    # TODO: this is lava flow...
-    'sys' => { 'time' => sub { time } },
-};
-
-sub error {
-    my $error = join('', @_);
-    chomp $error;
-    print STDERR "  ! $error\n";
-}
-$SIG{__WARN__} = \&error;
-
 
 #------------------------------------------------------------------------
 # pre-amble
@@ -149,7 +145,7 @@ if (@ARGV) {
     # explicitly process files specified on command lines 
     foreach my $file (@ARGV) {
 	print "  + $file\n" if $verbose;
-	$template->process("$file", $ttdata, $file)
+	$template->process("$file", $replace, $file)
 	    || print "  ! ", $template->error(), "\n";
     }
 }
@@ -284,7 +280,7 @@ sub process_file {
 
     # process file
     unless ($dryrun) {
-        $template->process("./$file", $ttdata, $file)
+        $template->process("./$file", $replace, $file)
 	    || print("  ! ", $template->error(), "\n");
 
 	if ($preserve) {
@@ -305,7 +301,7 @@ sub read_config {
     my $file = shift;
 
     my $config = AppConfig->new({ 
-	ERROR => sub { die @_, "\ntry `$NAME --help'\n" }   }, 
+	ERROR  => sub { die @_, "\ntry `$NAME --help'\n" }   }, 
 	'help|h'      => { ACTION => \&help },
 	'src|s=s'     => { EXPAND => EXPAND_ALL },
 	'dest|d=s'    => { EXPAND => EXPAND_ALL },
@@ -317,20 +313,27 @@ sub read_config {
 	'preserve|p'  => { DEFAULT => 0 },
 	'all|a'       => { DEFAULT => 0 },
         'debug|dbg'   => { DEFAULT => 0 },
+	'define=s%',
 	'ignore=s@',
 	'copy=s@',
 	'accept=s@',
-	'template_case|case',
+	'template_anycase|anycase',
 	'template_eval_perl|eval_perl',
 	'template_load_perl|load_perl',
 	'template_interpolate|interpolate',
 	'template_pre_chomp|pre_chomp|prechomp',
 	'template_post_chomp|post_chomp|postchomp',
+	'template_trim|trim',
         'template_pre_process|pre_process|preprocess=s',
         'template_post_process|post_process|postprocess=s',
+        'template_process|process=s',
+        'template_default|default=s',
+        'template_error|error=s',
         'template_start_tag|start_tag|starttag=s',
         'template_end_tag|end_tag|endtag=s',
         'template_tag_style|tag_style|tagstyle=s',
+        'template_compile_ext|compile_ext=s',
+        'template_compile_dir|compile_dir=s',
 	'template_plugin_base|plugin_base|pluginbase=s@',
 	'perl5lib|perllib=s@'
     );
@@ -481,18 +484,25 @@ File search specifications (all may appear multiple times):
    --accept=REGEX           Process only files matching REGEX 
 
 Additional options to set Template Toolkit configuration items:
+   --define var=value       Define template variable
    --interpolate            Interpolate '\$var' references in text
-   --case                   Case sensitivity of reserved words
-   --eval_perl              Evaluate [% PERL %] ... [% END %] code blocks
-   --load_perl              Load regular Perl modules via USE directive
+   --anycase                Accept directive keywords in any case.
    --pre_chomp              Chomp leading whitespace 
    --post_chomp             Chomp trailing whitespace
-   --pre_process=TEMPLATE   Use TEMPLATE as header
-   --post_process=TEMPLATE  Use TEMPLATE as footer
+   --trim                   Trim blank lines around template blocks
+   --eval_perl              Evaluate [% PERL %] ... [% END %] code blocks
+   --load_perl              Load regular Perl modules via USE directive
+   --pre_process=TEMPLATE   Add TEMPLATE as header for each file
+   --post_process=TEMPLATE  Add TEMPLATE as footer for each file
+   --process=TEMPLATE       Use TEMPLATE as wrapper around each file
+   --default=TEMPLATE       Use TEMPLATE as default
+   --error=TEMPLATE         Use TEMPLATE to handle errors
    --start_tag=STRING       STRING defines start of directive tag
    --end_tag=STRING         STRING defined end of directive tag
    --tag_style=STYLE        Use pre-defined tag STYLE    
    --plugin_base=PACKAGE    Base PACKAGE for plugins            
+   --compile_ext=STRING     File extension for compiled template files
+   --compile_dir=DIR        Directory for compiled template files
    --perl5lib=DIR           Specify additional Perl library directories
 
 See 'perldoc ttree' for further information.  Note that earlier versions
@@ -503,6 +513,8 @@ END_OF_HELP
 
     exit(0);
 }
+
+
 
 __END__
 
@@ -592,7 +604,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.20 $
+$Revision: 2.1 $
 
 =head1 COPYRIGHT
 

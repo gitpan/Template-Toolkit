@@ -6,13 +6,13 @@
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: datafile.t,v 1.2 1999/11/25 17:51:23 abw Exp $
+# $Id: datafile.t,v 2.0 2000/08/10 14:56:20 abw Exp $
 #
 #========================================================================
 
@@ -26,7 +26,7 @@ $Template::Test::DEBUG = 0;
 
 my $base   = -d 't' ? 't/test/lib' : 'test/lib';
 my $params = { 
-    datafile => [ "$base/userdata1", "$base/userdata2" ],
+    datafile => [ "$base/udata1", "$base/udata2" ],
 };
 
 test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1 }, $params);

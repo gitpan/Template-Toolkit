@@ -7,118 +7,106 @@
 #   in the Template Toolkit.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#----------------------------------------------------------------------------
+#------------------------------------------------------------------------
 #
-# $Id: Exception.pm,v 1.3 1999/07/28 11:33:01 abw Exp $
+# $Id: Exception.pm,v 2.0 2000/08/10 14:55:59 abw Exp $
 #
-#============================================================================
+#========================================================================
+
 
 package Template::Exception;
 
-require 5.004;
+require 5.005;
 
 use strict;
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
+use constant TYPE  => 0;
+use constant INFO  => 1;
+use constant TEXT  => 2;
+use overload q|""| => "as_string";
 
 
+$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
 
-#========================================================================
-#                      -----  CLASS METHODS -----
-#========================================================================
 
 #------------------------------------------------------------------------
-# new($type, $info, $thrown)
+# new($type, $info, \$text)
 #
 # Constructor method used to instantiate a new Template::Exception
 # object.  The first parameter should contain the exception type.  This
-# can be any arbitrary string of the user's choosing to represent a 
+# can be any arbitrary string of the caller's choice to represent a 
 # specific exception.  The second parameter should contain any 
 # information (i.e. error message or data reference) relevant to the 
-# specific exception event.  The object mantains a state flag, THROWN, 
-# to indicate if it has been thrown by, or through the $context->throw()
-# method.  Exceptions may be returned by template methods, user code, 
-# plugin objects, etc.  Those that have not been thrown are passed to 
-# $context->throw() which may have a relevant handler installed to catch
-# and possibly convert or ignore the error.  The exception is then marked
-# as thrown.  Exceptions that have been thrown will no longer be passed
-# to $context->throw().  The optional third parameter is used to set the
-# THROWN flag as construction time.  This generally happens when an 
-# exception is created by the $context->throw() method and naturally 
-# does not need to see it again.
+# specific exception event.  The third optional parameter may be a 
+# reference to a scalar containing output text from the template 
+# block up to the point where the exception was thrown.
 #------------------------------------------------------------------------
 
 sub new {
-    my ($class, $type, $info, $thrown) = @_;
-    bless {
-	TYPE   => $type,
-	INFO   => $info,
-	THROWN => $thrown,
-    }, $class;
+    my ($class, $type, $info, $textref) = @_;
+    bless [ $type, $info, $textref ], $class;
 }
 
-
-
-#========================================================================
-#                   -----  PUBLIC OBJECT METHODS -----
-#========================================================================
 
 #------------------------------------------------------------------------
 # type()
+# info()
+# type_info()
 #
-# Accessor method to return the internal TYPE value.
+# Accessor methods to return the internal TYPE and INFO fields.
 #------------------------------------------------------------------------
 
 sub type {
-    $_[0]->{ TYPE };
+    $_[0]->[ TYPE ];
 }
-
-
-#------------------------------------------------------------------------
-# info()
-#
-# Accessor method to return the internal INFO value.
-#------------------------------------------------------------------------
 
 sub info {
-    $_[0]->{ INFO };
+    $_[0]->[ INFO ];
 }
-
-
-#------------------------------------------------------------------------
-# type_info()
-#
-# Accessor method to return the internal TYPE and INFO values.
-#------------------------------------------------------------------------
 
 sub type_info {
     my $self = shift;
-    @$self{ qw( TYPE INFO ) };
+    @$self[ TYPE, INFO ];
 }
 
-
 #------------------------------------------------------------------------
-# thrown()
+# text()
+# text(\$pretext)
 #
-# Accessor method to return the internal THROWN flag.  A parameter may 
-# also be provided to update the thrown flag.
+# Method to return the text referenced by the TEXT member.  A text 
+# reference may be passed as a parameter to supercede the existing 
+# member.  The existing text is added to the *end* of the new text
+# before being stored.  This facility is provided for template blocks
+# to gracefully de-nest when an exception occurs and allows them to 
+# reconstruct their output in the correct order. 
 #------------------------------------------------------------------------
 
-sub thrown {
-    my ($self, $flag) = @_;
-    $self->{ THROWN } = $flag
-	if defined $flag;
-    $self->{ THROWN };
+sub text {
+    my ($self, $newtextref) = @_;
+    my $textref = $self->[ TEXT ];
+    
+    if ($newtextref) {
+	$$newtextref .= $$textref if $textref && $textref ne $newtextref;
+	$self->[ TEXT ] = $newtextref;
+	return '';
+	
+    }
+    elsif ($textref) {
+	return $$textref;
+    }
+    else {
+	return '';
+    }
 }
 
 
@@ -131,97 +119,34 @@ sub thrown {
 
 sub as_string {
     my $self = shift;
-    return "$self->{ TYPE } error - $self->{ INFO }";
+    return $self->[ TYPE ] . ' error - ' . $self->[ INFO ];
 }
 
 
-
 #------------------------------------------------------------------------
-# process($context)
-#
-# This method is part of the Template::Directive interface, allowing 
-# Template::Exception objects to be treated as Template::Directive
-# objects.  The method throws itself to the calling context.
+# select_handler(@types)
+# 
+# Selects the most appropriate handler for the exception TYPE, from 
+# the list of types passed in as parameters.  The method returns the
+# item which is an exact match for TYPE or the closest, more 
+# generic handler (e.g. foo being more generic than foo.bar, etc.)
 #------------------------------------------------------------------------
 
-sub process {
-    my ($self, $context) = @_;
-    $context->throw($self);
-}
+sub select_handler {
+    my ($self, @options) = @_;
+    my $type = $self->[ TYPE ];
+    my %hlut;
+    @hlut{ @options } = (1) x @options;
 
+    while ($type) {
+	return $type if $hlut{ $type };
 
-
-
-1;
-
-__END__
-
-
-
-=head1 NAME
-
-Template::Exception - exception handling class for the Template Toolkit
-
-=head1 SYNOPSIS
-
-    use Template::Exception;
-
-    my $exception = Template::Exception->new($type, $data);
-
-=head1 DESCRIPTION
-
-The Template::Exception module defines an object class for representing
-exceptional conditions (i.e. errors) within the template processing 
-life cycle.  Exceptions can be raised by modules within the Template 
-Toolkit, or can be generated and returned by user code bound to template
-variables.
-
-User code bound to template stash variables is expected to return a 
-single C<$value> or a pair of C<($value, $error)>.  The $error code
-may be a numerical value represented by one of the Template::Constant
-STATUS_XXXX constants.  User code may "throw" an exception to the 
-calling context, or throw the exception type and information fields
-so that an exception can be constructed.  The context will then handle 
-the exception in some way and return a value which can be propogated
-back to the caller.  Depending on the presence of a CATCH for the 
-exception type, that value may be the exception itself or some 
-other status value.
-
-    sub my_code {
-        my ($context = shift);
-	
-	# blah, blah, blah...
-
-	if ($database_has_exploded) {
-	    return (undef, $context->throw("database", $database_error));
-	}
-	else {
-	    return $value;
-	}
+	# strip .element from the end of the exception type to find a 
+	# more generic handler
+	$type =~ s/\.?[^\.]*$//;
     }
-
-    $template->process($my_file, { 'magic' => \&my_code })
-	|| die $template->error(); 
-
-=head1 AUTHOR
-
-Andy Wardley E<lt>cre.canon.co.ukE<gt>
-
-=head1 REVISION
-
-$Revision: 1.3 $
-
-=head1 COPYRIGHT
-
-Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-
-This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
-
-=head1 SEE ALSO
-
-L<Template>
-
-=cut
+    return undef;
+}
+    
+1;
 

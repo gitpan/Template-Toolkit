@@ -2,17 +2,17 @@
 #
 # t/macro.t
 #
-# Template script testing MACRO directive
+# Template script testing the MACRO directives.
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
+# Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: macro.t,v 1.4 1999/11/25 17:51:26 abw Exp $
+# $Id: macro.t,v 2.0 2000/08/10 14:56:27 abw Exp $
 #
 #========================================================================
 
@@ -21,150 +21,104 @@ use lib qw( ../lib );
 use Template::Test;
 $^W = 1;
 
-$Template::Test::DEBUG = 0;
-
-my ($a, $b, $c, $d, $w) = qw( alpha bravo charlie delta whisky );
-my $params = {
-    'a'    => $a,
-    'b'    => $b,
-    'c'    => $c,
-    'd'    => $d,
-    'w'    => $w,
+my $config = {
+    INCLUDE_PATH => -d 't' ? 't/test/src' : 'test/src',
+    TRIM => 1,
 };
 
-my $template = Template->new({
-	INTERPOLATE => 1,
-	POST_CHOMP  => 1,
-});
-
-test_expect(\*DATA, $template, $params);
+test_expect(\*DATA, $config, &callsign);
 
 __DATA__
-Defining macro
-[% MACRO foo INCLUDE header %]
-Defined macro
+-- test --
+[% MACRO foo INCLUDE foo -%]
+foo: [% foo %]
+foo(b): [% foo(a = b) %]
+-- expect --
+foo: This is the foo file, a is alpha
+foo(b): This is the foo file, a is bravo
 
-Calling macro
-[% foo %]
-Done
+-- test --
+foo: [% foo %].
+-- expect --
+foo: .
 
-[% BLOCK header %]
-This is the header
+-- test --
+[% MACRO foo(a) INCLUDE foo -%]
+foo: [% foo %]
+foo(c): [% foo(c) %]
+-- expect --
+foo: This is the foo file, a is
+foo(c): This is the foo file, a is charlie
+
+
+-- test --
+[% BLOCK mypage %]
+Header
+[% content %]
+Footer
 [% END %]
 
--- expect --
-Defining macro
-Defined macro
+[%- MACRO content BLOCK -%]
+This is a macro which encapsulates a template block.
+a: [% a -%]
+[% END -%]
 
-Calling macro
-This is the header
-Done
+begin
+[% INCLUDE mypage %]
+mid
+[% INCLUDE mypage a = 'New Alpha' %]
+end
+-- expect --
+begin
+Header
+This is a macro which encapsulates a template block.
+a: alpha
+Footer
+mid
+Header
+This is a macro which encapsulates a template block.
+a: New Alpha
+Footer
+end
 
 -- test --
-[% MACRO header IF graphics %]
-   Graphics are enabled!
-[% ELSE %]
-   Graphics are not enabled!
-[% END %]
-macro 'header' defined
-calling header
-[% header %]
-[% graphics = 1 %]
-calling header having set graphics on
-[% header %]
-done
+[% BLOCK table %]
+<table>
+[% rows %]
+</table>
+[% END -%]
 
--- expect --
-macro 'header' defined
-calling header
-   Graphics are not enabled!
-calling header having set graphics on
-   Graphics are enabled!
-done
+[% # define some dummy data
+   udata = [
+      { id => 'foo', name => 'Fubar' },
+      { id => 'bar', name => 'Babar' }
+   ] 
+-%]
 
-
--- test --
-[% CATCH %]ERROR: [% e.type %]: [% e.info %][% END %]
-[% MACRO zoom INCLUDE lord_lucan %]
-starting
-[% zoom +%]
-done
-
--- expect --
-starting
-ERROR: file: lord_lucan: not found
-done
-
-
--- test --
-[% MACRO p "value of a is [$a]  value of b is [$b]" %]
-[% p +%]
-[% p(10) +%]
-[% p(a = 'abw') +%]
-[% alpha %]
-
--- expect --
-value of a is [alpha]  value of b is [bravo]
-value of a is [alpha]  value of b is [bravo]
-value of a is [abw]  value of b is [bravo]
-
--- test --
-[% MACRO header(t) INCLUDE header title="Happy Header: $t" %]
-[% header %]
-[% header() %]
-[% header('Hello') %]
-[% header('New Title', a = 'abw') %]
-
-[% BLOCK header %]
-Header ([% title %]) a: [% a +%]
-[% END %]
-
--- expect --
-Header (Happy Header: ) a: alpha
-Header (Happy Header: ) a: alpha
-Header (Happy Header: Hello) a: alpha
-Header (Happy Header: New Title) a: abw
-
--- test --
-[% MACRO url(host,page,port) 
-     IF port; "http://$host:$port/$page";
-     ELSE;    "http://$host/$page";
-     END 
+[% # define a macro to print each row of user data
+   MACRO user_summary INCLUDE user_row FOREACH user = udata 
 %]
-[% url('www.foo.com', 'index.html')      +%]
-[% url('www.bar.com', 'help.html', 8080) +%]
 
+[% # here's the block for each row
+   BLOCK user_row %]
+<tr>
+  <td>[% user.id %]</td>
+  <td>[% user.name %]</td>
+</tr>
+[% END -%]
+
+[% # now we can call the main table template, and alias our macro to 'rows' 
+   INCLUDE table 
+     rows = user_summary
+%]
 -- expect --
-http://www.foo.com/index.html
-http://www.bar.com:8080/help.html
+<table>
+<tr>
+  <td>foo</td>
+  <td>Fubar</td>
+</tr><tr>
+  <td>bar</td>
+  <td>Babar</td>
+</tr>
+</table>
 
--- test --
-[% MACRO letter BLOCK %]
-Dear $name,
-
-I hope you are ${whatever}.
-[% END %]
-[% letter(name='Aunt Maud'  whatever='feeling well') %]
-
-[% letter(name='Bill Gates' whatever='sick as a parrot') %]
-
--- expect --
-
-Dear Aunt Maud,
-
-I hope you are feeling well.
-
-Dear Bill Gates,
-
-I hope you are sick as a parrot.
-
-
--- test --
-[% MACRO z a %]
-z: [% z %]
-[% a = b +%]
-z: [% z %]
-
--- expect --
-z: alpha
-z: bravo

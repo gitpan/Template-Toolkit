@@ -1,290 +1,393 @@
+#============================================================= -*-Perl-*-
+#
+# Parser.yp
+#
+# DESCRIPTION
+#   Definition of the parser grammar for the Template Toolkit language.
+#
+# AUTHOR
+#   Andy Wardley <abw@kfs.org> 
+#
+# HISTORY
+#   Totally re-written for version 2, based on Doug Steinwand's 
+#   implementation which compiles templates to Perl code.  The generated
+#   code is _considerably_ faster, more portable and easier to process.
+#
+# WARNINGS
+#   Expect 1 reduce/reduce conflict.  This can safely be ignored.
+#
+# COPYRIGHT
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#------------------------------------------------------------------------
+#
+# NOTE: this module is constructed from the parser/Grammar.pm.skel
+# file by running the parser/yc script.  You only need to do this if 
+# you have modified the grammar in the parser/Parser.yp file and need
+# to-recompile it.  See the README in the 'parser' directory for more
+# information (sub-directory of the Template distribution).
+#
+#------------------------------------------------------------------------
+#
+# $Id: Parser.yp,v 2.2 2000/09/12 15:25:22 abw Exp $
+#
+#========================================================================
+
+%right ASSIGN
+%right '?' ':'
 %left COMMA
 %left AND OR
 %left NOT
 %left DOT
-%left COMPOP
+%left CMPOP
 %left BINOP
+%left '/'
+%left DIV
+%left MOD
 %left TO 
-#STEP
-
 %%
 
-#------------------------------------------------------------------------
+#--------------------------------------------------------------------------
 # START AND TOP-LEVEL RULES
-#------------------------------------------------------------------------
+#--------------------------------------------------------------------------
 
-block:	    chunks	    	{ $factory->create(Block => $_[1])      }
-	|   /* NULL */	    	{ $factory->create(Block => [])         }
+template:   block		    { $factory->template($_[1])           }
 ;
 
-chunks:	    chunks chunk	{ push(@{$_[1]}, $_[2]) if defined $_[2];
-				   $_[1]                                }
-	|   chunk		{ defined $_[1] ? [ $_[1] ] : [ ]       }
+block:	    chunks		    { $factory->block($_[1])              }
+	|   /* NULL */		    { $factory->block()                   }
 ;
 
-chunk:	    TEXT            	{ $factory->create(Text => $_[1])       }
-	|   directive ';'
+chunks:	    chunks chunk	    { push(@{$_[1]}, $_[2]) 
+					if defined $_[2]; $_[1]           }
+	|   chunk		    { defined $_[1] ? [ $_[1] ] : [ ]     }
 ;
 
-directive:  atomdir
-	|   catch
-	|   condition
-	|   loop
+chunk:	    TEXT		    { $factory->textblock($_[1])          }
+	|   statement ';'
+;
+
+                          # { "#line ${$_[0]->{LINE} \"template\"\n$_[1]" }
+statement:  directive      
 	|   defblock
-	|   perl
+	|   anonblock
+	|   capture
 	|   macro
-	|   userdef
-	|   debug
-	|   /* NULL - empty directive */
+	|   use       
+	|   rawperl
+	|   expr		    { $factory->get($_[1])                }
+	|   META metadata 	    { $_[0]->add_metadata($_[2]);         }
+	|   /* empty statement */
+;
+
+directive:  setlist		    { $factory->set($_[1])                }
+	|   atomdir
+	|   condition
+	|   switch
+	|   loop
+	|   try
+	|   perl
 ;
 
 
-#------------------------------------------------------------------------
+#--------------------------------------------------------------------------
 # DIRECTIVE RULES
-#------------------------------------------------------------------------
+#--------------------------------------------------------------------------
 
-atomdir:    GET  term	    	{ $factory->create(Get     => $_[2])    }
-	|   CALL term	    	{ $factory->create(Call    => $_[2])    }
-	|   SET setlist    	{ $factory->create(Set     => $_[2])    }
-	|   DEFAULT setlist     { unshift(@{$_[2]}, OP_DEFAULT);
-				  $factory->create(Set     => $_[2])    }
-	|   USE useparam    	{ $factory->create(Use     => @{$_[2]}) }
-	|   INCLUDE file setopt { $factory->create(Include => @_[2,3])  }
-	|   PROCESS file setopt { $factory->create(Process => @_[2,3])  }
-	|   THROW textdot term  { $factory->create(Throw   => @_[2,3])  }
-	|   ERROR term	    	{ $factory->create(Error   => $_[2])    }
-	|   return		{ $factory->create(Return  => $_[1])    }
-	|   setlist		{ $factory->create(Set     => $_[1])    }
-	|   term		{ $factory->create(Get     => $_[1])    }
-	|   filter	          /* permits filter chaining */
+atomexpr:   expr		    { $factory->get($_[1])                }
+	|   atomdir
 ;
 
-return:	    RETURN		{ STATUS_RETURN }
-	|   STOP		{ STATUS_STOP   }
-	|   BREAK		{ STATUS_DONE   }
-;
-
-catch:	    CATCH textdot ';' 
-	      block END		{ $factory->create(Catch =>, @_[2, 4])    }
-	|   CATCH ';' 
-	      block END		{ $factory->create(Catch => undef, $_[3]) }
+atomdir:    GET expr		    { $factory->get($_[2])                }
+	|   CALL expr		    { $factory->call($_[2])               }
+	|   SET setlist    	    { $factory->set($_[2])                }
+	|   DEFAULT setlist         { $factory->default($_[2])            }
+	|   INSERT nameargs         { $factory->insert($_[2])             }
+	|   INCLUDE nameargs	    { $factory->include($_[2])            }
+	|   PROCESS nameargs	    { $factory->process($_[2])            }
+	|   THROW nameargs          { $factory->throw($_[2])              }
+	|   RETURN		    { $factory->return()                  }
+	|   STOP		    { $factory->stop()                    }
+	|   CLEAR                   { "\$output = '';";                   }
+	|   BREAK                   { 'last;'                             }
+	|   NEXT		    { $_[0]->{ INFOR }
+					? $factory->next()
+				        : 'next;'                         }
+        |   wrapper
+	|   filter
 ;
 
 condition:  IF expr ';' 
-	      block else END    { $factory->create(If => @_[2, 4, 5])   }
-	|   atomdir IF expr	{ $factory->create(If => @_[3, 1])      }
-	|   UNLESS expr ';'       # Wayne's World.... NOT!
-	      block else END    { push(@{$_[2]}, OP_NOT);
-				  $factory->create(If => @_[2, 4, 5])   }
-	|   atomdir UNLESS expr { push(@{$_[3]}, OP_NOT);
-				  $factory->create(If => @_[3, 1])      }
+	      block else END	    { $factory->if(@_[2, 4, 5])           }
+	|   atomexpr IF expr	    { $factory->if(@_[3, 1])              }
+	|   UNLESS expr ';'
+	      block else END	    { $factory->if("!($_[2])", @_[4, 5])  }
+	|   atomexpr UNLESS expr    { $factory->if("!($_[3])", $_[1])     }
 ;
 
-else:	    ELSE ';' block      { $_[3]                                 }
-	|   ELSIF expr ';' 
-	      block else        { $factory->create(If => @_[2, 4, 5])   }
+else:	    ELSIF expr ';' 
+	      block else	    { unshift(@{$_[5]}, [ @_[2, 4] ]);
+				      $_[5];                              }
+	|   ELSE ';' block	    { [ $_[3] ]                           }
+	|   /* NULL */              { [ undef ]                           }
+;
+
+switch:	    SWITCH expr ';' 
+	      block case END	    { $factory->switch(@_[2, 5])          } 
+;
+
+case:	    CASE term ';' block
+	      case		    { unshift(@{$_[5]}, [ @_[2, 4] ]); 
+				      $_[5];                              }
+	|   CASE DEFAULT ';' block  { [ $_[4] ]                           }
+	|   CASE ';' block	    { [ $_[3] ]                           }
+	|   /* NULL */		    { [ undef ]                           }
+;
+
+loop:	    FOR loopvar ';'         { $_[0]->{ INFOR }++                  }
+		block END	    { $_[0]->{ INFOR }--;
+				      $factory->foreach(@{$_[2]}, $_[5])  }
+#loop:	    FOR loopvar ';'
+#		block END	    { $factory->foreach(@{$_[2]}, $_[4])  }
+	|   atomexpr FOR loopvar    { $factory->foreach(@{$_[3]}, $_[1])  }
+	|   WHILE expr ';' 
+	      block END		    { $factory->while(@_[2, 4])           }
+	|   atomexpr WHILE expr	    { $factory->while(@_[3, 1])           }
+;
+
+loopvar:    IDENT ASSIGN term args  { [ @_[1, 3, 4] ]                     }
+	|   term args               { [ 0, @_[1, 2] ]                     }
+;
+
+wrapper:    WRAPPER nameargs ';'
+	      block END		    { $factory->wrapper(@_[2, 4])         }
+	|   atomexpr 
+	      WRAPPER nameargs	    { $factory->wrapper(@_[3, 1])         }
+;
+
+try:	    TRY ';' 
+	      block final END	    { $factory->try(@_[3, 4])             }
+;
+
+final:	    CATCH filename ';'	
+	      block final	    { unshift(@{$_[5]}, [ @_[2,4] ]);
+				      $_[5];                              }
+	|   CATCH DEFAULT ';'
+	      block final	    { unshift(@{$_[5]}, [ undef, $_[4] ]);
+				      $_[4];                              }
+	|   CATCH ';'
+	      block final	    { unshift(@{$_[4]}, [ undef, $_[3] ]);
+				      $_[4];                              }
+	|    FINAL ';' block	    { [ $_[3] ]                           }
+	|   /* NULL */		    { [ 0 ] } # no final
+;
+
+use:	    USE lnameargs	    { $factory->use($_[2])                }
+;
+
+perl:	    PERL ';'                { ${$_[0]->{ INPERL }}++;             }
+	      block END		    { ${$_[0]->{ INPERL }}--;
+				      $_[0]->{ EVAL_PERL } 
+				      ? $factory->perl($_[4])             
+				      : $factory->no_perl();              }
+;
+
+rawperl:    RAWPERL                 { ${$_[0]->{ INPERL }}++; 
+				      $rawstart = ${$_[0]->{'LINE'}};     }
+	    ';' TEXT END	    { ${$_[0]->{ INPERL }}--;
+				      $_[0]->{ EVAL_PERL } 
+				      ? $factory->rawperl($_[4], $rawstart)
+				      : $factory->no_perl();              }
+;
+
+filter:	    FILTER lnameargs ';' 
+	      block END		    { $factory->filter(@_[2,4])           }
+	|   atomexpr FILTER 
+	      lnameargs		    { $factory->filter(@_[3,1])           }
+;
+
+defblock:   BLOCK filename ';' 
+	      template END	    { $_[0]->define_block(@_[2, 4]); 
+				      undef                               }
+;
+
+anonblock:  BLOCK ';' block END	    { $factory->anon_block($_[3])         }
+;
+
+capture:    ident ASSIGN mdir	    { $factory->capture(@_[1, 3])         }
+;
+
+macro:      MACRO IDENT '(' margs ')'
+		mdir                { $factory->macro(@_[2, 6, 4])        }
+	|   MACRO IDENT mdir        { $factory->macro(@_[2, 3])           }
+;
+
+mdir:	    directive
+	|   BLOCK ';' block END	    { $_[3]                               }
+;
+
+margs:	    margs IDENT		    { push(@{$_[1]}, $_[2]); $_[1]        }
+	|   margs COMMA             { $_[1]                               }
+	|   IDENT                   { [ $_[1] ]                           }
+;
+
+metadata:   metadata meta	    { push(@{$_[1]}, @{$_[2]}); $_[1]     }
+	|   metadata COMMA
+	|   meta
+;
+
+meta:	    IDENT ASSIGN LITERAL       { for ($_[3]) { s/^'//; s/'$// }; 
+					 [ @_[1,3] ] }
+	|   IDENT ASSIGN '"' TEXT '"'  { [ @_[1,4] ] } 
+	|   IDENT ASSIGN NUMBER        { [ @_[1,3] ] }
+;
+
+
+#--------------------------------------------------------------------------
+# FUNDAMENTAL ELEMENT RULES
+#--------------------------------------------------------------------------
+
+term:	    lterm
+	|   sterm
+;
+
+lterm:	    '[' list  ']'	    { "[ $_[2] ]"                         }
+	|   '[' range ']'           { "[ $_[2] ]"                         }
+	|   '{' hash  '}'	    { "{ $_[2] }"                         }
+;
+
+sterm:	    ident		    { $factory->ident($_[1])              }
+	|   REF ident               { $factory->identref($_[2])           }
+	|   '"' quoted '"'	    { $factory->quoted($_[2])             }
+	|   LITERAL
+	|   NUMBER
+;
+
+list:	    list term		    { "$_[1], $_[2]"                      }
+	|   list COMMA
+	|   term
+;
+
+range:	    sterm TO sterm	    { $_[1] . '..' . $_[3]                }
+;
+
+
+hash:	    params
 	|   /* NULL */
 ;
 
-loop:	    FOR loopvar ';' 
-	      block END		{ $factory->create(For => @{$_[2]}, $_[4]) }
-	|   atomdir FOR loopvar { $factory->create(For => @{$_[3]}, $_[1]) }
-	|   WHILE expr ';' 
-	      block END	    	{ $factory->create(While  => @_[2, 4])   }
-	|   atomdir WHILE expr  { $factory->create(While  => @_[3, 1])   }
+params:	    params param	    { "$_[1], $_[2]"                      }
+	|   params COMMA
+	|   param
 ;
 
-loopvar:    IDENT ASSIGN term args  
-				{ [ @_[1, 3, 4] ]     }
-	|   IDENT ASSIGN term COMMA args  
-				{ [ @_[1, 3, 5] ]     }
-	|   term args           { [ undef, @_[1, 2] ] }
-	|   term COMMA args     { [ undef, @_[1, 3] ] }
+param:	    LITERAL ASSIGN term	    { "$_[1] => $_[3]"                    }
+	|   IDENT ASSIGN term	    { "'$_[1]' => $_[3]"                  }
 ;
 
-filter:	    FILTER useparam ';' 
-	      block END	    { $factory->create(Filter => @{$_[2]}, $_[4]) }
-	|   atomdir FILTER useparam  
-			    { $factory->create(Filter => @{$_[3]}, $_[1]) }
+ident:      ident DOT node	    { push(@{$_[1]}, @{$_[3]}); $_[1]     }
+	|   ident DOT NUMBER	    { push(@{$_[1]}, $_[3], 0); $_[1]     }
+	|   node     
 ;
 
-defblock:   BLOCK textdot ';' 
-	      block END	    	{ $_[0]->define_block(@_[2, 4]); undef  }
-	|   BLOCK ';' 
-	      block END	    	{ $_[3] }
+node:	    item		    { [ $_[1], 0 ]                        }
+	|   item '(' args ')'	    { [ $_[1], $factory->args($_[3]) ]    }
 ;
 
-perl:	    PERL ';'
-	      block END		{ $factory->create(Perl  => $_[3]) }
+item:	    IDENT		    { "'$_[1]'"                           }
+	|   '${' sterm '}'	    { $_[2]                               }
+	|   '$' IDENT		    { $_[0]->{ V1DOLLAR }
+				       ? "'$_[2]'" 
+				       : $factory->ident(["'$_[2]'", 0])  }
 ;
 
-macro:	    MACRO IDENT directive 
-				{ $factory->create(Macro => @_[2, 3])    }
-	|   MACRO IDENT '(' mlist ')' directive 
-				{ $factory->create(Macro => @_[2, 6, 4]) }
-;
-
-userdef:    UDIR                { $factory->create(Userdef => $_[1])     }
-        |   UBLOCK ';'
-		block END       { $factory->create(Userdef => @_[1, 3])  }
-;
-
-debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2])       }
-;
-
-
-#------------------------------------------------------------------------
-# FUNDAMENTAL ELEMENT RULES
-#------------------------------------------------------------------------
-
-term:       LITERAL			{ [ OP_LITERAL, $_[1]    ] }
-	|   ident			{ [ OP_IDENT,   $_[1]    ] }
-	|   REF ident                   { [ OP_REF,     $_[2]    ] }
-	|   '[' range ']'		{ [ OP_RANGE,   $_[2]    ] }
-	|   '[' list ']'		{ [ OP_LIST,    $_[2]    ] }
-	|   '[' list ']' '(' args ')'	{ [ OP_ITER,    @_[2, 5] ] }
-	|   '{' params '}'		{ [ OP_HASH,    $_[2]    ] }
-	|   '"' quoted '"'		{ [ OP_QUOTE,   $_[2]    ] }
-	|   term BINOP term             { push(@{$_[1]}, @{$_[3]}, 
-						OP_BINOP, $_[2]); $_[1]  }
-;
-
-
-ident:	    ident DOT item		{ push(@{$_[1]}, $_[3]); $_[1] }
-	|   ident DOT LITERAL		{ push(@{$_[1]}, [ $_[3], 0 ]); $_[1] }
-	|   item			{ [ $_[1] ] }
-	|   '$' item			{ [ $_[2] ] }
-;
-
-item:	    '${' term '}'		{ [ $_[2], 0 ] } 
-	|   '${' term '}' '(' args ')'  { [ @_[2, 5] ] } 
-	|   IDENT '(' args ')'		{ [ @_[1, 3] ] }
-	|   IDENT			{ [ $_[1], 0 ] }
-;
-
-assign:	    ident ASSIGN term		{ push(@{$_[3]}, OP_ASSIGN, $_[1]);
-					  $_[3] }
-	|   LITERAL ASSIGN term		{ push(@{$_[3]}, OP_ASSIGN, $_[1]);
-					  $_[3] }
-;
-
-list:	    list term			{ push(@{$_[1]}, $_[2]); $_[1] }
-	|   list COMMA                  { $_[1] }
-	|   term			{ [ $_[1] ] }
-;
-
-setlist:    setlist assign		{ push(@{$_[1]}, @{$_[2]}); $_[1] }
-	|   setlist COMMA		{ $_[1] }
-	|   assign
-;
-
-setopt:	    setlist
-	|   /* NULL */			{ [ ] }
-;
-
-range:	    term TO term		{ [ @_[1, 3] ] }
-#	|   term TO term 
-#	      STEP term 		{ [ @_[1, 3, 5] ] }
-;
-
-param:      LITERAL ASSIGN term         { [ $_[1], $_[3] ] }
-	|   IDENT ASSIGN term           { [ $_[1], $_[3] ] }
-;
-
-paramlist:  paramlist param		{ push(@{$_[1]}, $_[2]); $_[1] }
-	|   paramlist COMMA		{ $_[1] }
-	|   param			{ [ $_[1] ] }
-;
-
-params:	    paramlist
-	|   /* NULL */			{ [ ] }
-;
-
-arg:	    param
-	|   term			{ [ 0, $_[1] ] }
-;
-
-arglist:    arglist arg			{ push(@{$_[1]}, $_[2]); $_[1] }
-	|   arglist COMMA		{ $_[1] }
-	|   arg				{ [ $_[1] ] }
-;
-
-args:	    arglist			{ [ OP_ARGS, $_[1] ]  }
-	|   /* NULL */			{ [ OP_ARGS, [ ] ] }
-;
-
-# list of macro arguments
-mlist:	    mlist IDENT			{ push(@{$_[1]}, $_[2]); $_[1] }
-	|   mlist COMMA                 { $_[1] }
-	|   IDENT                       { [ $_[1] ] }
-;
-
-expr:	    expr COMPOP expr		{ push(@{$_[1]}, @{$_[3]}, 
-						OP_BINOP, $_[2]); $_[1]  }
-	|   expr AND expr		{ push(@{$_[1]}, OP_AND, $_[3]); 
-					  $_[1]                          }
-	|   expr OR expr		{ push(@{$_[1]}, OP_OR, $_[3]);
-					  $_[1]                          }
-	|   NOT expr			{ push(@{$_[2]}, OP_NOT);
-					  $_[2]                          }
-	|   '(' expr ')'		{ $_[2]                          }
-	|   assign
+expr:	    expr BINOP expr	    { "$_[1] $_[2] $_[3]"                 }
+	|   expr '/' expr	    { "$_[1] $_[2] $_[3]"                 }
+	|   expr DIV expr	    { "int($_[1] / $_[3])"                }
+	|   expr MOD expr	    { "$_[1] % $_[3]"                     }
+	|   expr CMPOP expr	    { "$_[1] $CMPOP{ $_[2] } $_[3]"       }
+	|   expr AND expr	    { "($_[1]) && ($_[3])"                }
+	|   expr OR expr	    { "($_[1]) || ($_[3])"                }
+	|   NOT expr		    { "!($_[2])"                          }
+	|   expr '?' expr ':' expr  { "(($_[1]) ? ($_[3]) : ($_[5]))"     }
+	|   '(' assign ')'	    { $factory->assign(@{$_[2]})          }
+	|   '(' expr ')'	    { "($_[2])"                           }
 	|   term		
 ;
 
-
-# this is a special case parameter used by INCLUDE, PROCESS, etc., which 
-# interprets barewords as quoted strings rather than variable identifiers;
-# a leading '$' is used to explicitly specify a variable.  It permits '/'
-# and '.' characters, allowing it to be used to specify filenames sans quotes
-file:	    '$' ident			{ [ OP_IDENT, $_[2] ] }
-	|   '"' quoted '"'		{ [ OP_QUOTE, $_[2] ] }
-	|   '/' textdot                 { '/' . $_[2]         }
-	|   textdot			
-	|   LITERAL			
+setlist:    setlist assign	    { push(@{$_[1]}, @{$_[2]}); $_[1]     }
+	|   setlist COMMA
+	|   assign
 ;
 
-# concatenates a sequence of identifiers, periods and/or slashes into 
-# a single string
-textdot:    textdot DOT IDENT		{ $_[1] .= "$_[2]$_[3]"; $_[1] }
-	|   textdot '/' IDENT		{ $_[1] .= "$_[2]$_[3]"; $_[1] }
-	|   IDENT
+
+assign:	    ident ASSIGN expr	    { [ $_[1], $_[3] ]                    }
+	|   LITERAL ASSIGN expr	    { [ @_[1,3] ]                         }
 ;
 
-# useparam is used by USE, FILTER, etc., to specify optional params
-# after a textdot option, 
-useparam:  IDENT ASSIGN textdot '(' args ')'	{ [ @_[3, 5, 1]         ] }
-	|  IDENT ASSIGN textdot			{ [ $_[3], undef, $_[1] ] }
-	|  textdot '(' args ')'			{ [ $_[1], $_[3], undef ] }
-	|  textdot				{ [ $_[1], undef, undef ] }
+# The 'args' production constructs a list of named and positional 
+# parameters.  Named parameters are stored in a list in element 0 
+# of the args list.  Remaining elements contain positional parameters
+
+args:	    args term		    { push(@{$_[1]}, $_[2]); $_[1]        }
+	|   args param              { push(@{$_[1]->[0]}, $_[2]); $_[1]   }
+	|   args COMMA		    { $_[1]                               }
+	|   /* init */		    { [ [ ] ]                             }
 ;
 
-# constructs an array containing the contents of an explicitly quoted
-# string consisting of text and/or embedded variable references.
-# we ignore undef generated by ';' separator in 'quotable' rule below
-quoted:	    quoted quotable 		{ push(@{$_[1]}, $_[2])
-						if defined $_[2]; $_[1] }
-	|   /* NULL */	        	{ [ ] }
+
+# These are special case parameters used by INCLUDE, PROCESS, etc., which 
+# interpret barewords as quoted strings rather than variable identifiers;
+# a leading '$' is used to explicitly specify a variable.  It permits '/',
+# '.' and '::' characters, allowing it to be used to specify filenames, etc.
+# without requiring quoting.
+
+lnameargs:  lvalue ASSIGN nameargs  { push(@{$_[3]}, $_[1]); $_[3]        }
+	|   nameargs
 ;
 
-# the tokeniser adds an explicit ';' after each directive it finds to help
-# the parser identify directive/text boundaries;  we're not interested in 
+lvalue:	    item
+	|   '"' quoted '"'	    { $factory->quoted($_[2])             }
+	|   LITERAL
+;
+	
+nameargs:   '$' ident args	    { [ $factory->ident($_[2]), $_[3] ]   }
+	|   '"' quoted '"' args	    { [ $factory->quoted($_[2]), $_[4] ]  }
+	|   LITERAL args	    { [   $_[1],   $_[2] ]                }
+	|   filename '(' args ')'   { [ "'$_[1]'", $_[3] ]                }
+	|   filename args	    { [ "'$_[1]'", $_[2] ]                }
+;
+
+filename:   filename DOT filepart   { "$_[1].$_[3]"                       }
+	|   filepart
+;
+
+filepart: FILENAME | IDENT | NUMBER
+;
+
+
+# The 'quoted' production builds a list of 'quotable' items that might
+# appear in a quoted string, namely text and identifiers.  The lexer
+# adds an explicit ';' after each directive it finds to help the
+# parser identify directive/text boundaries; we're not interested in
 # them here so we can simply accept and ignore by returning undef
-quotable:   ident			{ [ OP_IDENT,   $_[1] ] } 
-	|   TEXT			{ [ OP_LITERAL, $_[1] ] }
-	|   ';'		        	{ undef }
+
+quoted:	    quoted quotable	    { push(@{$_[1]}, $_[2]) 
+				          if defined $_[2]; $_[1]         }
+	|   /* NULL */		    { [ ]                                 }
+;
+
+quotable:   ident		    { $factory->ident($_[1])              }
+	|   TEXT		    { $factory->text($_[1])               }
+	|   ';'		            { undef                               }
 ;
 
 
 %%
-
-
-
-
-
-
-
-
 
 
 

@@ -7,229 +7,173 @@
 #   Toolkit.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.54 2000/05/19 09:38:23 abw Exp $
+#   $Id: Template.pm,v 2.1 2000/09/12 15:25:18 abw Exp $
 #
 #========================================================================
  
 package Template;
+use base qw( Template::Base );
 
-require 5.004;
+require 5.005;
 
 use strict;
-use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS $AUTOLOAD );
-use Exporter;
-use Template::Constants qw( :all );
-use Template::Context;
+use vars qw( $VERSION $AUTOLOAD $ERROR $DEBUG );
+use Template::Base;
+use Template::Config;
+use Template::Provider;  
+use Template::Service;
+use File::Basename;
+use File::Path;
+# use Template::Parser;    # autoloaded on demand
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '1.07';
-
-@ISA         = qw( Exporter );
-*EXPORT_OK   = \@Template::Constants::EXPORT_OK;
-*EXPORT_TAGS = \%Template::Constants::EXPORT_TAGS;
+$VERSION     = '2.00-beta4';
+$ERROR       = '';
+$DEBUG       = 0;
 
 
 #------------------------------------------------------------------------
-# new(\%config)
+# process($input, \%replace, $output)
 #
-# Constructor method.  Returns a reference to a newly created Template 
-# object which can be configured by passing a hash reference parameter.
-# A Template::Context object is created and stored internally for future
-# delegtion.
-#------------------------------------------------------------------------
-
-sub new {
-    my ($class, $params) = @_;
-    my ($context, $error);
-
-    # create a Context object and check for any errors raised during 
-    # the process (i.e. a file open error for an OUTPUT or ERROR redirect)
-    $context = $params->{ CONTEXT } ||= Template::Context->new($params);
-    if ($error = $context->{ _ERROR }) {
-	$error = ref($error) ? $error->as_string() : $error;
-    }
-
-    my $self = bless {
-	%$params,
-	_ERROR => $error,
-    }, $class;
-}
-
-
-#------------------------------------------------------------------------
-# process($template, \%params, $output, $errout)
-#
-# Main template processing method which delegates to the Context
-# process() method.  The first parameter denotes the template
-# filename, handle, etc.  This is processed in a localised variable
-# namespace, implemented by calling the context localise() and
-# delocalise() methods, passing any additional variables defined in
-# the $params hash ref.  Any PRE_PROCESS and POST_PROCESS templates
-# will be processed immediately before and after the main template.
-# The $output and $errout parameters may be provided to indicate
-# destinations for this template file.  Temporary redirections are
-# made to these locations for the processing of this template.
-#
-# The method returns 1 if the template was successfully processed.  On
-# error, 0 is returned and error() can be called to return the error
-# message.
+# Main entry point for the Template Toolkit.  The Template module 
+# delegates most of the processing effort to the underlying SERVICE
+# object, an instance of the Template::Service class.  
 #------------------------------------------------------------------------
 
 sub process {
-    my ($self, $template, $params, $output, $errout) = @_;
-    my ($context, $preproc, $postproc) = @$self{ 
-	qw( CONTEXT PRE_PROCESS POST_PROCESS ) };
-    my ($old_out, $old_err, $error);
+    my ($self, $template, $vars, $outstream) = @_;
+    my ($output, $error);
 
-    # set up output and/or error redirections if supplied as parameters
-    if ($output) {
-	($old_out, $error) = $context->redirect(TEMPLATE_OUTPUT, $output);
-    }
-    if ($errout && ! $error) {
-	($old_err, $error) = $context->redirect(TEMPLATE_ERROR, $errout);
-	# restore original output handler if error handler install failed
-	$context->redirect(TEMPLATE_OUTPUT, $old_out)
-	    if $error && $old_out;
-    }
-    # check for any errors encountered while redirecting output/error
-    if ($error) {
-	$self->{ _ERROR } = ref($error) ? $error->as_string : $error;
-	return 0;
-    }
-	
-    # add a 'filename' variable if $template looks like a filename
-    $params ||= { };
-    $params->{'filename'} ||= $template
-	unless ref $template;
+    $output = $self->{ SERVICE }->process($template, $vars);
     
-    # process the template with optional pre-process and post-process 
-    # templates; variables are localised for the duration
+    if (defined $output) {
+	$outstream ||= $self->{ OUTPUT };
+	unless (ref $outstream) {
+	    my $outpath = $self->{ OUTPUT_PATH };
+	    $outstream = "$outpath/$outstream" if $outpath;
+	}	
 
-    $context->localise($params);
+	# send processed template to output stream, checking for error
+	return ($self->error($error))
+	    if ($error = &_output($outstream, $output));
 
-    PROCESS: {
-	if ($preproc) {
-	    last PROCESS if $error = $context->process($preproc);
-	}
-
-	last PROCESS if $error = $context->process($template);
-
-	if ($postproc) {
-	    last PROCESS if $error = $context->process($postproc);
-	}
+	return 1;
     }
-
-    $context->delocalise();
-
-    # store returned error value or exception as string in ERROR
-    $self->{ _ERROR } = ref($error) ? $error->as_string : $error;
-
-    # restore previous output/error handlers, closing files, etc.
-    $context->redirect(TEMPLATE_OUTPUT, $old_out)
-	if $old_out;
-    $context->redirect(TEMPLATE_ERROR, $old_err)
-	if $old_err;
-
-    # return 1 on numerical or 0 status return, 0 on exception (ref)
-    return ref($error) ? 0 : 1;
+    else {
+	return $self->error($self->{ SERVICE }->error);
+    }
 }
 
 
 #------------------------------------------------------------------------
-# define($template, $name)
-# 
-# Method to compile a template and store it in the cache under a 
-# specific name.  The $template variable may contain the template text
-# or an IO or glob reference as per process().  The template is compiled
-# and stored in the cache as $name (using the cache fetch() method).
-# The $template variable may also reference a Template::Directive object
-# or subclass thereof which represents a "compiled" template.  This is
-# stored in the cache without any further compilation (using cache 
-# store() method).
+# service()
+#
+# Returns a reference to the the internal SERVICE object which handles
+# all requests for this Template object
 #------------------------------------------------------------------------
 
-sub define {
-    my ($self, $template, $name) = @_;
-    my $cache = $self->{ CONTEXT }->{ CACHE };
-    
-    if (UNIVERSAL::isa($template, 'Template::Directive')) {
-	return $cache->store($template, $name);
-    }
-    elsif (ref $template) {
-	return $cache->fetch($template, $name);
-    }
-    else {
-	return $cache->fetch(\$template, $name);
-    }
+sub service {
+    my $self = shift;
+    return $self->{ SERVICE };
 }
 
 
 #------------------------------------------------------------------------
 # context()
-# 
-# Returns a reference to the internal CONTEXT object
+#
+# Returns a reference to the the CONTEXT object withint the SERVICE 
+# object.
 #------------------------------------------------------------------------
 
 sub context {
-    $_[0]->{ CONTEXT };
-}
-
-
-#------------------------------------------------------------------------
-# error()
-# 
-# Returns the current contents of $self->{ ERROR } which represents 
-# the return code from the most recent call to $context->process(),
-# made in process() above.  The error will be numerical to indicate
-# that the template was processed sucessfully or a string constructed
-# from the exception returned which indicates the error.
-#------------------------------------------------------------------------
-
-sub error {
-    $_[0]->{ _ERROR };
-}
-
-
-#------------------------------------------------------------------------
-# AUTOLOAD
-#
-# Delegates to CONTEXT.
-#------------------------------------------------------------------------
-
-sub AUTOLOAD {
-    my $self   = shift;
-    my $method = $AUTOLOAD;
-
-    $method =~ s/.*:://;
-    return if $method eq 'DESTROY';
-
-    $self->{ CONTEXT }->$method(@_);
-}
-
-
-#------------------------------------------------------------------------
-# DESTROY
-#
-# Called automatically on object destruction to call the context old()
-# method to break circular references.
-#------------------------------------------------------------------------
-
-sub DESTROY {
     my $self = shift;
-    $self->{ CONTEXT }->old() if $self->{ CONTEXT };
-    undef %$self;
+    return $self->{ SERVICE }->{ CONTEXT };
+}
+
+
+#========================================================================
+#                     -- PRIVATE METHODS --
+#========================================================================
+
+#------------------------------------------------------------------------
+# _init(\%config)
+#------------------------------------------------------------------------
+sub _init {
+    my ($self, $config) = @_;
+
+    $self->{ SERVICE } = $config->{ SERVICE }
+	|| Template::Config->service($config)
+	|| return $self->error(Template::Config->error);
+
+    $self->{ OUTPUT      } = $config->{ OUTPUT } || \*STDOUT;
+    $self->{ OUTPUT_PATH } = $config->{ OUTPUT_PATH };
+
+    return $self;
+}
+
+
+#------------------------------------------------------------------------
+# _output($where, $text)
+#------------------------------------------------------------------------
+
+sub _output {
+    my ($where, $text) = @_;
+    my $reftype;
+    my $error = 0;
+    
+    # call a CODE referenc
+    if (($reftype = ref($where)) eq 'CODE') {
+	&$where($text);
+    }
+    # print to a glob (such as \*STDOUT)
+    elsif ($reftype eq 'GLOB') {
+	print $where $text;
+    }   
+    # append output to a SCALAR ref
+    elsif ($reftype eq 'SCALAR') {
+	$$where .= $text;
+    }
+    # call the print() method on an object that implements the method
+    # (e.g. IO::Handle, Apache::Request, etc)
+    elsif (UNIVERSAL::can($where, 'print')) {
+	$where->print($text);
+    }
+    # a simple string is taken as a filename
+    elsif (! $reftype) {
+	local *FP;
+	# make destination directory if it doesn't exist
+	my $dir = dirname($where);
+	eval { mkpath($dir) unless -d $dir; };
+	if ($@) {
+	    # strip file name and line number from error raised by die()
+	    ($error = $@) =~ s/ at \S+ line \d+\n?$//;
+	}
+	elsif (open(FP, ">$where")) { 
+	    print FP $text;
+	    close FP;
+	}
+	else {
+	    $error  = "$where: $!";
+	}
+    }
+    # give up, we've done our best
+    else {
+	$error = "output_handler() cannot determine target type ($where)\n";
+    }
+
+    return $error;
 }
 
 

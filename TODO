@@ -1,123 +1,162 @@
-#============================================================================
-#
-# Template Toolkit TODO
-#
-# DESCRIPTION
-#   Outstanding bugs, planned features, improvements, ideas, etc.
-#
-# AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
-#
-#----------------------------------------------------------------------------
-#
-# $Id: TODO,v 1.72 2000/06/14 13:29:20 abw Exp $
-#
-#============================================================================
+#------------------------------------------------------------------------
+# PENDING TODO ITEMS
+#------------------------------------------------------------------------
 
-NOTE: This list is now largely obsolete given the impending release of
-      a stable beta for version 2.  Thank you for playing.
+* URL plugin may be incorrect in not escaping certain characters such as 
+  '&'.  
 
-Bugs
-----
-  * object method call is failing when called against a non-object 
-    reference.  (fixed v2)
+* XML::Simple plugin (I wrote this once already but my laptop died and 
+  took it with it).  An XML::XPath plugin would also be nice.  Both are
+  trivial, although XML::Simple should use a singleton parser object, 
+  instantiated via load() which can then cache parsed documents if 
+  required.  new() would then be used to parse a file/text and return 
+  the data tree.  There may be cleanup issues.  Haven't looked at writing
+  an XML::XPath plugin yet, but it should be reasonably similar.
 
-  * CATCH installs a block which overwrites any previous one.  This then 
-    perists until the Context object is destroyed or the handler re-defined.
-   (fixed v2)
+* XML::DOM plugin may leak memory due to it not properly cleaning up
+  the data model which has massively circular references.  Simon
+  Matthews <sam@knowledgepool.com> has fixed this problem and also
+  added a wonderfully powerful to_template() method.  Will integrate
+  his changes before V2 proper.
 
-  * I don't think Tied Hashes get treated as regular hashes, but they 
-    should.
+* DBI plugin, also by Simon Matthews, will be distributed with V2.  
+  Makefile.PL will need some hacking to incorporate DBI testing options.
 
-Possible Features
-----------------
-  * TRY to scope CATCH? (added v2)
+* Document the TT internals and describe how, where and why to hack on
+  them.
 
-  * General-purpose DEBUG option which can activate *limited* debug operations
-    (e.g. for tracing undefined values at runtime) 
+* The documentation should be broken up into smaller chunks (or 
+  published as a book!).  An HTML/XML version will also be forthcoming.
 
-  * An option to bind subs in a Perl namespace into a template namespace
-    without requiring the specific binding to every function.  (possible in 
-    v2 via PERL/RAWPERL)
+#------------------------------------------------------------------------
+# KNOWN BUGS AND/OR LIMITATIONS
+#------------------------------------------------------------------------
 
-  * add INSERT directive to insert a file without processing it.  (still 
-    tricky but working on it for v2)
+* empty hashes can cause a harmless, but possibly annoying parser error.
 
-  * add document information structures as runtime variables (e.g. file.name
-    file.mod, template.name, system.time, etc).  As of 0.28, we do get the
-    'filename' variable set, which is a start. (added in v2)
+* Template process($file) method returns a string if the named
+  template ($file) can't be found, rather than an exception.  This
+  should be changed so that an exception is returned whatever.  The
+  fix is fairly simple, but requires a careful examination of the code
+  as there may be many places in which this happens.
 
-General Improvements
---------------------
-  * A more general way than macros to capture and handler a template block 
-    definiton.  The current macro wraps it up in a function which makes it 
-    hard to get at. (fixed in v2)
+* Filters and plugins cache may bloat.  Perhaps reset() should accept
+  flags to clear BLOCKS, PLUGINS, FILTERS, etc?  I need to check this.
 
-  * Should plugins be able to throw exceptions on creation failure
-    rather than reporting errors via Template::Plugin::fail() and 
-    returning undef? (possibly)
+* If you use 'ttree' with a COMPILE_EXT or COMPILE_DIR option then
+  templates in the 'lib' directories will be compiled, but those in
+  the src directories will not.  This is because ttree does a chdir()
+  to the src directory and processes files as './myfile'.  TT doesn't
+  compile RELATIVE files by default.
 
-  * It is currently impossible to create a list and then pass the members 
-    of that list to a code ref/method.  The following would pass the list
-    reference to the code, not the items in the list. 
+* There's no easy way to run version 1 and version 2 on the same
+  machine.  If you're happy to junk version 1 then no problem, go
+  ahead.  If you want or need to keep version 1 then you can install
+  one or the other under a separate directory tree, e.g.
 
-      [% things = [ b c a ]; do_something(things) %]
+    perl Makefile.PL PREFIX='/home/abw/tt1'
 
-    You can't create an empty list either, but I'm not sure how important 
-    these really are. (it's not)
+  You'll need to tell your scripts (and also tpage and ttree if you
+  use them) where to find this version.  E.g.
 
-  * At some point the 'cache' (really a file loader) should be
-    modified to work in a more generic resource brokering role.  This
-    could then be re-used for loading and caching code components.
-    (rewritten for v2)
+    use lib qw( /home/abw/tt1 );
 
-  * The parser could issue warnings (probably not necessary - better to
-    fail and get the error fixed ASAP)
+  I was planning on moving version 1 modules into Template::v1::* to 
+  allow them to co-exist but I think this will prove to be more trouble
+  than it's worth.
 
-  * The parser could return a Template::Document type encapsulating
-    template information (and warnings, etc.) rather than a bare
-    block. (yep, added in v2)
+* Note that no recursion checking is performed for BLOCKs, only 
+  Template::Document instances.  This is probably the way it will stay
+  (unless anyone shouts loudly enough) but it should be documented
+  anyway.   STOP PRESS: I had an idea that bare BLOCK subs should 
+  be blessed into Template::Document class to allow $template->process()
+  to be called regardless.  Template::Document methods would need to 
+  test $self for CODE/HASH and Do The Right Thing.  This would then 
+  allow recursion testing for BLOCKs as well as Template::Document objects.
 
-  * improve runtime debugging if possible to do this without incurring 
-    any significant overhead when not using it.  One strategy might be 
-    to enable a debugging-aware parser which inserts debugging directives
-    into the template context.  These would then be processed at runtime.
-    (should be easier in v2)
+* I've had a few reports of tests failing (provider.t test 37 and several
+  in args.t) but haven't been able to reproduce them.  If you do get 
+  any errors, please run the test individually (e.g. 'perl t/provider.t') 
+  or 'make test' in verbose mode (e.g. 'make test TEST_VERBOSE=1') and 
+  send me the output, along with any other relevant information.  If you're
+  able to track down the problem then so much the better.  The test suite
+  is well organised and fairly pleasant to work with these days so please
+  don't be afraid to go digging for answers (this means you, Perrin  :-)
 
-Documentation
--------------
+* The XML::RSS plugin test may generate warnings (but passes all tests)
+  under Perl 5.6
 
-  * Document references, if they prove to be useful. (nope, removed them)
 
-  * note that object methods get called with the RHS as a parameter when 
-    specified as an lvalue of an assignment.  e.g. [% foo.bar = 10 %]
-    => $foo_obj->bar(10)
+#------------------------------------------------------------------------
+# POSSIBLE FUTURE ENHANCEMENTS
+#------------------------------------------------------------------------
 
-  * iterator options specified through list construct parameters are
-    not documented.  This is probably a Good Thing.  :-)=
-    [% FOREACH user = [ foo bar baz ]( order = 'sorted', action = coderef ) %]
-    (removed for v2 - now use iterator plugin)
+* It would be useful if template components had some notion of inheritance
+  so that a 'derived' component could call on the 'super' component.  
+  This can probably best be acheived by means of a Template::Component
+  object, derived from Template::Document, which has a super() method
+  (and maybe many other magical methods).  The super() method would 
+  return a reference to another "parent" template which could be processed
+  by a directive of the form [% INCLUDE $component.super %]
 
-  * write more detailed description on extending the Template Toolkit.
-    (that'll come with v2)
+* I've written a version of Template::Stash in XS which should give a 
+  significant speedup to the runtime processing.  It's 95% complete and 
+  just needs some minor debugging and testing.  The new Template::Stash
+  will automatically load the existing Perl version if you don't have
+  a C compiler on your platform (shame on you!)
 
-Other plugins, modules, scripts
--------------------------------
+* The core parser FSM loop could also be implemented in XS to bring
+  some speeds-ups there.  Better still would be to rewrite the entire
+  parser in C/YACC.  This is entirely feasible now that we only have
+  to transform the input text (template) to output text (Perl) and
+  don't have to build any significant Perl structure.  It's not
+  entirely trivial - the scanner in particular has to handle CHOMP
+  options and user-definable TAGS, but it's certainly possible.
 
-  * finish Apache::Template (after speaking with SAM, I think we reached 
-    the conclusion that it's so easy to write your own Apache handler
-    that there's no point in trying to create a generic one.  Still, it
-    would be nice to have an example that people could work from)
-    (examples in docs)
+* An alternate parser back end could generate code which bypasses the
+  stash altogether, based on Doug Steinwand's strategy.  The V2
+  generated Perl code is much faster than V1 but still falls short of
+  what Doug has shown is possible.  His parser gets the massive
+  speed-up by bypassing the stash altogether (which in V1 was
+  particularly hideous) and directly generating code to walk the stash
+  structure and do the right thing.  A little magic was lost, so for
+  this version I've stuck with the full-blown stash approach which
+  provides all the magic for backwards compatibility, albeit at some
+  trade-off in speed.  Nevertheless, compiled V2 templates should
+  easily run twice as fast as under V1.  My current idea is to
+  hack the parser to generate more explicit stash navigation code
+  which uses direct access where the type can be grokked in advanced
+  (i.e. a NUMBER implies the parent is an ARRAY).  I'm also wondering
+  if we could add the '->' operator as a clue to the parser to do
+  direct access rather than stash access.  e.g.  
+  
+    [% something->first %] => $stash->{'something'}->{'first'} 
+    [% something.first %]  => $stash->get('something', 0, 'first', 0)
+  
+  The second example is as per the current V2 beta and allows
+  'something' to be either a hash with a 'first' member (which may be
+  a sub-routine which is then called), or an object with a 'first'
+  method, or a list from which the first item is returned, etc., etc.
+  All magic is intact.  The first example runs much faster and in
+  those cases when you know you haven't got any magical variables,
+  this is a Good Thing.  Doug used a combination of -> and () to give
+  enough clues to Do The Right Thing most of the time, so I'm hoping
+  that we will be able to incorporate some of those ideas some time
+  soon.
 
-  * extend 'format' to perform date formatting?  (probably better to 
-    do this via a 'date' plugin) (NOTE: Thiery-Michel Barral posted 
-    such a plugin to the mailing list but at the time of writing I 
-    haven't had a chance to look at it)
+* A 'FOR', like 'FOREACH' but without using an iterator.  You wouldn't get 
+  the 'loop' reference to test 'first', 'last', etc., against, but it would
+  be faster for those cases when you didn't need that.
 
-  * 'filemap' plugin to map a namespace to an INCLUDE 'file' directive.
-    e.g.   [% USE html=filemap('html') %]
-           [% html.header(title='Test') %] 
-    equivalent to:
-	   [% INCLUDE html/header title='Test' %]
-    (tried it, but need to clean it up)
+
+#------------------------------------------------------------------------
+# MISCELLANEOUS
+#------------------------------------------------------------------------
+
+* Add :preload use option to Template.pm to preload all modules?  Or should
+  it be :noload and have preload by default?  Or should it not bother?
+
+* merge Directive into Parse.yp via template process?  Yeah, one of these
+  days RSN.
+
+

@@ -1,261 +1,44 @@
-NAME
-    Template Toolkit - a Perl toolkit for template processing.
 
-OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
-    The Template Toolkit module bundle is available from CPAN as:
+             Template Toolkit Version 2.00 Beta Release 4
 
-        /modules/by-module/Template/Template-Toolkit-1.07.tar.gz
+                         12th September 2000
 
-    Unpack the archive to create an installation directory.
-    Something like this:
 
-        zcat Template-Toolkit-1.07.tar.gz | tar xvf -
+This is the fourth (and almost certainly, final) beta release of
+Version 2.00 of the Perl Template Toolkit.  It is fully-featured,
+reliable and all known bugs have been fixed (but see the TODO list for
+a few outstanding issues and minor "features").  The Changes file
+details changes from the last beta release, and versions before that.
+It also includes the major changes from Version 1.xx to 2.00.
 
-    'cd' into that directory, make, test and install the modules:
+Installation is as you might expect:
 
-        cd Template-Toolkit-1.07
-        perl Makefile.PL
-        make
-        make test
-        make install
+    perl Makefile.PL
+    make
+    make test
+    make install
 
-    NOTE: on Win32 systems, Microsoft's 'nmake' appears to be a
-    suitable replacement for 'make'.
+If you have version 1.xx installed then be warned that version 2.00
+will render it totally useless.  This probably isn't an issue unless
+you're relying heavily on any of the more obscure "features" that have
+changed from version 1.xx to 2.00 (see Changes file).
 
-    The 'make install' will install the module on your system. You
-    may need administrator privileges to perform this task. If you
-    install the module in a local directory (for example, by
-    executing "perl Makefile.PL LIB=~/lib" in the above - see
-    `perldoc ExtUtils::MakeMaker' for full details), you will need
-    to ensure that the PERL5LIB environment variable is set to
-    include the location, or add a line to your scripts explicitly
-    naming the library location:
+You can specify the PREFIX option to install the Template Toolkit to a
+different location if you want to preserve an existing installation
+(see ExtUtils::MakeMaker).  Or preferably, install version 2.00 as per
+usual and then go back and install version 1.07 to an alternate
+location, thus ensuring that version 2.00 is the default.
 
-        use lib '/local/path/to/lib';
+    perl Makefile.PL PREFIX=/some/where/else
+    make, etc.
 
-PREREQUISITES
-    The Template Toolkit requires Perl 5.004 or later.
+The documentation is now complete in all its 100+ page glory.  
 
-    The ttree script uses the AppConfig module (version 1.52+) for
-    managing configuration information. This is available from CPAN
-    as
+    perldoc Template
 
-        /modules/by-module/AppConfig/AppConfig-<version>.tar.gz
-        /authors/id/ABW/AppConfig-<version>.tar.gz       
+Any errors, inaccuracies or omissions are bugs and should be reported
+to the overworked and underpaid author who really needs to take a
+vacation.  8-)
 
-TOOLKIT CONTENTS
-    The Template Toolkit comprises of a number of Perl modules,
-    scripts and accompanying documentation.
-
-    The Template module acts as a general interface to the toolkit
-    and contains comprehensive documentation describing the toolkit,
-    its usage and further sources of reference.
-
-        perldoc Template
-
-    The Template::Tutorial document provides an introduction to the
-    Template Toolkit and shows some typical examples of usage.
-
-        perldoc Template::Tutorial
-
-    The tpage and ttree scripts are useful utilities for processing
-    template documents, or entire content trees, respectively.
-
-        perldoc tpage
-        perldoc ttree
-
-FEATURES
-    -   Fast, flexible, generic and open template processing system.
-
-    -   Simple template "mini-language" provides functionality to
-        manipulate variables (GET/SET/DEFAULT), process other
-        template component files (INCLUDE/PROCESS), iterate through
-        various values (FOREACH), conditional branching
-        (IF/UNLESS/ELSIF/ELSE), error handling (CATCH, THROW), flow
-        control (BREAK, RETURN, STOP), loading "plugin" code (USE)
-        and post-processing (FILTER). Optional PERL sections
-        (disabled by default - see EVAL_PERL option) allow Perl code
-        to be directly embedded with full interface to the Template
-        Toolkit interface and variables.
-
-    -   More complex application code can be developed in Perl (or C,
-        C++, etc) and maintained separately as "plugin" code.
-        Template processor binds user code to variables to provide
-        access to application functionality from templates.
-
-    -   This natural extensibility promotes the separation of the
-        application (implementation) from the interface
-        (presentation). Template documents remain simple and
-        focussed on rendering the interface. Application code can be
-        made more generic by concentrating on what the application
-        does, not what it looks like. If and when you really need to
-        embed Perl code, you can.
-
-    -   Ideally suited, but not limited to, web content generation. The
-        'tpage' and 'ttree' scripts help manage and build entire
-        directory trees from source templates, library files and
-        plugin components. The Template module can be used directly
-        from CGI scripts, Apache/mod_perl handlers, or any other
-        Perl code as a simple front-end to the Toolkit. Plugin
-        modules are available for building tables, constructing
-        URL's, interfacing to CGI, DBI, XML, DOM, etc.
-
-    -   Template documents parsed by a fast LALR(1) parser which is
-        generated from a YACC-like grammar. Parse::Yapp is used to
-        compile the grammar. Parser grammar can be modified and re-
-        compiled to create custom template languages.
-
-    -   Parsed template documents are compiled to an intermediate form
-        and cache. They can subsequently be rendered repeatedly in
-        minimal time.
-
-    -   Stash object manages references to complex external code and
-        data and provides a simple template interface via bound
-        variables.
-
-    -   Variables may be partitioned into nested namespaces.
-
-    -   Custom error handling and recovery mechanisms implemented as
-        basic exception handling. Users can define template blocks
-        to be processed automatically when errors occur and define
-        the subsequent course of action.
-
-    -   Iterator objects can be created to handle complex set iteration.
-        This is handled transparently by the FOREACH directive.
-
-    -   Provides an extensible framework for other template languages,
-        processors and applications, servers, etc.
-
-    -   Template language is largely independent (theoretically at
-        least) of the implementation language, platform, operating
-        system, etc.
-
-    -   Extensive documentation, test suite, examples, etc.
-
-    -   `use strict' and `-w' safe. Y2K compliant (no dates used or
-        stored).
-
-    -   Ongoing development and maintenance is part of a general
-        research program into web-relevant software tools and
-        techniques at Canon Research Centre Europe Ltd.
-
-    -   Fully open source code. Contributions, collaborations,
-        suggestions and other feedback welcome.
-
-    -   Mailing list and web site. See http://www.template-toolkit.org/
-
-EXAMPLE
-        #!/path/to/perl -w
-        use strict;
-        use Template;
-      
-        # create a template processor
-        my $tproc = Template->new({ 
-            INCLUDE_PATH => '/user/abw/templates', # template search path
-        });
-      
-        # define variables for use in templates
-        my $vars  = {
-            'animal' => 'cat',
-            'place'  => 'mat',
-            'list'   => [ 'foo', 'bar', 'baz' ],
-            'user'   => { 
-                'name'  => 'Me, Myself, I', 
-                'email' => 'me@here.com'  
-            },
-        };
-      
-        # process a template file, output defaults to STDOUT
-        $tproc->process('myfile', $vars)
-            || die $tproc->error(), "\n";
-
-    myfile:
-
-        [% INCLUDE header
-           title = 'Hello World!'
-        %]
-
-        The [% animal %] sat on the [% place %]
-
-        <a href="mailto:[% user.email %]">[% user.name %]</a>
-
-        <ul>
-        [% FOREACH item = list %]
-           <li>[% item %]
-        [% END %]
-        </ul>
-
-    Output:
-
-        <!-- ...output from processing 'header' template... -->
-
-        The cat sat on the mat
-
-        <a href="mailto:me@here.com">Me, Myself, I</a>
-
-        <ul>
-           <li>foo
-           <li>bar
-           <li>baz
-        </ul>
-
-    Apache/mod_perl handler:
-
-        sub handler {
-            my $r    = shift;
-            my $file = $r->path_info();  # or some other mapping
-
-            my $template = Template->new({ 
-                INCLUDE_PATH => '/where/to/look/for/templates',
-                OUTPUT       => $r,
-            });
-
-            $template->process($file) || do {
-                $r->log_reason($template->error());
-                return SERVER_ERROR;
-            };
-
-            return OK;
-        }
-
-MAILING LIST
-    A mailing list exists for up-to-date information on the Template
-    Toolkit and for following and contributing to the development
-    process. To subscribe, send an email to
-
-        templates-request@template-toolkit.org
-
-    with the message 'subscribe' in the body, or use the web
-    interface to subscribe or browse the archives at
-
-        http://www.template-toolkit.org/mailman/listinfo/templates
-
-AUTHOR
-    Andy Wardley <abw@cre.canon.co.uk>
-
-        http://www.template-toolkit.org/
-        http://www.kfs.org/~abw/
-
-VERSION
-    This is version 1.07 of the Template Toolkit.
-
-    Please consult the Changes file for information about visible
-    changes in the Template Toolkit between releases. The TODO file
-    contains details of known bugs, planned enhancements, features,
-    fixes, etc.
-
-    The latest version of the Template Toolkit can be downloaded
-    from any CPAN site:
-
-        /modules/by-module/Template/Template-Toolkit-<version>.tar.gz
-
-    Information regarding interim and development versions is posted
-    to the templates mailing list.
-
-COPYRIGHT
-    Copyright (C) 1996-2000 Andy Wardley. All Rights Reserved.
-    Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
-
-    This module is free software; you can redistribute it and/or
-    modify it under the same terms as Perl itself.
-
+Enjoy
+A

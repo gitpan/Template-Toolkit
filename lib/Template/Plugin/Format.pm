@@ -7,7 +7,7 @@
 #   Simple Template Toolkit Plugin which creates formatting functions.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cre.canon.co.uk>
+#   Andy Wardley   <abw@kfs.org>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Format.pm,v 1.4 2000/03/28 14:17:47 abw Exp $
+# $Id: Format.pm,v 2.0 2000/08/10 14:56:07 abw Exp $
 #
 #============================================================================
 
@@ -29,9 +29,10 @@ require 5.004;
 use strict;
 use vars qw( @ISA $VERSION );
 use base qw( Template::Plugin );
+use Template::Plugin;
 use CGI;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
 
 
 sub new {
@@ -73,11 +74,11 @@ a printf()-like format string.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>cre.canon.co.ukE<gt>
+Andy Wardley E<lt>kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 1.4 $
+$Revision: 2.0 $
 
 =head1 COPYRIGHT
 
