@@ -119,6 +119,13 @@ required.
     # explicit scoping with {  }
     <img src="$images/${icon.next}.gif">
 
+=item EVAL_PERL
+
+The EVAL_PERL option is used to specify if PERL sections should be
+evaluated or not.  It is disabled by default and any PERL sections
+will raise 'perl' exceptions when encountered.  Setting it to any true 
+value permits code contained within such blocks to be evaluated.
+
 =item PRE_PROCESS, POST_PROCESS
 
 These values may be set to contain the names of template files

@@ -8,45 +8,6 @@
 #   Generates test output compatible with Test::Harness.  This was 
 #   originally the t/texpect.pl script.
 #
-# USAGE:
-#     use Template::Test;
-#    
-#     $Template::Test::DEBUG = 0;   # set this true to see each test running
-#    
-#     extra_tests($n);  # some extra tests follow test_expect()...
-#     pre_ok($truth);   # a pre-check test
-#     test_expect($input, \%tproc_config, \%vars)
-#     ok( $truth )      # for 1..$n extra tests
-#
-#   The test_expect() sub splits the input source into a number of tests:
-#
-#   Each test is defined like this:
-#
-#     -- test --
-#     input
-#     -- expect --
-#     expected output
-#     -- error --
-#     expected error message(s) (optional)
-#   
-#   The first test in the file does not require a '-- test --' line.
-#   
-#   test_expect() counts the number of tests, and then calls ntests() 
-#   to generate the familiar "1..$ntests\n" test harness line.  Each 
-#   test defined generates three test numbers.  The first indicates 
-#   that the input was processed without error.  The second that the 
-#   output matches that expected.  The third does the same for any 
-#   error text expected.  In addition to this, any test results cached
-#   by calling pre_ok() will be added to the total along with any 
-#   additional tests known to follow the test_expect() method, set 
-#   by calling extra_tests($n).  The known result of the pre_ok() 
-#   calls is printed first.  Then test_expect() resumes and calls ok()
-#   to generate its results.  Finally, control is returned to the caller
-#   who can manually call ok() to run and final tests.
-#   
-#   Lines in tests that start with a '#' are ignored.  Lines that 
-#   look '-- likethis --' may also confuse the test splitter.
-#
 # AUTHOR
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
@@ -57,12 +18,9 @@
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-# BUGS
-#   This module is butt-ugly but it works.
-#
 #----------------------------------------------------------------------------
 #
-# $Id: Test.pm,v 1.1 1999/11/25 17:52:36 abw Exp $
+# $Id: Test.pm,v 1.2 1999/12/21 14:22:15 abw Exp $
 #
 #============================================================================
 
@@ -75,7 +33,7 @@ use vars qw( @ISA @EXPORT $VERSION $DEBUG $loaded %callsign);
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 @ISA     = qw( Exporter );
 @EXPORT  = qw( callsign extra_tests pre_ok ntests test_expect ok );
@@ -146,6 +104,10 @@ sub test_expect {
     }
 
     @tests = split(/^\s*--+\s*test\s*--+\s*\n/im, $input);
+
+    # if the first line of the file was '--test--' (optional) then the 
+    # first test will be empty and can be discarded
+    shift(@tests) if $tests[0] =~ /^\s*$/;
 
     ntests(3 + scalar(@tests) * 3);
 
@@ -262,6 +224,144 @@ sub test_expect {
 #
 #
 #========================================================================
+
+=head1 NAME
+
+Template::Test - module for automating test scripts
+
+=head1 SYNOPSIS
+
+    use Template::Test;
+   
+    $Template::Test::DEBUG = 0;   # set this true to see each test running
+   
+    pre_ok($truth);               # a pre-check test
+
+    extra_tests($n);              # some extra tests follow test_expect()...
+
+    test_expect($input, \%tproc_config, \%vars)
+
+    ok($truth)                    # for 1..$n extra tests
+
+=head1 DESCRIPTION
+
+The Template::Test module defines the test_expect() sub-routine which
+automates the testing of template input against expected output.  It
+splits an input document into a number of separate tests, processes
+each one using the Template Toolkit and then compares the generated
+output against an expected output, also specified in the input
+document.  It generates the familiar "ok/not ok" output compatible 
+with Test::Harness.
+
+An input filename or handle, or reference to a text string
+(i.e. anything that the Template module accepts as a valid input)
+should be provided which contains a number of tests defined in the
+following format:
+
+    -- test --
+    input
+    -- expect --
+    expected output
+
+    -- test --
+    input for next test
+    -- expect --
+    expected output for next test
+    -- error --
+    expected errors (optional)
+
+The first test in the file does not require a '-- test --' line.  Blank
+lines between test sections are generally ignored.  The '-- error --'
+section may be used to specify any error messages that the template
+fragment is expected to produce.
+
+The second and third parameters to test_expect() are optional.  The second
+may be either a reference to a Template object which should be used to 
+process the template fragments, or a reference to a hash array containing
+configuration values which should be used to instantiate a new Template
+object.  The third parameter may be used to reference a hash array of 
+template parameters which should be defined when processing the tests.
+
+    test_expect(\*DATA, { POST_CHOMP => 1 }, { a = 'alpha' });
+   
+The test_expect() sub counts the number of tests, and then calls ntests() 
+to generate the familiar "1..$ntests\n" test harness line.  Each 
+test defined generates three test numbers.  The first indicates 
+that the input was processed without error.  The second that the 
+output matches that expected.  The third does the same for any 
+error text expected.
+
+Additional test may also be run before test_expect() by calling the 
+pre_ok() sub-routine, passing in a true/false value.  These test
+results are cached until test_expect() is called.  They are added 
+to the total number of tests and their output generated before 
+the main template tests.
+
+    pre_ok(1);
+    test_expect('myfile');
+
+Any additional tests that you wish to run after calling test_expect()
+may be declared to the Template::Test module using the extra_tests($n)
+sub-routine.  Call this B<before> calling test_expect() so that the 
+total number of tests reported when test_expect() is called can be 
+adjusted accordingly.  When it comes to performing these tests, simply
+call ok() passing a true or false value to generate the "ok/not ok"
+output.
+
+    extra_tests(1);
+    test_expect('myfile');
+    ok(1);
+
+If you don't want to call test_expect() at all then you can call
+ntests($n) to declare the number of tests and generate the test 
+header line.  After that, simply call ok() for each test passing 
+a true or false values to indicate that the test passed or failed.
+
+    ntests(2);
+    ok(1);
+    ok(0);
+
+Lines in tests that start with a '#' are ignored.  Lines that look 
+'-- likethis --' may also confuse the test splitter.
+
+For historical reasons and general utility, the module also defines a
+'callsign' sub-routine which returns a hash containing the a..z of 
+radio callsigns (e.g. a => 'alpha', b => 'bravo').  This is used by many
+of the test scripts as a "known source" of variable values.
+
+=head1 BUGS
+
+This module is butt-ugly but it works.
+
+It imports all methods by default.  This is generally a Bad Thing, but 
+this module is really only used in test scripts (i.e. at build time) 
+and it made it more compatible with the previous t/texpect.pl script.
+
+=head1 AUTHOR
+
+Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
+
+=head1 REVISION
+
+$Revision: 1.2 $
+
+=head1 HISTORY
+
+This module started life as the t/texpect.pl script.
+
+=head1 COPYRIGHT
+
+Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
+Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+The test scripts in the 't' sub-directory, L<Template|Template>.
+
+=cut
 
 
 

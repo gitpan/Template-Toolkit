@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: code.t,v 1.7 1999/11/25 17:51:23 abw Exp $
+# $Id: code.t,v 1.8 1999/12/16 09:31:29 abw Exp $
 #
 #========================================================================
 
@@ -209,3 +209,11 @@ aaa
 [% joint(a b c) %]
 -- expect --
 alpha + bravo + charlie
+
+-- test -- 
+[% call = 'joint';
+   ${call}(a c) 
+%]
+-- expect --
+alpha + charlie
+

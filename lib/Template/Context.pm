@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.38 1999/12/02 16:14:12 abw Exp $
+# $Id: Context.pm,v 1.40 1999/12/21 14:22:13 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.38 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.40 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -101,9 +101,10 @@ sub new {
 	STASH        => $stash,
 	CACHE        => $cache,
 	PLUGIN_BASE  => $pbase,
-	PLUGINS      => $params->{ PLUGINS } || { },
-	CATCH        => $params->{ CATCH }   || { },
-	FILTERS      => $params->{ FILTERS } || { },
+	EVAL_PERL    => $params->{ EVAL_PERL }   || 0,
+	PLUGINS      => $params->{ PLUGINS }     || { },
+	CATCH        => $params->{ CATCH }       || { },
+	FILTERS      => $params->{ FILTERS }     || { },
         FILTER_CACHE => { },
         OUTPUT_PATH  => $params->{ OUTPUT_PATH } || '.',
 	RECURSION    => $params->{ RECURSION }   || 0,
@@ -624,7 +625,7 @@ sub _evaluate {
 	elsif ($op == OP_LISTFOLD) {
 	    # pop top $item items off the stack and push a new list
 	    $x = shift @pending;
-	    push(@stack, [ splice(@stack, -$x) ]);
+	    push(@stack, [ $x ? splice(@stack, -$x) : () ]);
 #	    print("  -> pop $x items\n",
 #		  "  <- list ($stack[-1])\n") if $DEBUG;
 	}
@@ -730,20 +731,31 @@ sub _evaluate {
 	elsif ($op == OP_DEFAULT) {
 	    $default_mode = 1;
 	}
-	elsif ($op == OP_IDENT) {
+	elsif ($op == OP_IDENT || $op == OP_REF) {
 	    $x = shift @pending;
 	    push(@stack, $root);    # push root stash to resolve ident
 	    @expand = ();
 	    foreach (@$x) {
 		($y, $p) = @$_;	    # item: [ ident/literal, params/0 ]
 		push(@expand, ref $y ? @$y : (OP_LITERAL, $y));
-		push(@expand, $p ? @$p : (OP_LITERAL, 0));
+		push(@expand, ($p && @$p) ? @$p : (OP_LITERAL, 0));
 		push(@expand, OP_DOT);
 	    }
+	    
+	    # if $op is OP_REF then convert final OP_DOT into an 
+	    # OP_MAKEREF to capture the state of the stack in a reference
+	    # for subsequent (lazy) evaluation
+	    $expand[-1] = OP_MAKEREF
+		if $op == OP_REF;
+
 	    unshift(@pending, @expand);
 # DEBUG
 #	    my $iname = join('.', (map { ref($_) ? $_->[0] : $_ } @$x));
 #	    print "   + ident ($iname)\n" if $DEBUG;
+	}
+	elsif ($op == OP_MAKEREF) {
+	    ($x, $y, $p) = splice(@stack, -3);    # x.y(p)
+	    push(@stack, $self->_make_ref($x, $y, $p));
 	}
 	elsif ($op == OP_ASSIGN) {
 	    # the term on the RHS of the assignment is on the top of
@@ -893,7 +905,32 @@ sub _evaluate {
     }
     pop @stack;
 }
-    
+
+
+sub _make_ref {
+    my ($self, $x, $y, $p) = @_;
+
+    return sub {
+	my $params = $p || [];
+
+	# if any additional parameters have been passed then we clone 
+	# the params list, $p, and add the new ones to the end
+	if (@_) {
+	    $params = $p ? [ @$p ] : [ ];
+	    push(@$params, @_);
+	}
+
+	# now we call _evaluate(), passing in a sequence of opcodes which
+	# will push the $x, $y and $p values onto the top of the stack 
+	# and then OP_DOT to evaluate them as $x.$y($p)
+	$self->_evaluate([ OP_LITERAL, $x,
+			   OP_LITERAL, $y, 
+			   OP_LITERAL, $params,
+			   OP_DOT ]);
+    };
+}
+
+
 
 #------------------------------------------------------------------------
 # oplist_dump(\@oplist)
@@ -914,7 +951,15 @@ sub oplist_dump {
     }
 }
 
-
+sub _dump_args {
+    my ($self, $args) = @_;
+    print("no args\n"), return unless $args;
+    my $text = $OP_NAME[$args->[0]] . ", [@{$args->[1]}] ]\n";
+    foreach my $arg (@{$args->[1]}) {
+	$text .= "    [ $arg->[0], [@{$arg->[1]}] ]\n";
+    }
+    $text;
+}
 
 1;
 
@@ -986,7 +1031,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.38 $
+$Revision: 1.40 $
 
 =head1 COPYRIGHT
 

@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.22 1999/11/20 09:50:39 abw Exp $
+# $Id: Directive.pm,v 1.24 1999/12/21 14:22:13 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -612,8 +612,36 @@ use vars qw( @ISA );
 
 sub process {
     my ($self, $context) = @_;
+    my $block = $self->{ PERLCODE };
+    my $stash = $context->{ STASH };
+    my ($perlcode, $handler, $error);
+    
+    return $context->throw(Template::Constants::ERROR_PERL, 
+			   "EVAL_PERL is disabled, ignoring PERL section")
+	unless $context->{ EVAL_PERL };
 
-    $context->output("PERL directive not yet implemented\n");
+    # first we process the block contained within PERL...END to expand
+    # and directives contained within the block; we install an output 
+    # handler to capture all output from the block and then restore the 
+    # original handler
+
+    $perlcode = '';
+    $handler  = 
+	$context->redirect(Template::Constants::TEMPLATE_OUTPUT, \$perlcode);
+    $error = $block->process($context);
+    $context->redirect(Template::Constants::TEMPLATE_OUTPUT, $handler);
+    return $error if $error;
+
+    # we update the $context and $stash variables to ensure they contain
+    # the relevent references and then evaluate the Perl code
+
+    $Template::Perl::context = $context;
+    $Template::Perl::stash   = $stash;
+    eval {
+	eval "package Template::Perl; $perlcode";
+    };
+    return $context->throw(Template::Constants::ERROR_PERL, $@)
+	if $@;
 
     return Template::Constants::STATUS_OK;
 }
@@ -634,7 +662,7 @@ sub process {
 
 
     my $callback = sub {
-	my ($params, $error);
+	my ($params, $error, $output);
 
 	# see if any mandatory arguments are expected
 	if ($args) {
@@ -740,7 +768,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.22 $
+$Revision: 1.24 $
 
 =head1 COPYRIGHT
 

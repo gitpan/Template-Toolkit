@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.40 1999/12/02 14:03:33 abw Exp $
+#   $Id: Template.pm,v 1.42 1999/12/21 14:22:11 abw Exp $
 #
 #========================================================================
  
@@ -34,7 +34,7 @@ use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '1.00';
+$VERSION     = '1.02';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;
@@ -99,11 +99,23 @@ sub process {
     $params->{'filename'} ||= $template
 	unless ref $template;
     
-    # localise variables, pre-process, process, post-process, delocalise
+    # process the template with optional pre-process and post-process 
+    # templates; variables are localised for the duration
+
     $context->localise($params);
-    $context->process($preproc) if $preproc;
-    $error = $context->process($template);
-    $context->process($postproc) if $postproc;
+
+    PROCESS: {
+	if ($preproc) {
+	    last PROCESS if $error = $context->process($preproc);
+	}
+
+	last PROCESS if $error = $context->process($template);
+
+	if ($postproc) {
+	    last PROCESS if $error = $context->process($postproc);
+	}
+    }
+
     $context->delocalise();
 
     # store returned error value or exception as string in ERROR

@@ -9,8 +9,74 @@
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes,v 1.77 1999/12/02 16:15:21 abw Exp $
+# $Id: Changes,v 1.81 1999/12/21 14:22:33 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 1.02  1999/12/21 14:22:04
+#------------------------------------------------------------------------
+
+* Added code to enable [% PERL %] ... [% END %] sections.  This is
+  controlled by the EVAL_PERL option and is disabled by default.  When
+  enabled, the Perl code contained in the block is evaluated in the
+  Template::Perl package and any runtime errors are thrown as 'perl'
+  exceptions.  A 'perl' exception is thrown automatically if the EVAL_PERL
+  option is disabled and a PERL block is encountered.  The 'context' and 
+  'stash' variables are pre-defined in the package.  e.g.
+
+    [% PERL %]
+       $stash->{'some_data'} = [ qw( foo bar baz ) ];
+       $context->output('loaded data');
+    [% END %]
+    
+    [% "$item\n" FOREACH item = some_data %]
+
+  The PERL section is a fully-fledged block allowing it to contain other
+  template directives.  These are processed first and the resulting output
+  of the entire PERL block is then evaluated as Perl code.
+
+* Changed main Template module to watch for and report errors during 
+  any pre-process and post-process templates.  For some reason I thought
+  it was a Good Thing to be tolerant of errors during these phases but
+  I now know that it's not (i.e. when your plugins fail to load from a 
+  pre-process file and you don't get any warning).  
+
+* Modified tokeniser regex to accept a leading '-' on literal numbers.
+  This is the quick fix to allow things like the following.  I'll add
+  a proper unary minus to the parser RSN.
+
+    [% FOREACH timezone = [-12..12] %]
+
+* Added some proper documentation to the Template::Test module.  Fixed
+  a minor bug in the test splitter to ignore the first '-- test --' line
+  if provided.
+
+
+#------------------------------------------------------------------------
+# Version 1.01  1999/12/16 09:31:19
+#------------------------------------------------------------------------
+
+* Added the pseudo-reference operator '\' as an experimental feature
+  to allow things like code references to be passed around without
+  being pre-evaluated.  The 'reference' created is actually a closure
+  which can be called from Perl code to evaluate the referred value
+  (i.e. lazy evaluation).  Additional parameters may also be passed
+  when calling the closure.  These are added to any parameters
+  supplied when the reference was created.  A reference will be
+  automatically evaluated (i.e. called) each time it is used in a
+  template.  Not yet documented - see tests in t/code.t for further
+  info.  e.g.
+
+  [% sql_query(sql, \my_filter('foo')) %]
+
+  sub sql_query {
+	my ($sql, $filter) = @_;
+	my $data = _do_sql_query($sql);
+	&$filter($data);    #  => my_filter('foo', $data);
+  }
+
+* Modified parser to accept parameter list after an evaluated term.  e.g.
+  ${foo}(bar).  Thanks to Paul Sharpe for spotting the omission.
 
 #------------------------------------------------------------------------
 # Version 1.00  1999/12/02 16:14:10

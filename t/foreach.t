@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 1.9 1999/11/25 17:51:24 abw Exp $
+# $Id: foreach.t,v 1.10 1999/12/21 14:22:15 abw Exp $
 # 
 #========================================================================
 
@@ -181,3 +181,8 @@ romeo, romeo, wherefore art thou, romeo?
 one four
 one, two, three, four, 
 
+-- test --
+[% "$i, " FOREACH i = [-2..2] %]
+
+-- expect --
+-2, -1, 0, 1, 2, 

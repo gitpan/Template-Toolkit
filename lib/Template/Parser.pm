@@ -31,7 +31,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 1.15 1999/11/26 07:53:34 abw Exp $
+# $Id: Parser.pm,v 1.17 1999/12/21 14:22:15 abw Exp $
 #
 #============================================================================
 
@@ -52,7 +52,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -444,13 +444,13 @@ sub tokenise_directive {
 		\1                       # match opening quote
 	    |
 		# an unquoted number matches in $3
-		(\d+)                    # numbers
+		(-?\d+)                  # numbers
 	    |
 		# an identifier matches in $4
 		(\w+)                    # variable identifier
 	    |   
 		# an unquoted word or symbol matches in $5
-		(   [(){}\[\];,\/]       # misc parenthesis and symbols
+		(   [(){}\[\];,\/\\]     # misc parenthesis and symbols
 		|   \+\-\*               # math operations
 		|   \$\{?                # dollar with option left brace
 		|   =>			 # like '='
@@ -887,7 +887,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.15 $
+$Revision: 1.17 $
 
 =head1 COPYRIGHT
 

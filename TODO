@@ -10,7 +10,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.58 1999/12/02 16:14:11 abw Exp $
+# $Id: TODO,v 1.59 1999/12/21 14:22:05 abw Exp $
 #
 #============================================================================
 
@@ -22,18 +22,12 @@ Bugs
   * I don't think Tied Hashes get treated as regular hashes, but they 
     should.
 
-  * Cannot create an empty list.
-
 Possible Features
 ----------------
   * TRY to scope CATCH?
 
   * General-purpose DEBUG option which can activate *limited* debug operations
     (e.g. for tracing undefined values at runtime) 
-
-  * PERL directive to encapsulate Perl code.  Stash variables could be 
-    made available.  This should be delegated to Text::Template, or to 
-    Template::Perl which is, or delegates to Text::Template.
 
   * An option to bind subs in a Perl namespace into a template namespace
     without requiring the specific binding to every function.
@@ -56,8 +50,12 @@ General Improvements
 
   * It is currently impossible to create a list and then pass the members 
     of that list to a code ref/method.  The following would pass the list
-    reference to the code, not the items in the list.
+    reference to the code, not the items in the list. 
+
       [% things = [ b c a ]; do_something(things) %]
+
+    You can't create an empty list either, but I'm not sure how important 
+    these really are.
 
   * At some point the 'cache' (really a file loader) should be
     modified to work in a more generic resource brokering role.  This
@@ -79,6 +77,8 @@ General Improvements
 
 Documentation
 -------------
+
+  * Document references, if they prove to be useful.
 
   * There's very little documentation describing the available filters.
 

@@ -13,7 +13,10 @@ variables (GET/SET/DEFAULT), process other template component files
 (INCLUDE/PROCESS), iterate through various values (FOREACH),
 conditional branching (IF/UNLESS/ELSIF/ELSE), error handling (CATCH,
 THROW), flow control (BREAK, RETURN, STOP), loading "plugin" code 
-(USE) and post-processing (FILTER).
+(USE) and post-processing (FILTER).  Optional PERL sections (disabled
+by default - see EVAL_PERL option) allow Perl code to be directly 
+embedded with full interface to the Template Toolkit interface and 
+variables.
 
 =item -
 
@@ -28,14 +31,17 @@ This natural extensibility promotes the separation of the application
 (implementation) from the interface (presentation).  Template
 documents remain simple and focussed on rendering the interface.
 Application code can be made more generic by concentrating on what the
-application does, not what it looks like.
+application does, not what it looks like.  If and when you really need
+to embed Perl code, you can.
 
 =item -
 
 Ideally suited, but not limited to, web content generation.  
-Front-end modules and/or scripts provided for use with static pages, 
-CGI scripts, Apache/mod_perl handlers, etc.  Plugin modules available
-for interfacing to CGI and DBI.
+The 'tpage' and 'ttree' scripts help manage and build entire directory
+trees from source templates, library files and plugin components.
+The Template module can be used directly from CGI scripts, Apache/mod_perl
+handlers, or any other Perl code as a simple front-end to the Toolkit.
+Plugin modules are available for interfacing to CGI, DBI, etc.
 
 =item -
 
@@ -77,7 +83,7 @@ and applications, servers, etc.
 
 =item -
 
-Template language is independent (theoretically at least) of the
+Template language is largely independent (theoretically at least) of the
 implementation language, platform, operating system, etc.
 
 =item -

@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm.skel,v 1.15 1999/11/26 07:53:34 abw Exp $
+# $Id: Grammar.pm.skel,v 1.16 1999/12/16 09:31:27 abw Exp $
 #
 #========================================================================
 
@@ -38,7 +38,7 @@ use vars qw( $VERSION );
 
 use Template::Constants qw( :ops :status );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, $LEXTABLE, $RULES, $STATES);
 my $factory;
@@ -87,6 +87,7 @@ $LEXTABLE = {
     '='       => 'ASSIGN',
     '=>'      => 'ASSIGN',
     ','       => 'COMMA',
+    '\\'      => 'REF',
     'and'     => 'AND',		# explicitly specified so that qw( and or
     'or'      => 'OR',		# not ) can always be used in lower case, 
     'not'     => 'NOT'		# regardless of CASE sensitivity flag

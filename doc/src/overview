@@ -55,22 +55,31 @@ distraction or discourse in any and all of your template documents.
 
 This isn't the only way to do it.  There are times when the "best
 solution" in terms of getting the job done quickly and efficiently is
-to simply embed Perl code directly into the document.  In those cases,
-Mark-Jason Dominus' Text::Template module, available from CPAN, comes
-highly recommended.  In many ways, this is like CGI scripting in 
-reverse.  Instead of embedding HTML within the Perl script, you 
-are embeddding Perl within the HTML document.
+to simply embed Perl code directly into the document.  The Template
+Toolkit has an option (EVAL_PERL - disabled by default) to allow Perl 
+code to be embedded into special 'PERL' sections which are then evaluated 
+when the template is processed.  These Perl code fragments have full access 
+to the Template Toolkit interface and may read or update variables, 
+process other template files, load plugins, and so on.
 
-The Template Toolkit promotes the separation of the two in attempt to
-create a more structured approach to constructing dynamic content.
-There's a slight "startup" cost to using this approach because, like
-life in general, it often takes a little longer to get yourself
-properly organised.  The payoff comes in terms of scalability and
-subsequent ease of re-use - the more you add, the more you benefit
-from having structure.  That's not to say that you can't use it in
-many interesting ways with just a single document, but if you only
-have a single document to worry about then the chances are that you
-haven't got a lot to worry about.
+If you prefer the embedded Perl approach and have a need to get
+some functionality into a document with the minimum fuss, setup time
+and effort, then you might want to consider using a dedicated embedded
+Perl processor. In those cases, Mark-Jason Dominus' Text::Template
+module, available from CPAN, comes highly recommended.  
+
+In many ways, this is like CGI scripting in reverse.  Instead of
+embedding HTML within the Perl script, you are embeddding Perl within
+the HTML document.  The Template Toolkit tries to better separate the
+two in attempt to create a more structured approach to constructing
+dynamic content.  There's a slight "startup" cost to using this
+approach because, like life in general, it often takes a little longer
+to get yourself properly organised.  The payoff comes in terms of
+scalability and subsequent ease of re-use - the more you add, the more
+you benefit from having structure.  That's not to say that you can't
+use it in many interesting ways with just a single document, but if
+you only have a single document to worry about then the chances are
+that you haven't got a lot to worry about.
 
 So rather than emphasing the raw programming power embeddable within
 any I<single document>, it focuses on tools and techniques to help
@@ -132,9 +141,7 @@ details are hidden away, the directive syntax is simplified and you
 can get a lot done very quickly with the minimum of fuss.  The benefit
 of the Text::Template approach is that you have complete control over
 exactly what happens and you can be as structured or as unstructured
-as the task in hand demands.  The internal parsing and processing
-method is also extremely efficient and fast, being handled by Perl
-itself.
+as the task in hand demands.
 
 The Template Toolkit is a direct descendant of, and replacement for
 the Text::MetaText module.  It has been designed and rebuilt from

@@ -128,6 +128,7 @@ debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2]) }
 
 term:       LITERAL			{ [ OP_LITERAL, $_[1]    ] }
 	|   ident			{ [ OP_IDENT,   $_[1]    ] }
+	|   REF ident                   { [ OP_REF,     $_[2]    ] }
 	|   '[' range ']'		{ [ OP_RANGE,   $_[2]    ] }
 	|   '[' list ']'		{ [ OP_LIST,    $_[2]    ] }
 	|   '[' list ']' '(' args ')'	{ [ OP_ITER,    @_[2, 5] ] }
@@ -144,9 +145,10 @@ ident:	    ident DOT item		{ push(@{$_[1]}, $_[3]); $_[1] }
 	|   '$' item			{ [ $_[2] ] }
 ;
 
-item:	    '${' term '}'		{ [ $_[2], 0     ] } 
-	|   IDENT '(' args ')'		{ [ $_[1], $_[3] ] }
-	|   IDENT			{ [ $_[1], 0     ] }
+item:	    '${' term '}'		{ [ $_[2], 0 ] } 
+	|   '${' term '}' '(' args ')'  { [ @_[2, 5] ] } 
+	|   IDENT '(' args ')'		{ [ @_[1, 3] ] }
+	|   IDENT			{ [ $_[1], 0 ] }
 ;
 
 assign:	    ident ASSIGN term		{ push(@{$_[3]}, OP_ASSIGN, $_[1]);
@@ -197,7 +199,7 @@ arglist:    arglist arg			{ push(@{$_[1]}, $_[2]); $_[1] }
 ;
 
 args:	    arglist			{ [ OP_ARGS, $_[1] ]  }
-	|   /* NULL */			{ [ OP_LITERAL, [ ] ] }
+	|   /* NULL */			{ [ OP_ARGS, [ ] ] }
 ;
 
 # list of macro arguments
