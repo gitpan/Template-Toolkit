@@ -15,7 +15,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile4.t,v 2.1 2000/09/08 08:10:52 abw Exp $
+# $Id: compile4.t,v 2.2 2001/08/04 09:49:29 abw Exp $
 #
 #========================================================================
 
@@ -37,13 +37,14 @@ my $ttcfg = {
     INCLUDE_PATH => "$dir/src",
     COMPILE_DIR  => $cdir,
     COMPILE_EXT  => '.ttc',
+    ABSOLUTE     => 1,
 };
 
 # delete any existing cache files
 rmtree($cdir) if -d $cdir;
 mkpath($cdir);
 
-test_expect(\*DATA, $ttcfg);
+test_expect(\*DATA, $ttcfg, { root => abs_path($dir) } );
 
 
 __DATA__
@@ -75,3 +76,7 @@ Error: [% error.type %] - [% error.info %]
 This is file baz
 The word is 'wibble'
 
+-- test --
+[% INCLUDE "$root/src/blam" %]
+-- expect --
+This is the blam file

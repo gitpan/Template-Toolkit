@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Service.pm,v 2.22 2001/06/29 13:09:00 abw Exp $
+# $Id: Service.pm,v 2.36 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -34,7 +34,7 @@ use Template::Base;
 use Template::Config;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.22 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.36 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 
 
@@ -709,8 +709,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.18, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.34, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

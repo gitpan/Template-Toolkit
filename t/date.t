@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: date.t,v 2.4 2001/06/14 13:20:12 abw Exp $
+# $Id: date.t,v 2.5 2001/09/06 19:20:08 abw Exp $
 #
 #========================================================================
 
@@ -206,4 +206,11 @@ not testing
 [% ELSE -%]
 not testing
 [% END -%]
+
+-- test --
+[% USE date;
+   date.format('12:59:00 30/09/2001', '%H:%M')
+-%]
+-- expect --
+12:59
 

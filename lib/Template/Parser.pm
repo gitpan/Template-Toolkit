@@ -31,7 +31,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 2.22 2001/06/29 13:09:00 abw Exp $
+# $Id: Parser.pm,v 2.38 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -42,7 +42,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ERROR );
 use base qw( Template::Base );
-use vars qw( $TAG_STYLE $DEFAULT_STYLE );
+use vars qw( $TAG_STYLE $DEFAULT_STYLE $QUOTED_ESCAPES );
 
 use Template::Constants qw( :status :chomp );
 use Template::Directive;
@@ -54,7 +54,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.22 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.38 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 $ERROR   = '';
 
@@ -88,6 +88,12 @@ $DEFAULT_STYLE = {
     EVAL_PERL   => 0,
 };
 
+$QUOTED_ESCAPES = {
+	n => "\n",
+	r => "\r",
+	t => "\t",
+};
+
 
 #========================================================================
 #                      -----  PUBLIC METHODS -----
@@ -117,6 +123,7 @@ sub new {
 	EVAL_PERL   => 0,
 	GRAMMAR     => undef,
 	_ERROR      => '',
+	FACTORY     => 'Template::Directive',
     }, $class;
 
     # update self with any relevant keys in config
@@ -128,7 +135,6 @@ sub new {
 	require Template::Grammar;
 	Template::Grammar->new();
     };
-    $self->{ FACTORY } ||= 'Template::Directive';
 
 #    # determine START_TAG and END_TAG for specified (or default) TAG_STYLE
 #    $tagstyle = $self->{ TAG_STYLE } || 'default';
@@ -323,7 +329,7 @@ sub split_text {
 	# and now the directive, along with line number information
 	if (length $dir) {
 	    # the TAGS directive is a compile-time switch
-	    if ($dir =~ /TAGS\s+(.*)/i) {
+	    if ($dir =~ /^TAGS\s+(.*)/i) {
 		my @tags = split(/\s+/, $1);
 		if (scalar @tags > 1) {
 		    ($start, $end) = map { quotemeta($_) } @tags;
@@ -386,26 +392,26 @@ sub interpolate_text {
 	   )
 	/gx) {
     
-	($pre, $var, $dir) = ($1, $3 || $4, $2);
+		($pre, $var, $dir) = ($1, $3 || $4, $2);
 
-	# preceding text
-	if (defined($pre) && length($pre)) {
-	    $line += $pre =~ tr/\n//;
-	    $pre =~ s/\\\$/\$/g;
-	    push(@tokens, 'TEXT', $pre);
-	}
-	# $variable reference
+		# preceding text
+		if (defined($pre) && length($pre)) {
+			$line += $pre =~ tr/\n//;
+			$pre =~ s/\\\$/\$/g;
+			push(@tokens, 'TEXT', $pre);
+		}
+		# $variable reference
         if ($var) {
-	    $line += $dir =~ tr/\n/ /;
-	    push(@tokens, [ $dir, $line, $self->tokenise_directive($var) ]);
-	}
-	# other '$' reference - treated as text
-	elsif ($dir) {
-	    $line += $dir =~ tr/\n//;
-	    push(@tokens, 'TEXT', $dir);
-	}
+			$line += $dir =~ tr/\n/ /;
+			push(@tokens, [ $dir, $line, $self->tokenise_directive($var) ]);
+		}
+		# other '$' reference - treated as text
+		elsif ($dir) {
+			$line += $dir =~ tr/\n//;
+			push(@tokens, 'TEXT', $dir);
+		}
     }
-
+	
     return \@tokens;
 }
 
@@ -495,11 +501,13 @@ sub tokenise_directive {
 	        if ($token =~ /[\$\\]/) {
 		    $type = 'QUOTED';
 		    # unescape " and \ but leave \$ escaped so that 
-		    # interpolate_text() doesn't incorrectly treat it
+			# interpolate_text() doesn't incorrectly treat it
 		    # as a variable reference
 #		    $token =~ s/\\([\\"])/$1/g;
-		    $token =~ s/\\([^\$n])/$1/g;
-		    $token =~ s/\\n/\n/g;
+			for ($token) {
+				s/\\([^\$nrt])/$1/g;
+				s/\\([nrt])/$QUOTED_ESCAPES->{ $1 }/ge;
+			}
 		    push(@tokens, ('"') x 2,
 				  @{ $self->interpolate_text($token) },
 				  ('"') x 2);
@@ -1268,8 +1276,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.22, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.38, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
  
 

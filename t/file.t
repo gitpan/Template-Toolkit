@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: file.t,v 2.3 2001/06/14 13:20:12 abw Exp $
+# $Id: file.t,v 2.5 2001/09/12 14:53:07 abw Exp $
 #
 #========================================================================
 
@@ -21,7 +21,7 @@ use Template::Test;
 use Template::Plugin::File;
 $^W = 1;
 
-if ($^O =~ /win/i) {
+if ($^O eq 'MSWin32') {
     print "1..0\n";
     exit(0);
 }
@@ -167,5 +167,15 @@ foo
 -- process --
 [% dir %]/src/foo
 [% mtime %]
+
+-- test --
+[% TRY -%]
+[% USE f = File('') -%]
+n: [% f.name %]
+[% CATCH -%]
+Drat, there was a [% error.type %] error.
+[% END %]
+-- expect --
+Drat, there was a File error.
 
 

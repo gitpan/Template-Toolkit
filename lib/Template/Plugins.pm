@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugins.pm,v 2.20 2001/06/29 13:09:00 abw Exp $
+# $Id: Plugins.pm,v 2.35 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $STD_PLUGINS );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.20 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.35 $ =~ /(\d+)\.(\d+)/);
 
 $STD_PLUGINS   = {
     'autoformat' => 'Template::Plugin::Autoformat',
@@ -96,17 +96,21 @@ sub fetch {
     unshift @$args, $context;
 
     $factory = $self->{ FACTORY }->{ $name } ||= do {
-	($factory, $error) = $self->_load($name, $args);
+	($factory, $error) = $self->_load($name, $context);
 	return ($factory, $error) if $error;			## RETURN
 	$factory;
     };
 
     # call the new() method on the factory object or class name
     eval {
-	print STDERR "args: [ @$args ]\n"
-	    if $DEBUG;
-	$plugin = $factory->new(@$args)
-    	    || die "$name plugin failed: ", $factory->error(), "\n";	## DIE
+	if (ref $factory eq 'CODE') {
+	    $plugin = &$factory(@$args)
+		|| die "$name plugin failed\n";
+	}
+	else {
+	    $plugin = $factory->new(@$args)
+		|| die "$name plugin failed: ", $factory->error(), "\n";
+	}
     };
     if ($error = $@) {
 #	chomp $error;
@@ -153,7 +157,7 @@ sub _init {
 
 
 #------------------------------------------------------------------------
-# _load($name, $args)
+# _load($name, $context)
 #
 # Private method which attempts to load a plugin module and determine the 
 # correct factory name or object by calling the load() class method in
@@ -161,7 +165,7 @@ sub _init {
 #------------------------------------------------------------------------
 
 sub _load {
-    my ($self, $name, $args) = @_;
+    my ($self, $name, $context) = @_;
     my ($factory, $module, $base, $pkg, $file, $ok, $error);
 
     if ($module = $self->{ PLUGINS }->{ $name }) {
@@ -197,8 +201,7 @@ sub _load {
 	print STDERR "fetch() attempting to call $pkg->load()\n"
 	    if $DEBUG;
 
-	# first item in @$args is context reference, passed to load()
-	$factory = eval { $pkg->load($args->[0]) };
+	$factory = eval { $pkg->load($context) };
 	$error   = '';
 	if ($@ || ! $factory) {
 	    $error = $@ || 'load() returned a false value';
@@ -212,10 +215,14 @@ sub _load {
 	    $error = $@;
 	}
 	else {
-	    # remove the context reference from the args list - this isn't
-	    # a plugin module and won't be expecting it
-	    shift(@$args);
-	    $factory = $module;
+	    # this is a regular Perl module so the new() constructor
+	    # isn't expecting a $context reference as the first argument;
+	    # so we construct a closure which removes it before calling
+	    # $module->new(@_);
+	    $factory = sub {
+		shift;
+		$module->new(@_);
+	    };
 	    $error   = '';
 	}
     }
@@ -883,8 +890,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.20, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.35, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

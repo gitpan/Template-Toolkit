@@ -17,7 +17,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Config.pm,v 2.17 2001/06/29 13:09:00 abw Exp $
+#   $Id: Config.pm,v 2.32 2001/11/06 15:00:19 abw Exp $
 #
 #========================================================================
  
@@ -32,7 +32,7 @@ use vars qw( $VERSION $DEBUG $ERROR $INSTDIR
              $LATEX_PATH $PDFLATEX_PATH $DVIPS_PATH
 	     $STASH $SERVICE $CONTEXT );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.17 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.32 $ =~ /(\d+)\.(\d+)/);
 $DEBUG    = 0 unless defined $DEBUG;
 $ERROR    = '';
 $CONTEXT  = 'Template::Context';
@@ -45,13 +45,13 @@ $SERVICE  = 'Template::Service';
 $STASH    = 'Template::Stash';
 
 # the following is set at installation time by the Makefile.PL 
-$INSTDIR  = '/usr/local/tt2';
+$INSTDIR  = '';
 
 # LaTeX executable paths set at installation time by the Makefile.PL
 # Empty strings cause the latex(pdf|dvi|ps) filters to throw an error.
-$LATEX_PATH    = '/usr/bin/latex';
-$PDFLATEX_PATH = '/usr/bin/pdflatex';
-$DVIPS_PATH    = '/usr/bin/dvips';
+$LATEX_PATH    = '';
+$PDFLATEX_PATH = '';
+$DVIPS_PATH    = '';
 
 #========================================================================
 #                       --- CLASS METHODS ---
@@ -392,8 +392,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.17, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.32, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

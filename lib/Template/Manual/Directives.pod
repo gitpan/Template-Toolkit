@@ -640,7 +640,10 @@ Multiple conditions may be joined with ELSIF and/or ELSE blocks.
 
 The following conditional and boolean operators may be used:
 
-    == != < <= > >= ! && || and or not
+    == != < <= > >= && || ! and or not
+
+Note that C<and>, C<or> and C<not> are also provided as aliases for
+C<&&>, C<||> and C<!>, respectively.
 
 Conditions may be arbitrarily complex and are evaluated with the same
 precedence as in Perl.  Parenthesis may be used to explicitly
@@ -652,6 +655,8 @@ determine evaluation order.
     [% ELSIF more > less %]
        That's more or less correct.
     [% END %]
+
+
 
 
 
@@ -2070,7 +2075,7 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.04, released on 29 June 2001.
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

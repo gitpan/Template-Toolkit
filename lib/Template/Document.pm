@@ -20,7 +20,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.19 2001/06/29 13:09:00 abw Exp $
+# $Id: Document.pm,v 2.34 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -32,8 +32,9 @@ use strict;
 use vars qw( $VERSION $ERROR $COMPERR $DEBUG $AUTOLOAD );
 use base qw( Template::Base );
 use Template::Constants;
+use Fcntl qw(O_WRONLY O_CREAT O_TRUNC);
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.19 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.34 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -243,11 +244,11 @@ sub write_perl_file {
 		       } keys %$metadata);
 
     local *CFH;
-    my ($cfile) = $file =~ /^([\w\.\-\/]+)$/ or do {
+    my ($cfile) = $file =~ /^(.+)$/s or do {
 	$ERROR = "invalid filename: $file";
 	return undef;
     };
-    open(CFH, ">$cfile") or do {
+    sysopen(CFH, $cfile, O_CREAT|O_WRONLY|O_TRUNC) or do {
 	$ERROR = $!;
 	return undef;
     };
@@ -449,8 +450,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.19, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.34, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

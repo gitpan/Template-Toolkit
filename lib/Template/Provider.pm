@@ -27,7 +27,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Provider.pm,v 2.18 2001/06/29 13:09:00 abw Exp $
+# $Id: Provider.pm,v 2.34 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -42,8 +42,9 @@ use Template::Config;
 use Template::Constants;
 use Template::Document;
 use File::Basename;
+use File::Spec;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.18 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.34 $ =~ /(\d+)\.(\d+)/);
 
 # maximum time between performing stat() on file to check staleness
 $STAT_TTL = 1 unless defined $STAT_TTL;
@@ -96,7 +97,7 @@ sub fetch {
 	$data = $data->{ data }
 	    unless $error;
     }
-    elsif (($name =~ m[^/]) || (($^O =~ /win/i) && ($name =~ m[^(\w:)?/]))) {
+    elsif (File::Spec->file_name_is_absolute($name)) {
 	# absolute paths (starting '/') allowed if ABSOLUTE set
 	($data, $error) = $self->{ ABSOLUTE } 
 	    ? $self->_fetch($name) 
@@ -156,7 +157,7 @@ sub load {
     my ($data, $error);
     my $path = $name;
 
-    if (($name =~ m[^/]) || (($^O =~ /win/i) && ($name =~ m[^(\w:)?/]))) {
+    if (File::Spec->file_name_is_absolute($name)) {
 	# absolute paths (starting '/') allowed if ABSOLUTE set
 	$error = "$name: absolute paths are not allowed (set ABSOLUTE option)" 
 	    unless $self->{ ABSOLUTE };
@@ -267,7 +268,7 @@ sub _init {
 
     # tweak delim to ignore C:/
     unless (defined $dlim) {
-	$dlim = ($^O =~ /win/i) ? ':(?!\\/)' : ':';
+        $dlim = ($^O eq 'MSWin32') ? ':(?!\\/)' : ':';
     }
 
     # coerce INCLUDE_PATH to an array ref, if not already so
@@ -305,7 +306,7 @@ sub _init {
 	require File::Path;
 	foreach my $dir (@$path) {
 	    my $wdir = $dir;
-	    $wdir =~ s[:][]g if ($^O =~ /win/i);
+            $wdir =~ s[:][]g if $^O eq 'MSWin32';
 	    &File::Path::mkpath("$cdir/$wdir");
 	}
 	# ensure $cdir is terminated with '/' for subsequent path building
@@ -347,13 +348,21 @@ sub _fetch {
     print STDERR "_fetch($name)\n"
 	if $DEBUG;
 
+    my $compiled = $self->_compiled_filename($name);
+
     if (defined $size && ! $size) {
 	# caching disabled so load and compile but don't cache
-	($data, $error) = $self->_load($name);
-	($data, $error) = $self->_compile($data)
+	if ($compiled && -f $compiled && (stat($name))[9] < (stat($compiled))[9]) {
+	    $data = $self->_load_compiled($compiled);
+	    $error = $self->error() unless $data;
+	}
+	else {
+	    ($data, $error) = $self->_load($name);
+	    ($data, $error) = $self->_compile($data, $compiled)
+		unless $error;
+	    $data = $data->{ data }
 	    unless $error;
-	$data = $data->{ data }
-	    unless $error;
+	}
     }
     elsif ($slot = $self->{ LOOKUP }->{ $name }) {
 	# cached entry exists, so refresh slot and extract data
@@ -363,11 +372,18 @@ sub _fetch {
     }
     else {
 	# nothing in cache so try to load, compile and cache
-	($data, $error) = $self->_load($name);
-	($data, $error) = $self->_compile($data)
-	    unless $error;
-	$data = $self->_store($name, $data)
-	    unless $error;
+	if ($compiled && -f $compiled && (stat($name))[9] < (stat($compiled))[9]) {
+	    $data = $self->_load_compiled($compiled);
+	    $error = $self->error() unless $data;
+	}
+	else {
+	    ($data, $error) = $self->_load($name);
+	    ($data, $error) = $self->_compile($data, $compiled)
+		unless $error;
+	    $data = $self->_store($name, $data)
+		unless $error;
+	}
+
     }
 
     return ($data, $error);
@@ -422,33 +438,18 @@ sub _fetch_path {
 		last INCLUDE;
 	    }
 	    elsif (-f $path) {
-		if ($compext || $compdir) {
-		    my $wpath = $path;
-		    $wpath =~ s[:][]g if $^O =~ /win/i;
-		    $compiled = "$compdir$wpath$compext";
-		    $compiled =~ s[//][/]g;
-		}
-		if ($compiled && -f $compiled
-		    && (stat($path))[9] < (stat($compiled))[9]) {
-		    
-		    # load compiled template via require();  we zap any
-		    # %INC entry to ensure it is reloaded (we don't 
-		    # want 1 returned by require() to say it's in memory)
-		    delete $INC{ $compiled };
-		    eval { 
-			my ($ccompiled) = $compiled =~ /^([\w\-\.\/]+)$/ 
-			    or die "invalid filename: $compiled";
-			$data = require $compiled;
-		    };
-		    if ($data && ! $@) {
+		$compiled = $self->_compiled_filename($path)
+		    if $compext || $compdir;
+
+		if ($compiled && -f $compiled && (stat($path))[9] < (stat($compiled))[9]) {
+		    if ($data = $self->_load_compiled($compiled)) {
 			# store in cache
 			$data  = $self->store($path, $data);
 			$error = Template::Constants::STATUS_OK;
 			last INCLUDE;
 		    }
-		    elsif ($@) {
-			warn "failed to load compiled template $compiled: $@\n";
-			# leave $compiled set to regenerate template
+		    else {
+			warn($self->error(), "\n");
 		    }
 		}
 		# $compiled is set if an attempt to write the compiled 
@@ -459,6 +460,7 @@ sub _fetch_path {
 		    unless $error;
 		$data = $self->_store($path, $data)
 		    unless $error || ! $caching;
+                $data = $data->{ data } if ! $caching;
 		# all done if $error is OK or ERROR
 		last INCLUDE if ! $error 
 		    || $error == Template::Constants::STATUS_ERROR;
@@ -477,6 +479,41 @@ sub _fetch_path {
 
     return ($data, $error);
 }
+
+
+
+sub _compiled_filename {
+    my ($self, $file) = @_;
+    my ($compext, $compdir) = @$self{ qw( COMPILE_EXT COMPILE_DIR ) };
+    my ($path, $compiled);
+
+    return undef
+	unless $compext || $compdir;
+
+    $path = $file;
+    $path =~ /^(.+)$/s or die "invalid filename: $path";
+    $path =~ s[:][]g if $^O eq 'MSWin32';
+    $compiled = "$compdir$path$compext";
+    $compiled =~ s[//][/]g;
+
+    return $compiled;
+}
+
+
+sub _load_compiled {
+    my ($self, $file) = @_;
+    my $compiled;
+
+    # load compiled template via require();  we zap any
+    # %INC entry to ensure it is reloaded (we don't 
+    # want 1 returned by require() to say it's in memory)
+    delete $INC{ $file };
+    eval { $compiled = require $file; };
+    return $@
+	 ? $self->error("compiled template $compiled: $@")
+	 : $compiled;
+}
+
 
 
 #------------------------------------------------------------------------
@@ -702,6 +739,9 @@ sub _compile {
     my $text = $data->{ text };
     my ($parsedoc, $error);
 
+    print STDERR "_compile($data, $compfile)\n"
+	if $DEBUG;
+
     my $parser = $self->{ PARSER } 
 	||= Template::Config->parser($self->{ PARAMS })
 	||  return (Template::Config->error(), Template::Constants::STATUS_ERROR);
@@ -727,16 +767,20 @@ sub _compile {
 		    . &File::Basename::basename($compfile)
 		    . ": $Template::Document::ERROR"
 		unless Template::Document::write_perl_file($compfile, $parsedoc);
+ 
+	    # set atime and mtime of newly compiled file, don't bother
+	    # if time is undef
+	    if (!defined($error) && defined $data->{ time }) {
+		my ($cfile) = $compfile =~ /^(.+)$/s or do {
+		    return("invalid filename: $compfile", 
+			      Template::Constants::STATUS_ERROR);
+		};
 
-	    if (!defined($error)) {
-		my ($ctime, $cfile);
-		# set atime and mtime of newly compiled file
-		($cfile = ($compfile =~ /^([\w\-\.\/]+)$/))
-		    or return("invalid filename: $compfile", 
+		my ($ctime) = $data->{ time } =~ /^(\d+)$/;
+		unless ($ctime || $ctime eq 0) {
+		    return("invalid time: $ctime", 
 			      Template::Constants::STATUS_ERROR);
-		($ctime = ($data->{ time } =~ /^(\d+)$/))
-		    or return("invalid time: $ctime", 
-			      Template::Constants::STATUS_ERROR);
+		}
  		utime($ctime, $ctime, $cfile);
 	    }
 	}
@@ -1194,8 +1238,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.18, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.34, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

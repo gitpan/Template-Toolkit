@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: latex2ps.t,v 2.1 2001/06/14 13:20:12 abw Exp $
+# $Id: latex2ps.t,v 2.2 2001/08/29 08:49:01 abw Exp $
 # 
 #========================================================================
 
@@ -29,7 +29,6 @@ my($LaTeXPath, $PdfLaTeXPath, $DviPSPath) = @{Template::Config->latexpaths()};
 # We need a non-empty $LaTeXPath and $DviPSPath to convert to PS
 #
 if ( $LaTeXPath eq "" || $DviPSPath eq "" ) {
-    print "1..0\n";
     exit(0);
 }
 

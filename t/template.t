@@ -14,7 +14,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: template.t,v 2.1 2000/11/01 12:01:45 abw Exp $
+# $Id: template.t,v 2.3 2001/08/29 13:15:21 abw Exp $
 #
 #========================================================================
 
@@ -40,4 +40,28 @@ my $error = $tt->error();
 ok( $error->type() eq 'file' );
 ok( $error->info() eq 'this_file_does_not_exist: not found' );
 
+sub myout {
+  my $output = shift;
+  ok($output)
+}
 
+ok($tt->process('header', undef, \&myout));
+
+$out = Myout->new();
+
+ok($tt->process('header', undef, $out));
+
+package Myout;
+use Template::Test;
+
+sub new {
+  my $proto = shift;
+  my $class = ref($proto) || $proto;
+  my $self = {};
+  bless($self, $class);
+  return $self;
+}
+sub print {
+  my $output = shift;
+  ok($output);
+}

@@ -20,7 +20,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Test.pm,v 2.17 2001/06/29 13:09:00 abw Exp $
+# $Id: Test.pm,v 2.31 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use vars qw( @ISA @EXPORT $VERSION $DEBUG $EXTRA $PRESERVE $loaded %callsign);
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.17 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.31 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 @ISA     = qw( Exporter );
 @EXPORT  = qw( ntests ok match flush test_expect callsign banner );
@@ -616,8 +616,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.17, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.31, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

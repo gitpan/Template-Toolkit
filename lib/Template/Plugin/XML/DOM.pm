@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: DOM.pm,v 2.17 2001/06/29 13:09:00 abw Exp $
+# $Id: DOM.pm,v 2.25 2001/11/06 15:00:22 abw Exp $
 #
 #============================================================================
 
@@ -202,6 +202,9 @@ sub content {
     my $output = '';
     foreach my $node (@{ $self->getChildNodes }) {
 	$output .= $node->present($view);
+
+# abw test passing args, Aug 2001
+#	$output .= $view->print($node);
     }
     return $output;
 }
@@ -798,7 +801,7 @@ library.
 =head1 VERSION
 
 2.6, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+Template Toolkit version 2.06, released on 07 November 2001.
 
 
 

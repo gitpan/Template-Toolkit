@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: parser.t,v 2.4 2000/12/15 16:01:11 abw Exp $
+# $Id: parser.t,v 2.6 2001/11/06 15:00:22 abw Exp $
 # 
 #========================================================================
 
@@ -24,7 +24,7 @@ use Template::Parser;
 $^W = 1;
 
 #$Template::Test::DEBUG = 0;
-#$Template::Test::PRESERVE = 0;
+#$Template::Test::PRESERVE = 1;
 #$Template::Stash::DEBUG = 1;
 #$Template::Parser::DEBUG = 1;
 #$Template::Directive::PRETTY = 1;
@@ -76,6 +76,7 @@ my $tt = [
 
 my $replace = &callsign;
 $replace->{ alist } = [ 'foo', 0, 'bar', 0 ];
+$replace->{ wintxt } = "foo\r\n\r\nbar\r\n\r\nbaz";
 
 test_expect(\*DATA, $tt, $replace);
 
@@ -215,6 +216,26 @@ The quoted value is [% quoted %]
 A directive looks like: [% INCLUDE foo %]
 The quoted value is [% INSERT foo %]
 
+-- test --
+=[% wintxt | replace("(\r\n){2,}", "\n<break>\n") %]
+
+-- expect --
+=foo
+<break>
+bar
+<break>
+baz
+
+-- test --
+[% nl  = "\n"
+   tab = "\t"
+-%]
+blah blah[% nl %][% tab %]x[% nl; tab %]y[% nl %]end
+-- expect --
+blah blah
+	x
+	y
+end
 
 #------------------------------------------------------------------------
 # STOP RIGHT HERE!

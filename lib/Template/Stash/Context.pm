@@ -65,7 +65,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.8 2001/06/29 13:09:00 abw Exp $
+# $Id: Context.pm,v 1.22 2001/11/06 15:00:22 abw Exp $
 #
 #============================================================================
 
@@ -76,7 +76,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -144,7 +144,7 @@ $HASH_OPS = {
     'list'   => sub { my ($hash, $what) = @_;  $what ||= '';
                       return ($what eq 'keys')   ? [   keys %$hash ]
                            : ($what eq 'values') ? [ values %$hash ]
-                           : ($what eq 'each')   ? [ values %$hash ]
+                           : ($what eq 'each')   ? [        %$hash ]
                            : [ map { { key => $_ , value => $hash->{ $_ } } }
                                keys %$hash ];
                 },
@@ -518,7 +518,7 @@ sub _dotop {
 	unless defined($root) and defined($item) and $item !~ /^[\._]/;
 
     if (ref(\$root) eq "SCALAR" && !$lvalue &&
-            (($value = $LIST_OPS->{ $item }) || $item =~ /^\d+$/) ) {
+            (($value = $LIST_OPS->{ $item }) || $item =~ /^-?\d+$/) ) {
         #
         # Promote scalar to one element list, to be processed below.
         #
@@ -575,7 +575,7 @@ sub _dotop {
                 $root->[$i] = &$value($root->[$i], @$args); ## @result
             }
 	}
-	elsif ($item =~ /^\d+$/) {
+	elsif ($item =~ /^-?\d+$/) {
 	    $value = $root->[$item];
             ($ret, $retVal, @result) = _dotop_return($value, $args, $returnRef,
                                                      $scalarContext);
@@ -720,7 +720,7 @@ sub _assign {
 	return ($root->{ $item } = $value)			## RETURN
 	    unless $default && $root->{ $item };
     }
-    elsif ($rootref eq 'ARRAY' && $item =~ /^\d+$/) {
+    elsif ($rootref eq 'ARRAY' && $item =~ /^-?\d+$/) {
 	# or set a list item by index number
 	return ($root->[$item] = $value)			## RETURN
 	    unless $default && $root->{ $item };
@@ -867,8 +867,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.08, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+1.22, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

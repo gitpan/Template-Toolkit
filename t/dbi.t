@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dbi.t,v 2.6 2001/06/25 10:55:07 abw Exp $
+# $Id: dbi.t,v 2.8 2001/08/29 08:46:13 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib ./blib/lib ../blib/lib );
+use lib qw( . ./t ./lib ../lib ./blib/lib ../blib/lib );
 use vars qw( $DEBUG $run $dsn $user $pass );
 use Template::Test;
 
@@ -34,7 +34,6 @@ if ($@) {
 # the $run, $dsn, $user and $pass variables.
 require 'dbi_test.cfg';
 unless ($run) {
-    print "1..0\n";
     exit(0);
 }
 
@@ -451,4 +450,52 @@ Group 2 : The Foo Group
 
 
 
+#------------------------------------------------------------------------
+# test get_all()
+#------------------------------------------------------------------------
+
+-- test --
+[% USE dbi(dsn, user, pass, attr) -%]
+[% people = dbi.query('SELECT * FROM usr ORDER BY id').get_all -%]
+[% FOREACH p = people -%]
+<person id="[% p.id %]">
+  <name>[% p.name %]</name>
+</person>
+[% END; global.people = people %]
+-- expect --
+<person id="abw">
+  <name>Andy Wardley</name>
+</person>
+<person id="hans">
+  <name>Hans von Lengerke</name>
+</person>
+<person id="mrp">
+  <name>Martin Portman</name>
+</person>
+<person id="sam">
+  <name>Simon Matthews</name>
+</person>
+
+-- test --
+[% FOREACH p = global.people.reverse -%]
+<person>[% p.name %]</person>
+[% END %]
+-- expect --
+<person>Simon Matthews</person>
+<person>Martin Portman</person>
+<person>Hans von Lengerke</person>
+<person>Andy Wardley</person>
+
+-- test --
+[% USE dbi(dsn, user, pass, attr) -%]
+[% people = dbi.query('SELECT * FROM usr ORDER BY id') -%]
+first: [% people.get.name %]
+[% FOREACH p = people.get_all -%]
+rest: [% p.name %]
+[% END %]
+-- expect --
+first: Andy Wardley
+rest: Hans von Lengerke
+rest: Martin Portman
+rest: Simon Matthews
 

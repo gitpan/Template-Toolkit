@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 2.24 2001/06/29 13:09:00 abw Exp $
+# $Id: Context.pm,v 2.38 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -36,7 +36,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.24 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.38 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -102,7 +102,7 @@ sub template {
 	# prefix is specified to indicate the desired provider set.
 	$prefix = undef;
 
-	if ($^O =~ /win/i) {
+	if ($^O eq 'MSWin32') {
 	    $prefix = $1	# let C:/foo through
 		if $name =~ s/^(\w{2,})://o;
 	}
@@ -1419,8 +1419,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.24, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.38, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Date.pm,v 2.16 2001/06/29 13:09:00 abw Exp $
+# $Id: Date.pm,v 2.32 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 
 use POSIX ();
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.16 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.32 $ =~ /(\d+)\.(\d+)/);
 $FORMAT  = '%H:%M:%S %d-%b-%Y';    # default strftime() format
 
 
@@ -84,7 +84,11 @@ sub format {
 		    : ($params->{ locale } || $self->{ locale });
     my (@date, $datestr);
 
-    unless ($time =~ /^\d+$/) {
+    if ($time =~ /^\d+$/) {
+	# $time is now in seconds since epoch
+	@date = (localtime($time))[0..6];
+    }
+    else {
 	# if $time is numeric, then we assume it's seconds since the epoch
 	# otherwise, we try to parse it as a 'H:M:S D:M:Y' string
 	@date = (split(/(?:\/| |:|-)/, $time))[2,1,0,3..5];
@@ -96,8 +100,6 @@ sub format {
 	$time = &POSIX::mktime(@date);
     }
     
-    # $time is now in seconds since epoch
-    @date = (localtime($time))[0..6];
 
     if ($locale) {
 	# format the date in a specific locale, saving and subsequently
@@ -280,8 +282,8 @@ fixups/enhancements, a test script and documentation.
 
 =head1 VERSION
 
-2.16, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.32, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 
 

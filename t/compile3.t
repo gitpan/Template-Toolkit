@@ -2,7 +2,7 @@
 #
 # t/compile3.t
 #
-# Last test in the compile<n>.t trilogy.  Checks that modifications
+# Third test in the compile<n>.t trilogy.  Checks that modifications
 # to a source template result in a re-compilation of the template.
 #
 # Written by Andy Wardley <abw@kfs.org>
@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile3.t,v 2.3 2001/06/14 13:20:12 abw Exp $
+# $Id: compile3.t,v 2.4 2001/08/04 09:49:29 abw Exp $
 #
 #========================================================================
 

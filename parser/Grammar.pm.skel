@@ -26,7 +26,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm.skel,v 2.4 2000/12/15 16:01:11 abw Exp $
+# $Id: Grammar.pm.skel,v 2.7 2001/09/06 13:59:08 abw Exp $
 #
 #========================================================================
 
@@ -37,7 +37,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.7 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, %CMPOP, $LEXTABLE, $RULES, $STATES);
 my ($factory, $rawstart);
@@ -55,7 +55,20 @@ my ($factory, $rawstart);
 	TRY THROW CATCH FINAL LAST RETURN STOP CLEAR VIEW
     );
 
-%CMPOP = qw( != ne  == eq  < <  > >  >= >=  <= <= );
+# for historical reasons, != and == are converted to ne and eq to perform 
+# stringwise comparison (mainly because it doesn't generate "non-numerical 
+# comparison" warnings which != and == can) but the others (e.g. < > <= >=)
+# are not converted to their stringwise equivalents.  I added 'gt' et al, 
+# briefly for v2.04d and then took them out again in 2.04e.
+
+%CMPOP = qw( 
+    != ne
+    == eq
+    <  <
+    >  >
+    >= >=
+    <= <=
+);
 
 
 #========================================================================

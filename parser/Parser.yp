@@ -37,7 +37,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Parser.yp,v 2.9 2001/06/25 10:55:07 abw Exp $
+# $Id: Parser.yp,v 2.10 2001/09/06 14:00:18 abw Exp $
 #
 #========================================================================
 
@@ -322,11 +322,8 @@ params:	    params param	    { "$_[1], $_[2]"                      }
 	|   param
 ;
 
-#param:	    LITERAL ASSIGN term	    { "$_[1] => $_[3]"                    }
-#	|   IDENT ASSIGN term	    { "'$_[1]' => $_[3]"                  }
-#;
-param:	    LITERAL ASSIGN expr	    { "$_[1] => $_[3]"                    }
-	|   IDENT ASSIGN expr	    { "'$_[1]' => $_[3]"                  }
+param:      LITERAL ASSIGN expr     { "$_[1] => $_[3]"                    }
+        |   item ASSIGN expr        { "$_[1] => $_[3]"                    }
 ;
 
 ident:      ident DOT node	    { push(@{$_[1]}, @{$_[3]}); $_[1]     }

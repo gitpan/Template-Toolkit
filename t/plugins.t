@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: plugins.t,v 2.0 2000/08/10 14:56:29 abw Exp $
+# $Id: plugins.t,v 2.2 2001/09/21 22:50:06 abw Exp $
 #
 #========================================================================
 
@@ -156,3 +156,9 @@ This is the Bar plugin, value is 64
 [% baz.output %]
 -- expect --
 This is the Baz module, value is 128
+
+-- test --
+[% USE boz = MyPlugs.Baz(256) -%]
+[% boz.output %]
+-- expect --
+This is the Baz module, value is 256

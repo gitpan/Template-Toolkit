@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 2.25 2001/06/29 13:09:00 abw Exp $
+# $Id: Stash.pm,v 2.39 2001/11/06 15:00:19 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.25 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.39 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -96,7 +96,7 @@ $HASH_OPS = {
     'list'   => sub { my ($hash, $what) = @_;  $what ||= '';
                       return ($what eq 'keys')   ? [   keys %$hash ]
                            : ($what eq 'values') ? [ values %$hash ]
-                           : ($what eq 'each')   ? [ values %$hash ]
+                           : ($what eq 'each')   ? [        %$hash ]
                            : [ map { { key => $_ , value => $hash->{ $_ } } }
                                keys %$hash ];
                 },
@@ -491,7 +491,7 @@ sub _dotop {
 	if (($value = $LIST_OPS->{ $item }) && ! $lvalue) {
 	    @result = &$value($root, @$args);		    ## @result
 	}
-	elsif ($item =~ /^\d+$/) {
+	elsif ($item =~ /^-?\d+$/) {
 	    $value = $root->[$item];
 	    return $value unless ref $value eq 'CODE';	    ## RETURN
 	    @result = &$value(@$args);			    ## @result
@@ -605,7 +605,7 @@ sub _assign {
 	return ($root->{ $item } = $value)			## RETURN
 	    unless $default && $root->{ $item };
     }
-    elsif ($rootref eq 'ARRAY' && $item =~ /^\d+$/) {
+    elsif ($rootref eq 'ARRAY' && $item =~ /^-?\d+$/) {
 	# or set a list item by index number
 	return ($root->[$item] = $value)			## RETURN
 	    unless $default && $root->{ $item };
@@ -760,6 +760,11 @@ value specified in the second.
 
     $stash->set('var1', 'value1');
 
+If the third parameter evaluates to a true value, the variable is
+set only if it did not have a true value before.
+
+    $stash->set('var2', 'default_value', 1);
+
 Dotted compound variables may be specified as per get() above.
 
     [% foo.bar = 30 %]
@@ -810,8 +815,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.25, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+2.39, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

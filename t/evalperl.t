@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: evalperl.t,v 2.1 2000/09/08 08:10:52 abw Exp $
+# $Id: evalperl.t,v 2.2 2001/09/21 22:50:06 abw Exp $
 #
 #========================================================================
 
@@ -110,7 +110,6 @@ some stuff
 This is some text
 ERROR: [perl] EVAL_PERL not set
 
--- start --
 -- test --
 -- use do_perl --
 some stuff

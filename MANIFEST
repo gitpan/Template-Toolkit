@@ -1,4 +1,6 @@
 Changes
+HACKING
+INSTALL
 MANIFEST
 Makefile.PL
 README
@@ -6,6 +8,7 @@ TODO
 bin/README
 bin/gifsplash
 bin/tpage
+bin/tt-bench.pl
 bin/tt2inst
 bin/ttree
 docs/README
@@ -91,9 +94,12 @@ docs/src/Modules/Template/Provider.html
 docs/src/Modules/Template/Service.html
 docs/src/Modules/Template/Stash.html
 docs/src/Modules/Template/Stash/Context.html
+docs/src/Modules/Template/Stash/XS.html
 docs/src/Modules/Template/Test.html
 docs/src/Modules/index.html
 docs/src/Release/Changes.html
+docs/src/Release/HACKING.html
+docs/src/Release/INSTALL.html
 docs/src/Release/README.html
 docs/src/Release/TODO.html
 docs/src/Release/index.html
@@ -333,6 +339,7 @@ images/splash/black/brhair.gif
 images/splash/black/diamond.gif
 images/splash/black/dot.gif
 images/splash/black/down.gif
+images/splash/black/horz.gif
 images/splash/black/left.gif
 images/splash/black/minus.gif
 images/splash/black/negbox.gif
@@ -421,6 +428,7 @@ lib/Template/Provider.pm
 lib/Template/Service.pm
 lib/Template/Stash.pm
 lib/Template/Stash/Context.pm
+lib/Template/Stash/XS.pm
 lib/Template/Test.pm
 lib/Template/Tools/tpage.pod
 lib/Template/Tools/ttree.pod
@@ -461,6 +469,7 @@ t/dumper.t
 t/error.t
 t/evalperl.t
 t/exception.t
+t/factory.t
 t/file.t
 t/filter.t
 t/foreach.t
@@ -493,6 +502,7 @@ t/ref.t
 t/rss.t
 t/service.t
 t/skel.t
+t/stash-xs.t
 t/stash.t
 t/stashc.t
 t/stop.t
@@ -532,6 +542,7 @@ t/test/src/bar/baz
 t/test/src/bar/baz.txt
 t/test/src/baz
 t/test/src/benchmark
+t/test/src/blam
 t/test/src/complex
 t/test/src/evalperl
 t/test/src/foo
@@ -547,6 +558,7 @@ t/test/xml/example.rdf
 t/test/xml/testfile.xml
 t/text.t
 t/throw.t
+t/tiedhash.t
 t/try.t
 t/url.t
 t/vars.t
@@ -641,3 +653,7 @@ templates/splash/tabset
 templates/splash/text
 templates/splash/ttdotorg
 templates/splash/ttpower
+xs/MANIFEST
+xs/Makefile.PL
+xs/README
+xs/Stash.xs

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.5 2001/06/23 08:42:00 abw Exp $
+# $Id: stash.t,v 2.9 2001/09/06 14:00:38 abw Exp $
 #
 #========================================================================
 
@@ -23,6 +23,10 @@ use Template;
 use Template::Stash;
 use Template::Test;
 $^W = 1;
+
+my $DEBUG = grep(/-d/, @ARGV);
+#$Template::Parser::DEBUG     = $DEBUG;
+#$Template::Directive::PRETTY = $DEBUG;
 
 my $count = 20;
 my $data = {
@@ -178,4 +182,52 @@ one, three
 %]
 -- expect --
 two, three, one
+
+
+-- stop --
+#
+# NOTE: these were added for a developer release 2.04d, but the oeprators
+# 'gt', etc, never made it in
+#
+
+-- test --
+[% 10 lt 20 ? 'foo' : 'bar' %]
+-- expect --
+foo
+
+-- test --
+[% 10 gt 20 ? 'foo' : 'bar' %]
+-- expect --
+bar
+
+-- test --
+[% 10 ne 20 ? 'foo' : 'bar' %]
+-- expect --
+foo
+
+-- test --
+[% 10 eq 20 ? 'foo' : 'bar' %]
+-- expect --
+bar
+
+-- test --
+[% 10 le 20 ? 'foo' : 'bar' %]
+-- expect --
+foo
+
+-- test --
+[% 10 ge 20 ? 'foo' : 'bar' %]
+-- expect --
+bar
+
+-- test --
+[% 10 ge 10 ? 'foo' : 'bar' %]
+-- expect --
+foo
+
+-- test --
+[% 10 le 10 ? 'foo' : 'bar' %]
+-- expect --
+foo
+
 

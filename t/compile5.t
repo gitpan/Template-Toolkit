@@ -14,7 +14,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile5.t,v 2.1 2001/04/06 09:10:12 abw Exp $
+# $Id: compile5.t,v 2.3 2001/09/12 14:53:07 abw Exp $
 #
 #========================================================================
 
@@ -33,13 +33,19 @@ my $ttcfg = {
     INCLUDE_PATH => "$dir/src",
     COMPILE_DIR  => $cdir,
     COMPILE_EXT  => '.ttc',
+    ABSOLUTE     => 1,
 };
 
 # check compiled template files exist
-my ($foo, $bar) = map { $dir =~ s[:][]g if ($^O =~ /win/i);
-			"$cdir/$dir/src/$_.ttc" } qw( foo complex );
+my $fixdir = $dir;
+$fixdir =~ s[:][]g if $^O eq 'MSWin32';
+my ($foo, $bar, $blam) = map { "$cdir/$fixdir/src/$_.ttc" } 
+                           qw( foo complex blam );
+$blam =~ s[/+][/]g;
+
 ok( -f $foo );
 ok( -f $bar );
+ok( -f $blam );
 
 # we're going to hack on the compiled 'foo' file to change some key text.
 # this way we can tell that the template was loaded from the compiled
@@ -55,7 +61,18 @@ open(FOO, "> $foo") || die "$foo: $!\n";
 print FOO $content;
 close(FOO);
 
-test_expect(\*DATA, $ttcfg);
+
+# same again for 'blam'
+open(BLAM, $blam) || die "$blam: $!\n";
+local $/ = undef;
+$content = <BLAM>;
+close(BLAM);
+$content =~ s/blam/wam-bam/g;
+open(BLAM, "> $blam") || die "$blam: $!\n";
+print BLAM $content;
+close(BLAM);
+
+test_expect(\*DATA, $ttcfg, { root => abs_path($dir) } );
 
 # cleanup cache directory
 rmtree($cdir) if -d $cdir;
@@ -76,4 +93,7 @@ This is a more complex file which includes some BLOCK definitions
 This is the footer, author: billg, version: 6.66
 - 3 - 2 - 1 
 
-
+-- test --
+[% INCLUDE "$root/src/blam" %]
+-- expect --
+This is the wam-bam file

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: pie3d.pm,v 1.8 2001/06/29 13:09:00 abw Exp $
+# $Id: pie3d.pm,v 1.22 2001/11/06 15:00:22 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Graph::pie3d Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -117,8 +117,8 @@ The GD::Graph3d module was written by Jeremy Wadsack. The GD::Graph module was w
 
 =head1 VERSION
 
-1.08, distributed as part of the
-Template Toolkit version 2.04, released on 29 June 2001.
+1.22, distributed as part of the
+Template Toolkit version 2.06, released on 07 November 2001.
 
 =head1 COPYRIGHT
 

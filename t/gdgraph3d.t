@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: gdgraph3d.t,v 2.2 2001/06/23 08:41:59 abw Exp $
+# $Id: gdgraph3d.t,v 2.3 2001/07/04 14:45:53 abw Exp $
 # 
 #========================================================================
 
@@ -23,7 +23,7 @@ $^W = 1;
 
 eval "use GD; use GD::Graph; use GD::Graph::bars3d;";
 
-if ( $@ ) {
+if ( $@ || $GD::VERSION < 1.20 ) {
     exit(0);
 }
 

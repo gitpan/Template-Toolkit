@@ -3,7 +3,7 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for the Template Toolkit version 2.04, detailing
+#   Revision history for the Template Toolkit version 2.06, detailing
 #   significant changes between versions, most recent first.  Some 
 #   way down the file you'll find a section detailing major changes from 
 #   version 1.* to 2.* and a list of "Gotchas!" that you might have to 
@@ -13,8 +13,243 @@
 #   Andy Wardley   <abw@kfs.org>
 #
 #------------------------------------------------------------------------
-# $Id: Changes.tt2,v 1.12 2001/06/29 13:08:59 abw Exp $
+# $Id: Changes.tt2,v 1.25 2001/11/06 15:00:18 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 2.06 - 7th Nov 2001
+#------------------------------------------------------------------------
+
+* Fixed a bug in t/compile5.t which caused the following test warning on 
+  Win32: "Cannot chdir to D/blah/blah/Template-Toolkit-2.05c/t/test: No 
+  such file or directory at t\compile5.t line 73".  Thanks to Chris 
+  Winters for finding the bug and testing the fix.
+
+
+#------------------------------------------------------------------------
+# Version 2.05d - 6th Nov 2001                    ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed a bug in the parser which was missing a '^' anchor on the regex
+  matching the TAGS directive, causing it to match anywhere.  Thanks to
+  Dominic Mitchell and Adrian Howard for reporting and fixing the problem.
+  See http://tt2.org/pipermail/templates/2001-October/001760.html
+
+* Modified Template::Parser to correctly handle "\t" and "\r" in double
+  quoted strings as well as "\n".  Added test to t/parser.t
+
+* Applied a patch from Stas Bekman to add 'valign' as an option to the 
+  html/cell template.
+
+* Applied a patch from Harald Joerg to document the 3rd $default
+  option to Template::Stash::set().  
+
+* Fixed a problem in the docsrc build whereby double quote strings
+  were causing embedded variables to be incorrectly interpolated, e.g.
+  [% INCLUDE xyz title="set($var, $val, $default)" %] is now 
+  [% INCLUDE xyz title='set($var, $val,  $default)' %].  Thanks to 
+  Harald Joerg for reporting the problem.
+
+
+#------------------------------------------------------------------------
+# Version 2.05c - 22 Oct 2001                     ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Applied a patch from Tony Payne which fixes a bug where templates were
+  being mangled under mod_perl due to a missing O_TRUNC on a sysopen().
+  See http://www.tt2.org/pipermail/templates/2001-October/001834.html
+
+* Fixed the mess I made of Pudge's XS Stash patch applied in 2.05b.
+
+* Updated the INSTALL/README guides to note the PPM installation for
+  Win32 users.
+
+
+#------------------------------------------------------------------------
+# Version 2.05b - 21 Sep 2001                     ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Applied a patch from Chris Nandor to bring the XS stash in line with
+  the regular Perl stash wrt accepting defined but empty keys.  See
+  http://www.tt2.org/pipermail/templates/2001-September/001695.html
+
+* Applied a patch to Template::Provider from Craig Barratt to fix 
+  a bug when caching is turned off (CACHE_SIZE = 0).  See
+  http://www.tt2.org/pipermail/templates/2001-September/001682.html
+
+* Moved installation out of README into a separate INSTALL file and
+  added the HACKING document as a pointer to the internals docs.
+
+* Added the 'uri' filter for URI escaping text.
+
+
+#------------------------------------------------------------------------
+# Version 2.05a - 12 Sep 2001                     ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Applied a patch from Chris Nandor to use 'MSWin32' as a specific O/S
+  detection rather than /win/i which gives a false positive for 'Darwin'.
+  Needless to say, that's something of an insult to Darwin  :-).  Also 
+  fixes Template::Provider to use File::Spec::file_name_is_absolute() to 
+  test for absolute paths instead of the previous kludge.
+
+* Updated Template::Manual::Internals to include information about
+  how to prepare patches and other useful information for potential
+  TT hackers.
+
+* Added some code to the XS Stash to handle trivial access to tied 
+  hashes.  Regular set/get/default should work as expected, but at 
+  present intermediate hashes are not auto-vivified on assignment,
+  e.g. [% these.dont.get.created.in.XS.but.do.in.the.perl.stash = 10 %] 
+
+
+#------------------------------------------------------------------------
+# Version 2.05 - 11 Sep 2001
+#------------------------------------------------------------------------
+
+* Bumped version number and updated documentation for release.
+
+
+#------------------------------------------------------------------------
+# Version 2.04f - 10 Sep 2001                     ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed a bug in the Date plugin which was performing one localtime() too 
+  many when a date was passed in to the format() method.  e.g. the result 
+  from date.format('12:59::00 30/09/2001', '%H:%M') was 13:59 not 12:59.
+  Thanks to Thierry-Michel Barral and Matthew Tuck for reporting the
+  problem.
+
+* Incorporated Doug's new version of the XS Stash.  It fixes the problem 
+  with strings not being recognized as integers (and the item = item + 1 
+  problem). It also adds a few additional tests for this situation to 
+  t/stash-xs.t
+
+* Fixed a minor bug in Makefile.PL which looked for 'msql' or 'mysql' as
+  the default DBD for testing DBI but didn't select a suitable default
+  if the above drivers weren't available.
+
+
+#------------------------------------------------------------------------
+# Version 2.04e - 06 Sep 2001                     ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed bug in 'list' entry in $HASH_OPS in both Template/Stash.pm and 
+  Template/Stash/Context.pm to return '%$hash' instead of 'values %$hash'.
+  Thanks to Craig Barrett for reporting the problem.
+
+* Applied a patch from Craig to Stash.pm and Stash/Context.pm to 
+  accept negative integers as array indices, counting back from the
+  end of the list as in Perl.  This brings it into line with the new
+  XS Stash.
+  http://www.tt2.org/pipermail/templates/2001-August/001493.html
+  
+* And another patch from Craig to allow $var and ${var} to be used as
+  keys in hashes.  
+  http://www.tt2.org/pipermail/templates/2001-August/001410.html
+
+* Modified Template::Plugins fetch() method to accept $factory as a
+  code reference.  Then changed _load() to return a closure for
+  regular Perl modules loaded (via LOAD_PERL option) which, which
+  called by fetch(), removes the first argument, the $context
+  reference, which the non-plugin module won't be expecting.  This
+  fixes the problem reported (and also fixed but in a slightly
+  different way) by Lyle Brooks, here in these messages:
+  http://www.tt2.org/pipermail/templates/2001-August/001397.html
+  http://www.tt2.org/pipermail/templates/2001-August/001406.html
+
+* Removed the eq, ne, gt, lt, ge and ne operators added in 2.04d.  Given
+  that they can (and did) break code that had existing variables with 
+  those names, I decided it was best to strip them out again and think
+  more carefully about adding them to an official release.  Hence they're
+  not going to be in 2.05.
+
+* Fixed an outrageous oversight in the HTML 'rgb' template by defining
+  'orange' as a valid colour (I can't believe Leon hasn't already sent
+  me a patch for this!)  Created a new custom colour scheme in the 
+  Makefile.PL which uses it.  Hacked the Makefile.PL and the generated 
+  ttree config file to allow text colours to be specified as well as
+  button background colours.
+
+
+#------------------------------------------------------------------------
+# Version 2.04d - 29 Aug 2001                     ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Incorporated Doug Steinwand's XS Stash.  This adds the files in the 
+  'xs' directory, t/stash-xs.t, bin/tt-bench.pl and includes some work
+  on the Makefile.PL to incorporate the required prompting, etc.
+
+* Added gt, ge, lt and le as comparison operators which map directly 
+  to their Perl counterparts.  Added tests to t/stash.t and relevant
+  documentation to the IF directive.
+
+* Applied some patches from Leon and Doug to enhance the coverage of
+  the test suite.
+
+* Added 'sorted' as a flag to the HTML plugin to return attributes in 
+  sorted order.  Mainly for debugging purposes, as used in t/html.t.
+
+* Fixed Template::Parser.pm to recognise "\r" as a valid escape sequence
+  in double quoted strings.
+
+
+#------------------------------------------------------------------------
+# Version 2.04c - 04 Aug 2001                     ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed t/dbi.t and t/latex*.t to not complain about "Test header seen
+  twice".  Thanks to Leon.
+
+
+#------------------------------------------------------------------------
+# Version 2.04b - 04 Aug 2001                     ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed a bug in the Makefile.PL which prevented the correct targets 
+  from being added to the generated Makefile to install additional
+  components, build HTML docs, etc. 
+
+* Applied a patch from Chris Nandor to fix a bug introduced by the taint 
+  checks in 2.04 which barfed on ';' in filenames.  Also changes open()
+  to sysopen() in Template::Document for additional security.  See
+  http://www.tt2.org/pipermail/templates/2001-August/001348.html
+
+* Another part of the same pudge patch adds FACTORY as a default value
+  to Template::Parser to allow Template::Directive factory class to 
+  be replaced.
+
+
+#------------------------------------------------------------------------
+# Version 2.04a - 5th July 2001                   ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Changed GD plugin and tests to require GD version 1.20.  See
+  http://www.tt2.org/pipermail/templates/2001-July/001212.html
+
+* Applied Craig's fix for the DBI plugin to correctly destroy a 
+  statement handle to ensure that finish() gets called on it even if the
+  iterator doesn't complete.  See:
+  http://www.tt2.org/pipermail/templates/2001-July/001216.html
+
+* Further to Craig's points in the above post, I added get_all() and 
+  get() to the DBI iterator so that you can now do this:
+
+  [% people = DBI.query(...) %]
+  [% person = people.get %]   # first person
+  [% person = people.get %]   # second person
+  [% FOREACH person = people.get_all %]
+     # third to nth person(s)
+  [% END %]
+
+* Fixed Template::Provider which wasn't saving compiled templates to 
+  disk when specified with an absolute path, as reported by Merlyn.  See
+  http://www.template-toolkit.org/pipermail/templates/2001-July/001213.html
+
+* Updated Makefile.PL to accept various command line args including 
+  TT_ACCEPT to automatically accept all default values and TT_QUIET to
+  shut the file up with all those yackety yack, yack messages.
+
 
 #------------------------------------------------------------------------
 # Version 2.04 - 29th June 2001
