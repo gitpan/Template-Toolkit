@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.32 1999/10/01 16:51:51 abw Exp $
+#   $Id: Template.pm,v 1.35 1999/11/05 10:27:22 abw Exp $
 #
 #========================================================================
  
@@ -34,7 +34,7 @@ use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '0.27';
+$VERSION     = '0.28';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;
@@ -94,6 +94,10 @@ sub process {
     $old_err = $context->redirect(TEMPLATE_ERROR, $errout)
 	if $errout;
 
+    # add a 'filename' variable if $template looks like a filename
+    $params ||= { };
+    $params->{'filename'} ||= $template
+	unless ref $template;
     
     # localise variables, pre-process, process, post-process, delocalise
     $context->localise($params);

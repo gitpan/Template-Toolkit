@@ -9,8 +9,88 @@
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes,v 1.56 1999/10/01 16:52:17 abw Exp $
+# $Id: Changes,v 1.61 1999/11/05 10:29:22 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 0.28  1999/11/05 10:29:05
+#------------------------------------------------------------------------
+
+* OK, so I lied about 0.27 being the final beta release. :-)=
+  The main reason is that the internal FILTER interface has been
+  improved at the cost of (possibly) breaking existing filter code.
+  This isn't as bad as it sounds because the filter code probably
+  wasn't working properly anyway, due to the interface not being up to
+  scratch.  Anyway, it's a change worthy of another beta release,
+  IMHO, to allow the changes to be tested and any wrinkles ironed out.
+  Interfaces should remain stable from now on so you can consider this
+  version a release candidate.
+
+* Changed the behaviour of the AND (&&) and OR (||) operators to act as 
+  "short-circuit" operators as in Perl.  If the left hand side of an OR 
+  evaluates true, then the right hand side will not be evaluated.  Likewise
+  for an AND which will bypass evaluation of the RHS if the LHS evaluates
+  false.  I thought this was going to be tricky to implement but Simon
+  Matthews sat me down in the pub with a few pints of beer and a laptop 
+  and it all came together quite well.  Inspirational hacking, indeed!
+  Updated t/binop.t to test this behaviour.
+
+* Added ABSOLUTE_PATHS option which allows template files to be specified 
+  using absolute paths (e.g. '/foo/bar/baz.html').  Enabled by default.
+  Thanks to all those who badgered me about this until I got a clue. :-)=
+  Added t/abspath.t and updated documentation.  Changed the parser grammar
+  to accept '/' as the first character of an unquoted INCLUDE file, e.g.
+  [% INCLUDE /slash/bang/wallop %]
+
+* Added 'perl5lib' option to ttree to allow additional Perl library 
+  directories to be specified.  These are simply unshifted onto @INC.
+
+* Changed Template::Context::_evaluate() test on ARRAY objects so that
+  the generic size, max, etc., and numerical indexing operations work 
+  on blessed arrays.
+
+* Added register_filter($name, $factory) method to context to allow
+  plugin modules (or whatever) to register filters for subsequent use.
+  Moved the filters defined in Template::Plugin::Filter into a new
+  module, Template::Filters, which defines all the "system" filters.
+  This is loaded the first time a FILTER directive is encountered and
+  registers all filters for subsequent use.
+
+* Changed behaviour of Context use_filter() method so that it no longer
+  passes the name of the filter to the factory method.
+
+* Added new filters 'redirect' and 'into'.  The first redirects a block 
+  into a separate file, as specified by a filename.  The file will be 
+  written relative to the OUTPUT_PATH.  This can be used to generate 
+  mucho pages from a list of records (see following example).  
+
+    List of User:
+    <ul>
+      [% FOREACH user = myorg.userlist %]
+         [% INCLUDE user_page FILTER redirect("users/${user.id}.html") %]
+         <li><a href="users/${user.id}.html">[% user.name %]</a>
+      [%
+    </ul>
+
+  The 'into' filter saves the output into a named variable.
+ 
+    [% INCLUDE myfile FILTER into('myvar') %]
+
+    [% FILTER into('description') %]
+       Rhubarb, rhubard, blah, blah, cabbages.
+    [% END %]
+
+* Added a minor feature to add a 'filename' variable which stores the name 
+  of the top-level template file.  This doesn't happen if a 'filename'
+  variables is already defined or if the template was specified via a 
+  reference (i.e. no filename available).
+
+* Added new Template Plugin module 'Datafile'.
+
+* Francois Desarmenien has released a new version of Parse::Yapp (0.32) 
+  which includes the patch to specify an alternate grammar template file 
+  (yapp -t <template>).  Removed parser/parse_yapp_patch and updated 
+  parser/README. 
 
 #------------------------------------------------------------------------
 # Version 0.27  1999/10/01 16:51:46

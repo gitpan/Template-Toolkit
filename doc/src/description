@@ -1290,7 +1290,9 @@ returns an instance of Lincoln Stein's CGI.pm module.
 Simon Matthews E<lt>sam@knowledgepool.comE<gt> has written a DBI
 plugin which provides an interfaces to the DBI module.
 
-    [% USE DBI('driver:dbase:etc') %]     # TODO: need to check this
+    # NOTE: provisional - see Template::Plugin::DBI for details
+
+    [% USE DBI('driver:dbase:etc') %]
     [% FOREACH user = DBI.query('SELECT * FROM users') %]
        [% user.id %] [% user.name %] [% user.etc.etc %]
     [% END %]
@@ -1322,6 +1324,8 @@ output:
     <!-- through the above format.               -->
 
 Additional filters may be provided via the FILTERS configuration option.
+Filters may also be added at any time via the register_filter($name, $factory)
+method.
 
 A filter that is created without any specific parameters will be cached
 and re-used whenever that same filter is required.  Specifying parameters
@@ -1367,19 +1371,6 @@ may be added after other (non-block) directives.
     [% END %]
 
     [% INCLUDE myfile FILTER myfilter FILTER format('<!-- %s -->') %]
-
-The FILTER facility is relatively new and still slightly immature.
-While it is fully functional (for the definition of 'fully' in that it
-works as claimed above), it is still lacking in some areas.  It isn't
-possible, for example, to dynamically load user-defined filters from a
-plugin module other than Template::Plugin::Filter.pm.  This will
-certainly be improved at some point in the future.  
-
-It should also be noted that 'html' and 'format' hardly represent a
-comprehensive list of the generic filters that might be widely
-useful.  Any thoughts on this matter, ideas or code for filters,
-problems encountered, suggestions, solutions, etc., are welcome on the
-templates mailing list.
 
 =head2 ERROR HANDLING AND FLOW CONTROL
 

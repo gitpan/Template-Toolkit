@@ -34,7 +34,8 @@ application does, not what it looks like.
 
 Ideally suited, but not limited to, web content generation.  
 Front-end modules and/or scripts provided for use with static pages, 
-CGI scripts, Apache/mod_perl handlers, etc.
+CGI scripts, Apache/mod_perl handlers, etc.  Plugin modules available
+for interfacing to CGI and DBI.
 
 =item -
 

@@ -1,6 +1,6 @@
 #============================================================= -*-Perl-*-
 #
-# Template::Plugin::Filter
+# Template::Filters
 #
 # DESCRIPTION
 #   Defines filter plugins as used by the FILTER directive.
@@ -17,50 +17,85 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filter.pm,v 1.4 1999/08/12 21:53:55 abw Exp $
+# $Id: Filters.pm,v 1.1 1999/11/03 01:20:32 abw Exp $
 #
 #============================================================================
 
-package Template::Plugin::Filter;
+package Template::Filters;
 
 require 5.004;
 
 use strict;
-use vars qw( @ISA $VERSION );
-use Template::Plugin;
+use vars qw( $VERSION );
 
-@ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+use Template qw( :template :status );
 
-my $FILTERS = {
-    'html'   => sub { return \&html_filter },
-    'format' => \&make_format_filter,
-};
 
-sub new {
-    my ($class, $context, $name, @params) = @_;
-    my $filter;
-    
-    return $class->fail("invalid filter name ($name)")
-	unless $filter = $FILTERS->{ $name };
+$VERSION = sprintf("%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/);
 
-    &$filter(@params);
+sub register {
+    my ($class, $context) = @_;
+    my ($filter, $factory);
+
+    my $FILTERS = {
+	# static filters
+	'html'     => sub { return \&html_filter },
+
+	# dynamic filters
+	'format'   => \&format_filter_factory,
+
+	# dynamic filters that require a context reference
+	'redirect' => sub { redirect_filter_factory($context, @_) },
+	'into'     => sub { into_filter_factory($context, @_) },
+    };
+
+    # register all those filters
+    while (($filter, $factory) = each %$FILTERS) {
+	$context->register_filter($filter, $factory);
+    }
+
+    return 1;
 }
 
 
 #========================================================================
-# Filter constructors
+# dynamic filter factories
 #========================================================================
 
-sub make_format_filter {
+sub format_filter_factory {
     my $format = shift;
     $format = '%s' unless defined $format;
+
     return sub {
 	my $text = shift;
 	$text = '' unless defined $text;
 	return join("\n", map{ sprintf($format, $_) } split(/\n/, $text));
     }
 }
+
+sub into_filter_factory {
+    my ($context, $var) = @_;
+    sub {
+	my $text = shift;
+	$context->{ STASH }->set($var, $text, $context);
+	return '';
+    }
+}
+
+sub redirect_filter_factory {
+    my ($context, $file) = @_;
+    sub {
+	my $text = shift;
+	my $handler;
+	$handler = $context->redirect(TEMPLATE_OUTPUT, $file);
+	$context->output($text);
+	$context->redirect(TEMPLATE_OUTPUT, $handler);
+	return '';
+    }
+}
+
+
+	
 
 #========================================================================
 # Filters
@@ -82,7 +117,7 @@ sub html_filter {
 
 =head1 NAME
 
-Template::Plugin::Filter - plugin implementing filtering functions
+Template::Filters - filters
 
 =head1 SYNOPSIS
 
@@ -97,8 +132,6 @@ Template::Plugin::Filter - plugin implementing filtering functions
 
 =head1 DESCRIPTION
 
-The Filter plugin module defines filters for the FILTER directive.
-
 The 'html' filter converts the characters '<', '>' and '&' to '&lt;', 
 '&gt;' and '&amp', respectively, protecting them from being interpreted 
 as representing HTML tags or entities.  
@@ -112,7 +145,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.4 $
+$Revision: 1.1 $
 
 =head1 COPYRIGHT
 
@@ -124,9 +157,10 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template::Plugin|Template::Plugin>, 
+L<Template>
 
 =cut
+
 
 
 

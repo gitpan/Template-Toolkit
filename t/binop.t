@@ -16,7 +16,7 @@
 # TODO: this should test the binary comparison and boolean operators
 #    more thoroughly, including parenthesised sub-expressions, etc.
 #
-# $Id: binop.t,v 1.4 1999/08/10 11:09:10 abw Exp $
+# $Id: binop.t,v 1.5 1999/11/03 01:20:38 abw Exp $
 #
 #========================================================================
 
@@ -28,7 +28,6 @@ $^W = 1;
 
 $DEBUG = 0;
 
-my ($a, $b, $c, $r) = qw( alpha bravo charlie romeo );
 my $params = {
     'yes'    => 1,
     'no'     => 0,
@@ -38,11 +37,25 @@ my $params = {
     'sad'    => '',
     'ten'    => 10,
     'twenty' => 20,
+    'alpha'  => \&alpha,
+    'omega'  => \&omega,
 };
 
 my $template = Template->new({ INTERPOLATE => 1, POST_CHOMP => 1 });
 
 test_expect(\*DATA, $template, $params);
+
+sub alpha {
+    $template->output("alpha\n");
+    1;
+}
+
+sub omega {
+    $template->output("omega\n");
+    0;
+}
+
+
 
 __DATA__
 maybe
@@ -233,4 +246,55 @@ yep
 yep
 
 
+
+#------------------------------------------------------------------------
+# test short-circuit operations
+#------------------------------------------------------------------------
+
+-- test --
+
+[% IF alpha AND omega %]
+alpha and omega are true
+[% ELSE %]
+alpha and/or omega are not true
+[% END %]
+
+-- expect --
+alpha
+omega
+alpha and/or omega are not true
+
+-- test --
+[% IF omega AND alpha %]
+omega and alpha are true
+[% ELSE %]
+omega and/or alpha are not true
+[% END %]
+
+-- expect --
+omega
+omega and/or alpha are not true
+
+-- test --
+[% IF alpha OR omega %]
+alpha and/or omega are true
+[% ELSE %]
+neither alpha nor omega are true
+[% END %]
+
+-- expect --
+alpha
+alpha and/or omega are true
+
+-- test --
+[% IF omega OR alpha %]
+alpha and/or omega are true
+[% ELSE %]
+neither alpha nor omega are true
+[% END %]
+
+-- expect --
+omega
+alpha
+alpha and/or omega are true
 

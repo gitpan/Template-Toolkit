@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Cache.pm,v 1.8 1999/08/28 12:55:04 abw Exp $
+# $Id: Cache.pm,v 1.9 1999/11/03 01:20:30 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Exception;
 use vars qw( $VERSION $PATHSEP $DEBUG );
 
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/);
 $PATHSEP  = ':';      # default path separator
 $DEBUG    = 0;
 
@@ -56,10 +56,12 @@ $DEBUG    = 0;
 #------------------------------------------------------------------------
 
 sub new {
-    my $class  = shift;
-    my $params = shift || { };
+    my $class   = shift;
+    my $params  = shift || { };
+    my $path    = $params->{ INCLUDE_PATH } || '.';
+    my $abspath = $params->{ ABSOLUTE_PATHS };
+       $abspath = 1 unless defined $abspath;   # enabled by default
     my ($delim, $p, $o, @paths);
-    my $path = $params->{ INCLUDE_PATH } || '.';
 
     # coerce path to an array
     $path = ref($path) eq 'ARRAY' ? $path : [ $path ];
@@ -81,6 +83,7 @@ sub new {
     bless {
 	CONFIG     => $params,	  # pass this onto Parser constructor
 	PATH       => \@paths,    # search path(s)
+	ABSPATH    => $abspath,   # absolute paths permitted
 	COMPILED   => { },	  # compiled template cache
 	ERROR      => '',	  # error
     }, $class;
@@ -221,7 +224,16 @@ sub _load {
 	local *FH;
 
 	OPEN: {
-	    # anything starting "./" is always relative to CWD.  We 
+	    # absolute paths (starting '/') allowed if ABSOLUTE_PATHS set
+	    if ($template =~ /^\//) {
+		return $self->_error(ERROR_FILE,
+				     "$template: ABSOLUTE_PATHS not enabled")
+		    unless $self->{ ABSPATH };
+		open(FH, $template)
+		    || return $self->_error(ERROR_FILE, "$template: $!");
+	    }
+
+	    # anything starting "./" is always relative to CWD. 
 	    if ($template =~ /^\.\//) {
 		last OPEN				## LAST ##
 		    if -f $template and open(FH, $template);
@@ -532,7 +544,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.8 $
+$Revision: 1.9 $
 
 =head1 COPYRIGHT
 

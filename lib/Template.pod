@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pod,v 1.16 1999/10/01 16:51:51 abw Exp $
+#   $Id: Template.pod,v 1.19 1999/11/05 10:27:23 abw Exp $
 #
 #========================================================================
 
@@ -1622,7 +1622,9 @@ returns an instance of Lincoln Stein's CGI.pm module.
 Simon Matthews E<lt>sam@knowledgepool.comE<gt> has written a DBI
 plugin which provides an interfaces to the DBI module.
 
-    [% USE DBI('driver:dbase:etc') %]     # TODO: need to check this
+    # NOTE: provisional - see Template::Plugin::DBI for details
+
+    [% USE DBI('driver:dbase:etc') %]
     [% FOREACH user = DBI.query('SELECT * FROM users') %]
        [% user.id %] [% user.name %] [% user.etc.etc %]
     [% END %]
@@ -1654,6 +1656,8 @@ output:
     <!-- through the above format.               -->
 
 Additional filters may be provided via the FILTERS configuration option.
+Filters may also be added at any time via the register_filter($name, $factory)
+method.
 
 A filter that is created without any specific parameters will be cached
 and re-used whenever that same filter is required.  Specifying parameters
@@ -1699,19 +1703,6 @@ may be added after other (non-block) directives.
     [% END %]
 
     [% INCLUDE myfile FILTER myfilter FILTER format('<!-- %s -->') %]
-
-The FILTER facility is relatively new and still slightly immature.
-While it is fully functional (for the definition of 'fully' in that it
-works as claimed above), it is still lacking in some areas.  It isn't
-possible, for example, to dynamically load user-defined filters from a
-plugin module other than Template::Plugin::Filter.pm.  This will
-certainly be improved at some point in the future.  
-
-It should also be noted that 'html' and 'format' hardly represent a
-comprehensive list of the generic filters that might be widely
-useful.  Any thoughts on this matter, ideas or code for filters,
-problems encountered, suggestions, solutions, etc., are welcome on the
-templates mailing list.
 
 =head2 ERROR HANDLING AND FLOW CONTROL
 
@@ -1934,7 +1925,8 @@ The INCLUDE_PATH option specifies one or directories in which to look for
 template files.  Multiple directories can be specified as a reference to
 a list or as a single string, delimited by ':' ($Template::Cache::PATHSEP) 
 Each item in a list may have additional CACHE parameters associated
-with it.
+with it.  If no INCLUDE_PATH is specified then the current working 
+directory (i.e. '.') is assumed by default.
 
     my $cache = Template::Cache->new({
         INCLUDE_PATH => '/user/abw/templates:/user/abw/tmp',
@@ -1947,7 +1939,7 @@ with it.
     my $template = Template->new({
         INCLUDE_PATH => [ 
   	    '/user/web/templates/src:/usr/web/templates/elements'
-  	    '/user/web/templates/toodamnbig' => { CACHE => 0 },
+  	    '/user/web/templates/toodarnbig' => { CACHE => 0 },
   	],
     });
   
@@ -1956,6 +1948,41 @@ with it.
     my $template = Template->new({
         INCLUDE_PATH => 'c:/templates;c:/web/templates'
     });
+
+=item ABSOLUTE_PATHS
+
+This option is enabled by default and allows templates to be specified
+using absolute paths.  In this context, an absolute path is one which
+starts with '/'.  Note that it is generally best to always use '/' as
+a directory delimiter, regardless of your local operating system
+convention.  Perl will automatically convert forward slashes into the
+appropriate character.  
+
+Any false value will disable the option.  In this case, any attempt to
+process a template file by specifying an absolute path will generate
+an error in the form of a 'file' exception (see L<CATCH>).  Files
+specified with a leading period (e.g. './foo/bar.html') are treated as
+relative to the current working directory.  All other files are
+considered relative to one of the INCLUDE_PATH directories.
+
+    # ABSOLUTE_PATHS are enabled by default
+    $template->process("/slash/bang/wallop")          # OK
+	|| die $template->error();
+
+    # in a template file, it would look like this
+    [% INCLUDE /slash/bang/wallop %]                  # OK
+
+    # this time we'll disable them
+    my $t2 = Template->new({ ABSOLUTE_PATHS => 0 });
+
+    $t2->process("foo/bar.html");                     # OK 
+	|| die $t2->error();
+
+    $t2->process("/foo/bar.html")      # FAILS with 'file' exception
+	|| die $t2->error();           # reports
+
+    # nope, this would barf
+    [% INCLUDE /foo/bar.html %]        # FAILS with 'file' exception
 
 =item PRE_DEFINE
 
@@ -2373,7 +2400,7 @@ parameter, $template, indicates the template and may be a simple
 SCALAR containing a filename (relative to INCLUDE_PATH), a reference
 to a SCALAR which contains the template text or a reference to a GLOB
 (e.g. \*MYFILE) or IO::Handle or sub-class from which the template 
-is read.
+is read.  
 
     $file = 'hworld.html'
     $text = "[% INCLUDE header %]\nHello world!\n[% INCLUDE footer %]"
@@ -2410,6 +2437,13 @@ The method returns 1 if the template was successfully processed.  This
 includes templates that were ended by a STOP or RETURN directive
 If an uncaught error occurs, the method returns 0.  A relevant 
 error message can then be returned by calling the error() method.
+
+The name of the template file is stored in the template variable
+'filename'.  This will not be the case if a 'filename' variable has
+been otherwise defined, or if the $template specified is a reference
+and does not represent a filename.
+
+  This file: [% filename %]
 
 =head2 redirect($what, $where)
 
@@ -2589,7 +2623,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 VERSION
 
-This is version 0.27 of the Template Toolkit.  
+This is version 0.28 of the Template Toolkit.  
 
 It is a stable beta release version preceding the imminent release 
 of version 1.0.

@@ -10,12 +10,9 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.47 1999/10/01 16:51:46 abw Exp $
+# $Id: TODO,v 1.50 1999/11/03 01:20:16 abw Exp $
 #
 #============================================================================
-
-Pending
--------
 
 Bugs
 ----
@@ -44,13 +41,15 @@ Possible Features
   * add INSERT directive to insert a file without processing it.  
 
   * add document information structures as runtime variables (e.g. file.name
-    file.mod, template.name, system.time, etc)
+    file.mod, template.name, system.time, etc).  As of 0.28, we do get the
+    'filename' variable set, which is a start.
 
 General Improvements
 --------------------
-  * user-defined filters can be provided in the FILTERS hash, but there
-    is no way to dynamically load filters from the template unless they
-    are "standard library" filters, defined in Template::Plugin::Filter.
+
+  * Should plugins be able to throw exceptions on creation failure
+    rather than reporting errors via Template::Plugin::fail() and 
+    returning undef?
 
   * should you be able to break out of an IF block?  At present, if you 
     BREAK outside of a FOREACH, then a STATUS_DONE value is returned to
@@ -81,22 +80,29 @@ General Improvements
 
 Documentation
 -------------
+
+  * There's very little documentation describing the available filters.
+
   * note that object methods get called with the RHS as a parameter when 
     specified as an lvalue of an assignment.  e.g. [% foo.bar = 10 %]
     => $foo_obj->bar(10)
 
   * iterator options specified through list construct parameters are
-    not documented.  
+    not documented.  This is probably a Good Thing.  :-)=
     [% FOREACH user = [ foo bar baz ]( order = 'sorted', action = coderef ) %]
 
-  * write more detailed description on extending the template toolkit.
+  * write more detailed description on extending the Template Toolkit.
 
 Other plugins, modules, scripts
 -------------------------------
 
-  * finish Apache::Template
+  * finish Apache::Template (after speaking with SAM, I think we reached 
+    the conclusion that it's so easy to write your own Apache handler
+    that there's no point in trying to create a generic one.  Still, it
+    would be nice to have an example that people could work from)
 
-  * extend 'format' to perform date formatting?
+  * extend 'format' to perform date formatting?  (probably better to 
+    do this via a 'date' plugin)
 
   * 'filemap' plugin to map a namespace to an INCLUDE 'file' directive.
     e.g.   [% USE html=filemap('html') %]

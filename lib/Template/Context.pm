@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.31 1999/09/29 10:17:01 abw Exp $
+# $Id: Context.pm,v 1.34 1999/11/03 01:20:30 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.31 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.34 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -165,7 +165,7 @@ sub process {
     $error = $template->process($self);
 
     # a STATUS_RETURN is caught and cleared as this represents the 
-    # correct point for a %% RETURN %% to return to
+    # correct point for a [% RETURN %] to return to
     $error = STATUS_OK 
 	if $error == STATUS_RETURN;
 
@@ -379,24 +379,27 @@ sub use_filter {
     $filter = $self->{ FILTER_CACHE }->{ $name }
 	unless ($params);
 
+    # load the Filter plugin, if not already loaded
+    $self->{ FILTER_PLUGIN } ||= do {
+	require Template::Filters;
+        Template::Filters->register($self);
+    };
+
     unless ($filter) {
 	# prepare filter arguments
 	$args = $params || [];
-	unshift(@$args, $name);
 
-	# the filter may be user-defined in FILTERS, otherwise we call
-	# use_plugin() to load the 'filter' plugin to create a filter
+	# extract the filter factory from FILTERS
+	return (undef, Template::Exception->new(ERROR_UNDEF,
+						"unknown FILTER '$name'"))
+	    unless $factory = $self->{ FILTERS }->{ $name };
 
-	if ($factory = $self->{ FILTERS }->{ $name }) {
-	    return (undef, Template::Exception->new(ERROR_UNDEF,
+	
+	return (undef, Template::Exception->new(ERROR_UNDEF,
 		       "invalid FILTER factory for '$name' (not a CODE ref)"))
-		unless ref($factory) eq 'CODE';
+	    unless ref($factory) eq 'CODE';
 
-	    ($filter, $error) = &$factory(@$args)
-	}
-	else {
-	    ($filter, $error) = $self->use_plugin('filter', $args);
-	}
+	($filter, $error) = &$factory(@$args);
 	return (undef, $error)
 	    if $error;
     }
@@ -414,6 +417,19 @@ sub use_filter {
 
     return ($filter, Template::Constants::STATUS_OK);
 } 
+
+
+
+#------------------------------------------------------------------------
+# register_filter($filter_name, $factory)
+#
+# Allows plugins to register filter factories that they define.
+#------------------------------------------------------------------------
+
+sub register_filter {
+    my ($self, $filter, $factory) = @_;
+    $self->{ FILTERS }->{ $filter } = $factory;
+}
 
 
 
@@ -669,16 +685,24 @@ sub _evaluate {
 		  ")\n")if $DEBUG;
 	}
 	elsif ($op == OP_AND) {
-	    $x = pop @stack;
-	    $stack[-1] &&= $x;
-	    print "  <- and (", $stack[-1] ? 'true' : 'false', 
+	    # LHS has been evaluated and is on the top of the stack.
+	    # RHS is the next item in pending.  This is a list reference 
+	    # containing the RHS opcodes.  If LHS is false then we can 
+	    # throw away the RHS and leave the false value on the stack.
+	    # If LHS is true then we pop it off the stack and push the 
+	    # RHS opcodes onto the front of @pending for subsequent 
+	    # evaluation
+	    $x = shift @pending;
+	    print "  <- and (LHS: ", $stack[-1] ? 'true' : 'false', 
 		  ")\n"if $DEBUG;
+	    unshift(@pending, @$x), pop(@stack) if $stack[-1];
 	}
 	elsif ($op == OP_OR) {
-	    $x = pop @stack;
-	    $stack[-1] ||= $x;
-	    print "  <- or (", $stack[-1] ? 'true' : 'false', 
+	    # same as per OP_AND, with the obvious exception
+	    $x = shift @pending;
+	    print "  <- or (LHS: ", $stack[-1] ? 'true' : 'false', 
 		  ")\n"if $DEBUG;
+	    unshift(@pending, @$x), pop(@stack) unless $stack[-1];
 	}
 	elsif ($op == OP_NOT) {
 	    $stack[-1] = ! $stack[-1];
@@ -775,13 +799,14 @@ sub _evaluate {
 			if $z = $hash_ops->{ $y };
 		}
 	    }
-	    elsif (ref($x) eq 'ARRAY') {
+	    elsif (UNIVERSAL::isa($x, 'ARRAY') 
+		   && (($z = $list_ops->{ $y }) || ($y =~ /^\d+$/))) {
 		# if the target is a list we try to apply the operations
 		# in $list_ops or apply a numerical operation as an index
-		if ($z = $list_ops->{ $y }) {
+		if ($z) {
 		    ($z, $err) = &$z($x);
 		}
-		elsif ($y =~ /^\d+$/) {
+		else {
 		    $z = $x->[$y];
 		}
 	    }
@@ -937,145 +962,13 @@ The context object provides template output and error handling methods
 which can output/delegate to a user-supplied file handle, text string or
 sub-routine.  These handlers are defined using the redirect() method.
 
-=head1 PUBLIC METHODS
-    
-=head2 new(\%config) 
-
-Constructor method which instantiates a new Template::Context object,
-initialised with the contents of an optional configuration hash array
-passed by reference as a parameter.
-
-Valid configuration values are:
-
-=over 4
-
-=item CATCH
-
-The CATCH option may be used to specify a hash array of error handlers.
-
-=item STASH
-    
-A reference to a L<Template::Stash|Template::Stash> object or derivative
-which should be used for storing and managing variable data.  A default 
-stash is created (using PRE_DEFINE variables) if this parameter is not 
-defined.
-
-=item PRE_DEFINE
-
-A reference to a hash which is passed to the Stash constructor to
-pre-defined variables.  This variable has no effect if STASH is
-defined to contain some existing Stash object.
-
-=item PRE_PROCESS/POST_PROCESS
-
-The PRE_PROCESS and POST_PROCESS options can be used to define 
-templates that should be processed immediately before and after 
-each template processed by the process() option, respectively.
-The templates are processed in the same variable context as the
-main template.  The PRE_PROCESS can be used to define variables
-that might then be used in the main template, for example.
-
-Any uncaught exceptions raised in the PRE/POST_PROCESS templates
-are ignored.
-
-=item RECURSION
-
-By default, the context will return a file exception if it detects
-direct or indirect recursion into a template.  Setting this option to 
-any true value will permit such recursion.
-
-=item CACHE
-
-A reference to a L<Template::Cache|Template::Cache> object or derivative
-which should be used for loading, parsing, compiling and caching template
-documents.  A default cache is created (passing all configuration parameters)
-if this is not provided.
-
-=back
-
-=head2 process($template, \%params)
-
-The process() method is called to render a template document within the
-current context.  The first parameter should name the template document
-or should be a file handle, glob reference or string (scalar) reference
-from which the template can be read.  The second, optional parameter should
-be a reference to a hash array of variables and values that should be 
-defined for use (i.e. substitution) within the template.
-
-    my $params = {
-	'name' = 'Fred Oliver Oscarson',
-	'id'   = 'foo'
-    };
-
-    $context->process('foopage.html', $params);
-
-=head2 redirect($what, $where)
-
-The redirect() method should be called with a first parameter represented
-by one of the constants TEMPLATE_OUTPUT or TEMPLATE_ERROR.  These are 
-defined in Template::Constants and can be imported by specifying 
-C<':template'> as a parameter to C<use Template> or 
-C<use Template::Constants>.
-
-The second parameter may contain a file handle (GLOB or IO::handle) 
-to which the output or error stream should be written.  Altenatively,
-$where may be a reference to a scalar variable to which output is appended
-or a code reference which is called to handle output.
-
-    use Template::Context;
-    use Template::Constants qw( :template );
-
-    my $context = Template::Context->new();
-    my $output  = '';
-    $context->redirect(TEMPLATE_OUTPUT, \$output);
-    $context->redirect(TEMPLATE_ERROR, \*STDOUT);
-
-=head2 output($text, ...)
-
-Prints all passed parameters to the output stream for the current template
-context.  By default, output is sent to STDOUT unless redirected by 
-calling the redirect() method.
-
-    $context->output("The cat sat on the ", $place);
-
-=head2 error($text, ...)
-
-Directs the passed parameters to the error stream for the current template
-context.  By default, errors are sent to STDERR unless redirected by 
-calling the redirect() method.
-
-    $context->error("This parrot is ", $dead);
-
-=head2 throw($type, $info) / throw($exception)
-
-The throw() method is called by other Template modules when an 
-error condition occurs.  The caller will pass an error type and 
-information string or a reference to a Template::Exception which
-encompasses those values.  The error type is used to index into 
-the CATCH hash array to see if a handler has been defined for this
-kind of error.  If it has, the CATCH value is returned or code 
-reference is run and it's value returned.
-
-=head2 catch($type, $handler)
-
-The catch() method is used to install an exception handler for a 
-specific type of error.
-
-=head2 use_plugin($name, \@params)
-
-Called to load, instantiate and return an instance of a plugin object.
-
-=head2 use_filter($name, \@params, $alias)
-
-Called to load, instaniate and return a filter sub-routine.
-
 =head1 AUTHOR
 
 Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.31 $
+$Revision: 1.34 $
 
 =head1 COPYRIGHT
 

@@ -4,16 +4,16 @@ NAME
 OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
     The Template Toolkit module bundle is available from CPAN as:
 
-        /authors/id/ABW/Template-Toolkit-0.27.tar.gz
+        /authors/id/ABW/Template-Toolkit-0.28.tar.gz
 
     Unpack the archive to create an installation directory.
     Something like this:
 
-        zcat Template-Toolkit-0.27.tar.gz | tar xvf -
+        zcat Template-Toolkit-0.28.tar.gz | tar xvf -
 
     'cd' into that directory, make, test and install the modules:
 
-        cd Template-Toolkit-0.27
+        cd Template-Toolkit-0.28
         perl Makefile.PL
         make
         make test
@@ -34,9 +34,7 @@ OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
         use lib '/local/path/to/lib';
 
 PREREQUISITES
-    At present, the Template Toolkit requires Perl 5.005. Efforts
-    will soon be made to support *some* earlier versions (e.g.
-    5.004).
+    The Template Toolkit requires Perl 5.005.
 
     The ttree script uses the AppConfig module (version 1.52+) for
     managing configuration information. This is available from CPAN
@@ -240,6 +238,7 @@ FEATURES
     -   Ideally suited, but not limited to, web content generation.
         Front-end modules and/or scripts provided for use with
         static pages, CGI scripts, Apache/mod_perl handlers, etc.
+        Plugin modules available for interfacing to CGI and DBI.
 
     -   Template documents parsed by a fast LALR(1) parser which is
         generated from a YACC-like grammar. Parse::Yapp is used to
@@ -355,7 +354,7 @@ AUTHOR
         http://www.cre.canon.co.uk/perl
 
 VERSION
-    This is version 0.27 of the Template Toolkit.
+    This is version 0.28 of the Template Toolkit.
 
     It is a stable beta release version preceding the imminent
     release of version 1.0.

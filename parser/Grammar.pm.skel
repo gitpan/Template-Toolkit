@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm.skel,v 1.12 1999/09/09 17:03:13 abw Exp $
+# $Id: Grammar.pm.skel,v 1.13 1999/10/07 13:08:59 abw Exp $
 #
 #========================================================================
 
@@ -38,7 +38,7 @@ use vars qw( $VERSION );
 
 use Template::Constants qw( :ops :status );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, $LEXTABLE, $RULES, $STATES);
 my $factory;
@@ -68,7 +68,7 @@ sub install_factory {
 	GET SET DEFAULT INCLUDE PROCESS 
 	IF UNLESS ELSE ELSIF FOR WHILE USE FILTER 
 	THROW CATCH ERROR RETURN STOP BREAK 
-	BLOCK END TO STEP AND OR NOT
+	PERL BLOCK END TO STEP AND OR NOT
     );
 
 

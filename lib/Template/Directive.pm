@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.19 1999/09/14 23:07:01 abw Exp $
+# $Id: Directive.pm,v 1.20 1999/10/07 13:08:29 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -45,21 +45,20 @@ $DEBUG = 0;
 my %param_tbl = (
     'Get'       => [ qw( TERM                   ) ],
     'Set'       => [ qw( ARGS                   ) ],
-#    'Default'   => [ qw( ARGS                   ) ],
-#    'Import'    => [ qw( ARGS                   ) ],
     'Include'   => [ qw( FILE ARGS              ) ],
     'Process'   => [ qw( FILE ARGS              ) ],
-    'Use'       => [ qw( NAME ARGS ALIAS       ) ],
-    'If'        => [ qw( EXPR BLOCK ELSE       ) ],
-    'For'       => [ qw( ITEM LIST BLOCK       ) ],
-    'While'     => [ qw( EXPR BLOCK            ) ],
-    'Filter'    => [ qw( NAME ARGS ALIAS BLOCK ) ],
+    'Use'       => [ qw( NAME ARGS ALIAS        ) ],
+    'If'        => [ qw( EXPR BLOCK ELSE        ) ],
+    'For'       => [ qw( ITEM LIST BLOCK        ) ],
+    'While'     => [ qw( EXPR BLOCK             ) ],
+    'Filter'    => [ qw( NAME ARGS ALIAS BLOCK  ) ],
     'Block'     => [ qw( CONTENT                ) ],
     'Text'      => [ qw( TEXT                   ) ],
     'Catch'     => [ qw( ETYPE BLOCK            ) ],
     'Throw'     => [ qw( ETYPE INFO             ) ],
     'Error'     => [ qw( INFO                   ) ],
     'Return'    => [ qw( RETVAL                 ) ],
+    'Perl'      => [ qw( PERLCODE               ) ],    
 );
 
 my $PKGVAR = 'PARAMS';
@@ -671,7 +670,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.19 $
+$Revision: 1.20 $
 
 =head1 COPYRIGHT
 

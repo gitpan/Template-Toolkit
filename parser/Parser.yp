@@ -30,6 +30,7 @@ directive:  atomdir
 	|   condition
 	|   loop
 	|   defblock
+	|   perl
 	|   debug
 	|   /* NULL - empty directive */
 ;
@@ -103,7 +104,11 @@ defblock:   BLOCK textdot ';'
 	      block END	    	{ $_[0]->define_block(@_[2, 4]); undef  }
 ;
 
-debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2])      }
+perl:	    PERL ';'
+	      block END		{ $factory->create(Perl  => $_[3]) }
+;
+
+debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2]) }
 ;
 
 
@@ -183,14 +188,14 @@ args:	    arglist			{ [ OP_ARGS, $_[1] ]  }
 ;
 
 expr:	    expr COMPOP expr		{ push(@{$_[1]}, @{$_[3]}, 
-						OP_BINOP, $_[2]); $_[1]     }
-	|   expr AND expr		{ push(@{$_[1]}, @{$_[3]}, 
-						OP_AND); $_[1]       }
-	|   expr OR expr		{ push(@{$_[1]}, @{$_[3]}, 
-						OP_OR); $_[1]        }
+						OP_BINOP, $_[2]); $_[1]  }
+	|   expr AND expr		{ push(@{$_[1]}, OP_AND, $_[3]); 
+					  $_[1]                          }
+	|   expr OR expr		{ push(@{$_[1]}, OP_OR, $_[3]);
+					  $_[1]                          }
 	|   NOT expr			{ push(@{$_[2]}, OP_NOT);
-					  $_[2]                             }
-	|   '(' expr ')'		{ $_[2]                             }
+					  $_[2]                          }
+	|   '(' expr ')'		{ $_[2]                          }
 	|   assign
 	|   term		
 ;
@@ -202,6 +207,7 @@ expr:	    expr COMPOP expr		{ push(@{$_[1]}, @{$_[3]},
 # and '.' characters, allowing it to be used to specify filenames sans quotes
 file:	    '$' ident			{ [ OP_IDENT, $_[2] ] }
 	|   '"' quoted '"'		{ [ OP_QUOTE, $_[2] ] }
+	|   '/' textdot                 { '/' . $_[2]         }
 	|   textdot			
 	|   LITERAL			
 ;
