@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.40 1999/12/21 14:22:13 abw Exp $
+# $Id: Context.pm,v 1.42 2000/02/01 12:14:28 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.40 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.42 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -102,6 +102,7 @@ sub new {
 	CACHE        => $cache,
 	PLUGIN_BASE  => $pbase,
 	EVAL_PERL    => $params->{ EVAL_PERL }   || 0,
+	LOAD_PERL    => $params->{ LOAD_PERL }   || 0,
 	PLUGINS      => $params->{ PLUGINS }     || { },
 	CATCH        => $params->{ CATCH }       || { },
 	FILTERS      => $params->{ FILTERS }     || { },
@@ -331,6 +332,7 @@ sub use_plugin {
     my ($self, $name, $params) = @_;
     my ($factory, $module, $base, $package, $filename, $plugin, $ok);
     my $error = '';
+    $params ||= [];
 
     require Template::Plugin;
 
@@ -347,25 +349,50 @@ sub use_plugin {
 	    ($filename = $package) =~ s|::|/|g;
 	    $filename .= '.pm';
 
+#	    print "use_plugin() attempting to load $filename\n"
+#		if $DEBUG;
+
 	    $ok = eval { require $filename };
 	    last unless $@;
-	    $error .= "filename: $@\n";
+	    $error .= "$@\n";
 	}
-	return (undef, Template::Exception->new(ERROR_UNDEF,
-			"failed to load plugin module $name:\n$error"))
-	    unless $ok;
 
-	$factory = eval { $package->load($self) };
-	return (undef, Template::Exception->new(ERROR_UNDEF, 
-			"failed to initialise plugin module $name: $@"))
-	    if $@ || ! $factory;
+	if ($ok) {
+#	    print "use_plugin() required $package\n"
+#		if $DEBUG;
 
-	$self->{ PLUGINS }->{ $name } = $factory;
+	    $factory = eval { $package->load($self) };
+
+	    return (undef, Template::Exception->new(ERROR_UNDEF, 
+			   "failed to initialise plugin module $name:\n  "
+			 . $@ ? $@ : 'load() returned a false value'))
+		if $@ || ! $factory;
+
+#	    print "use_plugin() loaded $package as factory $factory\n"
+#		if $DEBUG;
+
+	    # add factory class/object to PLUGINS cache
+	    $self->{ PLUGINS }->{ $name } = $factory;
+	}
+	elsif ($self->{ LOAD_PERL }) {
+	    # if we failed to load the specific Template::Plugin::* package
+	    # then we default to the Template::Plugin base class and add the
+	    # requested module name to the front of the parameter list
+	    $factory = 'Template::Plugin';
+	    unshift(@$params, $module);
+
+#	    print "use_plugin() defaulting to base class Template::Plugin\n"
+#		if $DEBUG;	    
+	}
+	else {
+	    return (undef, Template::Exception->new(ERROR_UNDEF, 
+                          "failed to load plugin $name: $error"));
+	}
     }
 
     # call the new() method on the factory object or class name
     eval {
-	$plugin = $factory->new($self, @{ $params || [] })
+	$plugin = $factory->new($self, @$params)
 	    || die "$name plugin: ", $factory->error(), "\n";
     };
     return (undef, Template::Exception->new(ERROR_UNDEF, $@))
@@ -545,7 +572,9 @@ sub DESTROY {
 my $list_ops = {
     'max'  => sub { local $^W = 0; my $item = shift; $#$item; },
     'size' => sub { local $^W = 0; my $item = shift; $#$item + 1; },
-    'sort' => sub { my $item = shift; [ sort @$item ] },
+    'sort' => sub { my $item  = shift; [ sort @$item ] },
+    'join' => sub { my ($list, $joint) = @_; 
+		    join(defined $joint ? $joint : ' ', @$list) },
 };
 
 my $hash_ops = {
@@ -825,7 +854,7 @@ sub _evaluate {
 		    $z = $x->{ $y } = { } if $lflag;
 		}
 		else {
-		    ($z, $err) = &$z($x) 
+		    ($z, $err) = &$z($x, @$p) 
 			if $z = $hash_ops->{ $y };
 		}
 	    }
@@ -834,7 +863,7 @@ sub _evaluate {
 		# if the target is a list we try to apply the operations
 		# in $list_ops or apply a numerical operation as an index
 		if ($z) {
-		    ($z, $err) = &$z($x);
+		    ($z, $err) = &$z($x, @$p);
 		}
 		else {
 		    $z = $x->[$y];
@@ -842,7 +871,16 @@ sub _evaluate {
 	    }
 	    elsif (ref($x)) {
 		eval { ($z, $err) = $x->$y(@$p); };
-		$e = $@ if $@;
+
+		# last chance to lookup a hash if the object call failed
+		if ($@ && UNIVERSAL::isa($x, 'HASH') 
+		       && defined($z = $x->{ $y })) {
+		    ($z, $err) = &$z(@$p)   # execute any code binding
+			if $z && ref($z) eq 'CODE';
+		}
+		else {
+		    $e = $@ if $@;
+		}
 	    }
 	    else {
 		$e = "don't know how to access [ $x ].$y";
@@ -1031,7 +1069,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.40 $
+$Revision: 1.42 $
 
 =head1 COPYRIGHT
 

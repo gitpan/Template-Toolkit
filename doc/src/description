@@ -26,8 +26,8 @@ Templates are rendered by calling the process() method on the Template
 object.  The first parameter specifies the template input and may be a
 filename, a reference to a text string (SCALAR) containing template
 text or a reference to a GLOB or IO::Handle (or sub-class) from which
-the template should be read.  The process returns 1 if the template
-was successfully rendered or 0 if an error occurred.  In the latter
+the template should be read.  The method returns 1 if the template
+was successfully processed or 0 if an error occurred.  In the latter
 case, the relevant error message can be retrieved by calling the
 error() method.
 
@@ -209,7 +209,6 @@ nested blocks) up to the next (balanced) END directive.  The IF,
 UNLESS, ELSIF and ELSE directives also define blocks and may be
 grouped together in the usual manner.
 
-    Metavars:
     [% FOREACH item = [ 'foo' 'bar' 'baz' ] %]
        * Item: [% item %]
     [% END %]
@@ -397,6 +396,10 @@ lists of the hash keys and values.
        [% field %] [% product.${field} %]
     [% END %]
 
+This example also shows how a variable ('field' in this case) may be 
+evaluated as '${field}' to return a value which is then used to index
+into the 'product' hash array.
+
 You can copy all the members of a hash into the top level variable namespace
 with the IMPORT directive.
 
@@ -540,7 +543,7 @@ The first element of the list is element 0.
     [% list = [ 'one' 'two' 'three' 'four' ] %]
     [% list.0 %] [% list.3 %]
 
-    [% FOREACH n = [0..4] %]
+    [% FOREACH n = [0..3] %]
     [% list.${n} %], 
     [%- END %]
 
@@ -566,7 +569,7 @@ Note that this particular usage creates a localised variable context
 to prevent the imported hash keys from overwriting any existing
 variables.  The imported definitions and any other variables defined
 in such a FOREACH loop will be lost at the end of the loop, when the 
-previous context and variable value are restored.
+previous context and variable values are restored.
 
 The [% BREAK %] directive can be used to prematurely exit a FOREACH
 loop.
@@ -580,7 +583,7 @@ The 'size' and 'max' values can be examined for a list to determine
 the number of elements and maximum index (size - 1).  The 'sort'
 method returns a sorted list of the elements in the list.
 
-    [% list = [ 'tom', 'dick', 'harry' ] %]
+    [% list = [ 'Tom', 'Dick', 'Harry' ] %]
     [% list.size %] names:
     [% FOREACH name = list.sort %]
        * [% name %]
@@ -589,9 +592,15 @@ method returns a sorted list of the elements in the list.
 Output:
 
     3 names:
-      * dick
-      * harry
-      * tom
+      * Dick
+      * Harry
+      * Tom
+
+The 'join' method can be called on a list to concatenate all values
+into a single string.  Values will be separated by a space or an
+alternate string can be passed as a parameter.
+
+    [% mylist.join(', ') %]
 
 =head2 VARIABLES BOUND TO USER CODE
 
@@ -637,11 +646,11 @@ to the code:
 
 myfile:
 
-    [% join(' + ', foo, bar, 'Mr. Baz', "Mr. $qux") %]
+    [% join(', ', foo, bar, 'Mr. Baz', "Mr. $qux") %]
 
 Output:
 
-    Mr. Foo + Mr. Bar + Mr. Baz + Mr Qux
+    Mr. Foo, Mr. Bar, Mr. Baz, Mr Qux
 
 Named parameters may also be specified.  These are automatically collected
 into a single hash array which is passed by reference as the B<last> 
@@ -678,6 +687,10 @@ string or the DEBUG option can be enabled to cause an 'undef'
 exception to be raised.  The code may also return a second value
 indicating the status.  A status of 0 (STATUS_OK) means everything
 went OK, regardless of whatever value was returned, defined or not.
+Specify the <:status> tag as a parameter to C<use Template> to 
+import the STATUS_* definitions.
+
+    use Template qw( :status );
 
     sub get_something {
 	# ...
@@ -889,7 +902,7 @@ sequence.  On each iteration, the ACTION for the iterator is called,
 which in this case is a closure which calls the user($uid) method to
 retrieve the complete user record from the database.  Thus, we avoid
 the overhead of loading and storing every complete user record,
-retrieving it only as and when required.
+retrieving them only as and when required.
 
     sub user {
   	my ($self, $uid) = @_;
@@ -906,13 +919,13 @@ retrieving it only as and when required.
     }
 
 This process is entirely hidden from the template author.  The use of 
-iterators is automatic and nothing needs to change in the template:
+iterators is automatic and nothing needs to be changed in the template:
 
     [% FOREACH user = myorg.userlist %]
        Name: [% user.name %]  EMail: [% user.email %]
     [% END %]
 
-A reference to the iterator is always available within the FOREACH 
+A reference to the iterator is always available within a FOREACH 
 block via the 'loop' variable.  An iterator is automatically created 
 by the FOREACH directive if a regular list is specified.  The iterator
 provides a number of methods for testing the state of the loop:
@@ -1026,7 +1039,9 @@ equivalent for non-Unix file systems.  The '/' character is therefore
 portable across all platforms.
 
 The included template will "inherit" all variables currently defined
-in the including template.
+in the including template.  Note how the 'title' and 'bgcol' variables
+in this next example are used in the 'header' file, inheriting the
+values defined previously in the including template.
 
     [% title = 'Hello World'
        bgcol = '#ffffff' 
@@ -1110,6 +1125,8 @@ copies refer to the same hash.  In more general terms, you can think
 of a dotted variable as referring to the appropriate global variable
 if (and only if) the top-level namespace (i.e. the first element of
 the compound variable) is already defined.
+
+Let's see if an example makes this any clearer:
 
     [% user = { name = 'John Doe' } %]
     [% INCLUDE change_name %]
@@ -1201,6 +1218,9 @@ Output:
 
     <img src="/images/mylogo.gif">
 
+See also the PRE_PROCESS option which allows you to specify such a file
+that will automatically be processed before each template.
+
 In addition to separate files, template blocks can be defined and 
 processed with the INCLUDE directive.  These are defined with the BLOCK
 directive and are parsed, compiled and cached as for files.
@@ -1280,18 +1300,22 @@ it is used.
 
 =head2 PLUGIN OBJECTS AND LIBRARIES
 
-The USE directive can be used to load and initialise "plugin" extension 
-modules.  These are regular Perl modules that may, or may not, be derived
-from the Template::Plugin base class.
+The USE directive can be used to load and initialise "plugin"
+extension modules.
 
     [% USE myplugin %]
+
+A plugin is a regular Perl module that conforms to a particular
+object-oriented interface, allowing it to be loaded into and used
+automatically by the Template Toolkit.  For details of this interface
+and information on writing plugins, consult L<Template::Plugin>.
 
 The plugin name is case-sensitive and will be appended to the
 PLUGIN_BASE value (default: 'Template::Plugin') to construct a full
 module name.  Any periods, '.', in the name will be converted to '::'.
 
-    [% USE MyPlugin   %]     #  => Template::Plugin::MyPlugin
-    [% USE CGI.Params %]     #  => Template::Plugin::CGI::Params
+    [% USE MyPlugin %]     #  => Template::Plugin::MyPlugin
+    [% USE Foo.Bar  %]     #  => Template::Plugin::Foo::Bar
 
 Any additional parameters supplied in parenthesis after the plugin name
 will be also be passed to the new() constructor.  A reference to the 
@@ -1342,25 +1366,77 @@ Output:
     <b>This is bold</b>
     <i>This is italic</i>
 
-Another very simple example is the CGI plugin which simply creates and
-returns an instance of Lincoln Stein's CGI.pm module.
+The CGI plugin is an example of one which delegates to another Perl
+module.  In this this case, it is to Lincoln Stein's CGI.pm module.
+All of the methods provided by CGI.pm are available via the plugin.
 
     [% USE CGI %]
-    [% name = CGI.param('username') %]
+
+    [% CGI.start_form %]
+
+    [% CGI.checkbox_group(name   =>   'colours', 
+                          values => [ 'red' 'green' 'blue' ])
+    %]
+
+    [% CGI.popup_menu(name   =>   'items', 
+                      values => [ 'foo' 'bar' 'baz' ])
+    %]
+
+    [% CGI.end_form %]
+
+The plugin is derived from the Template::Plugin module which provides
+a general facility for wrapping external objects.  If a method returns
+more than one value (such as the CGI method checkbox_group(), above)
+then the results will be concatenated into a single string, each
+separated by a space.  The joint() method can be used to change the
+joining string.
+
+    [% USE CGI %]
+    [% CGI.joint("\n") %]  # multi-values now separated by newline
+
+A method may have the '_as_list' suffix added to have the result(s)
+returned as a list reference.
+
+    [% checklist = CGI.checkbox_group_as_list(name   => 'names', 
+					      values => [ 'foo' 'bar' ])
+    %]
+
+    <ul>
+    [% FOREACH item = checklist %]
+       <li>[% item %]
+    [% END %]
+    </ul>
 
 Simon Matthews E<lt>sam@knowledgepool.comE<gt> has written a DBI
-plugin which provides an interfaces to the DBI module.
+plugin which provides an interface to Tim Bunce's DBI module (both
+available from CPAN).  Here's a short example:
 
     [% USE DBI('DBI:mSQL:mydbname') %]
+
     [% FOREACH user = DBI.query('SELECT * FROM users') %]
        [% user.id %] [% user.name %] [% user.etc.etc %]
+    [% END %]
+
+The LOAD_PERL option (disabled by default) provides a further way by
+which external Perl modules may be loaded.  If a regular Perl module
+(i.e. not a Template::Plugin::* or other module relative to some
+PLUGIN_BASE) supports an object-oriented interface and a new()
+constructor then it can be loaded and wrapped automatically by a
+Template::Plugin object.  The following example shows how the IO::File
+module might be used.  Please note that this feature is still
+experimental.
+
+    [% USE file = IO.File('/tmp/mydata') %]
+
+    [% WHILE line = file.getline %]
+       <!-- [% line %] -->
     [% END %]
 
 =head2 EVALUATING PERL CODE
 
 The PERL directive is used to mark the start of a block which contains
 Perl code for evaluation.  The EVAL_PERL option must be enabled for Perl
-code to be evaluated and a 'perl' exception will be thrown otherwise.
+code to be evaluated.  A 'perl' exception will be thrown otherwise.
 
 Perl code is evaluated in the Template::Perl package.  The $context
 package variable contains a reference to the current Template::Context
@@ -1396,12 +1472,12 @@ thrown as a 'perl' exception.
 =head2 POST-PROCESSING FILTERS
 
 The FILTER directive can be used to post-process the output of a
-block.  The Template::Plugin::Filter module defines the 'html' and
-'format' filters.  The 'html' filter converts the characters '<', '>'
-and '&' to '&lt;', '&gt;' and '&amp', respectively, protecting them
-from being interpreted as representing HTML tags or entities.  The
-'format' filter takes a format string as a parameter (as per printf()) 
-and formats each line of text accordingly.
+block.  The Template::Filters module defines the 'html',
+'format', 'redirect' and 'into' filters.  The 'html' filter converts
+the characters '<', '>' and '&' to '&lt;', '&gt;' and '&amp',
+respectively, protecting them from being interpreted as representing
+HTML tags or entities.  The 'format' filter takes a format string as a
+parameter (as per printf()) and formats each line of text accordingly.
 
     [% FILTER html %]
     Binary "<=>" returns -1, 0, or 1 depending on...
@@ -1418,6 +1494,25 @@ output:
   
     <!-- This is a block of text filtered        -->
     <!-- through the above format.               -->
+
+The 'redirect' filter redirects the output of the block into a separate
+file, specified relative to the OUTPUT_PATH configuration item.
+
+    [% FOREACH user = myorg.userlist %]
+       [% FILTER redirect("users/${username}.html") %]
+          [% INCLUDE userinfo %]
+       [% END %]
+    [% END %]
+
+The 'into' filter allows you to capture the output of a block into a template 
+variable.
+
+    [% FILTER into('user_details') %]
+       User: [% user.name %]
+       [% INCLUDE userinfo %]
+    [% END %]
+
+    [% notify_new_user_details(user_details) %]
 
 Additional filters may be provided via the FILTERS configuration option.
 Filters may also be added at any time via the register_filter($name, $factory)
@@ -1510,6 +1605,10 @@ Having performed any processing, it should then return a status code
 or an exception object to be propagated back to the user.  Returning a
 value of 0 (STATUS_OK) indicates that the exception has been
 successfully handled and processing should continue as before.
+Note that you need to specify C<:status> as a parameter to 
+C<use Template> in order for the STATUS_* constants to be defined.
+
+    use Template qw( :status );
 
     my $tproc = Template->new({	
   	CATCH => {

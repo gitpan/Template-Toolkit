@@ -9,8 +9,59 @@
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes,v 1.81 1999/12/21 14:22:33 abw Exp $
+# $Id: Changes,v 1.89 2000/02/01 12:35:23 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 1.03  2000/02/01 12:35:13
+#------------------------------------------------------------------------
+
+* Added support for running under Perl 5.004 (previously required 5.005)
+
+* Added a general purpose 'join' function which can be applied to list 
+  references.  A joining string can be passed, or ' ' is used by default.
+  Added test to t/list.t.  e.g. 
+
+     [% mylist.join %]   [% mylist.join(', ') %]
+
+* Improved the plugin interface by enhancing the Template::Plugin base
+  class to act as a general delegate to other Perl modules.  The base
+  class constructor can be passed an object reference to which it
+  should delegate all methods.  Alternatively, pass the name of a Perl
+  module as the first parameter and it will attempt to 'require' the
+  module and create an object instance via it's new() constructor
+  method.  Any additional parameters are passed to new().  A plugin
+  object is returned which wraps the target object, providing
+  delegation to its methods via an AUTOLOAD function.  This function
+  checks the values returned by the delegate method and concatenates
+  them if more than one is returned.  Methods may have a '_as_list'
+  suffix added to them which will cause the autoloader to return them
+  as a list reference.  Documented Template::Plugin, updated docs to
+  note changes and included some better examples for plugins in
+  general.
+
+* Changed Context use_plugin() method to look for LOAD_PERL option and
+  use the above Template::Plugin behaviour if set.  Changed CGI plugin
+  to also use the new delegating base class.
+
+* Modified handling of object references in Template::Context::_evaluate.
+  When a template variable is bound to a blessed object reference, any 
+  attempt to reference a member of that object (e.g. myobj.whatever) 
+  translates to a method call (e.g. myobj->whatever).  If that fails 
+  and the object is a blessed hash reference then the method will now 
+  attempt to resolve it as a hash member (e.g. myobj->{ whatever }).
+  Added test to t/object.t
+
+* Changed Template::Plugin::Format to pass all parameters to sprintf
+  rather than just the first.  Added test to t/format.t
+
+* Added a tutorial document as Template::Tutorial.  Many other minor
+  documentation updates.
+
+* Improved the comments in the sample .ttreerc file generated 
+  automatically by ttree when first run.  Added 'eval_perl' and 'load_perl'
+  template options.
+
 
 #------------------------------------------------------------------------
 # Version 1.02  1999/12/21 14:22:04
@@ -140,7 +191,7 @@
   loop variable was being freed (loop vs iter).
 
 * Fixed a problem in loading files with ABSOLUTE_PATHS.  Thanks again to 
-  Simon Matthews for only finding and fixing.
+  Simon Matthews for finding and fixing.
 
 * Moved t/texpect.pl into Template::Test module to make it easier to 
   load and use the test harness.  Modified test scripts accordingly.

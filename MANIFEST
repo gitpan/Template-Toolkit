@@ -10,6 +10,7 @@ doc/README
 doc/bin/mkdoc
 doc/src/README.pod
 doc/src/Template.pod
+doc/src/Tutorial.pod
 doc/src/acks
 doc/src/author
 doc/src/bugs
@@ -29,6 +30,12 @@ doc/src/overview
 doc/src/prereq
 doc/src/seealso
 doc/src/synopsis
+doc/src/tutorial/cgi
+doc/src/tutorial/description
+doc/src/tutorial/introduction
+doc/src/tutorial/modperl
+doc/src/tutorial/plugins
+doc/src/tutorial/static
 doc/src/version
 lib/Template.pm
 lib/Template.pod
@@ -48,6 +55,7 @@ lib/Template/Plugin/Datafile.pm
 lib/Template/Plugin/Format.pm
 lib/Template/Stash.pm
 lib/Template/Test.pm
+lib/Template/Tutorial.pod
 lib/Template/Utils.pm
 parser/Grammar.pm.skel
 parser/Parser.yp

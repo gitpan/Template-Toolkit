@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: format.t,v 1.6 1999/11/25 17:51:24 abw Exp $
+# $Id: format.t,v 1.8 2000/02/01 12:14:31 abw Exp $
 #
 #========================================================================
 
@@ -97,5 +97,12 @@ $user
 <b>This is bold</b>
 <i>This is italic</i>
 
+-- test --
+[% USE padleft  = format('%-*s') %]
+[% USE padright = format('%*s')  %]
+[% padleft(10, a) %]-[% padright(10, b) %]
+
+-- expect --
+alpha     -     bravo
 
 

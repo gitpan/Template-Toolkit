@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: object.t,v 1.6 1999/11/25 17:51:27 abw Exp $
+# $Id: object.t,v 1.7 2000/01/14 20:12:28 abw Exp $
 #
 #========================================================================
 
@@ -116,6 +116,22 @@ sub AUTOLOAD {
 }
 
 
+package TestObject2;
+
+sub new {
+    my ($class, $context, $params) = @_;
+    $params ||= {};
+
+    bless {
+	Help    => 'Help Yourself',
+    }, $class;
+}
+
+sub foo {
+    return 'bar';
+}
+
+
 #------------------------------------------------------------------------
 # main 
 #------------------------------------------------------------------------
@@ -142,10 +158,12 @@ my $obj_params = {
 
 my $tproc   = Template->new({ INTERPOLATE => 1, DEBUG => 1 });
 my $tobj    = TestObject->new($tproc->context(), $obj_params);
+my $tobj2   = TestObject2->new();
 my $params  = {
     'e'     => $e,
     'f'     => $f,
     'thing' => $tobj,
+    'other' => $tobj2,
 };
 
 test_expect(\*DATA, $tproc, $params);
@@ -380,6 +398,13 @@ ERROR: invalid member name '_private'
 -- expect --
 ERROR: invalid member name '.private'
 
+-- test --
+[% other.foo %]
+[% other.Help %]
 
+
+-- expect --
+bar
+Help Yourself
 
 

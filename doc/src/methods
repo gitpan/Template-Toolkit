@@ -226,6 +226,28 @@ variables.
 The only exception to this rule are the 'and', 'or' and 'not' operators
 which can I<always> be expressed in lower, or indeed any case.
 
+=item LOAD_PERL
+
+The LOAD_PERL option modifies the behaviour of the USE directive.  By
+default (LOAD_PERL => 0), the directive will only load special
+'plugin' modules whose names map onto Perl modules in the
+'Template::Plugin' namespace (e.g. CGI => Template::Plugin::CGI).
+
+When the LOAD_PERL option is set to any true value, the directive will
+also attempt to load a regular Perl module (i.e. no namespace prefix
+added) and create an object instance via the new() method.  The
+resulting object is then wrapped in a Template::Plugin object which
+delegates all method calls to it.  This acts as a general interface
+between the underlying Perl object and the Template Toolkit.
+
+The end result is that it is often possible to load a general purpose,
+object-oriented Perl module and use it in a template without having to
+write any special purpose plugin code.
+
+This feature is new as of version 1.03 and is still largely
+experimental.  Please report any problems or difficulties you may
+encounter to the author.
+
 =item PLUGIN_BASE
 
 This option allows you to define a base package for plugin objects loaded
@@ -252,6 +274,10 @@ used in preference to the default Template Toolkit equivalent.  In other
 words, the default 'Template::Plugin' location is always searched, but
 after any user defined values.  
 
+If the LOAD_PERL option is set, then the directive will also attempt to 
+load the module without adding a package prefix (i.e. a regular Perl 
+module) and instantiate an object via the new() method.  This is wrapped
+in a Template::Plugin object.
 
 =item PLUGINS
 

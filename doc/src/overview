@@ -29,7 +29,7 @@ require but without having to write the code directly into the
 document.  In other words, it promotes the separation of application
 code (the I<implementation>) from the user interface (the
 I<presentation>).  It tries to keep templates clutter-free,
-concentrating on what the document looks like, and hides the
+concentrating on what the document looks like, and hides away the
 implementation specific details of how the various items of content
 are stored, retrieved or calculated.
 
@@ -42,7 +42,7 @@ headers, footers, menus, etc.  Then, you (or your progammer) can
 create any Perl code required to required to generate the dynamic
 parts of the content, perhaps by using CPAN modules, one of the
 existing Template Toolkit "plugins" or by re-using some code you've
-previously written for another web "application" running on your site.
+previously written for another web application running on your site.
 
 The important thing is that the code is developed I<separately> from
 the template documents.  This is a key feature of the Template Toolkit
@@ -72,7 +72,7 @@ In many ways, this is like CGI scripting in reverse.  Instead of
 embedding HTML within the Perl script, you are embeddding Perl within
 the HTML document.  The Template Toolkit tries to better separate the
 two in attempt to create a more structured approach to constructing
-dynamic content.  There's a slight "startup" cost to using this
+dynamic content.  There's a slight startup cost to using this
 approach because, like life in general, it often takes a little longer
 to get yourself properly organised.  The payoff comes in terms of
 scalability and subsequent ease of re-use - the more you add, the more
@@ -116,11 +116,11 @@ The Template Toolkit is ideally suited for generating web content, but
 it is by no means limited or specific to this or any other application
 area.  The plugin interface means that it doesn't have to be - it can
 just concentrate on the task of constructing documents and doesn't
-care if you subsequently use it to generate HTML, LaTeX, RTF or plain
-text documents from a command-line, CGI script or an in-server web
-process such as Apache/mod_perl using data extracted from a CGI form,
-defined in a file, retrieved from a database or based on what Jim
-Morrison told you in a dream.  You choose what do to with it and
+care if you subsequently use it to generate HTML, XML, LaTeX, RTF or
+plain text documents from a command-line, CGI script or an in-server
+web process such as Apache/mod_perl using data extracted from a CGI
+form, defined in a file, retrieved from a database or based on what
+Jim Morrison told you in a dream.  You choose what do to with it and
 how to do it.  Simply load additional functionality as you need it
 from CPAN modules, Template Toolkit plugins, generic web applications
 such as chat rooms, FAQ lists, bulletin boards, etc., or any other
@@ -138,10 +138,7 @@ detection and handling, variable localisation and namespacing, dynamic
 loading of external modules, and so on, without having to code it
 yourself or even worry about the specifics of implementation.  The
 details are hidden away, the directive syntax is simplified and you
-can get a lot done very quickly with the minimum of fuss.  The benefit
-of the Text::Template approach is that you have complete control over
-exactly what happens and you can be as structured or as unstructured
-as the task in hand demands.
+can get a lot done very quickly with the minimum of fuss.  
 
 The Template Toolkit is a direct descendant of, and replacement for
 the Text::MetaText module.  It has been designed and rebuilt from

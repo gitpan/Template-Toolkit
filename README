@@ -4,16 +4,16 @@ NAME
 OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
     The Template Toolkit module bundle is available from CPAN as:
 
-        /authors/id/ABW/Template-Toolkit-1.02.tar.gz
+        /authors/id/ABW/Template-Toolkit-1.03.tar.gz
 
     Unpack the archive to create an installation directory.
     Something like this:
 
-        zcat Template-Toolkit-1.02.tar.gz | tar xvf -
+        zcat Template-Toolkit-1.03.tar.gz | tar xvf -
 
     'cd' into that directory, make, test and install the modules:
 
-        cd Template-Toolkit-1.02
+        cd Template-Toolkit-1.03
         perl Makefile.PL
         make
         make test
@@ -26,15 +26,15 @@ OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
     may need administrator privileges to perform this task. If you
     install the module in a local directory (for example, by
     executing "perl Makefile.PL LIB=~/lib" in the above - see
-    `perldoc MakeMaker' for full details), you will need to ensure
-    that the PERL5LIB environment variable is set to include the
-    location, or add a line to your scripts explicitly naming the
-    library location:
+    `perldoc ExtUtils::MakeMaker' for full details), you will need
+    to ensure that the PERL5LIB environment variable is set to
+    include the location, or add a line to your scripts explicitly
+    naming the library location:
 
         use lib '/local/path/to/lib';
 
 PREREQUISITES
-    The Template Toolkit requires Perl 5.005.
+    The Template Toolkit requires Perl 5.004 or later.
 
     The ttree script uses the AppConfig module (version 1.52+) for
     managing configuration information. This is available from CPAN
@@ -44,14 +44,19 @@ PREREQUISITES
         /authors/id/ABW/AppConfig-<version>.tar.gz       
 
 TOOLKIT CONTENTS
-    The Template Toolkit comprises of a number of Perl modules and
-    two additional scripts.
+    The Template Toolkit comprises of a number of Perl modules,
+    scripts and accompanying documentation.
 
     The Template module acts as a general interface to the toolkit
     and contains comprehensive documentation describing the toolkit,
     its usage and further sources of reference.
 
         perldoc Template
+
+    The Template::Tutorial document provides an introduction to the
+    Template Toolkit and shows some typical examples of usage.
+
+        perldoc Template::Tutorial
 
     The tpage and ttree scripts are useful utilities for processing
     template documents, or entire content trees, respectively.
@@ -90,8 +95,8 @@ OVERVIEW
     separation of application code (the *implementation*) from the
     user interface (the *presentation*). It tries to keep templates
     clutter-free, concentrating on what the document looks like, and
-    hides the implementation specific details of how the various
-    items of content are stored, retrieved or calculated.
+    hides away the implementation specific details of how the
+    various items of content are stored, retrieved or calculated.
 
     Development and subsequent maintenance become easier and less
     error prone when the "back-end" is separated from the "front-
@@ -103,7 +108,7 @@ OVERVIEW
     required to generate the dynamic parts of the content, perhaps
     by using CPAN modules, one of the existing Template Toolkit
     "plugins" or by re-using some code you've previously written for
-    another web "application" running on your site.
+    another web application running on your site.
 
     The important thing is that the code is developed *separately*
     from the template documents. This is a key feature of the
@@ -137,7 +142,7 @@ OVERVIEW
     embedding HTML within the Perl script, you are embeddding Perl
     within the HTML document. The Template Toolkit tries to better
     separate the two in attempt to create a more structured approach
-    to constructing dynamic content. There's a slight "startup" cost
+    to constructing dynamic content. There's a slight startup cost
     to using this approach because, like life in general, it often
     takes a little longer to get yourself properly organised. The
     payoff comes in terms of scalability and subsequent ease of re-
@@ -185,15 +190,15 @@ OVERVIEW
     any other application area. The plugin interface means that it
     doesn't have to be - it can just concentrate on the task of
     constructing documents and doesn't care if you subsequently use
-    it to generate HTML, LaTeX, RTF or plain text documents from a
-    command-line, CGI script or an in-server web process such as
-    Apache/mod_perl using data extracted from a CGI form, defined in
-    a file, retrieved from a database or based on what Jim Morrison
-    told you in a dream. You choose what do to with it and how to do
-    it. Simply load additional functionality as you need it from
-    CPAN modules, Template Toolkit plugins, generic web applications
-    such as chat rooms, FAQ lists, bulletin boards, etc., or any
-    other code you can beg, borrow or write yourself.
+    it to generate HTML, XML, LaTeX, RTF or plain text documents
+    from a command-line, CGI script or an in-server web process such
+    as Apache/mod_perl using data extracted from a CGI form, defined
+    in a file, retrieved from a database or based on what Jim
+    Morrison told you in a dream. You choose what do to with it and
+    how to do it. Simply load additional functionality as you need
+    it from CPAN modules, Template Toolkit plugins, generic web
+    applications such as chat rooms, FAQ lists, bulletin boards,
+    etc., or any other code you can beg, borrow or write yourself.
 
     It is worth noting that there is nothing to stop you from
     adopting a well structured approach to content construction
@@ -209,10 +214,7 @@ OVERVIEW
     without having to code it yourself or even worry about the
     specifics of implementation. The details are hidden away, the
     directive syntax is simplified and you can get a lot done very
-    quickly with the minimum of fuss. The benefit of the
-    Text::Template approach is that you have complete control over
-    exactly what happens and you can be as structured or as
-    unstructured as the task in hand demands.
+    quickly with the minimum of fuss.
 
     The Template Toolkit is a direct descendant of, and replacement
     for the Text::MetaText module. It has been designed and rebuilt
@@ -390,7 +392,7 @@ AUTHOR
         http://www.cre.canon.co.uk/perl
 
 VERSION
-    This is version 1.02 of the Template Toolkit.
+    This is version 1.03 of the Template Toolkit.
 
     Please consult the Changes file for information about visible
     changes in the Template Toolkit between releases. The TODO file
@@ -406,8 +408,8 @@ VERSION
     to the templates mailing list.
 
 COPYRIGHT
-    Copyright (C) 1996-1999 Andy Wardley. All Rights Reserved.
-    Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+    Copyright (C) 1996-2000 Andy Wardley. All Rights Reserved.
+    Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 
     This module is free software; you can redistribute it and/or
     modify it under the same terms as Perl itself.

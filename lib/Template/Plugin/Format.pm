@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Format.pm,v 1.2 1999/08/12 21:53:55 abw Exp $
+# $Id: Format.pm,v 1.3 2000/01/14 20:12:28 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use CGI;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
 
 
 sub new {
@@ -46,11 +46,7 @@ sub new {
 sub make_formatter {
     my $format = shift;
     $format = '%s' unless defined $format;
-    return sub {
-	my $text = shift;
-	$text = '' unless defined $text;
-	return sprintf($format, $text);
-    }
+    return sub { return sprintf($format, @_); }
 }
 
 
@@ -82,7 +78,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.2 $
+$Revision: 1.3 $
 
 =head1 COPYRIGHT
 

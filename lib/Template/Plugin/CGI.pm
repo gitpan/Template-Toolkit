@@ -4,7 +4,7 @@
 #
 # DESCRIPTION
 #
-#   Simple Template Toolkit Plugin interfacing the the CGI.pm module.
+#   Simple Template Toolkit plugin interfacing to the CGI.pm module.
 #
 # AUTHOR
 #   Andy Wardley   <abw@cre.canon.co.uk>
@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: CGI.pm,v 1.4 1999/08/12 21:53:55 abw Exp $
+# $Id: CGI.pm,v 1.5 2000/02/01 12:14:30 abw Exp $
 #
 #============================================================================
 
@@ -32,20 +32,13 @@ use Template::Plugin;
 use CGI;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
-
-
-#------------------------------------------------------------------------
-# new($context, \@params)
-#
-# Return a new CGI object.
-#------------------------------------------------------------------------
+$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
-    my ($self, $context, @params) = @_;
-    CGI->new(@params);
+    my $class   = shift;
+    my $context = shift;
+    $class->SUPER::new($context, CGI->new(@_));
 }
-
 
 1;
 
@@ -97,7 +90,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.4 $
+$Revision: 1.5 $
 
 =head1 COPYRIGHT
 

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: list.t,v 1.5 1999/11/25 17:51:26 abw Exp $
+# $Id: list.t,v 1.6 2000/02/01 12:14:31 abw Exp $
 # 
 #========================================================================
 
@@ -110,5 +110,13 @@ size of list1: 4
 3
 4
 
+-- test -- 
+[% mylist = [ 'foo' 'bar' 'baz' ] %]
+items: [% mylist.join +%]
+items: [% mylist.join(', ') +%]
+
+-- expect --
+items: foo bar baz
+items: foo, bar, baz
 
 

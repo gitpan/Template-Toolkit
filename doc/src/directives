@@ -71,13 +71,19 @@
                  content
               [% END %]
 
-  USE       - load a "plugin" module
+  USE       - load a "plugin" module (or any regular Perl module 
+              with LOAD_PERL option)
               [% USE name %]
               [% USE name( params ) %] 
               [% USE var = name( params ) %]
               ...
               [% name.method %]
               [% var.method %]
+
+  PERL      - evaluate block of Perl code (requires EVAL_PERL option)
+              [% PERL %]
+                 # perl code goes here
+              [% END %]
               
   CATCH     - define block to catch an exception
               [% CATCH etype %]

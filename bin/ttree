@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 1.14 1999/11/09 16:14:00 abw Exp $
+# $Id: ttree,v 1.16 2000/02/01 12:14:24 abw Exp $
 #
 #========================================================================
 
@@ -39,7 +39,7 @@ use File::Basename;
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
@@ -276,6 +276,7 @@ sub process_file {
 
 sub read_config {
     my $file = shift;
+
     my $config = AppConfig->new({ 
 	ERROR => sub { die @_, "\ntry `$NAME --help'\n" }   }, 
 	'help|h'      => { ACTION => \&help },
@@ -292,6 +293,8 @@ sub read_config {
 	'copy=s@',
 	'accept=s@',
 	'template_case|case',
+	'template_eval_perl|eval_perl',
+	'template_load_perl|load_perl',
 	'template_interpolate|interpolate',
 	'template_pre_chomp|pre_chomp|prechomp',
 	'template_post_chomp|post_chomp|postchomp',
@@ -303,7 +306,9 @@ sub read_config {
 	'template_plugin_base|plugin_base|pluginbase|p=s@',
 	'perl5lib|perllib=s@'
     );
-    # define this option now that we have $config context
+
+    # add the 'file' option now that we have a $config object that we 
+    # can reference in a closure
     $config->define(
 	'file|f=s@'   => { EXPAND => EXPAND_ALL, 
 			   ACTION => sub { 
@@ -313,6 +318,7 @@ sub read_config {
 			       $config->file($file) }  
 			   }
     );
+
     # process main config file, then command line args
     $config->file($file);
     $config->args();
@@ -332,28 +338,78 @@ sub write_config {
 
     open(CONFIG, ">$file") || die "failed to create $file: $!\n";
     print(CONFIG <<END_OF_CONFIG);
+#------------------------------------------------------------------------
+# sample .ttreerc file created automatically by $NAME version $VERSION
+#
+# This file originally written to $file
+#
+# For more information on the contents of this configuration file, see
+# 
+#     perldoc ttree
+#     ttree -h
+#
+# NOTE: The directories specified below adopt the UNIX convention of
+# specifying a user's home directory with the '~' character.  This
+# feature may not be available on other platforms in which case you
+# should specify the directory in entirety.
+#------------------------------------------------------------------------
 
-# the 'src' option defines the location of the template files that
+#------------------------------------------------------------------------
+# General options
+
+# print summary of what's going on (-v)
+verbose 
+
+# recurse into any sub-directories and process files (-r)
+recurse
+
+
+#------------------------------------------------------------------------
+# The 'cfg' option defines a directory in which other ttree configuration
+# files can be found;  you can specify a file using the '-f' option,
+# 'ttree -f myconfig' and the script will look for the file in this
+# directory.  Alteratively, provide an absolute path as an argument,
+# 'ttree -f /tmp/foo'.
+# 
+# By default, this option is commented out.  You will need to create a 
+# directory, uncomment the following line and set the value appropriately.
+# Having done that, you can then create files exactly like this in that
+# location.
+
+#cfg = ~/.ttree
+
+#------------------------------------------------------------------------
+# The remaining options define the default behaviour when you run ttree.
+# This file is always processed before any file specified by '-f'.  If
+# you define the 'src' and 'dest' options then these will be used by
+# default.  Values for these options defined in files loaded with '-f'
+# will override these default.  Other options such as 'lib', 'ignore',
+# 'copy' and 'accept' are accumulative.
+
+# The 'src' option defines the location of the template files that
 # you want to process
-src = $HOME/websrc/doc
+src  = ~/websrc/public_html
 
-# the 'dest' option specifies where the output should go
-dest = $HOME/public_html
+# The 'dest' option specifies where the output should go.  The script
+# compares the modification dates of files in the 'src' and 'dest'
+# directories to work out which need to be processed. 
+dest = ~/public_html
 
-# lib tells the processor (via INCLUDE_PATH) where to find any
+# 'lib' tells the processor (via INCLUDE_PATH) where to find any
 # template files that may be INCLUDE'd.  You can specify many.
-lib = $HOME/websrc/lib
+lib = ~/websrc/templates
 lib = /usr/local/templates/lib
 
-# things that aren't templates and should be ignored
+# Things that aren't templates and should be ignored, specified as Perl
+# regexen.
 ignore = \\b(CVS|RCS)\\b
 ignore = ^#
 
-# things that should be copied rather than processed
+# Things that should be copied rather than processed.
 copy = \\.png\$ 
 copy = \\.gif\$ 
 
-# by default, everything not ignored or copied is accepted; add 'accept'
+# By default, everything not ignored or copied is accepted; add 'accept'
 # lines if you want to filter further. e.g.
 # accept = \\.html\$
 # accept = \\.atml\$
@@ -398,6 +454,8 @@ File search specifications (all may appear multiple times):
 Additional options to set Template Toolkit configuration items:
    --interpolate            Interpolate '\$var' references in text
    --case                   Case sensitivity of reserved words
+   --eval_perl              Evaluate [% PERL %] ... [% END %] code blocks
+   --load_perl              Load regular Perl modules via USE directive
    --pre_chomp              Chomp leading whitespace 
    --post_chomp             Chomp trailing whitespace
    --pre_process=TEMPLATE   Use TEMPLATE as header
@@ -505,7 +563,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.14 $
+$Revision: 1.16 $
 
 =head1 COPYRIGHT
 

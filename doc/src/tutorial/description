@@ -1,0 +1,15 @@
+=head1 DESCRIPTION
+
+This tutorial document provides a introduction to the Template Toolkit
+and demonstrates some of the typical ways it may be used.  It covers
+the generation of static pages from templates using the F<tpage> and
+F<ttree> scripts and then goes on to show dynamic content generation 
+using CGI scripts and Apache/mod_perl handlers.
+
+Various features of the Template Toolkit are introduced and described 
+briefly and explained by use of example.  For a complete reference and
+guide to the template directives, features and options, consult the 
+F<Template> documentation.  e.g.
+
+    perldoc Template
+

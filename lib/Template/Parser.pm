@@ -31,13 +31,13 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 1.17 1999/12/21 14:22:15 abw Exp $
+# $Id: Parser.pm,v 1.18 2000/01/19 17:27:25 abw Exp $
 #
 #============================================================================
 
 package Template::Parser;
 
-require 5.005;
+require 5.004;
 
 use strict;
 use vars qw( $VERSION $DEBUG $DEFAULTS );
@@ -52,7 +52,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -76,7 +76,7 @@ $DEFAULTS = {
     PRE_CHOMP   => 0,
     POST_CHOMP  => 0,
     GRAMMAR     => undef,
-    ERROR       => '',
+    'ERROR'     => '',
 };
 
 
@@ -339,7 +339,7 @@ sub interpolate_text {
 
     while ($text =~ 
 	   /
-	   ( (?: \\. | [^\$] )* )   # escaped or non-'$' character [$1]
+	   ( (?: \\. | [^\$] )+ )   # escaped or non-'$' character [$1]
 	   | 
 	   ( \$ (?:		    # embedded variable	           [$2]
 	     (?: \{ ([^\}]*) \} )   # ${ ... }                     [$3]
@@ -887,7 +887,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.17 $
+$Revision: 1.18 $
 
 =head1 COPYRIGHT
 

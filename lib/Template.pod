@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pod,v 1.31 1999/12/21 14:22:11 abw Exp $
+#   $Id: Template.pod,v 1.36 2000/02/01 12:34:57 abw Exp $
 #
 #========================================================================
 
@@ -44,6 +44,7 @@ Template Toolkit - a Perl toolkit for template processing.
       INTERPOLATE  => 1,               # expand "$var" in plain text
       POST_CHOMP   => 1,               # cleanup whitespace 
       PRE_PROCESS  => 'header',        # prefix each template
+      EVAL_PERL    => 1,               # evaluate Perl code blocks
   );
 
   my $template = Template->new(\%config);
@@ -132,13 +133,19 @@ Template Toolkit - a Perl toolkit for template processing.
                  content
               [% END %]
 
-  USE       - load a "plugin" module
+  USE       - load a "plugin" module (or any regular Perl module 
+              with LOAD_PERL option)
               [% USE name %]
               [% USE name( params ) %] 
               [% USE var = name( params ) %]
               ...
               [% name.method %]
               [% var.method %]
+
+  PERL      - evaluate block of Perl code (requires EVAL_PERL option)
+              [% PERL %]
+                 # perl code goes here
+              [% END %]
               
   CATCH     - define block to catch an exception
               [% CATCH etype %]
@@ -170,14 +177,19 @@ Template Toolkit - a Perl toolkit for template processing.
 
 =head1 TOOLKIT CONTENTS
 
-The Template Toolkit comprises of a number of Perl modules and two
-additional scripts.
+The Template Toolkit comprises of a number of Perl modules, scripts
+and accompanying documentation.
 
 The F<Template> module acts as a general interface to the toolkit
 and contains comprehensive documentation describing the toolkit, its
 usage and further sources of reference.
 
     perldoc Template
+
+The F<Template::Tutorial> document provides an introduction to the Template
+Toolkit and shows some typical examples of usage.
+
+    perldoc Template::Tutorial
 
 The F<tpage> and F<ttree> scripts are useful utilities for processing 
 template documents, or entire content trees, respectively.
@@ -216,7 +228,7 @@ require but without having to write the code directly into the
 document.  In other words, it promotes the separation of application
 code (the I<implementation>) from the user interface (the
 I<presentation>).  It tries to keep templates clutter-free,
-concentrating on what the document looks like, and hides the
+concentrating on what the document looks like, and hides away the
 implementation specific details of how the various items of content
 are stored, retrieved or calculated.
 
@@ -229,7 +241,7 @@ headers, footers, menus, etc.  Then, you (or your progammer) can
 create any Perl code required to required to generate the dynamic
 parts of the content, perhaps by using CPAN modules, one of the
 existing Template Toolkit "plugins" or by re-using some code you've
-previously written for another web "application" running on your site.
+previously written for another web application running on your site.
 
 The important thing is that the code is developed I<separately> from
 the template documents.  This is a key feature of the Template Toolkit
@@ -259,7 +271,7 @@ In many ways, this is like CGI scripting in reverse.  Instead of
 embedding HTML within the Perl script, you are embeddding Perl within
 the HTML document.  The Template Toolkit tries to better separate the
 two in attempt to create a more structured approach to constructing
-dynamic content.  There's a slight "startup" cost to using this
+dynamic content.  There's a slight startup cost to using this
 approach because, like life in general, it often takes a little longer
 to get yourself properly organised.  The payoff comes in terms of
 scalability and subsequent ease of re-use - the more you add, the more
@@ -303,11 +315,11 @@ The Template Toolkit is ideally suited for generating web content, but
 it is by no means limited or specific to this or any other application
 area.  The plugin interface means that it doesn't have to be - it can
 just concentrate on the task of constructing documents and doesn't
-care if you subsequently use it to generate HTML, LaTeX, RTF or plain
-text documents from a command-line, CGI script or an in-server web
-process such as Apache/mod_perl using data extracted from a CGI form,
-defined in a file, retrieved from a database or based on what Jim
-Morrison told you in a dream.  You choose what do to with it and
+care if you subsequently use it to generate HTML, XML, LaTeX, RTF or
+plain text documents from a command-line, CGI script or an in-server
+web process such as Apache/mod_perl using data extracted from a CGI
+form, defined in a file, retrieved from a database or based on what
+Jim Morrison told you in a dream.  You choose what do to with it and
 how to do it.  Simply load additional functionality as you need it
 from CPAN modules, Template Toolkit plugins, generic web applications
 such as chat rooms, FAQ lists, bulletin boards, etc., or any other
@@ -325,10 +337,7 @@ detection and handling, variable localisation and namespacing, dynamic
 loading of external modules, and so on, without having to code it
 yourself or even worry about the specifics of implementation.  The
 details are hidden away, the directive syntax is simplified and you
-can get a lot done very quickly with the minimum of fuss.  The benefit
-of the Text::Template approach is that you have complete control over
-exactly what happens and you can be as structured or as unstructured
-as the task in hand demands.
+can get a lot done very quickly with the minimum of fuss.  
 
 The Template Toolkit is a direct descendant of, and replacement for
 the Text::MetaText module.  It has been designed and rebuilt from
@@ -368,8 +377,8 @@ Templates are rendered by calling the process() method on the Template
 object.  The first parameter specifies the template input and may be a
 filename, a reference to a text string (SCALAR) containing template
 text or a reference to a GLOB or IO::Handle (or sub-class) from which
-the template should be read.  The process returns 1 if the template
-was successfully rendered or 0 if an error occurred.  In the latter
+the template should be read.  The method returns 1 if the template
+was successfully processed or 0 if an error occurred.  In the latter
 case, the relevant error message can be retrieved by calling the
 error() method.
 
@@ -551,7 +560,6 @@ nested blocks) up to the next (balanced) END directive.  The IF,
 UNLESS, ELSIF and ELSE directives also define blocks and may be
 grouped together in the usual manner.
 
-    Metavars:
     [% FOREACH item = [ 'foo' 'bar' 'baz' ] %]
        * Item: [% item %]
     [% END %]
@@ -739,6 +747,10 @@ lists of the hash keys and values.
        [% field %] [% product.${field} %]
     [% END %]
 
+This example also shows how a variable ('field' in this case) may be 
+evaluated as '${field}' to return a value which is then used to index
+into the 'product' hash array.
+
 You can copy all the members of a hash into the top level variable namespace
 with the IMPORT directive.
 
@@ -882,7 +894,7 @@ The first element of the list is element 0.
     [% list = [ 'one' 'two' 'three' 'four' ] %]
     [% list.0 %] [% list.3 %]
 
-    [% FOREACH n = [0..4] %]
+    [% FOREACH n = [0..3] %]
     [% list.${n} %], 
     [%- END %]
 
@@ -908,7 +920,7 @@ Note that this particular usage creates a localised variable context
 to prevent the imported hash keys from overwriting any existing
 variables.  The imported definitions and any other variables defined
 in such a FOREACH loop will be lost at the end of the loop, when the 
-previous context and variable value are restored.
+previous context and variable values are restored.
 
 The [% BREAK %] directive can be used to prematurely exit a FOREACH
 loop.
@@ -922,7 +934,7 @@ The 'size' and 'max' values can be examined for a list to determine
 the number of elements and maximum index (size - 1).  The 'sort'
 method returns a sorted list of the elements in the list.
 
-    [% list = [ 'tom', 'dick', 'harry' ] %]
+    [% list = [ 'Tom', 'Dick', 'Harry' ] %]
     [% list.size %] names:
     [% FOREACH name = list.sort %]
        * [% name %]
@@ -931,9 +943,15 @@ method returns a sorted list of the elements in the list.
 Output:
 
     3 names:
-      * dick
-      * harry
-      * tom
+      * Dick
+      * Harry
+      * Tom
+
+The 'join' method can be called on a list to concatenate all values
+into a single string.  Values will be separated by a space or an
+alternate string can be passed as a parameter.
+
+    [% mylist.join(', ') %]
 
 =head2 VARIABLES BOUND TO USER CODE
 
@@ -979,11 +997,11 @@ to the code:
 
 myfile:
 
-    [% join(' + ', foo, bar, 'Mr. Baz', "Mr. $qux") %]
+    [% join(', ', foo, bar, 'Mr. Baz', "Mr. $qux") %]
 
 Output:
 
-    Mr. Foo + Mr. Bar + Mr. Baz + Mr Qux
+    Mr. Foo, Mr. Bar, Mr. Baz, Mr Qux
 
 Named parameters may also be specified.  These are automatically collected
 into a single hash array which is passed by reference as the B<last> 
@@ -1020,6 +1038,10 @@ string or the DEBUG option can be enabled to cause an 'undef'
 exception to be raised.  The code may also return a second value
 indicating the status.  A status of 0 (STATUS_OK) means everything
 went OK, regardless of whatever value was returned, defined or not.
+Specify the <:status> tag as a parameter to C<use Template> to 
+import the STATUS_* definitions.
+
+    use Template qw( :status );
 
     sub get_something {
 	# ...
@@ -1231,7 +1253,7 @@ sequence.  On each iteration, the ACTION for the iterator is called,
 which in this case is a closure which calls the user($uid) method to
 retrieve the complete user record from the database.  Thus, we avoid
 the overhead of loading and storing every complete user record,
-retrieving it only as and when required.
+retrieving them only as and when required.
 
     sub user {
   	my ($self, $uid) = @_;
@@ -1248,13 +1270,13 @@ retrieving it only as and when required.
     }
 
 This process is entirely hidden from the template author.  The use of 
-iterators is automatic and nothing needs to change in the template:
+iterators is automatic and nothing needs to be changed in the template:
 
     [% FOREACH user = myorg.userlist %]
        Name: [% user.name %]  EMail: [% user.email %]
     [% END %]
 
-A reference to the iterator is always available within the FOREACH 
+A reference to the iterator is always available within a FOREACH 
 block via the 'loop' variable.  An iterator is automatically created 
 by the FOREACH directive if a regular list is specified.  The iterator
 provides a number of methods for testing the state of the loop:
@@ -1368,7 +1390,9 @@ equivalent for non-Unix file systems.  The '/' character is therefore
 portable across all platforms.
 
 The included template will "inherit" all variables currently defined
-in the including template.
+in the including template.  Note how the 'title' and 'bgcol' variables
+in this next example are used in the 'header' file, inheriting the
+values defined previously in the including template.
 
     [% title = 'Hello World'
        bgcol = '#ffffff' 
@@ -1452,6 +1476,8 @@ copies refer to the same hash.  In more general terms, you can think
 of a dotted variable as referring to the appropriate global variable
 if (and only if) the top-level namespace (i.e. the first element of
 the compound variable) is already defined.
+
+Let's see if an example makes this any clearer:
 
     [% user = { name = 'John Doe' } %]
     [% INCLUDE change_name %]
@@ -1543,6 +1569,9 @@ Output:
 
     <img src="/images/mylogo.gif">
 
+See also the PRE_PROCESS option which allows you to specify such a file
+that will automatically be processed before each template.
+
 In addition to separate files, template blocks can be defined and 
 processed with the INCLUDE directive.  These are defined with the BLOCK
 directive and are parsed, compiled and cached as for files.
@@ -1622,18 +1651,22 @@ it is used.
 
 =head2 PLUGIN OBJECTS AND LIBRARIES
 
-The USE directive can be used to load and initialise "plugin" extension 
-modules.  These are regular Perl modules that may, or may not, be derived
-from the Template::Plugin base class.
+The USE directive can be used to load and initialise "plugin"
+extension modules.
 
     [% USE myplugin %]
+
+A plugin is a regular Perl module that conforms to a particular
+object-oriented interface, allowing it to be loaded into and used
+automatically by the Template Toolkit.  For details of this interface
+and information on writing plugins, consult L<Template::Plugin>.
 
 The plugin name is case-sensitive and will be appended to the
 PLUGIN_BASE value (default: 'Template::Plugin') to construct a full
 module name.  Any periods, '.', in the name will be converted to '::'.
 
-    [% USE MyPlugin   %]     #  => Template::Plugin::MyPlugin
-    [% USE CGI.Params %]     #  => Template::Plugin::CGI::Params
+    [% USE MyPlugin %]     #  => Template::Plugin::MyPlugin
+    [% USE Foo.Bar  %]     #  => Template::Plugin::Foo::Bar
 
 Any additional parameters supplied in parenthesis after the plugin name
 will be also be passed to the new() constructor.  A reference to the 
@@ -1684,25 +1717,77 @@ Output:
     <b>This is bold</b>
     <i>This is italic</i>
 
-Another very simple example is the CGI plugin which simply creates and
-returns an instance of Lincoln Stein's CGI.pm module.
+The CGI plugin is an example of one which delegates to another Perl
+module.  In this this case, it is to Lincoln Stein's CGI.pm module.
+All of the methods provided by CGI.pm are available via the plugin.
 
     [% USE CGI %]
-    [% name = CGI.param('username') %]
+
+    [% CGI.start_form %]
+
+    [% CGI.checkbox_group(name   =>   'colours', 
+                          values => [ 'red' 'green' 'blue' ])
+    %]
+
+    [% CGI.popup_menu(name   =>   'items', 
+                      values => [ 'foo' 'bar' 'baz' ])
+    %]
+
+    [% CGI.end_form %]
+
+The plugin is derived from the Template::Plugin module which provides
+a general facility for wrapping external objects.  If a method returns
+more than one value (such as the CGI method checkbox_group(), above)
+then the results will be concatenated into a single string, each
+separated by a space.  The joint() method can be used to change the
+joining string.
+
+    [% USE CGI %]
+    [% CGI.joint("\n") %]  # multi-values now separated by newline
+
+A method may have the '_as_list' suffix added to have the result(s)
+returned as a list reference.
+
+    [% checklist = CGI.checkbox_group_as_list(name   => 'names', 
+					      values => [ 'foo' 'bar' ])
+    %]
+
+    <ul>
+    [% FOREACH item = checklist %]
+       <li>[% item %]
+    [% END %]
+    </ul>
 
 Simon Matthews E<lt>sam@knowledgepool.comE<gt> has written a DBI
-plugin which provides an interfaces to the DBI module.
+plugin which provides an interface to Tim Bunce's DBI module (both
+available from CPAN).  Here's a short example:
 
     [% USE DBI('DBI:mSQL:mydbname') %]
+
     [% FOREACH user = DBI.query('SELECT * FROM users') %]
        [% user.id %] [% user.name %] [% user.etc.etc %]
+    [% END %]
+
+The LOAD_PERL option (disabled by default) provides a further way by
+which external Perl modules may be loaded.  If a regular Perl module
+(i.e. not a Template::Plugin::* or other module relative to some
+PLUGIN_BASE) supports an object-oriented interface and a new()
+constructor then it can be loaded and wrapped automatically by a
+Template::Plugin object.  The following example shows how the IO::File
+module might be used.  Please note that this feature is still
+experimental.
+
+    [% USE file = IO.File('/tmp/mydata') %]
+
+    [% WHILE line = file.getline %]
+       <!-- [% line %] -->
     [% END %]
 
 =head2 EVALUATING PERL CODE
 
 The PERL directive is used to mark the start of a block which contains
 Perl code for evaluation.  The EVAL_PERL option must be enabled for Perl
-code to be evaluated and a 'perl' exception will be thrown otherwise.
+code to be evaluated.  A 'perl' exception will be thrown otherwise.
 
 Perl code is evaluated in the Template::Perl package.  The $context
 package variable contains a reference to the current Template::Context
@@ -1738,12 +1823,12 @@ thrown as a 'perl' exception.
 =head2 POST-PROCESSING FILTERS
 
 The FILTER directive can be used to post-process the output of a
-block.  The Template::Plugin::Filter module defines the 'html' and
-'format' filters.  The 'html' filter converts the characters '<', '>'
-and '&' to '&lt;', '&gt;' and '&amp', respectively, protecting them
-from being interpreted as representing HTML tags or entities.  The
-'format' filter takes a format string as a parameter (as per printf()) 
-and formats each line of text accordingly.
+block.  The Template::Filters module defines the 'html',
+'format', 'redirect' and 'into' filters.  The 'html' filter converts
+the characters '<', '>' and '&' to '&lt;', '&gt;' and '&amp',
+respectively, protecting them from being interpreted as representing
+HTML tags or entities.  The 'format' filter takes a format string as a
+parameter (as per printf()) and formats each line of text accordingly.
 
     [% FILTER html %]
     Binary "<=>" returns -1, 0, or 1 depending on...
@@ -1760,6 +1845,25 @@ output:
   
     <!-- This is a block of text filtered        -->
     <!-- through the above format.               -->
+
+The 'redirect' filter redirects the output of the block into a separate
+file, specified relative to the OUTPUT_PATH configuration item.
+
+    [% FOREACH user = myorg.userlist %]
+       [% FILTER redirect("users/${username}.html") %]
+          [% INCLUDE userinfo %]
+       [% END %]
+    [% END %]
+
+The 'into' filter allows you to capture the output of a block into a template 
+variable.
+
+    [% FILTER into('user_details') %]
+       User: [% user.name %]
+       [% INCLUDE userinfo %]
+    [% END %]
+
+    [% notify_new_user_details(user_details) %]
 
 Additional filters may be provided via the FILTERS configuration option.
 Filters may also be added at any time via the register_filter($name, $factory)
@@ -1852,6 +1956,10 @@ Having performed any processing, it should then return a status code
 or an exception object to be propagated back to the user.  Returning a
 value of 0 (STATUS_OK) indicates that the exception has been
 successfully handled and processing should continue as before.
+Note that you need to specify C<:status> as a parameter to 
+C<use Template> in order for the STATUS_* constants to be defined.
+
+    use Template qw( :status );
 
     my $tproc = Template->new({	
   	CATCH => {
@@ -2246,6 +2354,28 @@ variables.
 The only exception to this rule are the 'and', 'or' and 'not' operators
 which can I<always> be expressed in lower, or indeed any case.
 
+=item LOAD_PERL
+
+The LOAD_PERL option modifies the behaviour of the USE directive.  By
+default (LOAD_PERL => 0), the directive will only load special
+'plugin' modules whose names map onto Perl modules in the
+'Template::Plugin' namespace (e.g. CGI => Template::Plugin::CGI).
+
+When the LOAD_PERL option is set to any true value, the directive will
+also attempt to load a regular Perl module (i.e. no namespace prefix
+added) and create an object instance via the new() method.  The
+resulting object is then wrapped in a Template::Plugin object which
+delegates all method calls to it.  This acts as a general interface
+between the underlying Perl object and the Template Toolkit.
+
+The end result is that it is often possible to load a general purpose,
+object-oriented Perl module and use it in a template without having to
+write any special purpose plugin code.
+
+This feature is new as of version 1.03 and is still largely
+experimental.  Please report any problems or difficulties you may
+encounter to the author.
+
 =item PLUGIN_BASE
 
 This option allows you to define a base package for plugin objects loaded
@@ -2272,6 +2402,10 @@ used in preference to the default Template Toolkit equivalent.  In other
 words, the default 'Template::Plugin' location is always searched, but
 after any user defined values.  
 
+If the LOAD_PERL option is set, then the directive will also attempt to 
+load the module without adding a package prefix (i.e. a regular Perl 
+module) and instantiate an object via the new() method.  This is wrapped
+in a Template::Plugin object.
 
 =item PLUGINS
 
@@ -2750,7 +2884,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 VERSION
 
-This is version 1.02 of the Template Toolkit.  
+This is version 1.03 of the Template Toolkit.  
 
 Please consult the F<Changes> file for information about visible changes
 in the Template Toolkit between releases.  The F<TODO> file contains 
@@ -2767,8 +2901,8 @@ templates mailing list.
 
 =head1 COPYRIGHT
 
-Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
-Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

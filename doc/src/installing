@@ -20,13 +20,13 @@ like this:
 NOTE: on Win32 systems, Microsoft's 'nmake' appears to be a suitable
 replacement for 'make'.
 
-The 'make install' will install the module on your system.  You may need 
-administrator privileges to perform this task.  If you install the module 
-in a local directory (for example, by executing "perl Makefile.PL
-LIB=~/lib" in the above - see C<perldoc MakeMaker> for full details), you
-will need to ensure that the PERL5LIB environment variable is set to
-include the location, or add a line to your scripts explicitly naming the
-library location:
+The 'make install' will install the module on your system.  You may
+need administrator privileges to perform this task.  If you install
+the module in a local directory (for example, by executing "perl
+Makefile.PL LIB=~/lib" in the above - see C<perldoc
+ExtUtils::MakeMaker> for full details), you will need to ensure that
+the PERL5LIB environment variable is set to include the location, or
+add a line to your scripts explicitly naming the library location:
 
     use lib '/local/path/to/lib';
 

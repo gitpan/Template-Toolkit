@@ -20,20 +20,20 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Test.pm,v 1.2 1999/12/21 14:22:15 abw Exp $
+# $Id: Test.pm,v 1.3 2000/01/19 17:27:25 abw Exp $
 #
 #============================================================================
 
 package Template::Test;
 
-require 5.005;
+require 5.004;
 
 use strict;
 use vars qw( @ISA @EXPORT $VERSION $DEBUG $loaded %callsign);
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 @ISA     = qw( Exporter );
 @EXPORT  = qw( callsign extra_tests pre_ok ntests test_expect ok );
@@ -343,7 +343,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.2 $
+$Revision: 1.3 $
 
 =head1 HISTORY
 
