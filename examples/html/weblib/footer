@@ -1,0 +1,15 @@
+%% DEFAULT 
+   year   = 1999
+   author = $abw
+%%
+
+<hr>
+
+%% UNLESS $no_copyright %%
+<p align=center>
+<font size="-1">&copy; Copyright $year $author
+</p>
+%% END %%
+
+</body>
+</html>

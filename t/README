@@ -1,0 +1,13 @@
+#========================================================================
+# Template Toolkit - t/
+#========================================================================
+
+This directory contains numerous test scripts which are run automatically
+by the 'make test'.
+
+The 'texpect.pl' library implements a simple function for testing 
+template output against an expected result.  See skel.t for a sample
+test script file that can be copied and modified as required.
+
+
+A

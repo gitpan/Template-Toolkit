@@ -1,0 +1,283 @@
+%left DOT
+%left NOT
+%left AND
+%left OR
+%left COMPOP
+%left COMMA
+
+%%
+
+#========================================================================
+# START RULE
+#========================================================================
+
+block:		chunks	
+			{ Template::Directive::Block->new($_[1]) }
+	|	/* NULL - empty block */ 
+			{ Template::Directive::Block->new([])    }
+;
+
+
+#========================================================================
+# PRIME DIRECTIVE RULES
+#========================================================================
+
+
+chunks:		chunk	
+			{ return defined $_[1] ? [ $_[1] ] : [ ] }
+	|	chunks chunk
+			{ push(@{ $_[1] }, $_[2]) if defined $_[2]; $_[1] }
+;
+
+chunk:		text
+			{ $_[1] }
+	|	directive SEPARATOR
+			{ $_[1] }
+;
+
+directive:	atomdir
+	|	use
+	|	catch
+	|	debug
+	|	condition
+	|	loop
+	|	defblock
+	|	/* NULL - empty directive */
+;
+
+atomdir:	get
+	|	set
+	|	include
+	|	throw
+	|	error
+	|	return
+	|	stop
+;
+
+
+#========================================================================
+# DIRECTIVE RULES
+#========================================================================
+
+text:		TEXT	
+			{ Template::Directive::Text->new($_[1])          }
+;
+
+get:		GET term
+			{ Template::Directive->new($_[2])                }
+
+	|	term		    
+			{ Template::Directive->new($_[1])                }
+;
+
+set:		SET setlist
+			{ Template::Directive->new($_[2])                }
+	|	DEFAULT setlist		    
+			{ unshift(@{$_[2]}, OP_DEFAULT);  # enable DEFAULT
+			  Template::Directive->new($_[2])                }
+	|	setlist	{ Template::Directive->new($_[1])                }
+;
+
+include:	INCLUDE incparam inclist
+			{ Template::Directive::Include->new(@_[2, 3])    }
+
+	|	INCLUDE IDENT ASSIGN incparam inclist
+			{ Template::Directive::Include->new(@_[4, 5, 2]) }
+;
+
+use:		USE useparam
+			{ Template::Directive::Use->new(@{$_[2]})        }
+	|	USE IDENT ASSIGN useparam
+			{ Template::Directive::Use->new($_[4]->[0], 
+						$_[4]->[1], $_[2])       }
+;
+
+throw:		THROW IDENT term
+			{ Template::Directive::Throw->new(@_[2, 3])      }
+;
+
+catch:		CATCH IDENT SEPARATOR block END
+			{ Template::Directive::Catch->new(@_[2, 4])      }
+	|	CATCH SEPARATOR block END
+			{ Template::Directive::Catch->new(undef, $_[3])  }
+;
+
+error:		ERROR term
+			{ Template::Directive::Error->new($_[2])         }
+;
+
+return:		RETURN	{ Template::Directive::Return->new(
+			      Template::Constants::STATUS_RETURN)        }
+;
+
+stop:		STOP	{ Template::Directive::Return->new(
+			      Template::Constants::STATUS_STOP)          }
+;
+
+condition:	IF expr SEPARATOR block else END
+			{ Template::Directive::If->new(@_[2, 4, 5])      }
+	|	UNLESS expr SEPARATOR block else END
+			{ push(@{ $_[2] }, OP_NOT);   # negate expression
+			  Template::Directive::If->new(@_[2, 4, 5])      }
+	|	atomdir IF expr
+			{ Template::Directive::If->new(@_[3, 1])         }
+	|	atomdir UNLESS expr
+			{ push(@{ $_[3] }, OP_NOT);   # negate expression
+			  Template::Directive::If->new(@_[3, 1])         }
+;
+
+else:		/* NULL */
+			{ undef }
+	|	ELSE SEPARATOR block 
+			{ $_[3] }
+	|	ELSIF expr SEPARATOR block else
+			{ Template::Directive::If->new(@_[2, 4, 5])      }
+;
+
+loop:		FOR IDENT ASSIGN term SEPARATOR block END
+			{ Template::Directive::For->new(@_[4, 6, 2])     }
+	|	FOR term SEPARATOR block END
+			{ Template::Directive::For->new(@_[2, 4])        }
+	|	atomdir FOR IDENT ASSIGN term
+			{ Template::Directive::For->new(@_[5, 1, 3])     }
+	|	atomdir FOR term
+			{ Template::Directive::For->new(@_[3, 1])        }
+;
+
+
+defblock:	BLOCK textdot SEPARATOR block END
+			{ $_[0]->define_block(@_[2, 4]); undef           }
+;
+
+debug:		DEBUG TEXT
+			{ Template::Directive::Debug->new($_[2])         }
+;
+
+
+#========================================================================
+# (NEW) FUNDAMENTAL ELEMENT RULES
+#========================================================================
+
+expr:		expr  AND expr		{ push(@{$_[1]}, @{$_[3]}, OP_AND);
+					  $_[1]                             }
+	|	expr  OR  expr		{ push(@{$_[1]}, @{$_[3]}, OP_OR);
+					  $_[1]                             }
+	|	      NOT expr		{ push(@{$_[2]}, OP_NOT); 
+					  $_[2]                             }
+	|	'(' expr ')'		{ $_[2]                             }
+	|	'(' assign ')'		{ unshift(@{$_[2]}, OP_ROOT); $_[2] }
+	|	term			{ unshift(@{$_[1]}, OP_TOLERANT);
+					  $_[1]                             }
+;
+
+assign:		lvalue ASSIGN term	{ [ @{$_[1]}, @{$_[3]}, 
+								OP_ASSIGN ] }
+;
+
+lvalue:		ident 			{ [ @{ shift @{$_[1]} },
+	     				    (map { (OP_LDOT, @$_) } @{$_[1]}), 
+					  ]                                 }
+	|	'$' ident 		{ [ @{ shift @{$_[2]} },
+	     				    (map { (OP_LDOT, @$_) } @{$_[2]}), 
+					  ]                                 }
+	|	LITERAL			{ [ [$_[1]], OP_LIST ]              }
+;
+
+ident:		ident DOT node		{ push(@{$_[1]}, $_[3]); $_[1]      }
+	|	node			{ [ $_[1] ]                         }
+;
+
+node:		'${' term '}'		{ push(@{$_[2]}, OP_LIST); $_[2]    } 
+	|	IDENT '(' list ')'	{ [ [$_[1]], @{$_[3]}  ]            }
+	|	IDENT			{ [ [$_[1]], OP_LIST ]              }
+;
+
+term:		term COMPOP term	{ push(@{$_[1]}, @{$_[3]},
+						[$_[2]], OP_BINOP);
+					  $_[1]                             }
+	|	'$' ident		{ [ OP_ROOT, ( map { (@$_, OP_DOT)  }
+						@{$_[2]} ) ]                }
+	|	ident			{ [ OP_ROOT, ( map { (@$_, OP_DOT)  }
+						@{$_[1]} ) ]                }
+	|	'[' list ']'		{ $_[2]                             }
+	|	'[' list ']''(' params ')'
+					{ push(@{$_[2]}, [ {} ], 
+							@{$_[5]}, OP_ITER);
+					  $_[2]                             }
+	|	'{' params '}'		{ unshift(@{$_[2]}, [ {} ]);
+					  $_[2]                             }
+	|	'"' quoted '"'		{ unshift(@{$_[2]}, [ "" ]);
+					  $_[2]                             }
+	|	LITERAL			{ [ [$_[1]] ]                       }
+;
+
+list:		list term		{ push(@{$_[1]}, @{$_[2]}, OP_PUSH);
+					  $_[1]                             }
+	|	list COMMA		{ $_[1]                             }
+	|	/* NULL */		{ [ OP_LIST ]                       }
+;
+
+params:		nparams		
+	|	/* NULL */		{ [ ]                               }
+;
+
+nparams:	nparams assign  	{ push(@{$_[1]}, OP_DUP, 
+							@{$_[2]}, OP_POP);
+				      	  $_[1]                             }
+	|	nparams COMMA		{ $_[1]                             }
+	|	assign	    		{ unshift(@{$_[1]}, OP_DUP);
+					  push(@{$_[1]}, OP_POP);
+					  $_[1]                             }
+;
+
+setlist:	nparams			{ unshift(@{$_[1]}, OP_ROOT);
+					     push(@{$_[1]}, OP_POP);
+					   $_[1]                            }
+;
+inclist:	params			{ unshift(@{$_[1]}, OP_ROOT);
+					     push(@{$_[1]}, OP_POP);
+					   $_[1]                            }
+;
+
+incparam:	'$' ident		{ [ OP_ROOT, ( map { (@$_, OP_DOT) }
+						@{$_[2]} ) ]                }
+	|	'"' quoted '"'		{ unshift(@{$_[2]}, [ "" ]);
+					  $_[2]                             }
+	|	textdot			{ [ [$_[1]] ]                       }
+	|	LITERAL			{ [ [$_[1]] ]                       }
+;
+
+useparam:	textdot '(' list ')'	{ [ @_[1, 3] ]                      }
+	|	textdot			{ [ $_[1] ]                         }
+;
+
+textdot:	textdot DOT IDENT	{ $_[1] .= "$_[2]$_[3]"; $_[1]      }
+	|	textdot '/' IDENT	{ $_[1] .= "$_[2]$_[3]"; $_[1]      }
+	|	IDENT
+;
+
+quoted:		quoted quotable 	{ push(@{$_[1]}, @{$_[2]}, OP_CAT)
+						if defined $_[2];
+					  $_[1]                             }
+	|	/* NULL - */	        { [  ]                              }
+;
+
+quotable:	ident			{ [ OP_ROOT, ( map { (@$_, OP_DOT) } 
+						@{$_[1]} ) ]                } 
+	|	TEXT			{ [ [$_[1]] ]                       }
+	|	SEPARATOR		{ undef }
+;
+
+
+%%
+
+
+
+
+
+
+
+
+
+
+

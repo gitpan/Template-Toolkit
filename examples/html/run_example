@@ -1,0 +1,26 @@
+#!/usr/bin/perl -w
+#
+# This is a simple example of an HTML page generator. 
+#
+
+use strict;
+use Template;
+
+my $srcfile  = 'websrc/example1.html';
+my $template = Template->new({
+    INTERPOLATE  => 1,
+    INCLUDE_PATH => 'weblib:.',
+    POST_CHOMP   => 1,
+});
+
+my $params = {
+    'root'     => '/~abw',
+    'images'   => '/~abw/images',
+    'graphics' => 1,
+    'abw'      => 'Andy Wardley'
+};
+    
+$template->process($srcfile, $params)
+	|| die $template->error(), "\n";
+
+

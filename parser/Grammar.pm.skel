@@ -1,0 +1,127 @@
+#=========================================================================
+#
+# Template::Grammar
+#
+# DESCRIPTION
+#   Perl 5 module defining the default grammar for Template::Parser.
+#
+# AUTHOR
+#   Andy Wardley   <abw@cre.canon.co.uk>
+#
+# COPYRIGHT
+#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#------------------------------------------------------------------------
+#
+# NOTE: this module is constructed from the parser/Grammar.pm.skel
+# file by running the parser/yc script.  You only need to do this if 
+# you have modified the grammar in the parser/Parser.yp file and need
+# to-recompile it.  See the README in the 'parser' directory for more
+# information (sub-directory of the Template distribution).
+#
+#------------------------------------------------------------------------
+#
+# $Id: Grammar.pm.skel,v 1.9 1999/08/01 13:43:15 abw Exp $
+#
+#========================================================================
+
+package Template::Grammar;
+
+require 5.004;
+
+use strict;
+use vars qw( $VERSION );
+
+use Template::Constants qw( :ops );
+
+$VERSION = sprintf("%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/);
+
+my (@RESERVED, $LEXTABLE, $RULES, $STATES);
+
+
+sub new {
+    my $class = shift;
+    bless {
+	LEXTABLE => $LEXTABLE,
+	STATES   => $STATES,
+	RULES    => $RULES,
+    };
+}
+
+
+
+#========================================================================
+# Reserved Words
+#========================================================================
+
+@RESERVED = qw( 
+	GET SET DEFAULT IF UNLESS ELSE ELSIF FOR INCLUDE USE
+	THROW CATCH ERROR RETURN STOP BLOCK END AND OR NOT
+    );
+
+
+#========================================================================
+# Lexer Token Table
+#========================================================================
+
+# lookup table used by lexer is initialised with special-cases
+$LEXTABLE = {
+    'FOREACH' => 'FOR',
+    '&&'      => 'AND',
+    '||'      => 'OR',
+    '!'       => 'NOT',
+    '.'       => 'DOT',
+    '..'      => 'TO',
+    ';'       => 'SEPARATOR',
+    '='       => 'ASSIGN',
+    '=>'      => 'ASSIGN',
+#    '/'       => 'END',
+    ','       => 'COMMA',
+    'and'     => 'AND',		# explicitly specified so that qw( and or
+    'or'      => 'OR',		# not ) can always be used in lower case, 
+    'not'     => 'NOT'		# regardless of CASE sensitivity flag
+};
+
+# localise the temporary variables needed to complete lexer table
+{ 
+    my @tokens   = qw< ( ) [ ] { } ${ $ / >;
+    my @compop   = qw( == != < <= > >= );
+
+    # fill lexer table, slice by slice, with reserved words and operators
+    @$LEXTABLE{ @RESERVED, @compop, @tokens } 
+	= ( @RESERVED, ('COMPOP') x @compop, @tokens );
+}
+
+
+#========================================================================
+# States
+#========================================================================
+
+$STATES = <<$states>>; 
+
+
+#========================================================================
+# Rules
+#========================================================================
+
+$RULES = <<$rules>>;
+
+
+
+1;
+
+
+
+
+
+
+
+
+
+
+
+

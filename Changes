@@ -1,0 +1,284 @@
+#============================================================================
+#
+# Changes 
+#
+# DESCRIPTION
+#   Revision history for Template::* modules.
+#
+# AUTHOR
+#   Andy Wardley   <abw@cre.canon.co.uk>
+#
+#----------------------------------------------------------------------------
+#
+# $Id: Changes,v 1.28 1999/08/04 20:37:43 abw Exp $
+#
+#============================================================================
+
+#------------------------------------------------------------------------
+# Version 0.22  1999/08/04 20:37:43
+#------------------------------------------------------------------------
+
+* First public beta release.
+
+* Updated all of the documentation.  The general toolkit document, 
+  Template-Toolkit.pod has been deleted and its content moved into
+  Template.pm.
+
+* Added facility to escape '$' in a document (and then have it correctly 
+  unescaped) to avoid unintentionally referencing a variable when 
+  INTERPOLATE is on.  Added test to t/interp.t
+
+* Changed default tag style to be '[% blah_blah %]' whilst also supporting
+  the old '%% blah_blah %%' style.  The TAG_STYLE parameter may be 
+  specified as 'regular' ([% ...%]), 'percent' (%% ... %%) or 'default'
+  (both of the above - [\[%]% ... %[\]%]).  The START_TAG and END_TAG 
+  may still be specified and will override any values set by the TAG_STYLE.
+
+* Added ERROR directive to allow reporting of errors via the $context->error()
+  method, which by default writes to STDERR.  Changed 'error' variable as 
+  passed to a CATCH block to 'e' to avoid a name clash with 'ERROR'.  Added
+  t/error.t to test suite.
+
+* Added CASE option, which by default is set to 0 to indicate non-case 
+  sensitivity of *KEYWORDS* (variables are always case sensitive).
+  When set off, a keyword such as 'INCLUDE' can be specified in any
+  case.  When set on, all keywords must be expressed in exact, upper
+  case.  Lower or mixed case versions of the same words (e.g. 'include',
+  'for', 'Filter') are treated as variables.  The only exceptions are 
+  'and', 'or' and 'not' which can *always* be expressed in any case.
+  Added t/case.t to test.
+
+* Added interpolation of '\n' into double-quoted text strings.
+
+* Added THROW directive and t/throw.t to test it.  Usage is:
+  %% THROW type info %%, mapping 'type' to a %% CATCH type %%.
+
+* Improved handling of exceptions, blocking only multiple occurances
+  of the same exception type.  Nested exception throwing now works OK.
+
+* Added a catch($type, $handler) method to Template::Context for installing
+  exception handlers.  Changed Template::Directive::Catch->process() to 
+  call this method.
+
+* Fixed memory leak caused by circular dependency rooted at Context.
+  Template.pm DESTROY method calls context->old() to perform clearup.
+
+* Removed ERROR_PARSE ('parse' exception) and made it a case of ERROR_FILE
+  ('file').
+
+* Removed redundant EXPAND_* constants from Template::Constants.
+
+
+#------------------------------------------------------------------------
+# Version 0.21  1999/07/28 16:12:58
+#------------------------------------------------------------------------
+
+* Fifth (and final?) alpha release.
+
+* Improved Template::Iterator to allow data items to be ordered by an 
+  external function or by one of the default ordering styles: 'sorted'
+  or 'reverse'.  The Iterator will also accept an action parameter
+  which is called on each iteration.  These can be set by passing an
+  additional hash reference to the iterator constructor containing ORDER
+  and/or ACTION keys.  e.g.
+ 
+  my $iterator = Template::Iterator->new(['foo', 'bar', 'baz'], 
+			{ ORDER => 'sorted', ACTION => \&format_data });
+
+  These can also be added as named parameters in parenthesis after a 
+  list constructor, e.g.
+
+  %% FOREACH user = [ tom dick harry] ( order => 'sorted') %%
+     ...
+  %% END %%
+
+  %% iterator = [ foo bar baz ] ( order => 'reverse' ) %%
+  %% INCLUDE winner FOREACH person = iterator %%
+
+* Added the Template::Plugin::Format module which implements a very 
+  simple plugin for creating sprintf-like formatting functions.  e.g. 
+  %% USE format; bold = format('<b>%s</b>'); bold('foo'); bold('bar') %%
+  %% FOREACH [ foo bar baz]( order='sorted' action=format('-- %s --') ) %%
+  etc., etc.  See t/format.t for examples.
+
+* Added thrown() method and internal flag to Template::Exception to 
+  indicate if it has been handled by the $context->thrown() method.
+  Changed Template::Directive::Block to throw any unthrown exceptions
+  it recevies to the $context->throw() method.  The upshot is that 
+  user code can now simply C<return (undef, Template::Exception->new(...))>
+  and the calling block loop will throw the exception.  Previously, the 
+  user code was required to directly call $context->throw() to raise an 
+  exception.  User code is no longer passed a reference to the context 
+  (although plugin objects have an internal reference they can use) so 
+  this would not have been possible otherwise.  Fixed a couple of other 
+  minor bugs in the exception throwing/handling in the process.
+
+* Finalised the return protocol for user code and object methods and 
+  implemented.  Code/methods may return a value and optionally, an 
+  additional status.  The status code may be a Template::Exception
+  (see previous item).  An undefined value returned will raise an
+  'undef' exception unless the error is already defined.  If the 
+  error is STATUS_OK (0) then the calue will be silently converted 
+  to an empty string ''.
+
+* Added tests t/code.t adnd t/object.t to test variable bindings to 
+  user code and objects respectively.  Added t/private.t to test that
+  members prefixed with '_' or '.' remain unexposed.
+
+* Added OP_TOLERANT as a temporary fix to set a flag to prevent the 
+  context runop() method from automatically raising an undef exception
+  when it resolves a variable to an undefined value.  This is to allow
+  directives such as IF to tolerate undefined values without raising 
+  exceptions.  Added tests to t/if.t to test this.
+
+* Fixed another instance of the OP_NOT bug (previously fixed in 0.18)
+  which manifested itself when UNLESS was used as a side-effect, e.g. 
+  %% RETURN UNLESS something_to_do %%.  Added tests to t/unless.t to 
+  detect.
+
+* Fixed minor bug in the parser which wasn't allowing a trailing comma
+  in an argument or named parameter list.  Updated t/hash.t and added 
+  t/list.t to test this and other related issues.
+
+* Added public context() method to Template.pm to return internal
+  context reference.
+
+
+#------------------------------------------------------------------------
+# Version 0.20  1999/07/27 12:59:08
+#------------------------------------------------------------------------
+
+* Fourth public alpha release.
+
+* Fixed bug in Context throw() method which was causing re-entrancy 
+  problems in CATCH handlers.  Also changed to pass a variable named 
+  'error' into the CATCH block containing the members 'type' and 'info'.
+  e.g. %% CATCH undef %% <!-- $error.info --> %% END %%.  Added tests
+  to t/catch.t.
+
+* Added '+' chomp option to compliment '-' option.  The '+' disables chomping
+  for that directive, the '-' forces it.  Improved the PRE_CHOMP to work 
+  better when POST_CHOMP is also enabled and to pre-chomp correctly on the 
+  first line of the file.  And hopefully, all this without screwing up line
+  numbering.
+
+* Fixed grammar to allow literals as lvalues.
+
+* Changed BLOCK definition grammar to allow names that contain dots and 
+  slashes as per INCLUDE.  These are treated as literal.
+
+* Fixed bug in FOREACH which was causing an undefined variable reference
+  to go un-noticed.  
+
+* Changed FOREACH to clone (localise) a stash context so that it
+  doesn't trample on previously defined variables.  In addition, it
+  will also automagically import the members of HASH references that
+  are returned by each iteration when a target loop variable isn't
+  specified.
+
+  This now allows you to write things like:
+     %% FOREACH userlist %%
+        $name ($id)
+     %% END %%
+
+  Instead of:
+     %% FOREACH user = userlist %%
+	$user.name ($user.id)
+     %% END %%
+
+* added tests to t/foreach.t to verify the above behaviour.
+
+* added test scripts binop.t, chomp.t, prechomp.t, postchomp.t
+  and skel.t.  Extended/improved tests in if.t, predefs.t.
+
+* Fixed bug in tokeniser that was failing to recognise '!='. 
+
+
+#------------------------------------------------------------------------
+# Version 0.19  1999/07/26 19:53:39
+#------------------------------------------------------------------------
+
+* Third public alpha release.
+
+* Added Template::Plugin and engaged the USE directive to load plugin
+  modules, instantiate plugin objects and bind them to variables in 
+  the stash.  Modified the grammar a little to build the appropriate 
+  reduction for the parenthesised parameters that may be passed from 
+  the USE directive.  Wrote simple stubs for Template::Plugin::CGI and 
+  Template::Plugin::DBI.
+
+* Fixed bug in UNLESS which was using the old '!' character instead of
+  OP_NOT.  Added t/unless.t to test UNLESS directive and IF directive
+  with logical negation operator ('!', aka OP_NOT)
+
+* Changed INCLUDE parameter to allow '/' as well as '.' within the name.
+  This is in addition to the regular \w characters permitted.  Names 
+  containing any other characters must be quoted.  Updated t/include.t
+  to add test for this.
+
+* Fixed bug that was causing the 'and' and 'or' boolean operations to 
+  not be recognised unless specified in UPPER CASE.  
+
+* Added t/direcive.t to test general directive options (e.g. chomping,
+  whitespace and case insensitivity, etc.
+
+* Fixed IMPORT option and added t/import.t test.
+
+* Fixed EXPORT and added t/export.t test.
+
+
+#------------------------------------------------------------------------
+# Version 0.18  1999/07/23 11:50
+#------------------------------------------------------------------------
+
+* Second public alpha release
+
+* Re-wrote the parser grammar and associated runtime support for the 
+  very last time.  The grammar needs some polishing and there are a 
+  couple of ugly/elegant hacks (depending on your perspective)  
+  to manage special cases for INCLUDE, in particular.  These
+  could be improved, but they work for now.
+
+* The language now fully supports multiple namespace variables of 
+  which any sub-element might be represented by a variable, hash array
+  or entry, list, code reference or object.  The runtime opcode loop
+  evaluates these with respect to one another where joined by '.'
+
+* Parameters can be specified to any individual element.  e.g. foo(a).bar(b)
+
+* An individual element may be an evaluated variable  e.g. user.${uname}
+
+* The INTERPOLATE option now includes period as part of identifier names.
+  Braces need only be used to delimit a variable against another period.
+  e.g.  $user.name   ${user.id}.gif
+
+* An assignment may now be enclosed in parentheses and used as a term, e.g.
+  %% IF (users = mydb.get_userlist) %%
+
+* Changed the calling convention for variables bound to code and
+  object (methods).  A reference is no longer passed as the first 
+  parameter.  This makes it easier to interface to existing code
+  and marginally quicker to write new code.  The Template::Stash
+  module can be sub-classed to create plug-in library modules which
+  can have far greater intimacy with the Template Toolkit.
+
+* Fixed broken parameter passing into code bound to variables.  Added
+  t/call.t to test correct behaviour.  Then the whole calling convention
+  got changed again, but its legacy remains...
+
+* Re-wrote and/or cleaned up the entire test suite.  Some are still
+  incomplete or missing.
+
+* Updated Template-Toolkit.pod to remove some of the documentation that 
+  was clearly obsoleted by these changes.  Added and corrected most of the
+  obvious stuff, but there's still some lacking and it may include features 
+  missing, changed or broken.
+
+* Numerous minor bugs, typos, etc.
+
+
+#------------------------------------------------------------------------
+# Version 0.17  1999/06/24 23:55
+#------------------------------------------------------------------------
+
+* First public alpha release

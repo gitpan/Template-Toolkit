@@ -1,0 +1,3 @@
+%% DEFAULT time = 'now' -%%
+This is file baz
+The time is %% time %%
