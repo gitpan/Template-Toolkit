@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: CGI.pm,v 1.5 2000/02/01 12:14:30 abw Exp $
+# $Id: CGI.pm,v 1.6 2000/03/01 14:22:05 abw Exp $
 #
 #============================================================================
 
@@ -32,12 +32,12 @@ use Template::Plugin;
 use CGI;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my $class   = shift;
     my $context = shift;
-    $class->SUPER::new($context, CGI->new(@_));
+    CGI->new(@_);
 }
 
 1;
@@ -90,7 +90,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.5 $
+$Revision: 1.6 $
 
 =head1 COPYRIGHT
 

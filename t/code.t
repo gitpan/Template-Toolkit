@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: code.t,v 1.8 1999/12/16 09:31:29 abw Exp $
+# $Id: code.t,v 1.9 2000/02/29 18:12:26 abw Exp $
 #
 #========================================================================
 
@@ -46,7 +46,10 @@ my $params = {
 	'this' => \&today,
 	'next' => \&tomorrow,
     },
-    'joint' => \&joint,
+    'joint'  => \&joint,
+    'people' => \&people,
+    'halt'   => \&halt,
+    'fine'   => \&fine,
 };
 
 test_expect(\*DATA, $tproc, $params);
@@ -89,6 +92,18 @@ sub belief {
 
 sub doh {
     return "D'Oh";
+}
+
+sub halt {
+    return (undef, STATUS_STOP);
+}
+
+sub fine {
+    return (undef, STATUS_OK);
+}
+
+sub people {
+    return qw( Tom Dick Larry );
 }
 
 sub nyet {
@@ -217,3 +232,27 @@ alpha + bravo + charlie
 -- expect --
 alpha + charlie
 
+-- test --
+[% FOREACH person = people -%]
+   * [% person %]
+[% END %]
+
+-- expect --
+   * Tom
+   * Dick
+   * Larry
+
+-- test --
+before
+[% halt %]
+after
+
+-- expect --
+before
+
+
+-- test --
+Feeling [% fine %].
+
+-- expect --
+Feeling .

@@ -20,7 +20,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Test.pm,v 1.3 2000/01/19 17:27:25 abw Exp $
+# $Id: Test.pm,v 1.4 2000/02/17 11:41:48 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use vars qw( @ISA @EXPORT $VERSION $DEBUG $loaded %callsign);
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 @ISA     = qw( Exporter );
 @EXPORT  = qw( callsign extra_tests pre_ok ntests test_expect ok );
@@ -102,6 +102,10 @@ sub test_expect {
 	warn "Cannot read input text from $src\n";
 	return undef;
     }
+
+    # remove anything before '-- start --' and/or after '-- stop --'
+    $input = $' if $input =~ /\s*--+\s*start\s*--+\s*/;
+    $input = $` if $input =~ /\s*--+\s*stop\s*--+\s*/;
 
     @tests = split(/^\s*--+\s*test\s*--+\s*\n/im, $input);
 
@@ -324,6 +328,27 @@ a true or false values to indicate that the test passed or failed.
 Lines in tests that start with a '#' are ignored.  Lines that look 
 '-- likethis --' may also confuse the test splitter.
 
+You can identify only a specific part of the input file for testing
+using the '-- start --' and '-- stop --' markers.  Anything before the 
+first '-- start --' is ignored, along with anything after the next 
+'-- stop --' marker.
+
+    -- test --
+    this is test 1 (not performed)
+    -- expect --
+    this is test 1 (not performed)
+
+    -- start --
+
+    -- test --
+    this is test 2
+    -- expect --
+    this is test 2
+ 
+    -- stop --
+
+    ...
+
 For historical reasons and general utility, the module also defines a
 'callsign' sub-routine which returns a hash containing the a..z of 
 radio callsigns (e.g. a => 'alpha', b => 'bravo').  This is used by many
@@ -343,7 +368,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.3 $
+$Revision: 1.4 $
 
 =head1 HISTORY
 

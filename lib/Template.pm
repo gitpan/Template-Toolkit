@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.45 2000/02/01 12:20:15 abw Exp $
+#   $Id: Template.pm,v 1.48 2000/02/17 12:32:03 abw Exp $
 #
 #========================================================================
  
@@ -34,12 +34,11 @@ use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '1.03';
+$VERSION     = '1.04';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;
 *EXPORT_TAGS = \%Template::Constants::EXPORT_TAGS;
-
 
 
 #------------------------------------------------------------------------
@@ -53,12 +52,18 @@ $VERSION     = '1.03';
 
 sub new {
     my ($class, $params) = @_;
+    my ($context, $error);
 
-    $params->{ CONTEXT } ||= Template::Context->new($params);
- 
-    bless {
+    # create a Context object and check for any errors raised during 
+    # the process (i.e. a file open error for an OUTPUT or ERROR redirect)
+    $context = $params->{ CONTEXT } ||= Template::Context->new($params);
+    if ($error = $context->{ _ERROR }) {
+	$error = ref($error) ? $error->as_string() : $error;
+    }
+
+    my $self = bless {
 	%$params,
-	ERROR => '',
+	_ERROR => $error,
     }, $class;
 }
 
@@ -88,12 +93,22 @@ sub process {
 	qw( CONTEXT PRE_PROCESS POST_PROCESS ) };
     my ($old_out, $old_err, $error);
 
-    # set up redirections if necessary
-    $old_out = $context->redirect(TEMPLATE_OUTPUT, $output)
-	if $output;
-    $old_err = $context->redirect(TEMPLATE_ERROR, $errout)
-	if $errout;
-
+    # set up output and/or error redirections if supplied as parameters
+    if ($output) {
+	($old_out, $error) = $context->redirect(TEMPLATE_OUTPUT, $output);
+    }
+    if ($errout && ! $error) {
+	($old_err, $error) = $context->redirect(TEMPLATE_ERROR, $errout);
+	# restore original output handler if error handler install failed
+	$context->redirect(TEMPLATE_OUTPUT, $old_out)
+	    if $error && $old_out;
+    }
+    # check for any errors encountered while redirecting output/error
+    if ($error) {
+	$self->{ _ERROR } = ref($error) ? $error->as_string : $error;
+	return 0;
+    }
+	
     # add a 'filename' variable if $template looks like a filename
     $params ||= { };
     $params->{'filename'} ||= $template
@@ -119,7 +134,7 @@ sub process {
     $context->delocalise();
 
     # store returned error value or exception as string in ERROR
-    $self->{ ERROR } = ref($error) ? $error->as_string : $error;
+    $self->{ _ERROR } = ref($error) ? $error->as_string : $error;
 
     # restore previous output/error handlers, closing files, etc.
     $context->redirect(TEMPLATE_OUTPUT, $old_out)
@@ -154,7 +169,7 @@ sub context {
 #------------------------------------------------------------------------
 
 sub error {
-    $_[0]->{ ERROR };
+    $_[0]->{ _ERROR };
 }
 
 

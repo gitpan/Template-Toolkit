@@ -9,8 +9,73 @@
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes,v 1.89 2000/02/01 12:35:23 abw Exp $
+# $Id: Changes,v 1.103 2000/03/01 14:22:20 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 1.04  2000/03/01 14:22:01
+#------------------------------------------------------------------------
+
+* Added the XML::DOM and XML::RSS plugin modules to the distribution.
+
+* Changed the handling of file errors generated when redirecting
+  output and/or error, as suggested by Jonas Lilligren.  Errors are
+  now raised as 'file' exceptions and are reported back to the caller
+  as per usual.  That is, the process() method returns 0 and the error
+  can be retrieved by the usual error() method.  e.g.
+ 
+  $template->process($infile, \%params, $path_to_output_file)
+	|| die $template->error(), "\n";
+
+  If a global OUTPUT or ERROR redirect is established by means of the
+  Template constructor parameters then any error will be stored and
+  also accessible via the error() method.  e.g.
+  
+  my $template = Template->new({ OUTPUT => $path_to_some_file });
+
+  # check for any OUTPUT errors
+  die $error
+	if $error = $template->error();
+
+* Changed the way in which multiple values returned from user code or
+  object methods are handled.  Previously, multiple values were
+  treated as being ($value, $error) and the code was required to
+  return a list reference in $value if it wanted to return more than
+  one item.  This behaviour is still supported if the first value
+  returned (i.e. $value) is undefined.  Thus, existing code can
+  continue to return (undef, $error) and expect the right result.  If
+  the first item returned has any defined value then all the return
+  values are folded into, and returned as a list reference.
+  e.g. return ('foo', 'bar', 'baz') => [ 'foo', 'bar', 'baz ].  Single
+  values are returned by themselves as per usual.  Removed the
+  work-around delegating AUTOLOAD code from Template::Plugin which is
+  no longer needed, updated documentation and added t/cgi.t to test
+  this behaviour with the CGI plugin.  Thanks to Leslie Michael
+  Orchard for raising the issue and sending various patches and ideas.
+
+* Fixed a bug concerning iterators in nested FOREACH loops, identified
+  by Thiery-Michel Barral <kktos@electron-libre.com>.  The iterator
+  (i.e. the 'loop' variable) in the outer loop was getting trashed by
+  an inner FOREACH loop.  Nested FOREACH loops now work as expected.
+
+* Split the Template::Cache new() constructor into new() and _init()
+  methods to facilitate easier subclassing, thanks to another patch
+  from Leslie.  Also fixed a minor bug which was preventing switching
+  of the PARSER object.
+
+* Added '--start--' and '--stop--' markers to Template::Test to allow
+  sub-sections of tests to be run in isolation.  Updated 'BUGS' section
+  of documentation to show new Template::Test module.
+
+* Added USER_DIR and USER_BLOCK options which allow user-defined
+  directives and block directives to be defined.  This is still
+  experimental and subject to change.  Not yet documented for that
+  reason, but see t/userdef.t if you're interested.
+
+* Added an acknowledgements section to the Template documentation and 
+  further information on other projects and related modules.  Also 
+  added internal/external plugin information.
+
 
 #------------------------------------------------------------------------
 # Version 1.03  2000/02/01 12:35:13

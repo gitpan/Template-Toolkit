@@ -10,9 +10,12 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.62 2000/02/01 12:34:57 abw Exp $
+# $Id: TODO,v 1.66 2000/02/29 18:12:18 abw Exp $
 #
 #============================================================================
+
+Pending
+-------
 
 Bugs
 ----
@@ -108,12 +111,6 @@ Other plugins, modules, scripts
            [% html.header(title='Test') %] 
     equivalent to:
 	   [% INCLUDE html/header title='Test' %]
-
-ttree
------
-  * Better documentation describing the use of ttree in building document
-    systems.  Examples of web sites, using config profiles, defining 
-    template variables in 'config' templates that get pre-processed, etc.
 
 
 

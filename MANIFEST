@@ -27,13 +27,16 @@ doc/src/maillist
 doc/src/methods
 doc/src/name
 doc/src/overview
+doc/src/plugins
 doc/src/prereq
+doc/src/related
 doc/src/seealso
 doc/src/synopsis
 doc/src/tutorial/cgi
 doc/src/tutorial/description
 doc/src/tutorial/introduction
 doc/src/tutorial/modperl
+doc/src/tutorial/name
 doc/src/tutorial/plugins
 doc/src/tutorial/static
 doc/src/version
@@ -53,6 +56,8 @@ lib/Template/Plugin.pm
 lib/Template/Plugin/CGI.pm
 lib/Template/Plugin/Datafile.pm
 lib/Template/Plugin/Format.pm
+lib/Template/Plugin/XML/RSS.pm
+lib/Template/Plugin/XML/DOM.pm
 lib/Template/Stash.pm
 lib/Template/Test.pm
 lib/Template/Tutorial.pod
@@ -70,6 +75,7 @@ t/break.t
 t/cache.t
 t/case.t
 t/catch.t
+t/cgi.t
 t/chomp.t
 t/code.t
 t/constants.t
@@ -77,6 +83,7 @@ t/context.t
 t/datafile.t
 t/default.t
 t/directive.t
+t/dom.t
 t/error.t
 t/exception.t
 t/filter.t
@@ -110,12 +117,15 @@ t/process.t
 t/recurse.t
 t/ref.t
 t/return.t
+t/rss.t
 t/set.t
 t/skel.t
 t/stash.t
 t/stop.t
 t/tag.t
 t/tags.t
+t/test/example.rdf
+t/test/testfile.xml
 t/test/dest/IGNOREME
 t/test/lib/footer
 t/test/lib/header
@@ -130,5 +140,6 @@ t/test/src/golf
 t/text.t
 t/throw.t
 t/unless.t
+t/userdef.t
 t/vars.t
 t/while.t

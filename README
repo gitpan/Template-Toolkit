@@ -4,16 +4,16 @@ NAME
 OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
     The Template Toolkit module bundle is available from CPAN as:
 
-        /authors/id/ABW/Template-Toolkit-1.03.tar.gz
+        /authors/id/ABW/Template-Toolkit-1.04.tar.gz
 
     Unpack the archive to create an installation directory.
     Something like this:
 
-        zcat Template-Toolkit-1.03.tar.gz | tar xvf -
+        zcat Template-Toolkit-1.04.tar.gz | tar xvf -
 
     'cd' into that directory, make, test and install the modules:
 
-        cd Template-Toolkit-1.03
+        cd Template-Toolkit-1.04
         perl Makefile.PL
         make
         make test
@@ -256,7 +256,8 @@ FEATURES
         plugin components. The Template module can be used directly
         from CGI scripts, Apache/mod_perl handlers, or any other
         Perl code as a simple front-end to the Toolkit. Plugin
-        modules are available for interfacing to CGI, DBI, etc.
+        modules are available for interfacing to CGI, DBI, XML, DOM,
+        etc.
 
     -   Template documents parsed by a fast LALR(1) parser which is
         generated from a YACC-like grammar. Parse::Yapp is used to
@@ -392,7 +393,7 @@ AUTHOR
         http://www.cre.canon.co.uk/perl
 
 VERSION
-    This is version 1.03 of the Template Toolkit.
+    This is version 1.04 of the Template Toolkit.
 
     Please consult the Changes file for information about visible
     changes in the Template Toolkit between releases. The TODO file

@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.24 1999/12/21 14:22:13 abw Exp $
+# $Id: Directive.pm,v 1.28 2000/02/29 18:12:24 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.28 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -60,6 +60,7 @@ my %param_tbl = (
     'Return'    => [ qw( RETVAL                 ) ],
     'Perl'      => [ qw( PERLCODE               ) ],    
     'Macro'     => [ qw( NAME DIRECTIVE ARGS    ) ],    
+    'Userdef'   => [ qw( HANDLER BLOCK          ) ],
 );
 
 my $PKGVAR = 'PARAMS';
@@ -354,9 +355,8 @@ use vars qw( @ISA );
 
 sub process {
     my ($self, $context) = @_;
-    my $stash = $context->{ STASH };
     my ($item, $list) = @$self{ qw( ITEM LIST ) };
-    my ($iterator, $value, $error);
+    my ($iterator, $value, $error, $loopsave);
     my $LOOPVAR = 'loop';
 
 
@@ -377,11 +377,19 @@ sub process {
     # initialise iterator
     ($value, $error) = $iterator->get_first();
 
-    # clone the stash if we're going to try to import hash items so 
-    # that we don't have to worry about trampling on any variables. 
-    $context->localise()
-	unless $item;
-
+    if ($item) {
+	# loop has a target variable to which values will be assigned, so
+	# there's no need to localise the stash to prevent existing variables
+	# being overwritten.  However, we do need to take a copy of any 
+	# existing 'loop' variable which we will overwrite
+	$loopsave = $context->{ STASH }->get($LOOPVAR);
+    }
+    else {
+	# with a target variable, any hash values will be imported.  Thus we
+	# need to clone the stash to avoid variable trample
+	$context->localise();
+    }
+    
     $context->{ STASH }->set($LOOPVAR => $iterator);
 
     # loop
@@ -395,7 +403,7 @@ sub process {
 	# item.  
 	if ($item) {
 	    # set target variable to iteration value
-	    $context->{ STASH }->set($item , $value);
+	    $context->{ STASH }->set($item, $value);
 	}
 	elsif (ref($value) eq 'HASH') {
 	    # otherwise IMPORT a hash value
@@ -409,7 +417,7 @@ sub process {
 	($value, $error) = $iterator->get_next();
     }
 
-    $context->{ STASH }->set($LOOPVAR => undef);
+    $context->{ STASH }->set($LOOPVAR => $loopsave);
 
     # declone the stash (revert to parent context)
     $context->delocalise()
@@ -688,14 +696,49 @@ sub process {
 	# restore original context
 	$context->delocalise()
 	    if $params;
-	
-	return ('', $error);
+
+	return $error 
+	    ? (undef, $error)
+	    : '';
     };
     $context->{ STASH }->set($name, $callback);
 
     return Template::Constants::STATUS_OK;
 }
 
+
+#------------------------------------------------------------------------
+# USERDEF/USERBLOCK	  [% USERDEF * %]/[% USERDEF * %] block [% END %]
+#------------------------------------------------------------------------
+ 
+package Template::Directive::Userdef;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
+
+sub process {
+    my ($self, $context) = @_;
+    my ($handler, $block) = @$self{ qw( HANDLER BLOCK ) };
+    my ($text, $hsave, $error);
+
+    # if a BLOCK is defined we process it and capture the output for 
+    # feeding into the handler as input text
+    if ($block) {
+	# install output handler to capture output, saving existing handler
+	$text = '';
+	$hsave = 
+	    $context->redirect(Template::Constants::TEMPLATE_OUTPUT, \$text);
+
+	# process contents of FILTER block
+	$error = $block->process($context);
+
+	# restore previous output handler
+	$context->redirect(Template::Constants::TEMPLATE_OUTPUT, $hsave);
+    }
+
+    $error ||= &$handler($context, $text);
+
+    return $error || Template::Constants::STATUS_OK;
+}
 
 
 #========================================================================
@@ -768,7 +811,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.24 $
+$Revision: 1.28 $
 
 =head1 COPYRIGHT
 

@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pod,v 1.36 2000/02/01 12:34:57 abw Exp $
+#   $Id: Template.pod,v 1.7 2000/03/01 14:22:02 abw Exp $
 #
 #========================================================================
 
@@ -1033,30 +1033,41 @@ variable, rather than just arguments passed to a function.
     [% r(100, 99, s, t, v) %]     # still just prints "Romeo"
 
 User code should return a value for the 'variable' to which it is
-bound.  An undefined value will be silently converted to an empty
-string or the DEBUG option can be enabled to cause an 'undef'
-exception to be raised.  The code may also return a second value
-indicating the status.  A status of 0 (STATUS_OK) means everything
-went OK, regardless of whatever value was returned, defined or not.
-Specify the <:status> tag as a parameter to C<use Template> to 
-import the STATUS_* definitions.
+bound.  Examples:
 
-    use Template qw( :status );
+    return 'foo';
+    return [ 'foo', 'bar' ];
+    return $myobj;
 
-    sub get_something {
-	# ...
-	# $value may be undefined, but not an error condition...
-  	return ($value, STATUS_OK);
-    }
+If a sub-routine returns multiple values of which the first has some
+defined value, then the entire list will be folded into a list reference
+and taken as the value for the variable to which it is bound.  Thus, 
+the following are roughly equivalent:
 
-The status code can also be STATUS_STOP (immediate stop) or
-STATUS_RETURN (stop the current template only and return to the caller
-or point of INCLUDE).  The final option is to return a status
-containing a reference to a newly instantiated Template::Exception
-object.  class which can be created by calling the new() constructor.
-This is a simple object containing an identifier representing the error
-type (e.g. 'file', 'undef', 'my_own_error_type') and a 'info' field
-containing specific information.
+    return ('foo', 'bar', 'baz');
+    return ['foo', 'bar', 'baz'];
+
+An undefined value may be returned by itself and will silently
+be converted to an empty string unless the DEBUG option is enabled, in
+which case an 'undef' exception will be raised.  Where an undefined
+value is returned followed by another value, then that second value
+is taken to indicate an error condition.  This may be in the form
+of a status code, an error string or a Template::Exception object
+reference.  Note that returning an undefined first value disables
+the automatic list folding described above.
+
+    return (undef, STATUS_OK);              # no error
+    return (undef, STATUS_STOP);            # stop
+    return (undef, 'something failed');     # general error
+    return (undef, Template::Exception->new('DBI', $DBI::Errstr));
+
+A status code of 0 (STATUS_OK) means everything went OK, and there's
+no error to raise.  The status code can also be STATUS_STOP (immediate
+stop) or STATUS_RETURN (stop the current template only and return to
+the caller or point of INCLUDE).  A text string returned, such as in
+the third example above, is converted into a Template::Exception of
+type 'undef'.  Template::Exception objects can also be returned
+directly as shown in the last example.
 
 The CATCH option and CATCH block directive allow you to define custom
 handling, or template blocks to be processed when different kinds of 
@@ -1109,6 +1120,7 @@ Example:
     [% # we're prepared for the worst... %]
     [% sql('EXPLODE my_brain INTO a_thousand_pieces') %] 
 
+
 =head2 VARIABLES BOUND TO OBJECTS
 
 A variable may contain an object reference whose methods will be
@@ -1147,9 +1159,10 @@ code references, above.
 
 =head2 VARIABLE EVALUATION
 
-A compound 'dotted' variable may contain any number of separate elements.  Each
-element may evaluate to one of the above variable types and the processor
-will then correctly use this value to evaluate the rest of the variable.
+A compound 'dotted' variable may contain any number of separate
+elements.  Each element may evaluate to one of the above variable
+types and the processor will then correctly use this value to evaluate
+the rest of the variable.
 
 For example, consider the following variable reference:
 
@@ -1659,7 +1672,7 @@ extension modules.
 A plugin is a regular Perl module that conforms to a particular
 object-oriented interface, allowing it to be loaded into and used
 automatically by the Template Toolkit.  For details of this interface
-and information on writing plugins, consult L<Template::Plugin>.
+and information on writing plugins, consult L<Template::Plugin>. 
 
 The plugin name is case-sensitive and will be appended to the
 PLUGIN_BASE value (default: 'Template::Plugin') to construct a full
@@ -1735,29 +1748,6 @@ All of the methods provided by CGI.pm are available via the plugin.
 
     [% CGI.end_form %]
 
-The plugin is derived from the Template::Plugin module which provides
-a general facility for wrapping external objects.  If a method returns
-more than one value (such as the CGI method checkbox_group(), above)
-then the results will be concatenated into a single string, each
-separated by a space.  The joint() method can be used to change the
-joining string.
-
-    [% USE CGI %]
-    [% CGI.joint("\n") %]  # multi-values now separated by newline
-
-A method may have the '_as_list' suffix added to have the result(s)
-returned as a list reference.
-
-    [% checklist = CGI.checkbox_group_as_list(name   => 'names', 
-					      values => [ 'foo' 'bar' ])
-    %]
-
-    <ul>
-    [% FOREACH item = checklist %]
-       <li>[% item %]
-    [% END %]
-    </ul>
-
 Simon Matthews E<lt>sam@knowledgepool.comE<gt> has written a DBI
 plugin which provides an interface to Tim Bunce's DBI module (both
 available from CPAN).  Here's a short example:
@@ -1767,6 +1757,9 @@ available from CPAN).  Here's a short example:
     [% FOREACH user = DBI.query('SELECT * FROM users') %]
        [% user.id %] [% user.name %] [% user.etc.etc %]
     [% END %]
+
+See the 'TEMPLATE TOOLKIT PLUGINS' section below for more information
+on the plugins distributed with the toolkit or available from CPAN.
 
 The LOAD_PERL option (disabled by default) provides a further way by
 which external Perl modules may be loaded.  If a regular Perl module
@@ -2416,14 +2409,12 @@ name or object which should be used to construct new instances of the
 plugin object.
 
     use MyOrg::Template::Plugin::Womble;
-    use Template::Plugin::DBI;         # available soon...
-  
-    my $dbi_factory = Template::Plugin::DBI->new();
+    my $factory = MyOrg::Template::Plugin::Foo->new();
   
     my $template->new({ 
   	PLUGINS => {
   	  'womble' => 'MyOrg::Template::Plugin::Womble',
-  	  'dbi'    =>  $dbi_factory,
+  	  'foo'    =>  $factory,
 	}
     });
 
@@ -2451,15 +2442,11 @@ fashion to the above, the new() method is called against the object,
 allowing it to act as a constructor object or 'prototype' for other
 instances of the same, or other objects.
 
-    [% USE dbi('dbase_xyz') %]
-      ==> $dbi_factory->new($context, 'dbase_xyz');
+    [% USE foo('xyz') %]
+      ==> $factory->new($context, 'xyz');
 
 This approach facilitates the easy implementation and use of plugins that 
-act as singletons (one instance only) or share some state information, 
-such as cached database handles in the DBI example shown here.  
-
-Simon Matthews <sam@knowledgepool.com> is currently working on the DBI
-plugin for the Template Toolkit.
+act as singletons (one instance only) or share some state information.
 
 When a plugin is requested via the USE directive that is not specified
 in the PLUGINS hash, the dynamic loading procedure described under
@@ -2740,6 +2727,42 @@ the values are defined in Template::Constants.
 
 
 
+=head1 TEMPLATE TOOLKIT PLUGINS
+
+Simon Matthews E<lt>sam@knowledgepool.comE<gt> has developed a DBI
+plugin for the Template Toolkit which brings the full power of Tim
+Bunce's E<lt>Tim.Bunce@ig.co.ukE<gt> database interface module (DBI)
+to your templates.  The DBI plugin and the DBI modules themselves are
+available from CPAN at:
+
+  http://www.cpan.org/authors/id/S/SA/SAM/
+  http://www.cpan.org/modules/by-module/DBI/
+
+The CGI plugin is a wrapper around Lincoln Stein's 
+E<lt>lstein@genome.wi.mit.eduE<gt> CGI.pm module.  The plugin is 
+distributed with the Template Toolkit (see L<Template::Plugin::CGI>)
+and the CGI module itself is distributed with recent versions Perl,
+or is available from CPAN.
+
+The XML::DOM plugin gives access to the XML Document Object Module via
+Clark Cooper E<lt>cooper@sch.ge.comE<gt> and Enno Derksen's 
+E<lt>enno@att.comE<gt> XML::DOM module.  The plugin is distributed with 
+the Template Toolkit (see L<Template::Plugin::XML::DOM>) and requires the 
+XML::DOM module, available from CPAN:
+
+  http://www.cpan.org/modules/by-module/XML
+
+The XML::RSS plugin is a simple interface to Jonathan Eisenzopf's
+E<lt>eisen@pobox.comE<gt> XML::RSS module.  An RSS (Rich Site Summary)
+file is typically used to store short news 'headlines' describing
+different links within a site.  This plugin allows you to parse RSS
+files and format the contents accordingly using templates.  The
+plugin is distributed with the Template Toolkit 
+(see L<Template::Plugin::XML::RSS>) and requires the XML::RSS module, 
+also available from CPAN:
+
+  http://www.cpan.org/modules/by-module/XML
+
 =head1 EXAMPLES
 
 These examples illustrate some of the typical uses of Template Toolkit
@@ -2846,8 +2869,7 @@ as a skeleton test file.
 Example:
 
     use lib qw( . ./t ../lib );
-    use Template;
-    require 'texpect.pl';
+    use Template::Test;
 
     test_expect(\*DATA);
 
@@ -2872,7 +2894,7 @@ containing the text "subscribe templates".
 
 To email the author directly, send email to E<lt>abw@cre.canon.co.ukE<gt>.  
 
-If you don't know how to do that then you are probably beyond helping. 
+If you don't know how to do that then you may need to seek help elsewhere.  :-)
 
 =head1 AUTHOR
 
@@ -2884,7 +2906,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 VERSION
 
-This is version 1.03 of the Template Toolkit.  
+This is version 1.04 of the Template Toolkit.  
 
 Please consult the F<Changes> file for information about visible changes
 in the Template Toolkit between releases.  The F<TODO> file contains 
@@ -2919,11 +2941,71 @@ Centre Europe Ltd. as part of an ongoing research theme into
 Web-related publishing and content generation.  Other tools are in
 development to compliment the Template Toolkit.
 
-Many people have contributed ideas, inspiration, bug reports and fixes
-to Text::MetaText and the Template Toolkit, but none more so than
-Simon Matthews E<lt>sam@knowledegpool.comE<gt>, aka "SAM".  He
-deserves special mention (and wins many beer tokens) for his continued
-effort and interest over a number of years.
+Many people have contributed ideas, inspiration, fixes and features to
+both Text::MetaText and the Template Toolkit and they all deserve credit
+for having improved the end product in some way and their efforts
+continue to be very much appreciated.  In particular, Simon Matthews
+E<lt>sam@knowledegpool.comE<gt>, aka "SAM", deserves special mention
+(and wins many beer tokens) for his continued effort and interest over
+a number of years.  Please let me know if you think anyone is missing 
+from this list.
+
+  Thiery-Michel Barral      <kktos@electron-libre.com>
+  Francois Desarmenien      <desar@club-internet.fr>
+  Horst Dumcke              <hdumcke@cisco.com> 
+  Perrin Harkins            <pharkins@etoys.com>
+  Hans von Lengerke         <hans@lengerke.org>
+  Jonas Lilligren           <jonas@paranormal.o.se>
+  Simon Matthews            <sam@knowledgepool.com>
+  Leslie Michael Orchard    <deus_x@ninjacode.com>
+  Eugene Miretskiy          <eugene@invision.net>
+  Martin Portman            <mrp@cre.canon.co.uk>
+  Paul Sharpe               <paul@miraclefish.com>
+  Doug Steinwand            <dsteinwand@etoys.com>
+
+=head1 RELATED MODULES AND PROJECTS
+
+Simon Matthews E<lt>sam@knowledgepool.comE<gt> has developed a DBI
+plugin for the Template Toolkit which brings the full power of Tim
+Bunce's E<lt>Tim.Bunce@ig.co.ukE<gt> database interface module (DBI)
+to your templates.  The DBI plugin and the DBI modules themselves are
+available from CPAN at:
+
+  http://www.cpan.org/authors/id/S/SA/SAM/
+  http://www.cpan.org/modules/by-module/DBI/
+
+Leslie Michael Orchard E<lt>deus_x@ninjacode.comE<gt> is developing
+Iaijutsu, a fully featured web application server and content
+management system which uses the Template Toolkit for processing
+content templates.  For further information, see:
+
+  http://www.ninjacode.com/iaijutsu
+
+Horst Dumcke E<lt>hdumcke@cisco.comE<gt> is working on Istore (Information 
+Storage and Retrieval), a Perl module which separates content, directory 
+structure and presentation.  The 'presentation' part is provided in part by
+the Template Toolkit.  See
+
+  http://www.employees.org/~hdumcke/IStore/
+
+Paul Sharpe E<lt>paul@miraclefish.comE<gt> is the author of
+DBFramework, a collection of classes for manipulating DBI databases
+loosely based on the CDIF Data Model Subject Area.  He's currently in
+the process of reworking it to use the Template Toolkit as the
+presentation layer.  The module is available from CPAN in 
+
+  http://www.cpan.org/modules/by-module/DbFramework/
+
+The XML::RSS plugin is a simple interface to Jonathan Eisenzopf's
+E<lt>eisen@pobox.comE<gt> XML::RSS module.  An RSS (Rich Site Summary)
+file is typically used to store short news 'headlines' describing
+different links within a site.  This plugin allows you to parse RSS
+files and format the contents accordingly using templates.  The
+XML::RSS module and plugin are available from CPAN:
+
+  http://www.cpan.org/modules/by-module/XML
+  http://www.cpan.org/authors/id/ABW
+
 
 =head1 SEE ALSO
 
@@ -2944,8 +3026,13 @@ single command or configuration file.
     perldoc tpage
     perldoc ttree
 
-The following modules comprise the Template Toolkit.  Consult the 
-individual documentation for further details. 
+The F<Template::Tutorial> document provides an introduction to the Template
+Toolkit and shows some typical examples of usage.
+
+    perldoc Template::Tutorial
+
+The following modules comprise the Template Toolkit.  Consult the
+individual documentation for further details.
 
 =over 4
 
@@ -3023,9 +3110,9 @@ specialised iterators for traversing data sets.
 The Template::Plugin module defines a base class for Template Toolkit
 extension modules that can be loaded via the USE directive.
 
-=item L<Template::Plugin::Filter|Template::Plugin::Filter>
+=item L<Template::Filters|Template::Filters>
 
-A specific plugin module which implements the FILTER methods.
+A module which implements the FILTER methods.
 
 =item L<Template::Constants|Template::Constants>
 

@@ -17,8 +17,13 @@ single command or configuration file.
     perldoc tpage
     perldoc ttree
 
-The following modules comprise the Template Toolkit.  Consult the 
-individual documentation for further details. 
+The F<Template::Tutorial> document provides an introduction to the Template
+Toolkit and shows some typical examples of usage.
+
+    perldoc Template::Tutorial
+
+The following modules comprise the Template Toolkit.  Consult the
+individual documentation for further details.
 
 =over 4
 
@@ -96,9 +101,9 @@ specialised iterators for traversing data sets.
 The Template::Plugin module defines a base class for Template Toolkit
 extension modules that can be loaded via the USE directive.
 
-=item L<Template::Plugin::Filter|Template::Plugin::Filter>
+=item L<Template::Filters|Template::Filters>
 
-A specific plugin module which implements the FILTER methods.
+A module which implements the FILTER methods.
 
 =item L<Template::Constants|Template::Constants>
 

@@ -288,14 +288,12 @@ name or object which should be used to construct new instances of the
 plugin object.
 
     use MyOrg::Template::Plugin::Womble;
-    use Template::Plugin::DBI;         # available soon...
-  
-    my $dbi_factory = Template::Plugin::DBI->new();
+    my $factory = MyOrg::Template::Plugin::Foo->new();
   
     my $template->new({ 
   	PLUGINS => {
   	  'womble' => 'MyOrg::Template::Plugin::Womble',
-  	  'dbi'    =>  $dbi_factory,
+  	  'foo'    =>  $factory,
 	}
     });
 
@@ -323,15 +321,11 @@ fashion to the above, the new() method is called against the object,
 allowing it to act as a constructor object or 'prototype' for other
 instances of the same, or other objects.
 
-    [% USE dbi('dbase_xyz') %]
-      ==> $dbi_factory->new($context, 'dbase_xyz');
+    [% USE foo('xyz') %]
+      ==> $factory->new($context, 'xyz');
 
 This approach facilitates the easy implementation and use of plugins that 
-act as singletons (one instance only) or share some state information, 
-such as cached database handles in the DBI example shown here.  
-
-Simon Matthews <sam@knowledgepool.com> is currently working on the DBI
-plugin for the Template Toolkit.
+act as singletons (one instance only) or share some state information.
 
 When a plugin is requested via the USE directive that is not specified
 in the PLUGINS hash, the dynamic loading procedure described under

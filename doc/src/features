@@ -41,7 +41,7 @@ The 'tpage' and 'ttree' scripts help manage and build entire directory
 trees from source templates, library files and plugin components.
 The Template module can be used directly from CGI scripts, Apache/mod_perl
 handlers, or any other Perl code as a simple front-end to the Toolkit.
-Plugin modules are available for interfacing to CGI, DBI, etc.
+Plugin modules are available for interfacing to CGI, DBI, XML, DOM, etc.
 
 =item -
 

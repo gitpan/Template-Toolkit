@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foriter.t,v 1.8 1999/11/25 17:51:24 abw Exp $
+# $Id: foriter.t,v 1.9 2000/02/15 14:53:44 abw Exp $
 #
 #========================================================================
 
@@ -181,7 +181,53 @@ List of 4 items:
  #4/4: delta
 
 
+-- test --
+[% FOREACH a = ['foo', 'bar', 'baz'] %]
+* [% loop.index %] [% a +%]
+[% FOREACH b = ['wiz', 'woz', 'waz'] %]
+  - [% loop.index %] [% b +%]
+[% END %]
+[% END %]
 
+-- expect --
+* 0 foo
+  - 0 wiz
+  - 1 woz
+  - 2 waz
+* 1 bar
+  - 0 wiz
+  - 1 woz
+  - 2 waz
+* 2 baz
+  - 0 wiz
+  - 1 woz
+  - 2 waz
+
+
+-- test --
+[% id    = 12345
+   name  = 'Original'
+   user1 = { id => 'tom', name => 'Thomas'   }
+   user2 = { id => 'reg', name => 'Reginald' }
+%]
+[% FOREACH [ user1 ] %]
+  id: [% id +%]
+  name: [% name +%]
+[% FOREACH [ user2 ] %]
+  - id: [% id +%]
+  - name: [% name +%]
+[% END %]
+[% END %]
+id: [% id +%]
+name: [% name +%]
+
+-- expect --
+  id: tom
+  name: Thomas
+  - id: reg
+  - name: Reginald
+id: 12345
+name: Original
 
 
 

@@ -33,6 +33,7 @@ directive:  atomdir
 	|   defblock
 	|   perl
 	|   macro
+	|   userdef
 	|   debug
 	|   /* NULL - empty directive */
 ;
@@ -113,12 +114,17 @@ perl:	    PERL ';'
 ;
 
 macro:	    MACRO IDENT directive 
-				{ $factory->create(Macro => @_[2, 3]) }
+				{ $factory->create(Macro => @_[2, 3])    }
 	|   MACRO IDENT '(' mlist ')' directive 
 				{ $factory->create(Macro => @_[2, 6, 4]) }
 ;
 
-debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2]) }
+userdef:    UDIR                { $factory->create(Userdef => $_[1])     }
+        |   UBLOCK ';'
+		block END       { $factory->create(Userdef => @_[1, 3])  }
+;
+
+debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2])       }
 ;
 
 

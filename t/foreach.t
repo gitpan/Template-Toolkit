@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 1.10 1999/12/21 14:22:15 abw Exp $
+# $Id: foreach.t,v 1.11 2000/02/17 12:15:31 abw Exp $
 # 
 #========================================================================
 
@@ -43,6 +43,8 @@ my $params  = {
     'seta'  => \@seta,
     'setb'  => \@setb,
     'users' => \@people,
+    'item'  => 'foo',
+    'items' => [ 'foo', 'bar' ],
 };
 
 
@@ -186,3 +188,19 @@ one, two, three, four,
 
 -- expect --
 -2, -1, 0, 1, 2, 
+
+-- test --
+[% FOREACH i = item -%]
+    - [% i %]
+[% END %]
+-- expect --
+    - foo
+
+-- test --
+[% FOREACH i = items -%]
+    - [% i +%]
+[% END %]
+-- expect --
+    - foo
+    - bar
+

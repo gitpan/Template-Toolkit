@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: object.t,v 1.7 2000/01/14 20:12:28 abw Exp $
+# $Id: object.t,v 1.8 2000/02/29 18:12:26 abw Exp $
 #
 #========================================================================
 
@@ -30,6 +30,8 @@ $Template::Test::DEBUG = 0;
 #------------------------------------------------------------------------
 
 package TestObject;
+
+use Template::Constants qw( :status );
 
 use vars qw( $AUTOLOAD );
 
@@ -74,6 +76,14 @@ sub belief {
 
 sub homer {
     return "D'Oh";
+}
+
+sub items {
+    return ('foo', 'bar', 'baz');
+}
+
+sub halt {
+    return (undef, STATUS_STOP);
 }
 
 sub fail {
@@ -407,4 +417,34 @@ ERROR: invalid member name '.private'
 bar
 Help Yourself
 
+
+#------------------------------------------------------------------------
+# test that a regular list returned is converted to a list reference
+#------------------------------------------------------------------------
+
+-- test --
+[% FOREACH item = thing.items -%]
+   * [% item %]
+[% END %]
+
+-- expect --
+   * foo
+   * bar
+   * baz
+
+-- test --
+before
+[% thing.halt %]
+after
+
+-- expect --
+before
+
+-- test --
+before
+[% thing.halt = 5 %]
+after
+
+-- expect --
+before
 

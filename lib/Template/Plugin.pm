@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugin.pm,v 1.9 2000/02/01 12:14:29 abw Exp $
+# $Id: Plugin.pm,v 1.10 2000/02/29 18:12:25 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use strict;
 use vars qw( $VERSION $DEBUG $PLUGIN_NAMES $JOINT $ERROR $AUTOLOAD );
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 # this maps standard library plugins to lower case names for convenience
@@ -42,7 +42,6 @@ $PLUGIN_NAMES = {
     'datafile' => 'Datafile',
 };
 
-$JOINT = ' ';
 
 
 
@@ -108,7 +107,6 @@ sub new {
 	_CONTEXT  => $context, 
 	_DELEGATE => $delegate,
 	_PARAMS   => \@params,
-	_JOINT    => $JOINT, 
     }, $class;
 }
 
@@ -144,26 +142,10 @@ sub error {
 #========================================================================
 
 #------------------------------------------------------------------------
-# joint($string)
-#
-# Method used to set the character sequence which is used to join
-# multiple values returned from a delegate object method.  See AUTOLOAD.
-#------------------------------------------------------------------------
-
-sub joint {
-    my ($self, $joint) = @_;
-    $self->{ _JOINT }  = defined $joint ? $joint : $JOINT;
-    return '';
-}
-
-
-#------------------------------------------------------------------------
 # AUTOLOAD
 #
 # General catch-all method which delegates all calls to the _DELEGATE 
-# object.  The method name may be suffixed by 'as_list' to indicate that
-# the results should be returned as a list reference.  Otherwise, multiple
-# values are concatenated using the _JOINT character sequence.
+# object.  
 #------------------------------------------------------------------------
 
 sub AUTOLOAD {
@@ -173,22 +155,7 @@ sub AUTOLOAD {
 
     $method =~ s/.*:://;
     return if $method eq 'DESTROY';
-
-    my $as_list = $method =~ s/_as_list$//;
-    my @results = $delegate->$method(@_);
-
-    if ($as_list) {
-	# method may have a '_as_list' suffix to request a list reference
-	return \@results;
-    }
-    elsif ($#results) {
-	# otherwise, we join multiple result with the _JOINT string
-        return join($self->{ _JOINT }, @results);
-    }
-    else {
-	# otherwise, return the only result
-	return $results[0];
-    }
+    $delegate->$method(@_);
 }
 
 
@@ -242,19 +209,20 @@ Use the PLUGIN_BASE option to specify the namespace that you use.  e.g.
 
 =head1 PLUGIN API
 
-The following methods form the basic interface between the Template Toolkit
-and plugin modules.
+The following methods form the basic interface between the Template
+Toolkit and plugin modules.
 
 =over 4
 
 =item load($context)
 
-This method is called by the Template Toolkit when the plugin module is 
-first loaded.  It is called as a package method and thus implicitly receives
-the package name as the first parameter.  A reference to the Template::Context
-object loading the plugin is also passed.  The default behaviour for the 
-load() method is to simply return the class name.  The calling context 
-then uses this class name to call the new() package method.
+This method is called by the Template Toolkit when the plugin module
+is first loaded.  It is called as a package method and thus implicitly
+receives the package name as the first parameter.  A reference to the
+Template::Context object loading the plugin is also passed.  The
+default behaviour for the load() method is to simply return the class
+name.  The calling context then uses this class name to call the new()
+package method.
 
     package MyPlugin;
 
@@ -419,31 +387,13 @@ passed will be forwarded onto new().
 	$class->SUPER::new($context, 'CGI', @_);
     }
 
-The delegation process examines the results returned by a method call
-and concatenates multiple values into a single string using a space as
-a joining character.  The joint() method may be called to changed this
-character sequence.  Method names may have 'as_list' appended to them
-and a list reference will instead be returned.
-
-    [% plugin.items %]             # items() result(s) joined by ' '
-
-    [% plugin.joint(', ') %] 
-
-    [% plugin.items %]             # items() result(s) joined by ', '
-
-                                   # items() result(s) as list ref
-    [% FOREACH item = plugin.items_as_list %]
-       [% item %]
-    [% END %]
-
-
 =head1 AUTHOR
 
 Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.9 $
+$Revision: 1.10 $
 
 =head1 COPYRIGHT
 

@@ -10,9 +10,25 @@ Centre Europe Ltd. as part of an ongoing research theme into
 Web-related publishing and content generation.  Other tools are in
 development to compliment the Template Toolkit.
 
-Many people have contributed ideas, inspiration, bug reports and fixes
-to Text::MetaText and the Template Toolkit, but none more so than
-Simon Matthews E<lt>sam@knowledegpool.comE<gt>, aka "SAM".  He
-deserves special mention (and wins many beer tokens) for his continued
-effort and interest over a number of years.
+Many people have contributed ideas, inspiration, fixes and features to
+both Text::MetaText and the Template Toolkit and they all deserve credit
+for having improved the end product in some way and their efforts
+continue to be very much appreciated.  In particular, Simon Matthews
+E<lt>sam@knowledegpool.comE<gt>, aka "SAM", deserves special mention
+(and wins many beer tokens) for his continued effort and interest over
+a number of years.  Please let me know if you think anyone is missing 
+from this list.
+
+  Thiery-Michel Barral      <kktos@electron-libre.com>
+  Francois Desarmenien      <desar@club-internet.fr>
+  Horst Dumcke              <hdumcke@cisco.com> 
+  Perrin Harkins            <pharkins@etoys.com>
+  Hans von Lengerke         <hans@lengerke.org>
+  Jonas Lilligren           <jonas@paranormal.o.se>
+  Simon Matthews            <sam@knowledgepool.com>
+  Leslie Michael Orchard    <deus_x@ninjacode.com>
+  Eugene Miretskiy          <eugene@invision.net>
+  Martin Portman            <mrp@cre.canon.co.uk>
+  Paul Sharpe               <paul@miraclefish.com>
+  Doug Steinwand            <dsteinwand@etoys.com>
 

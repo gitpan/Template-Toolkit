@@ -31,7 +31,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 1.18 2000/01/19 17:27:25 abw Exp $
+# $Id: Parser.pm,v 1.21 2000/02/17 12:32:04 abw Exp $
 #
 #============================================================================
 
@@ -52,7 +52,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -76,6 +76,8 @@ $DEFAULTS = {
     PRE_CHOMP   => 0,
     POST_CHOMP  => 0,
     GRAMMAR     => undef,
+    USER_DIR    => { },
+    USER_BLOCK  => { },
     'ERROR'     => '',
 };
 
@@ -94,7 +96,7 @@ $DEFAULTS = {
 sub new {
     my $class  = shift;
     my $config = shift || { };
-    my ($tagstyle, $start, $end, $defaults, $grammar);
+    my ($tagstyle, $start, $end, $defaults, $grammar, $hash, $key, $udef);
 
     # look for hash of defaults in class package or used base defaults
     {  
@@ -121,9 +123,21 @@ sub new {
     $self->{ START_TAG } ||= $start;
     $self->{   END_TAG } ||= $end;
 
+    # load grammar rules, states and lex table
     @$self{ qw( LEXTABLE STATES RULES ) } 
 	= @$grammar{ qw( LEXTABLE STATES RULES ) };
     
+    # build lookup table for user defined directives
+    $hash = $self->{ USER_DIR };
+    foreach $key (%$hash) {
+	$udef->{ $key } = [ 'UDIR', $hash->{ $key } ],
+    }
+    $hash = $self->{ USER_BLOCK };
+    foreach $key (%$hash) {
+	$udef->{ $key } = [ 'UBLOCK', $hash->{ $key } ],
+    }
+    $self->{ UDEF } = $udef;
+
     bless $self, $class;
 }
 
@@ -403,7 +417,7 @@ sub interpolate_text {
 # constructs a list of tokens each represented by 2 elements, as per
 # split_text() et al.  The first element contains the token type, the
 # second the token itself.
-
+#
 # The method tokenises the string using a complex (but fast) regex.
 # For a deeper understanding of the regex magic at work here, see
 # Jeffrey Friedl's excellent book "Mastering Regular Expressions",
@@ -421,9 +435,15 @@ sub tokenise_directive {
     my @tokens = ( );
 
 
-    if ($text =~ /^DEBUG\s*(.*)/i) {
-	# return 2 lexer token pairs; the 'DEBUG' identitifer and the text
-	return [ 'DEBUG', 'DEBUG', 'TEXT', $1 ];	    ## RETURN ##
+    if ($text =~ /^(\S+)\s*(.*)/) {
+	$token = $1;
+	if (uc $token eq 'DEBUG') {
+	    # return 2 lexer token pairs; the 'DEBUG' identitifer and the text
+	    return [ 'DEBUG', 'DEBUG', 'TEXT', $2 ];	    ## RETURN ##
+	}
+	elsif ($lookup = $self->{ UDEF }->{ $token }) {
+	    return [ $lookup->[0], &{$lookup->[1]}($text) ];
+	}
     }
 
 #    $self->_debug("TOKENISE: $text\n");
@@ -887,7 +907,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.18 $
+$Revision: 1.21 $
 
 =head1 COPYRIGHT
 

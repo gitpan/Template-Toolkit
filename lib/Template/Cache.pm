@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Cache.pm,v 1.11 1999/11/26 07:53:29 abw Exp $
+# $Id: Cache.pm,v 1.14 2000/02/15 14:53:42 abw Exp $
 #
 #============================================================================
 
@@ -30,10 +30,11 @@ require 5.004;
 use strict;
 use Template::Constants qw( :error :cache );
 use Template::Exception;
+use Template::Parser;
 use vars qw( $VERSION $PATHSEP $DEBUG );
 
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
 $PATHSEP  = ':';      # default path separator
 $DEBUG    = 0;
 
@@ -47,16 +48,17 @@ $DEBUG    = 0;
 # new(\%config)
 #
 # Constructor method used to instantiate a new Template::Cache object.
-# A reference to a hash array may be passed containing configuration
-# items:
-#    INCLUDE_PATH   where to look for files (e.g. '/tmp:/usr/local/templates');
-#    PARSER         reference to parser for compiling (default: auto-created)
-#
-# Returns a reference to a newly created Template::Cache object.
 #------------------------------------------------------------------------
 
 sub new {
-    my $class   = shift;
+    my $class = shift;
+    my $self = bless { }, $class; 
+    $self->_init(@_);
+    return $self;
+}
+
+sub _init {
+    my $self    = shift;
     my $params  = shift || { };
     my $path    = $params->{ INCLUDE_PATH } || '.';
     my $abspath = $params->{ ABSOLUTE_PATHS };
@@ -80,15 +82,12 @@ sub new {
     $params->{ CACHE } = CACHE_ALL
 	unless defined $params->{ CACHE };
 
-    bless {
-	CONFIG     => $params,	  # pass this onto Parser constructor
-	PATH       => \@paths,    # search path(s)
-	ABSPATH    => $abspath,   # absolute paths permitted
-	COMPILED   => { },	  # compiled template cache
-	ERROR      => '',	  # error
-    }, $class;
+    $self->{ CONFIG   } = $params,    # pass this onto Parser constructor
+    $self->{ PATH     } = \@paths,    # search path(s)
+    $self->{ ABSPATH  } = $abspath,   # absolute paths permitted
+    $self->{ COMPILED } = { },	       # compiled template cache
+    $self->{ ERROR    } = '',	       # error
 }
-
 
 
 #========================================================================
@@ -289,22 +288,21 @@ sub _compile {
     my ($self, $text, $whence) = @_;
     my ($parser, $compiled);
     
-    # create a parser object using any defined PARSER_PARAMS params
-    # and cache a reference to the object for next time
-    $parser = $self->{ PARSER } ||= do {
-	require Template::Parser;
-	Template::Parser->new($self->{ CONFIG });
-    };
+    # create a new Template::Parser object if not already defined or use
+    # a reference supplied in the config PARSER option
+    $parser = $self->{ PARSER } 
+	||= $self->{ CONFIG }->{ PARSER } 
+        ||  Template::Parser->new($self->{ CONFIG });
 
     # call parser to compile template
     return $self->_error(ERROR_FILE, "parse error: $whence " 
 			     . $parser->error())
 	unless $compiled = $parser->parse($text, $self, $whence);
 
-    if ($DEBUG) {
-	print STDERR "Cache compiled template\n";
-	$compiled->_inspect();
-    }
+#    if ($DEBUG) {
+#	print STDERR "Cache compiled template\n";
+#	$compiled->_inspect();
+#    }
 
     return $compiled;
 }
@@ -546,7 +544,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.11 $
+$Revision: 1.14 $
 
 =head1 COPYRIGHT
 

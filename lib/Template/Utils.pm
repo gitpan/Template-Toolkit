@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Utils.pm,v 1.7 1999/11/25 17:51:20 abw Exp $
+# $Id: Utils.pm,v 1.8 2000/02/07 17:42:50 abw Exp $
 #
 #============================================================================
 
@@ -28,11 +28,13 @@ require Exporter;
 
 use strict;
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
+use Template::Constants qw( :error );
 use File::Basename;
 use File::Path;
 
+
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
 
 
 
@@ -135,8 +137,12 @@ sub output_handler {
 	# make destination directory if it doesn't exist
 	my $dir = dirname($where);
 	my $handle = &Symbol::gensym;
-	mkpath($dir) unless -d $dir;
-	if (open($handle, ">$where")) { 
+	eval { mkpath($dir) unless -d $dir; };
+	if ($@) {
+	    # strip file name and line number from error raised by die()
+	    ($error = $@) =~ s/ at \S+ line \d+\n?$//;
+	}
+	elsif (open($handle, ">$where")) { 
 	    $output = sub { print $handle @_ };
 	}
 	else {
@@ -152,6 +158,10 @@ sub output_handler {
     # default handler in case we failed
     $output = sub { print @_ }
         unless $output;
+
+    # upgrade any error message to a 'file' exception
+    $error = Template::Exception->new(ERROR_FILE, $error)
+	if $error;
 
     # return handler
     wantarray ? ($output, $error) : $output;
@@ -225,7 +235,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.7 $
+$Revision: 1.8 $
 
 =head1 COPYRIGHT
 

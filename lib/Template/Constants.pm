@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Constants.pm,v 1.13 1999/12/21 14:22:12 abw Exp $
+# $Id: Constants.pm,v 1.14 2000/02/17 12:14:09 abw Exp $
 #
 #============================================================================
  
@@ -30,7 +30,7 @@ use strict;
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
 
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
 
 # BEGIN { print STDERR "Loading Template::Constants...\n" };
 
@@ -52,9 +52,10 @@ use constant STATUS_DONE     =>   3;      # ok, iterator done
 use constant STATUS_ERROR    => 255;      # error condition
 
 # ERROR constants for indicating soft errors.
-use constant ERROR_FILE      =>  'file';  # file error: I/O, parse, recursion
-use constant ERROR_UNDEF     =>  'undef'; # undefined variable value used
-use constant ERROR_PERL      =>  'perl';  # error in [% PERL %] block
+use constant ERROR_RETURN    =>  'return'; # return a status code
+use constant ERROR_FILE      =>  'file';   # file error: I/O, parse, recursion
+use constant ERROR_UNDEF     =>  'undef';  # undefined variable value used
+use constant ERROR_PERL      =>  'perl';   # error in [% PERL %] block
 
 use constant OP_NULLOP       =>   0;      # do nothing
 use constant OP_LITERAL      =>   1;      # literal value, do nothing
@@ -110,8 +111,7 @@ use constant DEBUG_ALL       => DEBUG_INFO | DEBUG_DATA | DEBUG_TOKEN |
 my @TEMPLATE = qw( TEMPLATE_OUTPUT TEMPLATE_ERROR TEMPLATE_DEBUG );
 my @STATUS   = qw( STATUS_OK STATUS_RETURN STATUS_STOP STATUS_DONE
 		   STATUS_ERROR );
-my @ERROR    = qw( ERROR_FILE ERROR_UNDEF ERROR_PERL );
-
+my @ERROR    = qw( ERROR_FILE ERROR_UNDEF ERROR_PERL ERROR_RETURN );
 my @OPS      = qw( OP_NULLOP OP_LITERAL OP_IDENT OP_RANGE OP_LIST OP_HASH 
 		   OP_QUOTE OP_UNYOP OP_BINOP OP_NOT OP_AND OP_OR OP_DOT
 		   OP_LDOT OP_LISTFOLD OP_HASHFOLD OP_HASHKEY OP_LVALUE 
@@ -220,7 +220,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.13 $
+$Revision: 1.14 $
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 1.8 1999/09/09 17:03:02 abw Exp $
+# $Id: Stash.pm,v 1.9 2000/02/29 18:12:25 abw Exp $
 #
 #============================================================================
 
@@ -29,8 +29,9 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 use Template::Constants qw( :status :error );
+use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/);
 
 # IMPORT/EXPORT parameters
 my $EXPORT = 'EXPORT';
@@ -147,16 +148,18 @@ sub declone {
 
 
 #------------------------------------------------------------------------
-# get($var, \@params, $context)
+# get($var, \@params, $create)
 #
 # Returns the stash value associated with the variable named in the 
 # first parameter.  If the value contains a CODE reference then it 
 # will be run, passing the contents of the list referenced by the 
-# second parameter as arguments.
+# second parameter as arguments.  The third, optional parameter is
+# a create flag which, when set true, will cause an empty hash to be
+# created when a requested item is undefined.
 #------------------------------------------------------------------------ 
 
 sub get {
-    my ($self, $var, $params, $context, $create) = @_;
+    my ($self, $var, $params, $create) = @_;
     my $value;
     $params ||= [];
 
@@ -175,18 +178,18 @@ sub get {
 
 
 #------------------------------------------------------------------------
-# set($var, $value, $context)
+# set($var, $value)
 #
 # Updates the stash value associated with the variable named in the 
 # first parameter with the value passed in the second. 
 #------------------------------------------------------------------------ 
  
 sub set {
-    my ($self, $var, $val, $context) = @_;
+    my ($self, $var, $val) = @_;
 
     if ($var eq $IMPORT) {
-	return (undef, $context->throw(ERROR_UNDEF, 
-				       "only a hash can be IMPORTed ($val)"))
+	return Template::Exception->new(ERROR_UNDEF, 
+					"only a hash can be IMPORTed ($val)")
 	    unless ref($val) eq 'HASH';
     
 	@$self{ keys %$val } = values %$val;
@@ -376,7 +379,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.8 $
+$Revision: 1.9 $
 
 =head1 COPYRIGHT
 

@@ -16,8 +16,7 @@ as a skeleton test file.
 Example:
 
     use lib qw( . ./t ../lib );
-    use Template;
-    require 'texpect.pl';
+    use Template::Test;
 
     test_expect(\*DATA);
 
@@ -42,5 +41,5 @@ containing the text "subscribe templates".
 
 To email the author directly, send email to E<lt>abw@cre.canon.co.ukE<gt>.  
 
-If you don't know how to do that then you are probably beyond helping. 
+If you don't know how to do that then you may need to seek help elsewhere.  :-)
 
