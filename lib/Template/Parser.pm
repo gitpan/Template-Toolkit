@@ -31,7 +31,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 1.11 1999/08/01 13:43:14 abw Exp $
+# $Id: Parser.pm,v 1.12 1999/08/10 11:09:09 abw Exp $
 #
 #============================================================================
 
@@ -52,7 +52,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -278,9 +278,16 @@ sub split_text {
 	
 	# and now the directive, along with line number information
 	if (length $dir) {
-	    push(@tokens, 'DIRECTIVE', $dir);
-	    push(@$linenos, $line);
-	    
+	    # the TAGS directive is a compile-time switch
+	    if ($dir =~ /TAGS\s+(\S+)\s+(\S+)/i) {
+		$start = quotemeta($1);
+		$end   = quotemeta($2);
+	    }
+	    else {
+		push(@tokens, 'DIRECTIVE', $dir);
+		push(@$linenos, $line);
+	    }
+
 	    # this is the fancy way but is temporarily removed because "n-n"
 	    # line numbers are not numeric and confuse interpolate_text()
 	    # push(@$linenos, 
@@ -909,7 +916,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.11 $
+$Revision: 1.12 $
 
 =head1 COPYRIGHT
 

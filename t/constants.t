@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/constants.t
 #
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: constants.t,v 1.3 1999/07/28 11:32:28 abw Exp $
+# $Id: constants.t,v 1.4 1999/08/10 11:09:12 abw Exp $
 #
 #========================================================================
 

@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/include.t
 #
@@ -17,7 +17,7 @@
 #   [% INCLUDE 'header' %].  This is a bit tricky, but it *must* be 
 #   fixed ASAP.  Apart from this inconvenience, INCLUDE seems to work OK.
 #
-# $Id: include.t,v 1.6 1999/08/01 13:43:18 abw Exp $
+# $Id: include.t,v 1.7 1999/08/10 11:09:15 abw Exp $
 #
 #========================================================================
 

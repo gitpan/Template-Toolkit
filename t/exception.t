@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/exception.t
 #
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: exception.t,v 1.4 1999/07/28 11:32:29 abw Exp $
+# $Id: exception.t,v 1.5 1999/08/10 11:09:12 abw Exp $
 #
 #========================================================================
 

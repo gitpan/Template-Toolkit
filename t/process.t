@@ -1,8 +1,8 @@
 #============================================================= -*-perl-*-
 #
-# t/predefs.t
+# t/process.t
 #
-# Template script testing the PREDEF configuration option.
+# Template script testing the PROCESS directive.
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
@@ -12,8 +12,8 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: predefs.t,v 1.5 1999/08/10 11:09:17 abw Exp $
-# 
+# $Id: process.t,v 1.1 1999/08/10 11:09:17 abw Exp $
+#
 #========================================================================
 
 use strict;
@@ -23,36 +23,34 @@ use Template;
 require 'texpect.pl';
 $^W = 1;
 
-$DEBUG = 0;
+$DEBUG = 1;
 
-# sample data
-my ($a, $b, $c, $d, $e, $f) = qw( alpha bravo charlie delta echo foxtrot );
-my $data = {
-    'a' => $a,
-    'b' => $b,	
-    'c' => { 
-	'd' => $d, 
-	'e' => { 
-	    'f' => $f,
-	},
-    },
+my $params = { 
+    'a' => 'alpha',
+    'b' => 'bravo',
+    'c' => 'charlie',
+    'd' => 'delta',
 };
 
-test_expect(\*DATA, { PRE_DEFINE => $data, INTERPOLATE => 1 }, $data);
+test_expect(\*DATA, { POST_CHOMP => 1 }, $params);
 
 __DATA__
--- test --
-[% a %]
-[% b %]
-[% c.d %]
-[% c.e.f %]
+[% a +%]
+[% PROCESS config %]
+[% a +%]
+[% c +%]
+[% z +%]
+[% BLOCK config %]
+Updating configuration...
+[% a = b %]
+[% c = 'marching powder'
+   z = 'zulu'
+%]
+[% END %]
 -- expect --
 alpha
+Updating configuration...
 bravo
-delta
-foxtrot
+marching powder
+zulu
 
--- test --
-$a $b $c.d $c.e.f
--- expect --
-alpha bravo delta foxtrot

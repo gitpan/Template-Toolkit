@@ -33,10 +33,19 @@ sub callsign {
 }
 
 
+# kludge to allow us to define some extra tests to add to the 
+# overall count
+
+my $xtests = 0;
+sub extra_tests {
+    $xtests = shift;
+}
+
 my ($ntests, $ok_count);
 
 sub ntests {
     $ntests = shift;
+    $ntests += $xtests;		    # add any extra tests 
     $ok_count = 1;
     print "1..$ntests\n";
 }

@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/if.t
 #
@@ -15,7 +15,7 @@
 # TODO: this should test the binary comparison and boolean operators
 #    more thoroughly, including parenthesised sub-expressions, etc.
 #
-# $Id: if.t,v 1.8 1999/08/01 13:43:18 abw Exp $
+# $Id: if.t,v 1.9 1999/08/10 11:09:14 abw Exp $
 #
 #========================================================================
 

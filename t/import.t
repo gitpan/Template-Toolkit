@@ -1,8 +1,9 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/import.t
 #
-# Template script testing IMPORT option to stash.
+# Template script testing IMPORT directive and "IMPORT = namespace"
+# assignment option.
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
@@ -12,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: import.t,v 1.3 1999/08/01 13:43:18 abw Exp $
+# $Id: import.t,v 1.4 1999/08/10 11:09:14 abw Exp $
 # 
 #========================================================================
 
@@ -23,6 +24,7 @@ use Template qw( :status );
 require 'texpect.pl';
 $^W = 1;
 
+#$Template::Context::DEBUG = 1;
 $DEBUG = 0;
 
 my ($a, $b, $c, $d, $e, $f ) = 
@@ -38,43 +40,49 @@ my $params = {
 };
 
 
-my $template = Template->new({ INTERPOLATE => 1 });
-
-test_expect(\*DATA, $template, $params);
+test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1 }, $params);
 
 __DATA__
-Defining catch block
-[% CATCH undef -%]
-NOT DEFINED
-[%- END -%]
-done
+[% domain = 'cre.canon.co.uk'
+   name   = 'John Doe'  
+   user   = {
+    id    = 'abw'
+    name  = 'Andy Wardley'
+    email = "abw@$domain"
+   }
+%]
+$user.id:  $user.name <$user.email>
+Name: $name
+[% IMPORT user %]
+Name: $name
 
 -- expect --
-Defining catch block
-done
+abw:  Andy Wardley <abw@cre.canon.co.uk>
+Name: John Doe
+Name: Andy Wardley
 
 -- test --
-[% a %]
-[% e %]
-
+[% user.id    = 'xyz'
+   user.name  = 'Xyzzyx'
+   user.email = 'xyz@zyx.com'
+%]
+[% name = 'nobody' %]
+Name: $name
+[% INCLUDE user_block1 %]
+Name: $name
+[% INCLUDE user_block2 IMPORT=user %]
+Name: $name
+[% PROCESS user_block2 IMPORT=user %]
+Name: $name
+[% BLOCK   user_block1 %]*1 $user.id: $user.name <$user.email>
+[% END %]
+[% BLOCK   user_block2 %]*2 $id: $name <$email>
+[% END %]
 -- expect --
-alpha
-NOT DEFINED
-
--- test --
-[% IMPORT=d -%]
-[% e %]
-[% f %]
--- expect --
-echo
-foxtrot
-
-
--- test --
-[% b %]
-[% IMPORT = b %]
-[% c %]
--- expect --
-bravo
-NOT DEFINED
-charlie
+Name: nobody
+*1 xyz: Xyzzyx <xyz@zyx.com>
+Name: nobody
+*2 xyz: Xyzzyx <xyz@zyx.com>
+Name: nobody
+*2 xyz: Xyzzyx <xyz@zyx.com>
+Name: Xyzzyx

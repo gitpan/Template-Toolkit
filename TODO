@@ -10,9 +10,28 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.23 1999/08/04 19:18:07 abw Exp $
+# $Id: TODO,v 1.26 1999/08/10 11:08:56 abw Exp $
 #
 #============================================================================
+
+Pending
+-------
+  * cvs add MANIFEST.SKIP
+  * cvs add t/filter.t
+  * cvs add t/break.t
+  * cvs add lib/Template/Plugin/Filter.pm  
+  * cvs add t/process.t
+  * cvs add t/while.t
+  * cvs add t/import.t
+  * cvs add t/literal.t 
+  * cvs add t/os.t
+  * cvs remove t/export.t
+
+  * Document WHILE
+  * Document PROCESS
+  * Document BREAK
+  * Document OS option and change PATH_SEP/DIR_SEP 
+  * Document FILTER
 
 Bugs
 ----
@@ -21,43 +40,36 @@ Bugs
 
 Planned Features
 ----------------
-  * Add BREAK directive to exit block
-
-  * TAG_STYLE should be switchable on a per-template basis.
-
-  * re-implement FILTER
-
-  * add IMPORT (and EXPORT?) directives
-
   * TRY to scope CATCH?
- 
-  * An option to bind subs in a Perl namespace into a template namespace
-   without requiring the specific binding to every function.
 
-  * add INSERT directive to insert a file without processing it.  This 
-    suggests an altenate cache will be required and points to the fact 
-    that it may be time to develop a more generic broker to handle 
-    loading, compiling and caching of resources such as template documents
-    (INCLUDE), raw text files (INSERT) and library code (USE)
+  * PERL directive to encapsulate Perl code.  Stash variables could be 
+    made available.
+
+  * An option to bind subs in a Perl namespace into a template namespace
+    without requiring the specific binding to every function.
+
+  * general purpose methods (e.g. 'size' on a list, 'keys' on a hash)
+
+  * add INSERT directive to insert a file without processing it.  
 
   * add document information structures as runtime variables (e.g. file.name
     file.mod, template.name, system.time, etc)
 
 Improvements
 ------------
-  * Context constructor should be more intelligent about the PLUGIN_BASE 
-    which might have multiple values.
-
-  * Loading of plugins should be more intelligent, setting a local @INC 
-    to the PLUGINS_BASE and let Perl find the file.
+  * user-defined filters can be provided in the FILTERS hash, but there
+    is no way to dynamically load filters from the template unless they
+    are "standard library" filters, defined in Template::Plugin::Filter.
 
   * Template/Context redirect() should be able to handle a file name
     and open output for it
 
+  * should you be able to break out of an IF block?  At present, if you 
+    BREAK outside of a FOREACH, then a STATUS_DONE value is returned to
+    the caller.
+
   * Change default ERROR handler to be undef (errors retrieved via 
     error()) and have uncaught exceptions call $context->error().
-
-  * Add AUTOLOAD to Template.pm to delegate to Context
 
   * It is currently impossible to create a list and then pass the members 
     of that list to a code ref/method.  The following would pass the list
@@ -75,7 +87,7 @@ Improvements
     modified to work in a more generic resource brokering role.  This
     could then be re-used for loading and caching code components.
 
-  * The parser could issue Issue warnings
+  * The parser could issue issue warnings
 
   * The parser could return a Template::Document type encapsulating
     template information (and warnings, etc.) rather than a bare
@@ -89,7 +101,7 @@ Improvements
     to enable a debugging-aware parser which inserts debugging directives
     into the template context.  These would then be processed at runtime.
 
-  * The parser grammar can be simplified a lot.  I think that the
+  * The parser grammar can be simplified a bit.  I think that the
     re-write between 0.17 and 0.18 was a Good Thing but pitched the
     intermediate code too low down at the opcode level.  It needs to
     be lifted up a little to encompass broader concepts such as
@@ -129,6 +141,19 @@ Documentation
 
   * automatic import of ident-less FOREACH loops that return hashes is not
     documented
+
+  * IMPORT documentation is wrong - you can't import to another package.
+    Aloso need to document for IMPORT directive.
+
+  * WHILE is not documented
+
+  * PROCESS is not documented
+
+  * FILTER is not documented
+
+  * TAGS directive is not documented
+
+  * OS, PATH_SEP and PATH_SPLIT options are not documented.
 
   * write more detailed description on extending the template toolkit.
 

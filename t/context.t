@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/context.t
 #
@@ -17,7 +17,7 @@
 #   these get so thoroughly tested by so many things that any problems 
 #   there would show up immediately and blow smoke.
 #
-# $Id: context.t,v 1.4 1999/07/28 11:32:28 abw Exp $
+# $Id: context.t,v 1.6 1999/08/10 11:09:12 abw Exp $
 #
 #========================================================================
 
@@ -81,6 +81,7 @@ ok( $output eq "World" );
 
 
 
+print "OS: ", $context->{ OS }->name(), "\n";
 
 
 

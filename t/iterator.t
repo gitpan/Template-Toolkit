@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/iterator.t
 #
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: iterator.t,v 1.3 1999/07/28 11:32:30 abw Exp $
+# $Id: iterator.t,v 1.4 1999/08/10 11:09:15 abw Exp $
 #
 #========================================================================
 

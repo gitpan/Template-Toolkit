@@ -1,8 +1,8 @@
 #============================================================= -*-perl-*-
 #
-# t/predefs.t
+# t/literal.t
 #
-# Template script testing the PREDEF configuration option.
+# Template script testing literal lvalues.
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
@@ -12,47 +12,40 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: predefs.t,v 1.5 1999/08/10 11:09:17 abw Exp $
+# $Id: literal.t,v 1.1 1999/08/10 11:09:16 abw Exp $
 # 
 #========================================================================
 
 use strict;
 use lib qw( . ./t ../lib );
 use vars qw( $DEBUG );
-use Template;
+use Template qw( :status );
+$Template::Context::DEBUG = 0;
 require 'texpect.pl';
 $^W = 1;
 
 $DEBUG = 0;
 
-# sample data
-my ($a, $b, $c, $d, $e, $f) = qw( alpha bravo charlie delta echo foxtrot );
-my $data = {
-    'a' => $a,
-    'b' => $b,	
-    'c' => { 
-	'd' => $d, 
-	'e' => { 
-	    'f' => $f,
-	},
+my ($a, $b, $c, $d, $e, $f ) = 
+	qw( alpha bravo charlie delta echo foxtrot);
+my $params = {
+    'a'    => $a,
+    'b'    => $b,
+    'c'    => $c,
+    'd'    => {
+	'e' => $e,
+	'f' => $f,
     },
 };
 
-test_expect(\*DATA, { PRE_DEFINE => $data, INTERPOLATE => 1 }, $data);
+
+test_expect(\*DATA, undef, $params);
 
 __DATA__
--- test --
 [% a %]
-[% b %]
-[% c.d %]
-[% c.e.f %]
+[% a = b; a %]
+[% 'a' = c; a %]
 -- expect --
 alpha
 bravo
-delta
-foxtrot
-
--- test --
-$a $b $c.d $c.e.f
--- expect --
-alpha bravo delta foxtrot
+charlie

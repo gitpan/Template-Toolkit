@@ -41,6 +41,7 @@ directive:	atomdir
 	|	debug
 	|	condition
 	|	loop
+	|	filter
 	|	defblock
 	|	/* NULL - empty directive */
 ;
@@ -51,7 +52,6 @@ atomdir:	get
 	|	throw
 	|	error
 	|	return
-	|	stop
 ;
 
 
@@ -75,14 +75,17 @@ set:		SET setlist
 	|	DEFAULT setlist		    
 			{ unshift(@{$_[2]}, OP_DEFAULT);  # enable DEFAULT
 			  Template::Directive->new($_[2])                }
+	|	IMPORT term
+			{ Template::Directive->new([ OP_ROOT, ['IMPORT'],
+				OP_LIST,  @{$_[2]}, OP_ASSIGN, OP_POP ]) }
 	|	setlist	{ Template::Directive->new($_[1])                }
 ;
 
 include:	INCLUDE incparam inclist
 			{ Template::Directive::Include->new(@_[2, 3])    }
 
-	|	INCLUDE IDENT ASSIGN incparam inclist
-			{ Template::Directive::Include->new(@_[4, 5, 2]) }
+	|	PROCESS incparam inclist
+			{ Template::Directive::Process->new(@_[2, 3])    }
 ;
 
 use:		USE useparam
@@ -108,10 +111,12 @@ error:		ERROR term
 
 return:		RETURN	{ Template::Directive::Return->new(
 			      Template::Constants::STATUS_RETURN)        }
-;
-
-stop:		STOP	{ Template::Directive::Return->new(
+	|
+		STOP	{ Template::Directive::Return->new(
 			      Template::Constants::STATUS_STOP)          }
+	|
+		BREAK	{ Template::Directive::Return->new(
+			      Template::Constants::STATUS_DONE)          }
 ;
 
 condition:	IF expr SEPARATOR block else END
@@ -138,12 +143,29 @@ loop:		FOR IDENT ASSIGN term SEPARATOR block END
 			{ Template::Directive::For->new(@_[4, 6, 2])     }
 	|	FOR term SEPARATOR block END
 			{ Template::Directive::For->new(@_[2, 4])        }
+	|	WHILE expr SEPARATOR block END
+			{ Template::Directive::While->new(@_[2, 4])      }
 	|	atomdir FOR IDENT ASSIGN term
 			{ Template::Directive::For->new(@_[5, 1, 3])     }
 	|	atomdir FOR term
 			{ Template::Directive::For->new(@_[3, 1])        }
+	|	atomdir WHILE expr
+			{ Template::Directive::While->new(@_[3, 1])      }
 ;
 
+filter:		FILTER useparam SEPARATOR block END
+			{ Template::Directive::Filter->new(
+				$_[2]->[0], $_[2]->[1], $_[4])   }
+	|	FILTER IDENT ASSIGN useparam SEPARATOR block END
+			{ Template::Directive::Filter->new(
+				$_[4]->[0], $_[4]->[1], @_[6,2]) }
+	|	atomdir FILTER useparam 
+			{ Template::Directive::Filter->new(
+				$_[3]->[0], $_[3]->[1], $_[1])   }
+	|	atomdir FILTER IDENT ASSIGN useparam
+			{ Template::Directive::Filter->new(
+				$_[5]->[0], $_[5]->[1], @_[1,3]) }
+;
 
 defblock:	BLOCK textdot SEPARATOR block END
 			{ $_[0]->define_block(@_[2, 4]); undef           }
@@ -155,7 +177,7 @@ debug:		DEBUG TEXT
 
 
 #========================================================================
-# (NEW) FUNDAMENTAL ELEMENT RULES
+# FUNDAMENTAL ELEMENT RULES
 #========================================================================
 
 expr:		expr  AND expr		{ push(@{$_[1]}, @{$_[3]}, OP_AND);
@@ -165,13 +187,13 @@ expr:		expr  AND expr		{ push(@{$_[1]}, @{$_[3]}, OP_AND);
 	|	      NOT expr		{ push(@{$_[2]}, OP_NOT); 
 					  $_[2]                             }
 	|	'(' expr ')'		{ $_[2]                             }
-	|	'(' assign ')'		{ unshift(@{$_[2]}, OP_ROOT); $_[2] }
+	|	'(' assign ')'		{ unshift(@{$_[2]}, OP_TOLERANT,
+					    OP_ROOT); $_[2] }
 	|	term			{ unshift(@{$_[1]}, OP_TOLERANT);
 					  $_[1]                             }
 ;
 
-assign:		lvalue ASSIGN term	{ [ @{$_[1]}, @{$_[3]}, 
-								OP_ASSIGN ] }
+assign:		lvalue ASSIGN term	{ [ @{$_[1]}, @{$_[3]}, OP_ASSIGN ] }
 ;
 
 lvalue:		ident 			{ [ @{ shift @{$_[1]} },
@@ -181,6 +203,7 @@ lvalue:		ident 			{ [ @{ shift @{$_[1]} },
 	     				    (map { (OP_LDOT, @$_) } @{$_[2]}), 
 					  ]                                 }
 	|	LITERAL			{ [ [$_[1]], OP_LIST ]              }
+	|	IMPORT			{ [ ['IMPORT'], OP_LIST ]           }
 ;
 
 ident:		ident DOT node		{ push(@{$_[1]}, $_[3]); $_[1]      }
@@ -234,6 +257,7 @@ setlist:	nparams			{ unshift(@{$_[1]}, OP_ROOT);
 					     push(@{$_[1]}, OP_POP);
 					   $_[1]                            }
 ;
+
 inclist:	params			{ unshift(@{$_[1]}, OP_ROOT);
 					     push(@{$_[1]}, OP_POP);
 					   $_[1]                            }

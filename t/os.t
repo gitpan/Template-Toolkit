@@ -1,8 +1,8 @@
 #============================================================= -*-perl-*-
 #
-# t/stop.t
+# t/os.t
 #
-# Template script testing the STOP directive.
+# Template script testing Template::OS module.
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
@@ -12,35 +12,38 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stop.t,v 1.6 1999/08/10 11:09:18 abw Exp $
+# $Id: os.t,v 1.1 1999/08/10 11:09:16 abw Exp $
 #
 #========================================================================
 
 use strict;
 use lib qw( . ./t ../lib );
 use vars qw( $DEBUG );
-use Template qw( :status );
+use Template::OS;
 require 'texpect.pl';
 $^W = 1;
 
 $DEBUG = 0;
 
+extra_tests(1);
+
 test_expect(\*DATA);
 
-__DATA__
-line 1
-[% INCLUDE 'first_block' %]
-line 2
-[% RETURN %]
+my $os = Template::OS->new();
+ok( $os );
 
-[% BLOCK first_block -%]
-first block line 1
-[% STOP %]
-first block line 2
-[% END %]
+print "pathsep: ", $os->pathsep(), "\npathsplit: ", $os->pathsplit, "\n";
+
+
+
+__DATA__
+hello world
 -- expect --
-line 1
-first block line 1
+hello world
+
+
+
+
 
 
 

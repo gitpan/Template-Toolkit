@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.16 1999/08/04 09:22:57 abw Exp $
+# $Id: Context.pm,v 1.19 1999/08/10 11:09:06 abw Exp $
 #
 #============================================================================
 
@@ -33,9 +33,10 @@ use Template::Constants qw( :status :error :ops );
 use Template::Utils qw( :subs );
 use Template::Cache;
 use Template::Stash;
+use Template::OS;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -73,23 +74,39 @@ my $binop  = {
 sub new {
     my $class  = shift;
     my $params = shift || { };
-    my ($cache, $stash) = 
-	@$params{ qw( CACHE STASH ) };
+    my ($cache, $stash, $os, $pbase) = 
+	@$params{ qw( CACHE STASH OS PLUGIN_BASE ) };
+
+    # create an OS object, using provided parameter, autodetecting 
+    # if $os is undefined, and defaulting to 'unix' on error.
+    $os = Template::OS->new($os) || do {
+	warn "Invalid operating system, defaulting to unix: ", 
+	    $os || '', "\n";
+	Template::OS->new('unix');
+    };
+    $params->{ OS } = $os;
+
+    # stash is constructed with any PRE_DEFINE variables
+    $stash ||= Template::Stash->new($params->{ PRE_DEFINE });
 
     # CACHE can be either an option to the Template::Cache->new() 
     # constructor or a cache object reference
     $cache = Template::Cache->new($params)
 	unless ref $cache;
-
-    # stash is constructed with any PRE_DEFINE variables
-    $stash ||= Template::Stash->new($params->{ PRE_DEFINE });
+    
+    # PLUGIN_BASE is a single directory or array ref (may also be undef)
+    $pbase = ref $pbase eq 'ARRAY' 
+	     ?   $pbase 
+	     : [ $pbase || 'Template::Plugin'];
 
     my $self = bless {
-	CACHE       => $cache,
+	OS          => $os,
 	STASH       => $stash,
-	CATCH       => $params->{ CATCH } || { },
-	PLUGIN_BASE => $params->{ PLUGIN_BASE } || 'Template::Plugin',
+	CACHE       => $cache,
+	PLUGIN_BASE => $pbase,
 	PLUGINS     => $params->{ PLUGINS } || { },
+	FILTERS     => $params->{ FILTERS } || { },
+	CATCH       => $params->{ CATCH } || { },
 	OUTPUT      => output_handler($params->{ OUTPUT }),
 	ERROR       => output_handler($params->{ ERROR } || \*STDERR),
     }, $class;
@@ -143,10 +160,20 @@ sub old {
 
 sub process {
     my ($self, $template, $params) = @_;
-    my $error;
+    my ($ops, $error);
 
+    # params may be an ARRAY reference to an opcode list which will
+    # update local parameters for us.  In this case, we copy it to $ops
+    # and nullify $params
+    $params = undef 
+	if ($ops = ref($params) eq 'ARRAY' ? $params : undef);
+	
     # clone internal stash to localise new variables
     $self->{ STASH } = $self->{ STASH }->clone($params);
+
+    # run any opcode list passed as $params
+    $self->_runop($ops)
+	if $ops;
 
     $error = $self->_process($template);
 
@@ -260,7 +287,7 @@ sub catch {
 
 sub use_plugin {
     my ($self, $name, $params) = @_;
-    my ($modname, $filename, $factory, $plugin);
+    my ($factory, $module, $base, $package, $filename, $plugin, $ok);
 
     require Template::Plugin;
 
@@ -268,22 +295,26 @@ sub use_plugin {
     unless (defined ($factory = $self->{ PLUGINS }->{ $name })) {
 
 	# module name is built from $name unless defined in PLUGIN_NAME hash
-	($modname = $name) =~ s/\./::/g
-	    unless defined($modname = 
+	($module = $name) =~ s/\./::/g
+	    unless defined($module = 
 			   $Template::Plugin::PLUGIN_NAMES->{ $name });
 
-	$modname = "$self->{ PLUGIN_BASE }::$modname";
-	($filename = $modname) =~ s|::|/|g;
-	$filename .= '.pm';
+	foreach $base (@{ $self->{ PLUGIN_BASE } }) {
+	    $package =  $base . '::' . $module;
+	    ($filename = $package) =~ s|::|/|g;
+	    $filename .= '.pm';
 
-	eval {
-	    require $filename;
-	    $factory = $modname->load()
-		|| die "load() for $name plugin returned false ($modname)\n";
-	};
-	return (undef, $self->throw(ERROR_UNDEF, 
-				    "failed to load $name ($modname)\n - $@"))
-	    if $@;
+	    $ok = eval { require $filename };
+	    last unless $@;
+	}
+	return (undef, Template::Exception->new(ERROR_UNDEF,
+			"failed to load plugin module $name"))
+	    unless $ok;
+
+	$factory = eval { $package->load($self) };
+	return (undef, Template::Exception->new(ERROR_UNDEF, 
+			"failed to initialise plugin module $name"))
+	    if $@ || ! $factory;
 
 	$self->{ PLUGINS }->{ $name } = $factory;
     }
@@ -291,13 +322,57 @@ sub use_plugin {
     # call the new() method on the factory object or class name
     eval {
 	$plugin = $factory->new($self, @{ $params || [] })
-	    || die "plugin constructor failed for $name ($modname)\n";
+	    || die "$name plugin: ", $factory->error(), "\n";
     };
-    return (undef, $self->throw(ERROR_UNDEF, $@))
+    return (undef, Template::Exception->new(ERROR_UNDEF, $@))
 	if $@;
 
     return $plugin;
 }
+
+
+
+#------------------------------------------------------------------------
+# use_filter($name, \@params, $alias) 
+#
+# Called by the FILTER directive to request a filter sub-routine.
+# Calls use_plugin() to request a filter plugin type, passing the 
+# filter name and params.  Filters specified without any parameters
+# will be cached by their name or a provided alias.  Filters that
+# have parameters will only be cached if an alias is provided.
+#
+# Returns a CODE reference representing the filter.
+#------------------------------------------------------------------------
+
+sub use_filter {
+    my ($self, $name, $params, $alias) = @_;
+    my ($filter, $args, $error);
+    
+    # use any cached version of the filter if no params provided
+    $filter = $self->{ FILTERS }->{ $name }
+	unless ($params);
+
+    unless ($filter) {
+	# prepare arguments for passing to the 'filter' plugin
+	$args = $params || [];
+	unshift(@$args, $name);
+
+	# request filter plugin to build filter
+	($filter, $error) = $self->use_plugin('filter', $args);
+	return (undef, $error)
+	    if $error;
+    }
+
+    # alias defaults to name iff no parameters were supplied
+    $alias = $name
+	unless $params || defined $alias;
+
+    # cache FILTER if alias is valid
+    $self->{ FILTERS }->{ $alias } = $filter
+	if $alias;
+
+    return ($filter, Template::Constants::STATUS_OK);
+} 
 
 
 
@@ -452,6 +527,11 @@ sub _process {
 # indicate an exception or error.
 #------------------------------------------------------------------------ 
 
+my $root_ops = {
+    'inc'  => sub { local $^W = 0; my $item = shift; ++$item }, 
+    'dec'  => sub { local $^W = 0; my $item = shift; --$item }, 
+};
+
 sub _runop {
     my ($self, $oplist) = @_;
     my $root = $self->{ STASH };
@@ -523,7 +603,6 @@ sub _runop {
 	    # logical negation of top item on stack
 	    $stack[-1] = ! $stack[-1];
 	}
-
 
 	## OP_AND ##
 	elsif ($op == OP_AND) {
@@ -653,10 +732,18 @@ sub _runop {
 		# if the LHS is a Stash then we call its get() method
 		($z, $err) = $x->get($y, $p, $self);
 
-		# create an intermediate namespace hash if the item doesn't
-		# exist and this is an OP_LDOT operation (lvalue)
-		if ($lflag && ! defined $z && ! $err) {
-		    $err = $x->set($y, $z = { });
+		unless (defined $z || $err) {
+		    # create an intermediate namespace hash if the item 
+		    # doesn't exist and this is an OP_LDOT (lvalue)
+		    if ($lflag) {
+			$err = $x->set($y, $z = { });
+		    }
+		    # try to resolve undefined root variables
+		    elsif ($x eq $root) {
+			$z = $root_ops->{ $y };
+			($z, $err) = &$z(@$p)
+			    if $z;
+		    }
 		}
 	    }
 	    elsif (ref($x) eq 'HASH') {
@@ -1032,7 +1119,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.16 $
+$Revision: 1.19 $
 
 =head1 COPYRIGHT
 

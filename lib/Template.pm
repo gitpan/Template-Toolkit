@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.21 1999/08/04 20:37:49 abw Exp $
+#   $Id: Template.pm,v 1.23 1999/08/10 12:12:10 abw Exp $
 #
 #========================================================================
  
@@ -27,14 +27,14 @@ package Template;
 require 5.004;
 
 use strict;
-use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
+use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS $AUTOLOAD );
 use Exporter;
 use Template::Constants qw( :all );
 use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '0.22';
+$VERSION     = '0.23';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;
@@ -85,19 +85,6 @@ sub process {
 }
 
 
-
-#------------------------------------------------------------------------
-# redirect()
-# 
-# Delegates to $self->{ CONTEXT }->redirect();
-#------------------------------------------------------------------------
-
-sub redirect {
-    my $self = shift;
-    $self->{ CONTEXT }->redirect(@_);
-}
-
-
 #------------------------------------------------------------------------
 # context()
 # 
@@ -121,6 +108,23 @@ sub context {
 
 sub error {
     $_[0]->{ ERROR };
+}
+
+
+#------------------------------------------------------------------------
+# AUTOLOAD
+#
+# Delegates to CONTEXT.
+#------------------------------------------------------------------------
+
+sub AUTOLOAD {
+    my $self   = shift;
+    my $method = $AUTOLOAD;
+
+    $method =~ s/.*:://;
+    return if $method eq 'DESTROY';
+
+    $self->{ CONTEXT }->$method(@_);
 }
 
 
@@ -2063,7 +2067,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 VERSION
 
-This is version 0.22 of the Template Toolkit.  
+This is version 0.23 of the Template Toolkit.  
 
 It is a stable beta release version preceding the imminent release 
 of version 1.0.

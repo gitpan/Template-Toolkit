@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/binop.t
 #
@@ -16,7 +16,7 @@
 # TODO: this should test the binary comparison and boolean operators
 #    more thoroughly, including parenthesised sub-expressions, etc.
 #
-# $Id: binop.t,v 1.3 1999/08/01 13:43:15 abw Exp $
+# $Id: binop.t,v 1.4 1999/08/10 11:09:10 abw Exp $
 #
 #========================================================================
 

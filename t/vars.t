@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/vars.t
 #
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vars.t,v 1.3 1999/08/01 13:43:22 abw Exp $
+# $Id: vars.t,v 1.4 1999/08/10 11:09:19 abw Exp $
 #
 #========================================================================
 
@@ -49,6 +49,7 @@ my $params = {
     },
     'l' => $l,
     "letter$a" => "'$a'",
+    'count' => 1,
 };
 
 my $tproc = Template->new({ INTERPOLATE => 1 });
@@ -84,4 +85,45 @@ golf golf hotel golf hotel.gif
 -- expect --
 juliet juliet kilo juliet kilo.gif
 
+-- test --
+[% inc %]
+[% inc %]
+[% inc(count) %]
+[% count %]
+[% count = inc(count); count %]
+[% count %]
+-- expect --
+1
+1
+2
+1
+2
+2
+
+-- test --
+[% count %]
+[% WHILE (count = inc(count)) -%]
+$count
+[% BREAK IF count > 10 -%]
+[% END %]
+-- expect --
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+
+-- test --
+[% inc = 100 -%]
+[% inc %]
+[% inc(inc) %]
+-- expect --
+100
+100
 

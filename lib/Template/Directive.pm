@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.12 1999/08/01 13:43:12 abw Exp $
+# $Id: Directive.pm,v 1.14 1999/08/10 11:09:07 abw Exp $
 #
 #============================================================================
  
@@ -33,7 +33,7 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 1;
 
 
@@ -41,24 +41,22 @@ $DEBUG = 1;
 #                      -----  CONFIGURATION -----
 #========================================================================
 
-# define a list of directives and which parameters they accept
-my @param_list = (
-    [ qw( INCLUDE USE           ) ] => [ qw( IDENT PARAMS NAMESPACE   ) ],
-    [ qw( IF                    ) ] => [ qw( EXPR BLOCK ELSE          ) ],
-    [ qw( FOR                   ) ] => [ qw( LIST BLOCK VARNAME       ) ],
-    [ qw( BLOCK                 ) ] => [ qw( CONTENT                  ) ],
-    [ qw( TEXT DEBUG            ) ] => [ qw( TEXT                     ) ],
-    [ qw( CATCH                 ) ] => [ qw( ERRTYPE BLOCK            ) ],
-    [ qw( THROW                 ) ] => [ qw( ERRTYPE EXPR             ) ],
-    [ qw( ERROR                 ) ] => [ qw( EXPR                     ) ],
-    [ qw( RETURN                ) ] => [ qw( RETVAL                   ) ],
+# table defining parameters for each directive type
+my %param_tbl = (
+    'INCLUDE'   => [ qw( IDENT PARAMS             ) ],
+    'PROCESS'   => [ qw( IDENT PARAMS             ) ],
+    'USE'       => [ qw( IDENT PARAMS NAMESPACE   ) ],
+    'IF'        => [ qw( EXPR BLOCK ELSE          ) ],
+    'FOR'       => [ qw( LIST BLOCK VARNAME       ) ],
+    'WHILE'     => [ qw( EXPR BLOCK               ) ],
+    'FILTER'    => [ qw( NAME PARAMS BLOCK ALIAS  ) ],
+    'BLOCK'     => [ qw( CONTENT                  ) ],
+    'TEXT'      => [ qw( TEXT                     ) ],
+    'CATCH'     => [ qw( ERRTYPE BLOCK            ) ],
+    'THROW'     => [ qw( ERRTYPE EXPR             ) ],
+    'ERROR'     => [ qw( EXPR                     ) ],
+    'RETURN'    => [ qw( RETVAL                   ) ],
 );
-
-# construct a lookup table of directive parameters
-my %param_tbl;
-while (my ($d, $p) = splice(@param_list, 0, 2)) {
-   @param_tbl{ @$d } = ($p) x @$d;
-}
 
 my $PKGVAR = 'PARAMS';
 
@@ -202,17 +200,23 @@ sub _report {
 
 
 #========================================================================
-#               -----  Template::Directive::Include  -----
+#                    --- DIRECTIVE SUB-CLASSES ---
 #========================================================================
+
+#------------------------------------------------------------------------
+# INCLUDE			    [% INCLUDE ident params %]
+#
+# The INCLUDE directive calls on the context process() method to 
+# process another template file or block.  Parameters may be defined
+# which get passed and used to update a local copy of the stash.
+# Variables passed to a INCLUDE'd template, or set within such a 
+# template are local to that template and do not affect variables
+# in the caller's namespace.
+#------------------------------------------------------------------------
  
 package Template::Directive::Include;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
-
-
-#------------------------------------------------------------------------
-# process($context)  ->  %% INCLUDE ident params %%
-#------------------------------------------------------------------------
 
 sub process {
     my ($self, $context) = @_;
@@ -228,32 +232,62 @@ sub process {
 			   'Undefined INCLUDE file/block name')
 	unless defined $ident && length $ident;
 
-    # clone stash and run PARAMS oplist to update vars
-    $context->{ STASH } = $context->{ STASH }->clone();
-    $context->_runop($self->{ PARAMS });
-    $error = $context->_process($ident);
-    $context->{ STASH } = $context->{ STASH }->declone($self->{ NAMESPACE });
-
-    return $error;
+    $context->process($ident, $self->{ PARAMS });
 }
 
 
 
-#========================================================================
-#                 -----  Template::Directive::If  -----
-#========================================================================
+#------------------------------------------------------------------------
+# PROCESS			    [% PROCESS ident params %]
+#
+# The PROCESS directive is similar to INCLUDE except that variables are
+# not localised.  This allows variables defined in a sub-template to
+# persist in the caller's namespace.  This is ideal for putting config
+# values in a separate file which can then be PROCESS'd.  The context's
+# 'private' _process() method is called, bypassing the 'public' process()
+# method which localises variables.  This is OK.  The Context object 
+# treats us as a friend and grants this behaviour.
+#------------------------------------------------------------------------
  
-package Template::Directive::If;
+package Template::Directive::Process;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
 
+sub process {
+    my ($self, $context) = @_;
+    my ($ident, $error);
+
+    # the file/block identifier might be a variable reference so must
+    # first be evaluated in context
+    ($ident, $error) = $context->_runop($self->{ IDENT });
+    return $error					    ## RETURN ##
+	if $error;
+
+    return $context->throw(Template::Constants::ERROR_FILE, 
+			   'Undefined PROCESS file/block name')
+	unless defined $ident && length $ident;
+
+    # call _runop() to update any variables
+    $context->_runop($self->{ PARAMS });
+
+    # call 'private' _process() method to bypass variable localisation
+    # inherent in 'public' process() method
+    $context->_process($ident);
+}
+
+
+
 #------------------------------------------------------------------------
-# process($context)  ->  %% IF expr %%
+# IF				    [% IF expr %]
 #
 # Iterates through the expression stored in $self->{ EXPR } and calls the 
 # process() method of the $self->{ BLOCK } if it evaluates true.  If it 
 # evaluates false, any block referenced in $self->{ ELSE } is processed.
 #------------------------------------------------------------------------
+ 
+package Template::Directive::If;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
 
 sub process {
     my ($self, $context) = @_;
@@ -280,18 +314,57 @@ sub process {
 
 
 
-#========================================================================
-#                 -----  Template::Directive::For  -----
-#========================================================================
+#------------------------------------------------------------------------
+# WHILE				    [% WHILE expr %]
+#
+# Iterates through the following block while the expression evaluates
+# true.
+#------------------------------------------------------------------------
+ 
+package Template::Directive::While;
+use vars qw( @ISA $MAXITER );
+@ISA = qw( Template::Directive );
+$MAXITER = 1_000;
+
+sub process {
+    my ($self, $context) = @_;
+    my $expr = $self->{ EXPR };
+    my ($true, $error);
+
+    $error = Template::Constants::STATUS_OK;
+
+    # this is a hack to prevent runaways
+    my $failsafe = $MAXITER + 1;
+    for (;--$failsafe;) {
+	# test expression
+	($true, $error) = $context->_runop($self->{ EXPR });
+	return $error if $error;
+	last unless $true;
+
+	# run block
+	$error = $self->{ BLOCK }->process($context);
+	last if $error;
+    }
+    $context->error("Runaway WHILE loop terminated (> $MAXITER iterations)")
+	unless $failsafe;
+    
+    # STATUS_DONE indicates the iterator completed succesfully
+    return ! $error || $error == Template::Constants::STATUS_DONE
+	? Template::Constants::STATUS_OK
+	: $error;
+}
+
+
+
+#------------------------------------------------------------------------
+# FOR				    [% FOREACH varname IN list %]
+#
+# Iterates through a list of expressions.
+#------------------------------------------------------------------------
  
 package Template::Directive::For;
 use vars qw( @ISA );
 @ISA = qw( Template::Directive );
-
-
-#------------------------------------------------------------------------
-# process($context)  ->  %% FOR [ident in] target %%
-#------------------------------------------------------------------------
 
 sub process {
     my ($self, $context) = @_;
@@ -355,6 +428,60 @@ sub process {
     return $error == Template::Constants::STATUS_DONE
 	? Template::Constants::STATUS_OK
 	: $error;
+}
+
+
+
+#========================================================================
+#                 -----  Template::Directive::Filter  -----
+#========================================================================
+ 
+package Template::Directive::Filter;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
+
+
+#------------------------------------------------------------------------
+# process($context)  ->  %% FILTER alias = name(params) %%
+#------------------------------------------------------------------------
+
+#name params block alias
+
+sub process {
+    my ($self, $context) = @_;
+    my ($name, $params, $block, $alias) 
+	= @$self{ qw( NAME PARAMS BLOCK ALIAS ) };
+    my ($filter, $handler, $input, $output, $error);
+
+    # evaluate PARAMS
+    ($params, $error) = $context->_runop($params);
+
+    # ask the context for the requested filter
+    ($filter, $error) = $context->use_filter($name, $params, $alias)
+	unless $error;
+
+    return $error					    ## RETURN ##
+	if $error;
+
+    # install output handler to capture output, saving existing handler
+    $input = '';
+    $handler = 
+	$context->redirect(Template::Constants::TEMPLATE_OUTPUT, \$input);
+
+    # process contents of FILTER block
+    $error = $block->process($context);
+
+    # restore previous output handler
+    $context->redirect(Template::Constants::TEMPLATE_OUTPUT, $handler);
+
+    # filter output generated from processing block
+    ($output, $error) = &$filter($input)
+	unless $error;
+
+    # output the filtered text, or the original text if the filter failed
+    $context->output($error ? $input : $output);
+
+    return $error || Template::Constants::STATUS_OK;
 }
 
 
@@ -648,7 +775,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.12 $
+$Revision: 1.14 $
 
 =head1 COPYRIGHT
 

@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugin.pm,v 1.4 1999/07/28 14:26:22 abw Exp $
+# $Id: Plugin.pm,v 1.5 1999/08/09 11:47:35 abw Exp $
 #
 #============================================================================
 
@@ -31,12 +31,13 @@ use strict;
 use vars qw( $VERSION $DEBUG $PLUGIN_NAMES $ERROR );
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 # this maps standard library plugins to lower case names for convenience
 $PLUGIN_NAMES = {
     'format' => 'Format',
+    'filter' => 'Filter',
     'cgi'    => 'CGI',
     'dbi'    => 'DBI',
 };
@@ -89,6 +90,16 @@ sub new {
 }
 
 
+sub fail {
+    my $class = shift;
+    $ERROR = shift;
+    return undef;
+}
+
+sub error {
+    $ERROR;
+}
+
 
 #========================================================================
 #                   -----  PUBLIC OBJECT METHODS -----
@@ -136,7 +147,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.4 $
+$Revision: 1.5 $
 
 =head1 COPYRIGHT
 

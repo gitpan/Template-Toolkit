@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/prechomp.t
 #
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: prechomp.t,v 1.3 1999/08/01 13:43:19 abw Exp $
+# $Id: prechomp.t,v 1.4 1999/08/10 11:09:17 abw Exp $
 # 
 #========================================================================
 

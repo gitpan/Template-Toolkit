@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/multi.t
 #
@@ -15,7 +15,7 @@
 # TODO: this should test the binary comparison and boolean operators
 #    more thoroughly, including parenthesised sub-expressions, etc.
 #
-# $Id: multi.t,v 1.1 1999/08/04 10:41:05 abw Exp $
+# $Id: multi.t,v 1.2 1999/08/10 11:09:16 abw Exp $
 #
 #========================================================================
 

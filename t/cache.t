@@ -1,4 +1,4 @@
-#============================================================= -*-Perl-*-
+#============================================================= -*-perl-*-
 #
 # t/cache.t
 #
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: cache.t,v 1.4 1999/08/01 13:43:16 abw Exp $
+# $Id: cache.t,v 1.6 1999/08/10 11:09:11 abw Exp $
 #
 #========================================================================
 
@@ -45,8 +45,23 @@ my $tproc = Template->new({
 })
     || die "Failed to create Template\n";
 
+extra_tests(3);			# defined below
+
 test_expect(\*DATA, $tproc);
 
+
+#-- extra tests --
+
+# test an OS object gets created implicitly and explicitly
+my $pathtest = Template::Cache->new();
+ok( $pathtest->{ OS } );
+
+$pathtest = Template::Cache->new({
+    OS => Template::OS->new('win')
+});
+
+ok( $pathtest );
+ok( $pathtest->{ PATH_SEP } eq '\\' );
 
 __DATA__
 [% INCLUDE 'foo' %]

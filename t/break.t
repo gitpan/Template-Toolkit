@@ -1,8 +1,8 @@
 #============================================================= -*-perl-*-
 #
-# t/stop.t
+# t/break.t
 #
-# Template script testing the STOP directive.
+# Template script testing the BREAK directive.
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stop.t,v 1.6 1999/08/10 11:09:18 abw Exp $
+# $Id: break.t,v 1.1 1999/08/10 11:09:11 abw Exp $
 #
 #========================================================================
 
@@ -25,22 +25,20 @@ $^W = 1;
 
 $DEBUG = 0;
 
-test_expect(\*DATA);
+test_expect(\*DATA, { POST_CHOMP => 1 });
 
 __DATA__
-line 1
-[% INCLUDE 'first_block' %]
-line 2
-[% RETURN %]
-
-[% BLOCK first_block -%]
-first block line 1
-[% STOP %]
-first block line 2
-[% END %]
+-- test --
+[% FOREACH number = [ 1 2 3 4 5 ] %]
+[% BREAK IF number > 3 %]
+[% number %] [% END +%]
+The end
 -- expect --
-line 1
-first block line 1
+1 2 3 
+The end
+
+
+
 
 
 

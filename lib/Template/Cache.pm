@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Cache.pm,v 1.3 1999/08/01 13:43:11 abw Exp $
+# $Id: Cache.pm,v 1.5 1999/08/10 11:09:06 abw Exp $
 #
 #============================================================================
 
@@ -30,12 +30,11 @@ require 5.004;
 use strict;
 use Template::Constants qw( :error :cache );
 use Template::Exception;
-use vars qw( $VERSION $DIRSEP $PATHSEP $DEBUG );
+use vars qw( $VERSION $PATHSEP $DEBUG );
 
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
-$DIRSEP   = '/';		# default directory separator
-$PATHSEP  = ':';		# default path separator
+$VERSION  = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+$PATHSEP  = '/';      # default path separator converted to OS equivalent
 $DEBUG    = 0;
 
 
@@ -51,8 +50,9 @@ $DEBUG    = 0;
 # A reference to a hash array may be passed containing configuration
 # items:
 #    INCLUDE_PATH   where to look for files (e.g. '/tmp:/usr/local/templates');
-#    PATH_SEPARATOR path separator in above (default: ':')
-#    DIR_SEPARATOR  directory separator (default: '/')
+#    OS             Template::OS object containing filesys specifics
+#    PATH_SEP       path separator to  override O/S value
+#    PATH_SPLIT     characters to delimit paths
 #    PARSER         reference to parser for compiling (default: auto-created)
 #
 # Returns a reference to a newly created Template::Cache object.
@@ -62,20 +62,21 @@ sub new {
     my $class  = shift;
     my $params = shift || { };
     my ($delim, $p, $o, @paths);
-    my ($dirsep, $pathsep, $path) = 
-	@$params{ qw( DIR_SEPARATOR PATH_SEPARATOR INCLUDE_PATH ) };
+    my ($os, $pathsep, $pathsplit, $path) = 
+	@$params{ qw( OS PATH_SEP PATH_SPLIT INCLUDE_PATH ) };
 
     local $" = ', ';	# used for debugging
 
-    $dirsep  ||= $DIRSEP;
-    $pathsep ||= $PATHSEP;
-    $path    ||= '.';
-    $delim     = quotemeta($pathsep);
+    $os        ||= do { require Template::OS; Template::OS->new() };
+    $pathsep   ||= $os->{'pathsep'};
+    $pathsplit ||= $os->{'pathsplit'};
+    $path      ||= '.';
+    $delim       = quotemeta($pathsplit);
 
 
     # INCLUDE_PATH can be specified as a single string or an array; in 
-    # the former case, the string may contain PATHSEP characters (':' by
-    # default) to separate two or more directories.  The array specification
+    # the former case, the string may contain PATH_SPLIT characters
+    # to separate two or more directories.  The array specification
     # can be used to specify multiple directories that have _different_ 
     # caching strategies.  The elements in the array should consist of 
     # directory strings in the format described above with a second, optional
@@ -106,9 +107,10 @@ sub new {
 	unless defined $params->{ CACHE };
 
     bless {
-	%$params,		  # user-supplied params
+#	%$params,		  # user-supplied params
+	OS         => $os,        # OS specifics
 	CONFIG     => $params,	  # pass this onto Parser constructor
-	DIRSEP     => $dirsep,    # default directory separator
+	PATH_SEP   => $pathsep,   # path separator
 	PATH       => \@paths,	  # where to look for files
 	COMPILED   => { },	  # compiled template cache
 	ERROR      => '',	  # error
@@ -245,30 +247,31 @@ sub _load {
     }
     # ...otherwise, it's a filename so we look for it in $self->{ PATH }
     else {
-	my ($path, $dirsep) = @$self{ qw( PATH DIRSEP ) };
+	my ($path, $pathsep) = @$self{ qw( PATH PATH_SEP ) };
 	my ($p, $o, $dir, $filepath);
 	local *FH;
-	local $" = ', ';    # used for debugging
 
 	# if the internal directory separator isn't the default, then we 
 	# convert filenames to have the correct separator; this allows 
 	# '/foo/bar/baz' to be converted to '\foo\bar\baz' for certain
 	# broken platforms
-	unless ($dirsep eq $DIRSEP) {
-	    $qmsep = quotemeta($DIRSEP);
-	    $template =~ s/$qmsep/$dirsep/g;
+	unless ($pathsep eq $PATHSEP) {
+	    $qmsep = quotemeta($PATHSEP);
+	    $template =~ s/$qmsep/$pathsep/g;
 	}
 
 	OPEN: {
-	    # check first for an absolute pathname (e.g. starts '/')
-	    $qmsep = quotemeta( $dirsep );
-	    if ($template =~ /^($qmsep|\.)/) {
-		last OPEN if -f $template and open(FH, $template);
-
-		# fail immediately if the file wasn't opened
-		return					    ## RETURN ##
-		    $self->_error(ERROR_FILE, "$template: not found");
-	    }
+# shouldn't open absolute file paths - removed by abw 199-08-07
+#           # check first for an absolute pathname (e.g. starts '/')
+#	    $qmsep = quotemeta( $pathsep );
+#
+#	    if ($template =~ /^($qmsep|\.)/) {
+#		last OPEN if -f $template and open(FH, $template);
+#
+#		# fail immediately if the file wasn't opened
+#		return					    ## RETURN ##
+#		    $self->_error(ERROR_FILE, "$template: not found");
+#	    }
 
 	    # look for file in each PATH element : [ \@dirs, \%opts ]
 	    foreach (@$path) {
@@ -280,7 +283,7 @@ sub _load {
 		    if defined $o;
 
 		foreach $dir (@$p) {
-		    $filepath = "${dir}${dirsep}${template}";
+		    $filepath = "${dir}${pathsep}${template}";
 
 		    if (-f $filepath and open(FH, $filepath)) {
 			# store file name and cache opts
@@ -642,7 +645,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.3 $
+$Revision: 1.5 $
 
 =head1 COPYRIGHT
 

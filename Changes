@@ -10,9 +10,69 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Changes,v 1.28 1999/08/04 20:37:43 abw Exp $
+# $Id: Changes,v 1.33 1999/08/10 12:12:51 abw Exp $
 #
 #============================================================================
+
+#------------------------------------------------------------------------
+# Version 0.23  1999/08/10 12:12:07
+#------------------------------------------------------------------------
+
+* Interim (non-public) release.  This will become the next public 
+  beta release once the documentation has been updated to reflect 
+  the following changes.  For now, the best source of inspiration for 
+  usage of new features can be found in the relevant test scripts.
+
+* Added PROCESS directive which acts like INCLUDE but doesn't localise
+  variables.  This allows configuration files, etc., to update non-local
+  variables.  Added t/process.t to test suite.
+
+* Added IMPORT directive to copy all members of a hash into the main 
+  namespace.  Added t/import.t to test suite.
+
+* Added WHILE directive to repeat a loop while an expression evaluates
+  true.  The $Template::Directive::While::MAXITER variable defines an
+  upper iteration limit and kills the loop with an error if it is exceeded.
+  By default this value is set to 1000.  Added t/while.t to test suite.
+
+* Added BREAK directive to prematurely exit FOREACH or WHILE loop.  Added 
+  t/break.t to test suite and updated t/while.t and t/foreach.t.
+
+* Added TAGS directive to allow per-file switching of the tokens that mark
+  the start and end of directives.  Added t/tags.t to test suite
+
+* Added FILTER directive to allow post-processing of output.  Filters
+  are defined in the Template::Plugin::Filter module.  The Context 
+  use_filter() method simply calls use_plugin(), requesting the 'filter'
+  plugin module, providing he filter name and any additional parameters
+  specified.  Thus "FILTER foo(bar)" is roughly equivalent to 
+  "USE filter('foo', bar)".  Added t/filter.t to test suite.
+
+* Changed Context to allow multiple PLUGIN_BASE packages to be defined.
+
+* Added Template::OS module to autodetect operating system and return
+  specific values such as path separator.  The Context creates an OS 
+  object and stores it internally.
+
+* Added OS option to Template.pm to specify operating system to override
+  the autodetect.
+
+* Changed old DIR_SEPARATOR option to PATH_SEP and old PATH_SEPARATOR to 
+  PATH_SPLIT.  These are defaulted based on OS if not specified.
+
+* Removed some old code which allowed an absolute filename to be specified
+  and opened by the cache.  This isn't a bad thing, per se, but needs
+  to be optional and disabled by default.  
+
+* Added an AUTOLOAD method to Template.pm to delegate to Context object.
+  Template redirect() removed, given that it is now accessible via 
+  AUTOLOAD.
+
+* Added inc() and dec() root functions to the Context object which get 
+  evaluated to simple increment/decrement subs when called as root 
+  variables and not otherwise defined.  This may be extended in the 
+  future to provide default object/package whose methods/subs should be 
+  called when root variables are requested but not defined.
 
 #------------------------------------------------------------------------
 # Version 0.22  1999/08/04 20:37:43
@@ -282,3 +342,7 @@
 #------------------------------------------------------------------------
 
 * First public alpha release
+
+
+
+

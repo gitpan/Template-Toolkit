@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm.skel,v 1.9 1999/08/01 13:43:15 abw Exp $
+# $Id: Grammar.pm.skel,v 1.11 1999/08/10 11:09:10 abw Exp $
 #
 #========================================================================
 
@@ -38,7 +38,7 @@ use vars qw( $VERSION );
 
 use Template::Constants qw( :ops );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, $LEXTABLE, $RULES, $STATES);
 
@@ -59,8 +59,10 @@ sub new {
 #========================================================================
 
 @RESERVED = qw( 
-	GET SET DEFAULT IF UNLESS ELSE ELSIF FOR INCLUDE USE
-	THROW CATCH ERROR RETURN STOP BLOCK END AND OR NOT
+	GET SET DEFAULT IMPORT INCLUDE PROCESS 
+	IF UNLESS ELSE ELSIF FOR WHILE USE FILTER 
+	THROW CATCH ERROR RETURN STOP BREAK 
+	BLOCK END AND OR NOT
     );
 
 
@@ -79,7 +81,7 @@ $LEXTABLE = {
     ';'       => 'SEPARATOR',
     '='       => 'ASSIGN',
     '=>'      => 'ASSIGN',
-#    '/'       => 'END',
+#    '/'      => 'END',
     ','       => 'COMMA',
     'and'     => 'AND',		# explicitly specified so that qw( and or
     'or'      => 'OR',		# not ) can always be used in lower case, 
