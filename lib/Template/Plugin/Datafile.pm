@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Datafile.pm,v 1.1 1999/10/07 13:08:51 abw Exp $
+# $Id: Datafile.pm,v 1.2 2000/03/28 14:17:47 abw Exp $
 #
 #============================================================================
 
@@ -29,10 +29,9 @@ require 5.004;
 
 use strict;
 use vars qw( @ISA $VERSION );
-use Template::Plugin;
+use base qw( Template::Plugin );
 
-@ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
 
 
 sub new {
@@ -76,6 +75,10 @@ sub new {
 
     bless $self, $class;
 }	
+
+
+sub AUTOLOAD {
+}
 
 
 1;
@@ -145,7 +148,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.1 $
+$Revision: 1.2 $
 
 =head1 COPYRIGHT
 

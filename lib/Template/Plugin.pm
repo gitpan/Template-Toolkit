@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugin.pm,v 1.11 2000/03/20 08:02:26 abw Exp $
+# $Id: Plugin.pm,v 1.12 2000/03/28 14:17:47 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use strict;
 use vars qw( $VERSION $DEBUG $PLUGIN_NAMES $JOINT $ERROR $AUTOLOAD );
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 # this maps standard library plugins to lower case names for convenience
@@ -93,7 +93,7 @@ sub new {
 	# $delclass contains a reference to a delegate object
 	$delegate = $delclass;
     }
-    else {
+    elsif ($delclass) {
 	# delclass is the name of a module to load and instantiate
 	($delmod = $delclass) =~ s|::|/|g;
 
@@ -157,6 +157,7 @@ sub AUTOLOAD {
 
     $method =~ s/.*:://;
     return if $method eq 'DESTROY';
+
     $delegate->$method(@_);
 }
 
@@ -395,7 +396,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.11 $
+$Revision: 1.12 $
 
 =head1 COPYRIGHT
 

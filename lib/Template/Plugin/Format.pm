@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Format.pm,v 1.3 2000/01/14 20:12:28 abw Exp $
+# $Id: Format.pm,v 1.4 2000/03/28 14:17:47 abw Exp $
 #
 #============================================================================
 
@@ -28,11 +28,10 @@ require 5.004;
 
 use strict;
 use vars qw( @ISA $VERSION );
-use Template::Plugin;
+use base qw( Template::Plugin );
 use CGI;
 
-@ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
 
 
 sub new {
@@ -78,7 +77,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.3 $
+$Revision: 1.4 $
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: RSS.pm,v 1.5 2000/03/03 11:07:16 abw Exp $
+# $Id: RSS.pm,v 1.6 2000/03/28 15:52:51 abw Exp $
 #
 #============================================================================
 
@@ -28,10 +28,14 @@ require 5.004;
 
 use strict;
 use vars qw( @ISA $VERSION );
-use base qw( Template::Plugin );
+#use base qw( Template::Plugin );
 use XML::RSS;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
+
+sub load {
+    return $_[0];
+}
 
 sub new {
     my ($class, $context, $filename) = @_;
@@ -155,7 +159,7 @@ Schwartz <merlyn@stonehenge.com>.
 
 =head1 REVISION
 
-$Revision: 1.5 $
+$Revision: 1.6 $
 
 =head1 COPYRIGHT
 
