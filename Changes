@@ -3,16 +3,42 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for Template::* modules.
+#   Revision history for Template Toolkit.
 #
 # AUTHOR
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Changes,v 1.33 1999/08/10 12:12:51 abw Exp $
+# $Id: Changes,v 1.37 1999/08/12 22:04:26 abw Exp $
 #
 #============================================================================
+
+#------------------------------------------------------------------------
+# Version 0.24  1999/08/12 22:04:26
+#------------------------------------------------------------------------
+
+* Second public beta release.
+
+* Improved FILTERS configuration option which now allows filter 
+  constructors (factories) to be defined.  These take responsibility
+  for creating filter instances as they are required.
+
+* Documented WHILE, PROCESS, IMPORT, TAGS, BREAK and FILTER
+  directives.  Re-wrote the overview and summary sections, moved some
+  bits around, generally improved various other parts of the docs.
+  The Template.pod and README file are now constructed automatically 
+  by the 'make dist' from source in doc/src, using bin/mkdoc.
+
+* Removed operating-system dependant code which was detecting and
+  storing path separators.  I realised that if everyone uses '/' as
+  the path separator, then Perl will do the conversion automagically.  
+  Much easier.  This also means that the OS, PATH_SEP and PATH_SPLIT 
+  options are no longer required.  
+
+* Deleted old and boring 'examples' directory.
+
+* Deleted obsolete code from Template::Debug.pm
 
 #------------------------------------------------------------------------
 # Version 0.23  1999/08/10 12:12:07

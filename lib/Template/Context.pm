@@ -16,10 +16,10 @@
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
-#
+# 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.19 1999/08/10 11:09:06 abw Exp $
+# $Id: Context.pm,v 1.22 1999/08/12 21:53:47 abw Exp $
 #
 #============================================================================
 
@@ -33,10 +33,9 @@ use Template::Constants qw( :status :error :ops );
 use Template::Utils qw( :subs );
 use Template::Cache;
 use Template::Stash;
-use Template::OS;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -74,17 +73,8 @@ my $binop  = {
 sub new {
     my $class  = shift;
     my $params = shift || { };
-    my ($cache, $stash, $os, $pbase) = 
-	@$params{ qw( CACHE STASH OS PLUGIN_BASE ) };
-
-    # create an OS object, using provided parameter, autodetecting 
-    # if $os is undefined, and defaulting to 'unix' on error.
-    $os = Template::OS->new($os) || do {
-	warn "Invalid operating system, defaulting to unix: ", 
-	    $os || '', "\n";
-	Template::OS->new('unix');
-    };
-    $params->{ OS } = $os;
+    my ($cache, $stash, $pbase) = 
+	@$params{ qw( CACHE STASH PLUGIN_BASE ) };
 
     # stash is constructed with any PRE_DEFINE variables
     $stash ||= Template::Stash->new($params->{ PRE_DEFINE });
@@ -100,15 +90,15 @@ sub new {
 	     : [ $pbase || 'Template::Plugin'];
 
     my $self = bless {
-	OS          => $os,
-	STASH       => $stash,
-	CACHE       => $cache,
-	PLUGIN_BASE => $pbase,
-	PLUGINS     => $params->{ PLUGINS } || { },
-	FILTERS     => $params->{ FILTERS } || { },
-	CATCH       => $params->{ CATCH } || { },
-	OUTPUT      => output_handler($params->{ OUTPUT }),
-	ERROR       => output_handler($params->{ ERROR } || \*STDERR),
+	STASH        => $stash,
+	CACHE        => $cache,
+	PLUGIN_BASE  => $pbase,
+	PLUGINS      => $params->{ PLUGINS } || { },
+	CATCH        => $params->{ CATCH }   || { },
+	FILTERS      => $params->{ FILTERS } || { },
+        FILTER_CACHE => { },
+	OUTPUT       => output_handler($params->{ OUTPUT }),
+	ERROR        => output_handler($params->{ ERROR } || \*STDERR),
     }, $class;
 
     $self;
@@ -346,29 +336,43 @@ sub use_plugin {
 
 sub use_filter {
     my ($self, $name, $params, $alias) = @_;
-    my ($filter, $args, $error);
+    my ($filter, $factory, $args, $error);
     
     # use any cached version of the filter if no params provided
-    $filter = $self->{ FILTERS }->{ $name }
+    $filter = $self->{ FILTER_CACHE }->{ $name }
 	unless ($params);
 
     unless ($filter) {
-	# prepare arguments for passing to the 'filter' plugin
+	# prepare filter arguments
 	$args = $params || [];
 	unshift(@$args, $name);
 
-	# request filter plugin to build filter
-	($filter, $error) = $self->use_plugin('filter', $args);
+	# the filter may be user-defined in FILTERS, otherwise we call
+	# use_plugin() to load the 'filter' plugin to create a filter
+
+	if ($factory = $self->{ FILTERS }->{ $name }) {
+	    return (undef, Template::Exception->new(ERROR_UNDEF,
+		       "invalid FILTER factory for '$name' (not a CODE ref)"))
+		unless ref($factory) eq 'CODE';
+
+	    ($filter, $error) = &$factory(@$args)
+	}
+	else {
+	    ($filter, $error) = $self->use_plugin('filter', $args);
+	}
 	return (undef, $error)
 	    if $error;
     }
+    return (undef, Template::Exception->new(ERROR_UNDEF,
+				    "invalid FILTER '$name' (not a CODE ref)"))
+	unless ref($filter) eq 'CODE';
 
     # alias defaults to name iff no parameters were supplied
     $alias = $name
 	unless $params || defined $alias;
 
     # cache FILTER if alias is valid
-    $self->{ FILTERS }->{ $alias } = $filter
+    $self->{ FILTER_CACHE }->{ $alias } = $filter
 	if $alias;
 
     return ($filter, Template::Constants::STATUS_OK);
@@ -445,7 +449,6 @@ sub error {
 sub DESTROY {
     my $self = shift;
     undef $self->{ STASH };
-#    print "destroying $self\n";
 }
 
 
@@ -917,18 +920,16 @@ Template::Context - object class representing a runtime context in which templat
 
     $context->output($text);
     $context->error($text);
-    $context->throw($exception);   
+    $context->redirect($what, $where);
 
-    ($value, $error) = $context->runop(\@opcodes);
+    $context->throw($type, $info);
+    $context->catch($type, $handler);
 
-=head1 DOCUMENTATION NOTES
+    ($plugin, $error) = $context->use_plugin($name, \@params);
+    ($filter, $error) = $context->use_filter($name, \@params, $alias);
 
-This documentation describes the Template::Context module and is aimed at 
-people who wish to understand, extend or build template processing 
-applications with the Template Toolkit.
-
-For a general overview and information of how to use the modules, write
-and render templates, see L<Template-Toolkit>.
+    # cleanup
+    $context->old();
 
 =head1 DESCRIPTION
 
@@ -953,6 +954,9 @@ a L<Template::Parser|Template::Parser> object.  A cache may be shared
 among multiple context objects allowing common templates documents to
 be compile only once and rendered many times in different contexts.
 
+In addition, the context provides facilities for loading plugins and 
+filter.
+
 The context object provides template output and error handling methods 
 which can output/delegate to a user-supplied file handle, text string or
 sub-routine.  These handlers are defined using the redirect() method.
@@ -971,34 +975,7 @@ Valid configuration values are:
 
 =item CATCH
 
-The CATCH option may be used to specify a hash array of error handlers
-which are used when a run time error condition occurs.  Each key in 
-the hash represents an error type.  The Template Toolkit generates the 
-following error types which have corresponding ERROR_XXX constants.
-
-   undef    - GET on an undefined variable 
-   file     - INCLUDE a file that can't be read
-   parse    - INCLUDE a file that can't be parsed (bad syntwx)
-
-User code may generate further errors of any types and custom handlers
-may be provided to trap them.  A handler, defined as the related value
-in the CATCH configuration hash may be one of the STATUS_XXXX constants
-defined in Template::Constants (e.g. STATUS_OK, STATUS_STOP) or a code
-reference which is called when an error occurs.  The handler is passed
-a reference to the context ($self) and the error type and info.  The 
-return value should be one of the aforementioned constants.
-
-    use Template qw( :error );
-
-    my $template = Template->new({
-	CATCH => {
-	    ERROR_UNDEF => STATUS_OK,
-	    ERROR_FILE  => sub { my ($context, $type, $info) = @_;
-				 $context->output("FILE ERROR: $info");
-				 return STATUS_OK; 
-			   },
-	}
-    });
+The CATCH option may be used to specify a hash array of error handlers.
 
 =item STASH
     
@@ -1022,35 +999,7 @@ if this is not provided.
 
 =back
 
-Examples:
-
-    use Template::Context;
-    use Template::Stash;
-    use Template::Cache;
-
-    my $stash = Template::Stash->new();
-    my $cache = Template::Cache->new();
-
-    # create own stash and cache
-    my $context1 = Template::Context->new();
-
-    # own cache, shared stash
-    my $context2 = Template::Context->new({ 
-	STASH => $stash 
-    });
-
-    # shared cached and stash
-    my $context3 = Template::Context->new({ 
-	STASH => $stash,
-	CACHE => $cache,
-    });
-
-    # shared cached, own stash
-    my $context4 = Template::Context->new({ 
-	CACHE => $cache,
-    });
-
-=head2 process($template, \%params, $alias)
+=head2 process($template, \%params)
 
 The process() method is called to render a template document within the
 current context.  The first parameter should name the template document
@@ -1113,13 +1062,26 @@ the CATCH hash array to see if a handler has been defined for this
 kind of error.  If it has, the CATCH value is returned or code 
 reference is run and it's value returned.
 
+=head2 catch($type, $handler)
+
+The catch() method is used to install an exception handler for a 
+specific type of error.
+
+=head2 use_plugin($name, \@params)
+
+Called to load, instantiate and return an instance of a plugin object.
+
+=head2 use_filter($name, \@params, $alias)
+
+Called to load, instaniate and return a filter sub-routine.
+
 =head1 AUTHOR
 
 Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.19 $
+$Revision: 1.22 $
 
 =head1 COPYRIGHT
 
@@ -1131,7 +1093,7 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template-Toolkit|Template-Toolkit>
+L<Template|Template>
 
 =cut
 

@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Utils.pm,v 1.3 1999/08/01 13:43:15 abw Exp $
+# $Id: Utils.pm,v 1.4 1999/08/12 21:53:47 abw Exp $
 #
 #============================================================================
 
@@ -30,7 +30,7 @@ use strict;
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
 
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
 
 
 
@@ -153,15 +153,6 @@ Template::Utils - Various utility functions for the Template Tookit.
     my $handler = output_handler($target);
     my $target  = update_hash(\%target, \%params, \%defaults)
 
-=head1 DOCUMENTATION NOTES
-
-This documentation describes the Template::Utils module and is aimed at 
-people who wish to understand, extend or build template processing 
-applications with the Template Toolkit.
-
-For a general overview and information of how to use the modules, write
-and render templates, see L<Template-Toolkit>.
-
 =head1 DESCRIPTION
 
 The Template::Utils module defines a number of general sub-routines used
@@ -183,9 +174,6 @@ a target string (a closure which appends output to the string is returned).
 
 The closure returned will print all parameters passed to it, as per 
 print().
-
-A further modification to accept a filename which is opened for writing
-is also planned.
 
     open(ERRLOG, "> $errorlog")
 	|| die "$errorlog: $!\n";
@@ -216,7 +204,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.3 $
+$Revision: 1.4 $
 
 =head1 COPYRIGHT
 
@@ -228,7 +216,9 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template-Toolkit|Template-Toolkit>
+L<Template|Template>
 
 =cut
+
+
 

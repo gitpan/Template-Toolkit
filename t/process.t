@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: process.t,v 1.1 1999/08/10 11:09:17 abw Exp $
+# $Id: process.t,v 1.2 1999/08/12 02:30:39 abw Exp $
 #
 #========================================================================
 
@@ -23,7 +23,7 @@ use Template;
 require 'texpect.pl';
 $^W = 1;
 
-$DEBUG = 1;
+$DEBUG = 0;
 
 my $params = { 
     'a' => 'alpha',
@@ -53,4 +53,22 @@ Updating configuration...
 bravo
 marching powder
 zulu
+
+-- test --
+[% PROCESS myblock +%]
+[% title +%]
+[% PROCESS myblock title = 'Goodbye, Cruel World' +%]
+[% title +%]
+
+[% BLOCK myblock %]
+[% DEFAULT title = 'Hello World' %]
+TITLE BLOCK: [% title %]
+[% END %]
+-- expect --
+TITLE BLOCK: Hello World
+Hello World
+TITLE BLOCK: Goodbye, Cruel World
+Goodbye, Cruel World
+
+
 

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 1.1 1999/08/10 11:09:13 abw Exp $
+# $Id: filter.t,v 1.2 1999/08/12 02:30:38 abw Exp $
 #
 #========================================================================
 
@@ -33,8 +33,35 @@ my $params = {
     'd'      => $d,
     'list'   => [ $a, $b, $c, $d ],
 };
+my $config = {
+    INTERPOLATE => 1, 
+    POST_CHOMP  => 1,
+    FILTERS     => {
+        'badfact'   => 'nonsense',
+	'badfilt'   => sub { 'rubbish' },
+	'microjive' => sub { \&microjive },
+	'censor'    => \&censor_factory,
+    },
+};
 
-test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1 }, $params);
+sub microjive {
+    my $text = shift;
+    $text =~ s/microsoft/The 'Soft/sig;
+    $text;
+}
+
+sub censor_factory {
+    my @forbidden = @_;
+    return sub {
+	my $text = shift;
+	foreach my $word (@forbidden) {
+	    $text =~ s/$word/[** CENSORED **]/sig;
+	}
+	return $text;
+    }
+}
+
+test_expect(\*DATA, $config, $params);
  
 
 __DATA__
@@ -99,3 +126,42 @@ Hello World!
   +++ Doze +++
 *** Wiz  ***
 *** Waz  ***
+
+-- test --
+[% FILTER microjive %]
+The "Halloween Document", leaked to Eric Raymond from an insider
+at Microsoft, illustrated Microsoft's strategy of "Embrace,
+Extend, Extinguish"
+[% END %]
+-- expect --
+The "Halloween Document", leaked to Eric Raymond from an insider
+at The 'Soft, illustrated The 'Soft's strategy of "Embrace,
+Extend, Extinguish"
+
+-- test --
+[% FILTER censor('bottom' 'nipple') %]
+At the bottom of the hill, he had to pinch the
+nipple to reduce the oil flow.
+[% END %]
+-- expect --
+At the [** CENSORED **] of the hill, he had to pinch the
+[** CENSORED **] to reduce the oil flow.
+
+-- test --
+[% CATCH; msg = "$e.type: $e.info"; ERROR msg; "[-- BZZZZT --]"; END %]
+[% FILTER badfact %]
+[% END %]
+-- expect --
+[-- BZZZZT --]
+-- error --
+undef: invalid FILTER factory for 'badfact' (not a CODE ref)
+
+-- test --
+[% FILTER badfilt %]
+[% END %]
+-- expect --
+[-- BZZZZT --]
+-- error --
+undef: invalid FILTER 'badfilt' (not a CODE ref)
+
+

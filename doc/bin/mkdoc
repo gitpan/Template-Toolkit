@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+use strict;
+use lib qw( lib ../lib );
+use Template;
+
+my $file  = shift || 'README.pod';
+my $tproc = Template->new({
+    INCLUDE_PATH => [ qw( doc/src src ) ],
+});
+
+my $vars = {
+    'tt' => {
+	'version' => $Template::VERSION,
+    },
+};
+
+$tproc->process($file, $vars)
+    || die $tproc->error(), "\n";
+

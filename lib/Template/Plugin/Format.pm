@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Format.pm,v 1.1 1999/07/28 14:11:07 abw Exp $
+# $Id: Format.pm,v 1.2 1999/08/12 21:53:55 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use CGI;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
 
 
 sub new {
@@ -64,14 +64,17 @@ Template::Plugin::Format - simple Template Plugin interface to create formatting
 
 =head1 SYNOPSIS
 
-    %% USE format %%
-    %% commented = format('# %s') %%
-    %% commented('The cat sat on the mat') %%
+    [% USE format %]
+    [% commented = format('# %s') %]
+    [% commented('The cat sat on the mat') %]
     
-    %% USE bold = format('<b>%s</b>') %%
-    %% bold('Hello') %%
+    [% USE bold = format('<b>%s</b>') %]
+    [% bold('Hello') %]
 
 =head1 DESCRIPTION
+
+The format plugin constructs sub-routines which format text according to
+a printf()-like format string.
 
 =head1 AUTHOR
 
@@ -79,7 +82,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.1 $
+$Revision: 1.2 $
 
 =head1 COPYRIGHT
 
@@ -92,7 +95,6 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Plugin|Template::Plugin>, 
-L<Template-Toolkit|Template-Toolkit>
 
 =cut
 

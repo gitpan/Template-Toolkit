@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugin.pm,v 1.5 1999/08/09 11:47:35 abw Exp $
+# $Id: Plugin.pm,v 1.6 1999/08/12 21:53:47 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use strict;
 use vars qw( $VERSION $DEBUG $PLUGIN_NAMES $ERROR );
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 # this maps standard library plugins to lower case names for convenience
@@ -64,7 +64,6 @@ sub load {
 }
 
 
-
 #------------------------------------------------------------------------
 # new($context)
 #
@@ -89,6 +88,13 @@ sub new {
     }, $class;
 }
 
+
+#------------------------------------------------------------------------
+# fail()
+# error()
+# 
+# Report/return errors via the $ERROR package variable.
+#------------------------------------------------------------------------
 
 sub fail {
     my $class = shift;
@@ -128,26 +134,31 @@ Template::Plugin - Base class for plugin objects.
 
 =head1 SYNOPSIS
 
-=head1 DOCUMENTATION NOTES
+    package MyOrg::Template::MyPlugin;
+    use base qw( Template::Plugin );
 
-This documentation describes the Template::Plugin module and is aimed at 
-people who wish to understand, extend or build template processing 
-applications with the Template Toolkit.
+    sub new {
+        my ($class, $context, @params) = @_;
+	bless {
+            ...whatever...
+        }, $class;
+    }
 
-For a general overview and information of how to use the modules, write
-and render templates, see L<Template-Toolkit>.
+    sub method1 { }
+    sub method1 { }
 
 =head1 DESCRIPTION
 
-=head1 PUBLIC METHODS
-    
+The Template::Plugin module defines a base class from which other 
+plugin modules can be derived.
+
 =head1 AUTHOR
 
 Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.5 $
+$Revision: 1.6 $
 
 =head1 COPYRIGHT
 
@@ -159,7 +170,7 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template-Toolkit|Template-Toolkit>
+L<Template|Template>
 
 =cut
 

@@ -1,0 +1,106 @@
+=head1 FEATURES
+
+=over 4
+
+=item - 
+
+Fast, flexible, generic and open template processing system.
+
+=item -
+
+Simple template "mini-language" provides functionality to manipulate
+variables (GET/SET/DEFAULT), process other template component files
+(INCLUDE/PROCESS), iterate through various values (FOREACH),
+conditional branching (IF/UNLESS/ELSIF/ELSE), error handling (CATCH,
+THROW), flow control (BREAK, RETURN, STOP), loading "plugin" code 
+(USE) and post-processing (FILTER).
+
+=item -
+
+More complex application code can be developed in Perl (or C, C++,
+etc) and maintained separately as "plugin" code.  Template processor
+binds user code to variables to provide access to application
+functionality from templates.
+
+=item - 
+
+This natural extensibility promotes the separation of the application
+(implementation) from the interface (presentation).  Template
+documents remain simple and focussed on rendering the interface.
+Application code can be made more generic by concentrating on what the
+application does, not what it looks like.
+
+=item -
+
+Ideally suited, but not limited to, web content generation.  
+Front-end modules and/or scripts provided for use with static pages, 
+CGI scripts, Apache/mod_perl handlers, etc.
+
+=item -
+
+Template documents parsed by a fast LALR(1) parser which is 
+generated from a YACC-like grammar.  Parse::Yapp is used to compile the 
+grammar.  Parser grammar can be modified and re-compiled to create custom 
+template languages.
+
+=item -
+
+Parsed template documents are compiled to an intermediate form and
+cache.  They can subsequently be rendered repeatedly in minimal time.
+
+=item -
+
+Stash object manages references to complex external code and data and 
+provides a simple template interface via bound variables.
+
+=item -
+
+Variables may be partitioned into nested namespaces.
+
+=item -
+
+Custom error handling and recovery mechanisms implemented as basic 
+exception handling.  Users can define template blocks to be processed 
+automatically when errors occur and define the subsequent course of
+action.
+
+=item -
+
+Iterator objects can be created to handle complex set iteration.  This is 
+handled transparently by the FOREACH directive.
+
+=item -
+
+Provides an extensible framework for other template languages, processors
+and applications.
+
+=item -
+
+Template language is independent (theoretically at least) of the
+implementation language, platform, operating system, etc.
+
+=item -
+
+Extensive documentation, test suite, examples, etc.
+
+=item - 
+
+C<use strict> and C<-w> safe.  Y2K compliant (no dates used or stored).
+
+=item -
+
+Ongoing development and maintenance is part of a general research
+program into web-relevant software tools and techniques at Canon Research 
+Centre Europe Ltd.
+
+=item -
+
+Fully open source code.  Contributions, collaborations, suggestions
+and other feedback welcome.  
+
+=item - 
+
+Mailing list: send email to majordomo@cre.canon.co.uk containing the 
+text "subscribe templates".
+
+=back

@@ -31,7 +31,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 1.12 1999/08/10 11:09:09 abw Exp $
+# $Id: Parser.pm,v 1.13 1999/08/12 21:53:47 abw Exp $
 #
 #============================================================================
 
@@ -52,7 +52,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -791,15 +791,6 @@ Template::Parser - module implementing LALR(1) parser for compiling template doc
     die $parser->error()
 	unless defined $template;
 
-=head1 DOCUMENTATION
-
-This documentation describes the Template::Parser module and is aimed at 
-people who wish to understand, extend or build template processing 
-applications with the Template Toolkit.
-
-For a general overview and information of how to use the modules, write
-and render templates, see L<Template-Toolkit>.
-
 =head1 DESCRIPTION
 
 The Template::Parser module implements a LALR(1) parser and associated methods
@@ -815,20 +806,10 @@ parameter to provide configuration values.  These may include:
 
 =over
 
-=item START_TAG, END_TAG
+=item START_TAG, END_TAG, TAG_STYLE
 
 The START_TAG and END_TAG options are used to specify the character 
-sequences that mark the start and end of a template directive.  By 
-default, these are both set to '%%'.
-
-  my $template->new({ 
-      START_TAG => '<+',
-      END_TAG   => '+>',
-  });
-
-Example:
-
-  <+ INCLUDE foobar +>
+sequences that mark the start and end of a template directive.
 
 =item INTERPOLATE
 
@@ -838,19 +819,6 @@ to be recognised and interpolated accordingly.  Variables should be
 prefixed by a '$' to identify them and may contain only alphanumeric
 characters, underscores or periods.  Curly braces can be used to 
 explicitly specify the variable name where it may be ambiguous.
-
-  # INTERPOLATE = 0
-  <a href="http://%% server %%:%% port %%/%% page %%">
-  <img src="%% images %%/foo.gif">
-  </a>
-
-  # INTERPOLATE = 1
-  <a href="http://$server:$port/$page">
-  <img src="$images/foo.gif">
-  </a>
-
-  # explicit scoping with {  }
-  <img src="${icon.next}.gif">
 
 =item PRE_CHOMP, POST_CHOMP
 
@@ -863,22 +831,6 @@ With PRE_CHOMP set true, the newline and whitespace preceeding a directive
 at the start of a line will be deleted.  This has the effect of 
 concatenating a line that starts with a directive onto the end of the 
 previous line.
-
-PRE_CHOMP and POST_CHOMP can be activated for individual directives by
-placing a '-' at the start and/or end of the directive:
-
-  %% FOREACH name = [ 'foo', 'bar' ] %%
-     %%- name -%%
-  %% END %%
-
-The '-' characters activate both PRE_CHOMP and POST_CHOMP for the one
-directive '%%- name -%%'.  Thus, the template will be processed as if
-written:
-
-  %% FOREACH name = [ 'foo', 'bar' ] %%%% name %%%% END %%
-
-Similarly, the '+' characters can be specified to temporarily 
-disable any chomping for that directive.
 
 =item GRAMMAR
 
@@ -916,7 +868,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.12 $
+$Revision: 1.13 $
 
 =head1 COPYRIGHT
 
@@ -940,7 +892,6 @@ appears in the Parse::Yapp documentation.
 
 =head1 SEE ALSO
 
-L<Template-Toolkit|Template-Toolkit>, 
 L<Template|Template>, 
 L<Template::Grammar|Template::Grammar>, 
 L<Template::Directive|Template::Directive>

@@ -17,7 +17,7 @@
 #   these get so thoroughly tested by so many things that any problems 
 #   there would show up immediately and blow smoke.
 #
-# $Id: context.t,v 1.6 1999/08/10 11:09:12 abw Exp $
+# $Id: context.t,v 1.7 1999/08/12 04:40:14 abw Exp $
 #
 #========================================================================
 
@@ -81,7 +81,6 @@ ok( $output eq "World" );
 
 
 
-print "OS: ", $context->{ OS }->name(), "\n";
 
 
 

@@ -1,0 +1,23 @@
+=head1 SYNOPSIS 
+
+  use Template;
+
+  # some useful options (see docs below for full list)
+  my %config = (
+      INCLUDE_PATH => '/search/path',  # or list ref
+      INTERPOLATE  => 1,               # expand "$var" in plain text
+      POST_COMP    => 1,               # cleanup whitespace 
+  );
+
+  my $template = Template->new(\%config);
+
+  my %params = (
+      var1  => $value,
+      var2  => \%hash,
+      var3  => \@list,
+      var4  => \&code,
+      var5  => $object,
+  );
+
+  $template->process($input, \%params)
+      || die $template->error();

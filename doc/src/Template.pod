@@ -1,0 +1,53 @@
+#============================================================= -*-perl-*-
+#
+# Template.pod
+#
+# DESCRIPTION
+#   This is the main documentation for the Template module and the 
+#   Template Toolkit as a whole.  It is constructed automatically 
+#   during the 'make dist' process from the document fragments in 
+#   the doc/src distribution sub-directory.  
+#
+#   **************************** IMPORTANT ****************************
+#     Any changes to this document should be made to the files in the 
+#     doc/src directory and not the lib/Template.pod file itself.
+#   *******************************************************************
+#
+# AUTHOR
+#   Andy Wardley   <abw@cre.canon.co.uk>
+#
+# COPYRIGHT
+#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#------------------------------------------------------------------------
+#
+#   $Id: Template.pod,v 1.3 1999/08/12 20:15:26 abw Exp $
+#
+#========================================================================
+
+[% INCLUDE name        %]
+[% INCLUDE synopsis    %]
+[% INCLUDE directives  %]
+[% INCLUDE overview    %]
+[% INCLUDE description %]
+[% INCLUDE methods     %]
+[% INCLUDE examples    %]
+[% INCLUDE files       %]
+[% INCLUDE bugs        %]
+[% INCLUDE author      %]
+[% INCLUDE version     %]
+[% INCLUDE copyright   %]
+[% INCLUDE acks        %]
+[% INCLUDE seealso     %]
+
+
+
+
+
+
+
+

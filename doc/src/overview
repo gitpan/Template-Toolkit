@@ -1,0 +1,86 @@
+[% TAGS [** **] -%]
+=head1 OVERVIEW 
+
+The Template Toolkit is a collection of Perl modules which
+collectively implement a fast and powerful template processing system.
+In this context, a template is a text document which contains embedded
+processing "directives".  These instruct the template processor to
+perform certain actions such as; inserting the value of a variable,
+processing and including another template file or user-defined block,
+iterating through a set of values, and so on.  Anything not marked as
+a template directive is treated as plain text and gets passed through
+unaltered.  Directive are by default embedded like this: [% directive %]
+
+The "mini-language" that the toolkit uses (ATML - A Template Markup
+Language :-) is designed to be clear, concise, regular in structure
+and simple in syntax.  It is a specialised language which boasts many
+powerful features for constructing dynamic content but it is I<not> a
+general purpose programming language.  Instead, it supports a plugin
+interface which allows separate modules of application specific code
+to be written in the language of choice (i.e. Perl, C, C++) and then
+loaded, used and re-used as required.
+
+In other words, it helps to promote the separation of application code
+(the I<implementation>) from the user interface (the I<presentation>).
+It tries to keep templates clutter-free, concentrating on what the
+document I<looks like>, not how the various items of content are
+stored, retrieved or calculated.  From the perspective of a web
+designer, for example, they're just bits of text that get inserted
+into different parts of the page.
+
+Development and subsequent maintenance become easier and less
+error-prone when the "back-end" is separated from the "front-end".  As
+a further benefit, it becomes far easier to re-use plugin code by
+simply changing the templates that generate the output.  Likewise it
+becomes possible to change the implementation of some functionality
+without affecting the template files.
+
+Application code becomes easier to write and more portable when you
+don't have to worry about what the output looks like.  From the
+perspective of the coder, this is a Good Thing.  They only have to
+worry about performing some task and returning some value and really
+don't care if it ends up right-justified in a table with an blue
+background.  Similarly, the output templates become easier to write
+and more portable because they don't contain any implementation
+specific details (i.e. code).  
+
+The end result is that complex, dynamic content systems can be built
+easily and quickly from a number of small, reusable components.  Some
+of these components are template files representing user interface
+"chunks" and others may be data structures, library code, user-defined
+sub-routines or objects that implement various functionalities of the
+system.  The Template Toolkit's role is to help glue the different
+pieces together as quickly and simply as possible, hiding as many of
+the unnecessary details as possible.
+
+The Template Toolkit is ideally suited for generating web content, but
+it is by no means limited or specific to this or any other application
+area.  The plugin interface means that it doesn't have to be - it can
+just concentrate on the task of constructing documents and doesn't
+care if you subsequently use it to generate HTML, LaTeX, RTF or plain
+text documents from a command-line, CGI script or an in-server web
+process such as Apache/mod_perl using data extracted from a CGI form,
+a database, by psychic medium or by averaging last month's rainfall in
+Seattle.  You choose what do to with it and how to do it.  Simply load
+additional functionality as you need it from CPAN modules, Template
+Toolkit plugins, generic web applications such as chat rooms, FAQ
+lists, bulletin boards, etc., or any other code you can beg, borrow or
+write yourself.
+
+The philosophy behind the toolkit should hopefully now be clearer.  It
+is about power and ease of use in I<document construction> and defers
+the task of any application-specific functionality to a far more
+powerful, general purpose language - Perl.  The Template Toolkit
+promotes a clean separation between the two for the reasons outlined
+above.  It is important to note, however, that no one tool is
+appropriate for every use and there are many times when you can't beat
+simply embedding Perl code directly into your document.  In those
+cases, Mark-Jason Dominus' Text::Template module comes highly
+recommended (available from CPAN).
+
+The Template Toolkit is a direct descendant of, and replacement for
+the Text::MetaText module.  It has been designed and rebuilt from
+scratch based on several years of experience gained from developing,
+supporting and using Text::MetaText and other template processing
+applications and tools.  It is an Open Source project in which
+contribution and collaboration are encouraged.

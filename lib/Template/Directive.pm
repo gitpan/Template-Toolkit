@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.14 1999/08/10 11:09:07 abw Exp $
+# $Id: Directive.pm,v 1.15 1999/08/12 21:53:47 abw Exp $
 #
 #============================================================================
  
@@ -33,7 +33,7 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 1;
 
 
@@ -743,7 +743,7 @@ Template::Directive - Object class for defining directives that represent the op
   use Template::Directive;
 
   my $dir = Template::Directive->new(\@opcodes);
-  my $inc = Template::Directive::Include->new(\@ident, \@param, $namespace);
+  my $inc = Template::Directive::Include->new(\@ident, \@params);
   my $if  = Template::Directive::If->new(\@expr, $true_block, $else_block);
   my $for = Template::Directive::For->new(\@list, $block, $varname);
   my $blk = Template::Directive::Block->new($content);
@@ -752,10 +752,6 @@ Template::Directive - Object class for defining directives that represent the op
   my $cth = Template::Directive::Catch->new($errtype, $block);
   my $ret = Template::Directive::Return->new($retval);
   my $dbg = Template::Directive::Debug->new($text);
-  
-  $get->process($context);
-  $set->process($context);
-  ...etc..
 
 =head1 DESCRIPTION
 
@@ -775,7 +771,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.14 $
+$Revision: 1.15 $
 
 =head1 COPYRIGHT
 

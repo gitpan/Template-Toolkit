@@ -1,9 +1,0 @@
-%% DEFAULT 
-   title = 'Test Page'
-   bgcol = '#ffffff'
-%%
-<html>
-<head>
-<title>$title</title>
-</head>
-<body bgcolor="$bgcol">

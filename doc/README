@@ -1,0 +1,12 @@
+#========================================================================
+# Template Toolkit - doc/
+#========================================================================
+
+This directory contains the template 'source' for the toolkit
+documentation.  The README file in the main distribution directory is
+created from ./src/README.pod, along with ./src/Template.pod which
+ends up in ../lib.  These files are constructed by the 'bin/mkdoc'
+scripts which is called from the Makefile.PL in the main distribution
+directory.
+
+

@@ -1,0 +1,100 @@
+[% TAGS [** **] -%]
+=head1 TEMPLATE DIRECTIVES
+
+  GET       - evaluate and print a variable or value
+	      [%  GET variable %]
+              [%      variable %]
+              [%      hash.var %]
+              [% "value: $var" %]
+
+  SET       - assign a value to a variable
+	      [% SET variable = value %]
+              [%     variable = other_variable
+                     variable = 'literal text @ $100'
+                     variable = "interpolated text: $var"
+                     list     = [ val, val, val, val, ... ]
+                     hash     = { var = val, var = val, ... }
+              %]
+
+  DEFAULT   - as SET above, if variable(s) not set
+              [% DEFAULT variable = value %]
+
+  INCLUDE   - include another template file/block, localising vars
+              [% INCLUDE template %]
+              [% INCLUDE template  var = val, ... %]
+
+  PROCESS   - as above, without localising variables
+              [% PROCESS template %]
+              [% PROCESS template  var = val, ... %]
+
+  FOREACH   - repeat block for each value in a list
+	      [% FOREACH variable = [ val, val, val ] %]
+              [% FOREACH variable = list %]
+              [% FOREACH list %]
+                 content
+              [% END %]
+
+  WHILE     - iterate while condition is true
+              [% WHILE condition %]
+	         content
+	      [% END %]
+
+  IF/UNLESS - process block if condition is true/false.
+              [% IF condition %]
+                 content
+	      [% ELSIF condition %]
+		 content
+	      [% ELSE %]
+		 content
+              [% END %]
+
+              [% UNLESS condition %]
+                 content
+              [% # ELSIF/ELSE as per IF, above %]
+	         content
+              [% END %]
+
+  BLOCK     - define a template block for INCLUDE or PROCESS
+              [% BLOCK template %]
+                 content
+	      [% END %]
+
+  FILTER    - post-process block through a filter
+              [% FILTER name %]
+              [% FILTER name( params ) %]
+              [% FILTER alias = name( params ) %]
+                 content
+              [% END %]
+
+  USE       - load a "plugin" module
+              [% USE name %]
+              [% USE name( params ) %] 
+              [% USE alias = name( params ) %]
+
+  CATCH     - define block to catch an exception
+              [% CATCH errtype %]
+                 content
+              [% END %]
+
+  THROW     - throw an exception
+              [% THROW errtype info %]
+
+  ERROR     - generate an error message (default: to STDERR)
+              [% ERROR info %]
+
+  BREAK     - break out of FOREACH/WHILE
+              [% BREAK %]
+     
+  RETURN    - stop processing current template
+              [% RETURN %]
+
+  STOP      - stop processing all templates and return to caller
+              [% STOP %]
+
+  COMMENT   - ignored and deleted
+              [% # this is a comment  %]
+
+  TAGS      - define new tag characters (default: [% %])
+              [% TAGS <!-- --> %]
+
+

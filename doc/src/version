@@ -1,0 +1,18 @@
+=head1 VERSION
+
+This is version [% tt.version %] of the Template Toolkit.  
+
+It is a stable beta release version preceding the imminent release 
+of version 1.0.
+
+Please consult the F<Changes> file for information about visible changes
+in the Template Toolkit between releases.  The F<TODO> file contains 
+details of known bugs, planned enhancements, features, fixes, etc.
+
+The latest version of the Template Toolkit can be downloaded from any 
+CPAN site:
+
+    /authors/id/ABW/Template-Toolkit-<version>.tar.gz
+
+Information regarding interim and development versions is posted to the
+templates mailing list.

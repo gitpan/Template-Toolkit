@@ -1,0 +1,4 @@
+=head1 PREREQUISITES
+
+At present, the Template Toolkit requires Perl 5.005.   Efforts will soon
+be made to support I<some> earlier versions (e.g. 5.004).

@@ -17,7 +17,7 @@
 #   [% INCLUDE 'header' %].  This is a bit tricky, but it *must* be 
 #   fixed ASAP.  Apart from this inconvenience, INCLUDE seems to work OK.
 #
-# $Id: include.t,v 1.7 1999/08/10 11:09:15 abw Exp $
+# $Id: include.t,v 1.8 1999/08/12 02:30:38 abw Exp $
 #
 #========================================================================
 
@@ -56,7 +56,7 @@ my $params = {
 
 my $tproc = Template->new({ 
     INTERPOLATE => 1,
-    INCLUDE_PATH => 't/misc:misc'
+    INCLUDE_PATH => [ qw( t/misc misc ) ],
 });
 test_expect(\*DATA, $tproc, $params);
 
@@ -144,3 +144,16 @@ BAZ: This is file baz
 The time is now
 BAZ: This is file baz
 The time is nigh
+
+-- test --
+[% BLOCK bamboozle -%]
+This is bamboozle
+[%- END -%]
+Block defined...
+[% blockname = 'bamboozle' -%]
+[% INCLUDE $blockname %]
+End
+-- expect --
+Block defined...
+This is bamboozle
+End

@@ -1,0 +1,17 @@
+=head1 DISTRIBUTION FILES AND DIRECTORIES
+
+The following directories and files comprise the Template Toolkit
+distribution.  See the individual README files in each directory
+for further information on their contents.
+
+    bin/        Template processing scripts; tpage
+    doc/        Documentation source
+    examples/   Example templates and scripts
+    lib/        Template Toolkit modules
+    parser/     Grammar and compiler scripts for parser
+    t/          Test scripts (run via 'make test')
+    MANIFEST    Manifest file (ExtUtils::MakeMaker)
+    Makefile.PL Makefile construction script (ExtUtils::MakeMaker)
+    Changes     History of visible changes between versions.
+    TODO        List of bugs, enhancements, planned features, ideas, etc.
+    README      README file containing general info

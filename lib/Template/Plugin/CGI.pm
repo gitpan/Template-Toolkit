@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: CGI.pm,v 1.3 1999/07/28 11:33:02 abw Exp $
+# $Id: CGI.pm,v 1.4 1999/08/12 21:53:55 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use CGI;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -57,11 +57,11 @@ Template::Plugin::CGI - simple Template Plugin interface to CGI.pm module
 
 =head1 SYNOPSIS
 
-    %% USE CGI %%
-    %% CGI.param('parameter') %%
+    [% USE CGI %]
+    [% CGI.param('parameter') %]
 
-    %% USE things = CGI %%
-    %% things.param('name') %%
+    [% USE things = CGI %]
+    [% things.param('name') %]
     
     # see CGI docs for other methods provided by the CGI object
 
@@ -70,26 +70,26 @@ Template::Plugin::CGI - simple Template Plugin interface to CGI.pm module
 This is a very simple Template Toolkit Plugin interface to the CGI module.
 A CGI object will be instantiated via the following directive:
 
-    %% USE CGI %%
+    [% USE CGI %]
 
 CGI methods may then be called as follows:
 
-    %% CGI.header %%
-    %% CGI.param('parameter') %%
+    [% CGI.header %]
+    [% CGI.param('parameter') %]
 
 An alias can be used to provide an alternate name by which the object should
 be identified.
 
-    %% USE mycgi = CGI %%
-    %% mycgi.start_form %%
-    %% mycgi.popup_menu({ Name   => 'Color'
-			  Values => [ 'Green' 'Black' 'Brown' ] }) %%
+    [% USE mycgi = CGI %]
+    [% mycgi.start_form %]
+    [% mycgi.popup_menu({ Name   => 'Color'
+			  Values => [ 'Green' 'Black' 'Brown' ] }) %]
 
 Parenthesised parameters to the USE directive will be passed to the plugin 
 constructor:
     
-    %% USE cgiprm = CGI('uid=abw&name=Andy+Wardley') %%
-    %% cgiprm.param('uid') %%
+    [% USE cgiprm = CGI('uid=abw&name=Andy+Wardley') %]
+    [% cgiprm.param('uid') %]
 
 =head1 AUTHOR
 
@@ -97,7 +97,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.3 $
+$Revision: 1.4 $
 
 =head1 COPYRIGHT
 
@@ -110,7 +110,6 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<CGI|CGI>, L<Template::Plugin|Template::Plugin>, 
-L<Template-Toolkit|Template-Toolkit>
 
 =cut
 

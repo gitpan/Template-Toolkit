@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Cache.pm,v 1.5 1999/08/10 11:09:06 abw Exp $
+# $Id: Cache.pm,v 1.7 1999/08/12 21:53:46 abw Exp $
 #
 #============================================================================
 
@@ -33,8 +33,8 @@ use Template::Exception;
 use vars qw( $VERSION $PATHSEP $DEBUG );
 
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
-$PATHSEP  = '/';      # default path separator converted to OS equivalent
+$VERSION  = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
+$PATHSEP  = ':';      # default path separator
 $DEBUG    = 0;
 
 
@@ -50,9 +50,6 @@ $DEBUG    = 0;
 # A reference to a hash array may be passed containing configuration
 # items:
 #    INCLUDE_PATH   where to look for files (e.g. '/tmp:/usr/local/templates');
-#    OS             Template::OS object containing filesys specifics
-#    PATH_SEP       path separator to  override O/S value
-#    PATH_SPLIT     characters to delimit paths
 #    PARSER         reference to parser for compiling (default: auto-created)
 #
 # Returns a reference to a newly created Template::Cache object.
@@ -62,44 +59,19 @@ sub new {
     my $class  = shift;
     my $params = shift || { };
     my ($delim, $p, $o, @paths);
-    my ($os, $pathsep, $pathsplit, $path) = 
-	@$params{ qw( OS PATH_SEP PATH_SPLIT INCLUDE_PATH ) };
+    my $path = $params->{ INCLUDE_PATH } || '.';
 
-    local $" = ', ';	# used for debugging
-
-    $os        ||= do { require Template::OS; Template::OS->new() };
-    $pathsep   ||= $os->{'pathsep'};
-    $pathsplit ||= $os->{'pathsplit'};
-    $path      ||= '.';
-    $delim       = quotemeta($pathsplit);
-
-
-    # INCLUDE_PATH can be specified as a single string or an array; in 
-    # the former case, the string may contain PATH_SPLIT characters
-    # to separate two or more directories.  The array specification
-    # can be used to specify multiple directories that have _different_ 
-    # caching strategies.  The elements in the array should consist of 
-    # directory strings in the format described above with a second, optional
-    # element containing a hash reference of cache options.  In all cases,
-    # the INCLUDE_PATH is munged into an array which looks like this:
-    # [ [ \@dirs1, \%opts1 ], [ \@dirs2, \%opts2 ], ... ]
-
-    if (ref($path) eq 'ARRAY') {
-	while (@$path) {
-	    # path may be represented as 'dir:dir' or array
-	    $p = shift @$path;
-	    $p = [ split(/$delim/, $p) ]
-		unless ref($p) eq 'ARRAY';
-	    $o = ref($path->[0]) eq 'HASH'
-		 ? shift @$path
-		 : undef;
-	    push(@paths, [ $p, $o ]);
-	}
-    }
-    # should really check for other refs and barf...
-    else {
-	$p = [ split(/$delim/, $path) ];
-	@paths = map { [ [ $_ ], undef ] } @$p;
+    # coerce path to an array
+    $path = ref($path) eq 'ARRAY' ? $path : [ $path ];
+    while (@$path) {
+	# path may be represented as 'dir:dir' or array
+	$p = shift @$path;
+	$p = [ split(/$PATHSEP/, $p) ]
+	    unless ref($p) eq 'ARRAY';
+	$o = ref($path->[0]) eq 'HASH'
+	    ? shift @$path
+	    : undef;
+	push(@paths, [ $p, $o ]);
     }
 
     # turn caching on by default
@@ -107,11 +79,8 @@ sub new {
 	unless defined $params->{ CACHE };
 
     bless {
-#	%$params,		  # user-supplied params
-	OS         => $os,        # OS specifics
 	CONFIG     => $params,	  # pass this onto Parser constructor
-	PATH_SEP   => $pathsep,   # path separator
-	PATH       => \@paths,	  # where to look for files
+	PATH       => \@paths,    # search path(s)
 	COMPILED   => { },	  # compiled template cache
 	ERROR      => '',	  # error
     }, $class;
@@ -229,7 +198,7 @@ sub error {
  
 sub _load {
     my ($self, $template) = @_;
-    my ($text, $whence, $type, $qmsep, $cache_opt);
+    my ($text, $whence, $type, $cache_opt);
     local $/ = undef;		# read entire files in one go
 
     $self->{ ERROR     } = '';
@@ -247,32 +216,11 @@ sub _load {
     }
     # ...otherwise, it's a filename so we look for it in $self->{ PATH }
     else {
-	my ($path, $pathsep) = @$self{ qw( PATH PATH_SEP ) };
+	my $path =  $self->{ PATH };
 	my ($p, $o, $dir, $filepath);
 	local *FH;
 
-	# if the internal directory separator isn't the default, then we 
-	# convert filenames to have the correct separator; this allows 
-	# '/foo/bar/baz' to be converted to '\foo\bar\baz' for certain
-	# broken platforms
-	unless ($pathsep eq $PATHSEP) {
-	    $qmsep = quotemeta($PATHSEP);
-	    $template =~ s/$qmsep/$pathsep/g;
-	}
-
 	OPEN: {
-# shouldn't open absolute file paths - removed by abw 199-08-07
-#           # check first for an absolute pathname (e.g. starts '/')
-#	    $qmsep = quotemeta( $pathsep );
-#
-#	    if ($template =~ /^($qmsep|\.)/) {
-#		last OPEN if -f $template and open(FH, $template);
-#
-#		# fail immediately if the file wasn't opened
-#		return					    ## RETURN ##
-#		    $self->_error(ERROR_FILE, "$template: not found");
-#	    }
-
 	    # look for file in each PATH element : [ \@dirs, \%opts ]
 	    foreach (@$path) {
 		# $p = \@dirs, $o = \%opts
@@ -283,7 +231,7 @@ sub _load {
 		    if defined $o;
 
 		foreach $dir (@$p) {
-		    $filepath = "${dir}${pathsep}${template}";
+		    $filepath = "$dir/$template";
 
 		    if (-f $filepath and open(FH, $filepath)) {
 			# store file name and cache opts
@@ -411,17 +359,6 @@ Template::Cache - object for loading, compiling and caching template documents
         unless $template;
 
     $cache->store($template, $name);
-    $cache->load($input);
-    $cache->compile($text);
-
-=head1 DOCUMENTATION NOTES
-
-This documentation describes the Template::Cache module and is aimed at 
-people who wish to understand, extend or build template processing 
-applications with the Template Toolkit.
-
-For a general overview and information of how to use the modules, write
-and render templates, see L<Template-Toolkit>.
 
 =head1 DESCRIPTION
 
@@ -434,21 +371,21 @@ The cache can load templates from files specified either by filename or
 by passing a file handle or GLOB reference (e.g. \*STDIN) to the fetch() 
 method.  A reference to a text string containing the template text may 
 also be passed to fetch(). This method returns a cache version of the 
-template document if it exists or calls load() to load and compile the 
+template document if it exists or calls _load() to load and compile the 
 template.  Compiled templates are then cached by their filename or a 
 specific alias which can be passed as a second parameter to fetch().
 A template whose source is a file handle, glob or text reference (i.e. 
 the first parameter is any kind of reference) will not be cached unless
 an alias is specifically provided.
 
-The load() method takes the input source (filename, file handle, text
+The _load() method takes the input source (filename, file handle, text
 ref, etc.) as its only parameter and attempts to read the content.  If
 a filename has been specified then the method will look in each
 directory specified in the PATH configuration option to find the file.
 If the PATH has not been specified then the current directory only is
 searched.  
 
-Once loaded, the template text is passed to compile() which delegates
+Once loaded, the template text is passed to _compile() which delegates
 the task of parsing and compiling the document to a Template::Parser
 object.  The PARSER configuration option may be specified to provide a
 reference to a Template::Parser, or subclass thereof, which should be
@@ -530,54 +467,12 @@ caching options specific to those directories.
         ],
     });
 
-=item PATH_SEPARATOR
-
-The INCLUDE_PATH values above may denote several directories separated 
-by a colon character ':'.  On some operating systems, the colon 
-may be legally embedded in a directory (e.g. 'C:\DOS98').  The 
-PATH_SEPARATOR can be used to specify an alternative delimiter.
-
-    use Template::Cache;
-
-    my $cache = Template::Cache->new({ 
-	INCLUDE_PATH   => 'C:\\TMP | D:\\FOO',
-	PATH_SEPARATOR => ' | ',
-    });
-
-=item DIR_SEPARATOR
-
-The default directory separator is the forward slash '/' character.
-The DIR_SEPARATOR can be used to specify an alternate character 
-sequence.  Paths specified in template files with forwards slashes 
-will be converted to the correct format by the fetch() method.
-
-    # note the need to escape all those backslashes
-    my $cache = Template::Cache->new({ 
-	INCLUDE_PATH   => 'D:\\ABW\\TEMPLATES + C:\\USR\\LOCAL\\TEMPLATES',
-	PATH_SEPARATOR => ' + ',
-	DIR_SEPARATOR  => '\\',
-    });
-
-    my $template = $cache->fetch('foo/bar');
-
-The fetch() method shown above will look for the following files:
-
-    D:\ABW\TEMPLATES\foo\bar
-    C:\USR\LOCAL\TEMPLATES\foo\bar
-
-Similarly, specifying the following in a template file will have the 
-same effect.  This allows template authors to use a consistent file
-naming convention within templates (i.e. B<always> use forwards slashes)
-and have the cache loader convert it to the correct local equivalent.
-
-    %% INCLUDE foo/bar %%
-
 =item PARSER
 
-A reference to a Template::Parser object, or sub-class thereof, which should
-be used for parsing and compiling templates as they are loaded.  A 
-default Template::Parser object when first used if this option 
-is not specified.
+A reference to a Template::Parser object, or sub-class thereof, which
+should be used for parsing and compiling templates as they are loaded.
+A default Template::Parser object when first used if this option is
+not specified.
 
 =back
 
@@ -619,21 +514,6 @@ under a given name ($alias).
 	$cache->store($compiled, 'my_compiled_template')
     }
 
-=head2 load($template)
-
-Method called by fetch() to find and load a template document and then 
-call compile() to parse and compile the template.  The $template parameter
-should contain a filename or be a reference as described in fetch() above.
-
-    $compiled = $cache->load($inputsrc);
-
-=head2 compile($text)
-
-Method called by load() to compile the template text.  Delegates to 
-a Template::Parser object.
-
-    $compiled = $cache->compile($text);
-
 =head2 error()
 
 Returns the current error condition which is represented as a 
@@ -645,7 +525,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.5 $
+$Revision: 1.7 $
 
 =head1 COPYRIGHT
 
@@ -657,7 +537,7 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template-Toolkit|Template-Toolkit>
+L<Template|Template>
 
 =cut
 

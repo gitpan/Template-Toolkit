@@ -10,33 +10,18 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.26 1999/08/10 11:08:56 abw Exp $
+# $Id: TODO,v 1.32 1999/08/12 22:04:26 abw Exp $
 #
 #============================================================================
-
-Pending
--------
-  * cvs add MANIFEST.SKIP
-  * cvs add t/filter.t
-  * cvs add t/break.t
-  * cvs add lib/Template/Plugin/Filter.pm  
-  * cvs add t/process.t
-  * cvs add t/while.t
-  * cvs add t/import.t
-  * cvs add t/literal.t 
-  * cvs add t/os.t
-  * cvs remove t/export.t
-
-  * Document WHILE
-  * Document PROCESS
-  * Document BREAK
-  * Document OS option and change PATH_SEP/DIR_SEP 
-  * Document FILTER
 
 Bugs
 ----
   * CATCH installs a block which overwrites any previous one.  This then 
     perists until the Context object is destroyed or the handler re-defined.
+
+  * The Tied Hash example briefly mentioned in the VARIABLE EVALUATION 
+    section in doc/src/description is unlikely to work properly.  I don't
+    think Tied Hashes get treated as regular hashes, but they should.
 
 Planned Features
 ----------------
@@ -138,22 +123,6 @@ Documentation
   * iterator options specified through list construct parameters are
     not documented.  
     [% FOREACH user = [ foo bar baz ]( order = 'sorted', action = coderef ) %]
-
-  * automatic import of ident-less FOREACH loops that return hashes is not
-    documented
-
-  * IMPORT documentation is wrong - you can't import to another package.
-    Aloso need to document for IMPORT directive.
-
-  * WHILE is not documented
-
-  * PROCESS is not documented
-
-  * FILTER is not documented
-
-  * TAGS directive is not documented
-
-  * OS, PATH_SEP and PATH_SPLIT options are not documented.
 
   * write more detailed description on extending the template toolkit.
 

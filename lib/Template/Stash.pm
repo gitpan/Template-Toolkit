@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 1.6 1999/08/01 13:43:14 abw Exp $
+# $Id: Stash.pm,v 1.7 1999/08/12 21:53:47 abw Exp $
 #
 #============================================================================
 
@@ -30,7 +30,7 @@ use strict;
 use vars qw( $VERSION );
 use Template::Constants qw( :status :error );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
 
 # IMPORT/EXPORT parameters
 my $EXPORT = 'EXPORT';
@@ -283,15 +283,6 @@ Template::Stash - variable storage for Template Toolkit
     $stash = $stash->clone(\%new_params);
     $stash = $stash->declone($namespace);
 
-=head1 DOCUMENTATION
-
-This documentation describes the Template::Stash module and is aimed at 
-people who wish to understand, extend or build template processing 
-applications with the Template Toolkit.
-
-For a general overview and information of how to use the modules, write
-and render templates, see L<Template-Toolkit>.
-
 =head1 DESCRIPTION
 
 The Template::Stash module defines an object class which is used to store
@@ -310,8 +301,8 @@ from such errors.
 
 The object has clone() and declone() methods which are used by the 
 template processor to make temporary copies of the stash for localising
-changes made to variables.  The use of 'magical' variables, 'IMPORT' and
-'EXPORT' allow users to manipulate the contents of namespaces.
+changes made to variables.  The use of the 'magical' variable, 'IMPORT' 
+allows users to manipulate the contents of namespaces.
 
 =head1 PUBLIC METHODS
 
@@ -379,7 +370,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.6 $
+$Revision: 1.7 $
 
 =head1 COPYRIGHT
 
@@ -391,7 +382,6 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template-Toolkit|Template-Toolkit>, 
 L<Template|Template>, 
 L<Template::Context|Template::Context>, 
 

@@ -1,0 +1,47 @@
+[% TAGS [** **] -%]
+=head1 BUGS
+
+See the separate F<TODO> file for details of known bugs, limitations
+and planned features.  The F<Changes> file details visible changes 
+in the toolkit between public versions.  The definition of 'visible'
+is of course entirely dependent on how hard you're looking.
+
+If you do find something that looks or acts like a bug, then please 
+report it along with a I<short> example of what doesn't work as 
+advertised and as much I<relevant> detail as you can give about how it
+manifested itself.  The best way to report a bug is to send a 
+short test file that illustrates the problem.  You can use F<t/skel.t>
+as a skeleton test file.
+
+Example:
+
+    use lib qw( . ./t ../lib );
+    use Template;
+    require 'texpect.pl';
+
+    test_expect(\*DATA);
+
+    __DATA__
+    -- test --
+    [% a = 10 %]
+    [% explode(a) %]
+    -- expect --
+    Big Bang!
+
+If you are able to find and fix the bug, and feel inclined to do so, 
+then patches are most welcome of all, especially when prepared by
+C<diff -u>.
+
+The Template Toolkit is an Open Source project and you are encouraged to 
+contribute ideas, suggestions and code.  The templates mailing list is 
+currently the focal point for discussion on these matters.  Alternatively,
+you can email the author directly.
+
+To join the mailing list, send email to E<lt>majordomo@cre.canon.co.ukE<gt>
+containing the text "subscribe templates".  
+
+To email the author directly, send email to E<lt>abw@cre.canon.co.ukE<gt>.  
+
+If you don't know how to do that then you are probably beyond helping. 
+
+:-)=

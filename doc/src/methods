@@ -1,0 +1,482 @@
+[% TAGS [** **] -%]
+=head1 PUBLIC METHODS
+
+=head2 new(\%config)
+
+The new() constructor is called to create and return a new instance 
+of the Template class.  This object acts as a front-end processor 
+to the other Template Toolkit modules.
+
+A reference to a hash array may be passed which contains configuration 
+parameters.  These may include:
+
+=over
+
+=item INCLUDE_PATH
+
+The INCLUDE_PATH option specifies one or directories in which to look for
+template files.  Multiple directories can be specified as a reference to
+a list or as a single string, delimited by ':' ($Template::Cache::PATHSEP) 
+Each item in a list may have additional CACHE parameters associated
+with it.
+
+    my $cache = Template::Cache->new({
+        INCLUDE_PATH => '/user/abw/templates:/user/abw/tmp',
+    });
+  
+    my $cache = Template::Cache->new({
+        INCLUDE_PATH => [ '/tmp/templates', '/usr/web/templates' ],
+    });
+  
+    my $template = Template->new({
+        INCLUDE_PATH => [ 
+  	    '/user/web/templates/src:/usr/web/templates/elements'
+  	    '/user/web/templates/toodamnbig' => { CACHE => 0 },
+  	],
+    });
+  
+    use Template::Cache;
+    $Template::Cache::PATHSEP = ';';
+    my $template = Template->new({
+        INCLUDE_PATH => 'c:/templates;c:/web/templates'
+    });
+
+=item PRE_DEFINE
+
+A reference to a hash of variables and values that should be pre-defined
+for use in every template processed via the process() method.  The 
+original values are restored each time process() is called.
+
+    my $template = Template->new({
+        PRE_DEFINE => {
+	    'server'    => 'www.myorg.com',
+	    'help'      => 'help/helpndx.html',
+	    'images'    => '/images'
+	    'copyright' => '(C) Copyright 1999',
+	    'userlist'  => [ 'tom', 'dick', 'harry'   ],
+	    'myorg'     => { 'name' => 'My Org. Inc.', 
+            		     'tel'  => '555-1234'     },
+            'icon'      => { 'prev' => 'prevbutton', 
+            		     'next' => 'nextbutton'   },
+      }
+  });
+
+=item START_TAG, END_TAG, TAG_STYLE
+
+The START_TAG and END_TAG options are used to specify character  
+sequences or regular expressions that mark the start and end of a template 
+directive.  Any Perl regex characters can be used and therefore should be 
+escaped (or use the Perl C<quotemeta> function) if they are intended to
+represent literal characters.
+
+    my $template->new({ 
+  	START_TAG => quotemeta('<+'),
+  	END_TAG   => quotemeta('+>'),
+    });
+
+example:
+
+    <+ INCLUDE foobar +>
+
+The TAG_STYLE option can be used to set both according to pre-defined tag
+styles.  Available styles are:
+
+    regular   [% ... %]      (recommended)
+    percent   %% ... %%      (Text::MetaText compatibility)
+    default   [% ... %] or %% ... %%
+
+The default style (TAG_STYLE => 'default') allows either of the 'regular'
+or 'percent' tags to be used (START_TAG = '[\[%]%', END_TAG = '%[\]%]')
+Any values specified for START_TAG and/or END_TAG will over-ride
+those defined by a TAG_STYLE.  
+
+See also the TAGS directive which allows directive tags to set from within
+a template and act on a per-file basis.
+
+=item INTERPOLATE
+
+The INTERPOLATE flag, when set to any true value will cause variable 
+references in plain text (i.e. not surrounded by START_TAG and END_TAG)
+to be recognised and interpolated accordingly.  Variables should be
+prefixed by a '$' to identify them.  Curly braces can be used in the 
+familiar Perl/shell style to explicitly scope the variable name where
+required.
+
+    # INTERPOLATE = 0
+    <a href="http://[% server %]/[% help %]">
+    <img src="[% images %]/help.gif"></a>
+    [% myorg.name %]
+  
+    # INTERPOLATE = 1
+    <a href="http://$server/$help">
+    <img src="$images/help.gif"></a>
+    $myorg.name
+  
+    # explicit scoping with {  }
+    <img src="$images/${icon.next}.gif">
+
+=item PRE_CHOMP, POST_CHOMP
+
+These values set the chomping options for the parser.  With POST_CHOMP
+set true, any whitespace after a directive up to and including the newline
+will be deleted.  This has the effect of joining a line that ends with 
+a directive onto the start of the next line.
+
+With PRE_CHOMP set true, the newline and whitespace preceding a directive
+at the start of a line will be deleted.  This has the effect of 
+concatenating a line that starts with a directive onto the end of the 
+previous line.
+
+PRE_CHOMP and POST_CHOMP can be activated for individual directives by
+placing a '-' at the start and/or end of the directive:
+
+    [% FOREACH user = userlist %]
+       [%- user -%]
+    [% END %]
+
+The '-' characters activate both PRE_CHOMP and POST_CHOMP for the one
+directive '[%- name -%]'.  Thus, the template will be processed as if
+written:
+
+    [% FOREACH user = userlist %][% user %][% END %]
+
+Similarly, '+' characters can be used to disable PRE- or POST-CHOMP (i.e.
+leave the whitespace/newline intact) options on a per-directive basis.
+
+    [% FOREACH user = userlist %]
+    User: [% user +%]
+    [% END %]
+
+With POST_CHOMP set on, the above example would be parsed as if written:
+
+    [% FOREACH user = userlist %]User: [% user %]
+    [% END %]
+
+=item CASE
+
+The Template Toolkit treats all variables with case sensitivity.  Thus, 
+the variable 'foo' is different from 'Foo' and 'FOO'.  Reserved words,
+by default, may be specified in either case, but are usually UPPER CASE
+by convention.
+
+    [% INCLUDE foobar %]
+    [% include foobar %]
+
+One side-effect of this is that you cannot use a variable of the same 
+name as a reserved word such as 'include', 'error', 'foreach', etc.
+
+Setting the CASE option to any true value will cause the parser to only
+consider UPPER CASE words as reserved words.  Thus, 'ERROR' remains a 
+reserved word, but 'error', 'Error', 'ERRoR', etc., may all be used as 
+variables.  
+
+The only exception to this rule are the 'and', 'or' and 'not' operators
+which can I<always> be expressed in lower, or indeed any case.
+
+=item PLUGIN_BASE
+
+This option allows you to define a base package for plugin objects loaded
+and used via the USE directive.  The default base is 'Template::Plugin'.
+Periods in a plugin name are converted to '::' and the name is appended
+to the PLUGIN_BASE.  Thus the following directive:
+
+    [% USE Magic.Wand %]
+
+Would request and instantiate and object from the plugin module 
+'Template::Plugin::Magic::Wand'.
+
+Specifying a new PLUGIN_BASE will cause the processor to use that package 
+name before falling back on the default 'Template::Plugin'.
+
+    my $tproc = Template->new({
+	PLUGIN_BASE => 'MyOrg::Template::Plugin',
+    });
+
+In the above example, the [% USE Magic.Wand %] directive, would resolve
+to 'MyOrg::Template::Plugin::Magic::Wand' or 'Template::Plugin::Magic::Wand'
+in that order.  Thus, a module defined in a 'local' PLUGIN_BASE will be
+used in preference to the default Template Toolkit equivalent.
+
+To stop the processor from looking in the default location at all, 
+specify the PLUGIN_BASE as an array reference.  Only those locations
+listed in the array will be searched.
+
+    my $tproc = Template->new({
+	PLUGIN_BASE => [ MyOrg::Template::Plugin ],
+    });
+
+=item PLUGINS
+
+The PLUGINS option may be specified as a reference to a hash
+pre-defining plugin objects for the USE directive.  Each key in the
+hash represents a plugin name and the corresponding value, a package
+name or object which should be used to construct new instances of the
+plugin object.
+
+    use MyOrg::Template::Plugin::Womble;
+    use Template::Plugin::DBI;         # available soon...
+  
+    my $dbi_factory = Template::Plugin::DBI->new();
+  
+    my $template->new({ 
+  	PLUGINS => {
+  	  'womble' => 'MyOrg::Template::Plugin::Womble',
+  	  'dbi'    =>  $dbi_factory,
+  	END_TAG   => quotemeta('+>'),
+    });
+
+The new() method is called against the PLUGINS value when a plugin is USE'd.
+Thus, an entry that specifies a package name will caused instances of that
+plugin to be created as follows:
+
+    [% USE womble %] 
+       ==> MyOrg::Template::Plugin::Womble->new($context);
+
+A reference to the Template::Context object in which the plugin will run 
+is passed as the first parameter.  The plugin object may store this 
+reference and subsequently use it to control the template process via 
+it's public interface.  This gives plugin objects access to the full
+functionality of the Template Toolkit.
+
+Any parameters specified in parenthesis after the plugin name will be 
+passed to the new() constructor.  
+
+    [% USE womble('Tomsk') %] 
+       ==> MyOrg::Template::Plugin::Womble->new($context, 'Tomsk');
+
+The PLUGINS value may also contain an object reference.  In identical
+fashion to the above, the new() method is called against the object,
+allowing it to act as a constructor object or 'prototype' for other
+instances of the same, or other objects.
+
+    [% USE dbi('dbase_xyz') %]
+      ==> $dbi_factory->new($context, 'dbase_xyz');
+
+This approach facilitates the easy implementation and use of plugins that 
+act as singletons (one instance only) or share some state information, 
+such as cached database handles in the DBI example shown here.  
+
+Simon Matthews <sam@knowledgepool.com> is currently working on the DBI
+plugin for the Template Toolkit.
+
+When a plugin is requested via the USE directive that is not specified
+in the PLUGINS hash, the dynamic loading procedure described under
+PLUGIN_BASE above will be used.  If a module is successfully loaded,
+the load() sub-routine in that package is called and should return the
+package name itself (i.e. simply return the first parameter) or an
+object reference which is then stored and used in the PLUGINS hash as
+described above.
+
+=item FILTERS
+
+The FILTERS option may contain a reference to a hash defining
+additional filter types.  Each key represents a filter name and the
+value should contain a CODE reference which will be called when the
+relevant FILTER directive is encountered, passing any additional
+parameters specified.  This sub-routine is expected to act as a
+I<factory> and construct a closure, or return a reference to some
+other code, which will be responsible for filtering the text.
+
+    $tproc = Template->new({
+  	FILTERS => {
+  	    'microjive' => sub { \&microjive },
+  	    'censor'    => \&make_censor_filter,
+  	},
+    });
+  
+    # 'static' filter which never takes params (like 'html')
+    sub microjive {
+  	my $text = shift;
+  	$text =~ s/microsoft/The 'Soft/sig;
+  	$text;
+    }
+    
+    # factory for 'dynamic' filters which can take params
+    sub make_censor_filter {
+  	my @forbidden = @_;
+  	return sub {
+  	    my $text = shift;
+  	    foreach my $word (@forbidden) {
+  		$text =~ s/$word/**CENSORED**/sig;
+  	    }
+  	    return $text;
+  	}
+    }
+
+Example:
+
+    [% FILTER microjive %] 
+    The "Halloween Document", leaked to Eric Raymond 
+    from an insider at Microsoft, demonstrated...
+    [% END %]              
+  
+    [% FILTER censor('nuclear') %]
+    Airkraft were forced to fly in nuclear winds 
+    but still managed an excellent performance.
+    [% END %]
+
+Output:
+
+    The "Halloween Document", leaked to Eric Raymond 
+    from an insider at The 'Soft, demonstrated...
+
+    Airkraft were forced to fly in **CENSORED** winds 
+    but still managed an excellent performance.
+
+=item OUTPUT, ERROR
+
+The OUTPUT and ERROR options may be specified to redirect template output
+and/or error messages.  The value for these options should be a file GLOB
+or IO::Handle to which the output/error is directed, a CODE reference
+which is called to handle messages, or a reference to a text string (SCALAR)
+to which output or error messages are appended.
+
+    my $output = '';
+
+    my $template = Template->new({
+        OUTPUT = \$output,
+        ERROR  = sub { print STDERR "Most Bogus Error: ", @_ }
+    };
+
+The redirect() method can be subsequently called to define new 
+output or error options.
+
+=item CATCH 
+
+The CATCH option may be used to specify a hash array of error handlers
+which are used when a run time error condition occurs.  Each key in 
+the hash represents an error type.  The Template Toolkit generates the 
+following error types which have corresponding ERROR_XXX constants.
+
+    undef    - an variable was undefined or evaluated undef
+    file     - file find/open/parse error
+
+User code may generate further errors of any types and custom handlers
+may be provided to trap them.  A handler, defined as the related value
+in the CATCH configuration hash may be one of the STATUS_XXXX constants
+defined in Template::Constants (e.g. STATUS_OK, STATUS_STOP) or a code
+reference which is called when an error occurs.  The handler is passed
+a reference to the context ($self) and the error type and info.  The 
+return value should be one of the aforementioned constants or a 
+Template::Exception object.
+
+    use Template qw( :error );
+
+    my $template = Template->new({
+	CATCH => {
+	    ERROR_UNDEF => STATUS_OK,
+	    ERROR_FILE  => sub { 
+		my ($context, $type, $info) = @_;
+		$context->output("FILE ERROR: $info");
+		return STATUS_OK; 
+	    },
+	}
+    });
+
+A 'default' handler may be provided to catch any exceptions not 
+explicitly caught by their own handler.  This is equivalent to defining
+a CATCH block without specifying an error type:
+
+    [% CATCH %]
+    Caught '[% e.type %]' exception:
+      [% e.info %]
+    [% END %]
+
+=item PARSER, GRAMMAR
+
+The PARSER and GRAMMAR configuration items can be used to specify an 
+alternate parser or grammar for the parser.  Otherwise an instance of 
+the default Template::Parser/Template::Grammar will be created and used
+as required.
+
+See the B<parser> sub-directory of the Template Toolkit distribution
+for further information on compiling and using your own grammars (some
+parser expertise required).
+
+    use Template;
+    use MyTemplate::MyGrammar;
+
+    my $template = Template->new({ 
+        GRAMMAR = MyTemplate::MyGrammar->new();
+    });
+
+=item CACHE
+
+The CACHE item can be used to specify an alternate cache object to 
+handle loading, compiling and caching of template documents.  A default
+Template::Cache object is created otherwise.  See L<Template::Cache> for 
+further information.
+
+=back
+
+=head2 process($template, \%vars, ...)
+
+The process() method is called to process a template.  The first 
+parameter, $template, indicates the template and may be a simple
+SCALAR containing a filename (relative to INCLUDE_PATH), a reference
+to a SCALAR which contains the template text or a reference to a GLOB
+(e.g. \*MYFILE) or IO::Handle or sub-class from which the template 
+is read.
+
+    $file = 'hworld.html'
+    $text = "[% INCLUDE header %]\nHello world!\n[% INCLUDE footer %]"
+
+    $template->process($file)
+        || die $template->error(), "\n";
+
+    $template->process(\$text)
+        || die $template->error(), "\n";
+
+    $template->process(\*DATA)
+        || die $template->error(), "\n";
+
+    __END__
+    [% INCLUDE header %]    
+    Hello World!
+    [% INCLUDE footer %]
+
+The optional second parameter may be a reference to a hash array containing
+variables and values which should be available in the template.  These are
+applied in addition to (and may temporarily modify previous values for)
+the PRE_DEFINE variables.
+
+Any output generated by processing the template will be sent to the 
+current output stream which is STDOUT by default.  Errors are similarly 
+directed to the error stream or STDERR.
+
+The method returns 1 if the template was successfully processed.  This
+includes templates that were ended by a STOP or RETURN directive
+If an uncaught error occurs, the method returns 0.  A relevant 
+error message can then be returned by calling the error() method.
+
+=head2 redirect($what, $where)
+
+The redirect() method can be called to redirect the output or error
+stream for the template processing system.  This method simply delegates
+to the underlying Template::Context object().
+
+The first parameter should specify 'output' or 'error' (defined as the 
+constants TEMPLATE_OUTPUT and TEMPLATE_ERROR in Template::Constants).
+
+The second parameter should contain a file handle (GLOB or IO::handle) 
+to which the output or error stream should be written.  Alternatively,
+$where may be a reference to a scalar variable to which output is appended
+or a code reference which is called to handle output.
+
+    use Template::Context;
+    use Template::Constants qw( :template );
+
+    my $context = Template::Context->new();
+    my $output  = '';
+    $context->redirect(TEMPLATE_OUTPUT, \$output);
+    $context->redirect(TEMPLATE_ERROR, \*STDOUT);
+
+=head2 error()
+
+The error() method returns any error message generated by the previous
+call to the process() method.
+
+If no error occurred, the method returns a numerical value representing
+the return code of the last directive processed.  This will generally 
+be STATUS_OK (0), STATUS_STOP or STATUS_RETURN.  Constants representing
+the values are defined in Template::Constants. 

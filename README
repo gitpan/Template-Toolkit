@@ -1,59 +1,157 @@
 NAME
-    Template Toolkit - a Perl toolkit for processing templates and building 
-    template applications.
+    Template Toolkit - a Perl toolkit for template processing.
+
+PREREQUISITES
+    At present, the Template Toolkit requires Perl 5.005. Efforts
+    will soon be made to support *some* earlier versions (e.g.
+    5.004).
+
+OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
+    The Template Toolkit module bundle is available from CPAN as:
+
+        /authors/id/ABW/Template-Toolkit-0.24.tar.gz
+
+    Unpack the archive to create an installation directory.
+    Something like this:
+
+        zcat Template-Toolkit-0.24.tar.gz | tar xvf -
+
+    'cd' into that directory, make, test and install the modules:
+
+        cd Template-Toolkit-0.24
+        perl Makefile.PL
+        make
+        make test
+        make install
+
+    NOTE: on Win32 systems, Microsoft's 'nmake' appears to be a
+    suitable replacement for 'make'.
+
+    The 'make install' will install the module on your system. You
+    may need administrator privileges to perform this task. If you
+    install the module in a local directory (for example, by
+    executing "perl Makefile.PL LIB=~/lib" in the above - see
+    `perldoc MakeMaker' for full details), you will need to ensure
+    that the PERL5LIB environment variable is set to include the
+    location, or add a line to your scripts explicitly naming the
+    library location:
+
+        use lib '/local/path/to/lib';
 
 OVERVIEW
     The Template Toolkit is a collection of Perl modules which
     collectively implement a fast and powerful template processing
     system. In this context, a template is a text document which
-    contains embedded processing "directives". These directives
-    instruct the template processor to perform certain actions and
-    collectively constitute the *language* that the toolkit
-    implements. Anything not specially marked as a template
-    directive is treated as plain text and gets passed through
-    intact. You can choose what mark-up tags to use but in the
-    default case, directives are embedded [% like this %].
+    contains embedded processing "directives". These instruct the
+    template processor to perform certain actions such as; inserting
+    the value of a variable, processing and including another
+    template file or user-defined block, iterating through a set of
+    values, and so on. Anything not marked as a template directive
+    is treated as plain text and gets passed through unaltered.
+    Directive are by default embedded like this: [% directive %]
 
-    The toolkit is designed to be fast, flexible and easy to use,
-    allowing you to construct entire content systems from a number
-    of small, reusable components. It can be customised, modified
-    and extended to serve in almost any template-based application.
+    The "mini-language" that the toolkit uses (ATML - A Template
+    Markup Language :-) is designed to be clear, concise, regular in
+    structure and simple in syntax. It is a specialised language
+    which boasts many powerful features for constructing dynamic
+    content but it is *not* a general purpose programming language.
+    Instead, it supports a plugin interface which allows separate
+    modules of application specific code to be written in the
+    language of choice (i.e. Perl, C, C++) and then loaded, used and
+    re-used as required.
 
-    It is ideally suited for generating web content, but it is by no
-    means limited or specific to this or any other application area.
-    Instead, it supports a simple "plugin" interface for dynamically
-    loading extension code to satisfy different requirements. It
-    encourages the clean separation of user interface elements (sub-
-    templates) and code (plugin modules or other Perl objects/code),
-    promoting flexibility, re-use and ease of development and
-    subsequent maintenance.
+    In other words, it helps to promote the separation of
+    application code (the *implementation*) from the user interface
+    (the *presentation*). It tries to keep templates clutter-free,
+    concentrating on what the document *looks like*, not how the
+    various items of content are stored, retrieved or calculated.
+    From the perspective of a web designer, for example, they're
+    just bits of text that get inserted into different parts of the
+    page.
 
-    The toolkit is a direct descendant of, and replacement for the
-    Text::MetaText module. It has been designed and rebuilt from
-    scratch based on several years of experience gained from
+    Development and subsequent maintenance become easier and less
+    error-prone when the "back-end" is separated from the "front-
+    end". As a further benefit, it becomes far easier to re-use
+    plugin code by simply changing the templates that generate the
+    output. Likewise it becomes possible to change the
+    implementation of some functionality without affecting the
+    template files.
+
+    Application code becomes easier to write and more portable when
+    you don't have to worry about what the output looks like. From
+    the perspective of the coder, this is a Good Thing. They only
+    have to worry about performing some task and returning some
+    value and really don't care if it ends up right-justified in a
+    table with an blue background. Similarly, the output templates
+    become easier to write and more portable because they don't
+    contain any implementation specific details (i.e. code).
+
+    The end result is that complex, dynamic content systems can be
+    built easily and quickly from a number of small, reusable
+    components. Some of these components are template files
+    representing user interface "chunks" and others may be data
+    structures, library code, user-defined sub-routines or objects
+    that implement various functionalities of the system. The
+    Template Toolkit's role is to help glue the different pieces
+    together as quickly and simply as possible, hiding as many of
+    the unnecessary details as possible.
+
+    The Template Toolkit is ideally suited for generating web
+    content, but it is by no means limited or specific to this or
+    any other application area. The plugin interface means that it
+    doesn't have to be - it can just concentrate on the task of
+    constructing documents and doesn't care if you subsequently use
+    it to generate HTML, LaTeX, RTF or plain text documents from a
+    command-line, CGI script or an in-server web process such as
+    Apache/mod_perl using data extracted from a CGI form, a
+    database, by psychic medium or by averaging last month's
+    rainfall in Seattle. You choose what do to with it and how to do
+    it. Simply load additional functionality as you need it from
+    CPAN modules, Template Toolkit plugins, generic web applications
+    such as chat rooms, FAQ lists, bulletin boards, etc., or any
+    other code you can beg, borrow or write yourself.
+
+    The philosophy behind the toolkit should hopefully now be
+    clearer. It is about power and ease of use in *document
+    construction* and defers the task of any application-specific
+    functionality to a far more powerful, general purpose language -
+    Perl. The Template Toolkit promotes a clean separation between
+    the two for the reasons outlined above. It is important to note,
+    however, that no one tool is appropriate for every use and there
+    are many times when you can't beat simply embedding Perl code
+    directly into your document. In those cases, Mark-Jason Dominus'
+    Text::Template module comes highly recommended (available from
+    CPAN).
+
+    The Template Toolkit is a direct descendant of, and replacement
+    for the Text::MetaText module. It has been designed and rebuilt
+    from scratch based on several years of experience gained from
     developing, supporting and using Text::MetaText and other
     template processing applications and tools. It is an Open Source
-    project in which contribution and collaboration are strongly
-    encouraged.
+    project in which contribution and collaboration are encouraged.
 
 FEATURES
     -   Fast, flexible, generic and open template processing system.
 
-    -   Simple template "micro-language" provides basic functionality to
-        manipulate variables (GET/SET), process other template
-        component files (INCLUDE), iterate through various values
-        (FOREACH) and conditional branching (IF/ELSIF/ELSE).
+    -   Simple template "mini-language" provides functionality to
+        manipulate variables (GET/SET/DEFAULT), process other
+        template component files (INCLUDE/PROCESS), iterate through
+        various values (FOREACH), conditional branching
+        (IF/UNLESS/ELSIF/ELSE), error handling (CATCH, THROW), flow
+        control (BREAK, RETURN, STOP), loading "plugin" code (USE)
+        and post-processing (FILTER).
 
     -   More complex application code can be developed in Perl (or C,
-        C++, etc) and maintained separately. Template processor
-        binds user code to variables to provide access to
-        application functionality from templates.
+        C++, etc) and maintained separately as "plugin" code.
+        Template processor binds user code to variables to provide
+        access to application functionality from templates.
 
     -   This natural extensibility promotes the separation of the
-        application from the interface. Template documents remain
-        simple and focussed on rendering the interface. Application
-        code can be made more generic by concentrating on what the
-        application does, not what it looks like.
+        application (implementation) from the interface
+        (presentation). Template documents remain simple and
+        focussed on rendering the interface. Application code can be
+        made more generic by concentrating on what the application
+        does, not what it looks like.
 
     -   Ideally suited, but not limited to, web content generation.
         Front-end modules and/or scripts provided for use with
@@ -90,59 +188,73 @@ FEATURES
 
     -   Extensive documentation, test suite, examples, etc.
 
+    -   `use strict' and `-w' safe. Y2K compliant (no dates used or
+        stored).
+
+    -   Ongoing development and maintenance is part of a general
+        research program into web-relevant software tools and
+        techniques at Canon Research Centre Europe Ltd.
+
     -   Fully open source code. Contributions, collaborations,
         suggestions and other feedback welcome.
 
     -   Mailing list: send email to majordomo@cre.canon.co.uk containing
         the text "subscribe templates".
 
-PREREQUISITES
-    At present, the Template Toolkit requires Perl 5.005. Efforts
-    will soon be made to support *some* earlier versions (e.g.
-    5.004).
+EXAMPLE
+        #!/path/to/perl -w
+        use strict;
+        use Template;
+      
+        # create a template processor
+        my $tproc = Template->new({ 
+            INCLUDE_PATH => '/user/abw/templates', # template search path
+        });
+      
+        # define variables for use in templates
+        my $vars  = {
+            'animal' => 'cat',
+            'place'  => 'mat',
+            'list'   => [ 'foo', 'bar', 'baz' ],
+            'user'   => { 
+                'name'  => 'Me, Myself, I', 
+                'email' => 'me@here.com'  
+            },
+        };
+      
+        # process a template file, output defaults to STDOUT
+        $tproc->process('myfile', $vars)
+            || die $tproc->error(), "\n";
 
-OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
-    The Template Toolkit module bundle is available from CPAN. As
-    the 'perlmod' manual page explains:
+    myfile:
 
-        CPAN stands for the Comprehensive Perl Archive Network.
-        This is a globally replicated collection of all known Perl
-        materials, including hundreds of unbundled modules.  
-        [...]
-        For an up-to-date listing of CPAN sites, see
-        http://www.perl.com/perl/ or ftp://ftp.perl.com/perl/ .
+        [% INCLUDE header
+           title = 'Hello World!'
+        %]
 
-    The module is available as:
+        The [% animal %] sat on the [% place %]
 
-        /authors/id/ABW/Template-Toolkit-<version>.tar.gz
+        <a href="mailto:[% user.email %]">[% user.name %]</a>
 
-    Unpack the archive to create an installation directory.
-    Something like this:
+        <ul>
+        [% FOREACH item = list %]
+           <li>[% item %]
+        [% END %]
+        </ul>
 
-        zcat Template-Toolkit-<version>.tar.gz | tar xvf -
+    Output:
 
-    'cd' into that directory, make, test and install the modules:
+        <!-- ...output from processing 'header' template... -->
 
-        cd Template-Toolkit-<version>
-        perl Makefile.PL
-        make
-        make test
-        make install
+        The cat sat on the mat
 
-    The 't' sub-directory contains a number of test scripts that are
-    run when a 'make test' is run. You may find some of the examples
-    to be enlightening and others perplexing.
+        <a href="mailto:me@here.com">Me, Myself, I</a>
 
-    The 'make install' will install the module on your system. You
-    may need administrator privileges to perform this task. If you
-    install the module in a local directory (for example, by
-    executing "perl Makefile.PL LIB=~/lib" in the above - see
-    `perldoc MakeMaker' for full details), you will need to ensure
-    that the PERL5LIB environment variable is set to include the
-    location, or add a line to your scripts explicitly naming the
-    library location:
-
-        use lib '/local/path/to/lib';
+        <ul>
+           <li>foo
+           <li>bar
+           <li>baz
+        </ul>
 
 MAILING LIST
     A mailing list exists for up-to-date information on the Template
@@ -150,16 +262,16 @@ MAILING LIST
     process. Send email to majordomo@cre.canon.co.uk with the
     following message in the body:
 
-      subscribe templates
+        subscribe templates
 
 AUTHOR
     Andy Wardley <abw@cre.canon.co.uk>
 
-      http://www.kfs.org/~abw/
-      http://www.cre.canon.co.uk/perl
+        http://www.kfs.org/~abw/
+        http://www.cre.canon.co.uk/perl
 
 VERSION
-    This is version 0.23 of the Template Toolkit.
+    This is version 0.24 of the Template Toolkit.
 
     It is a stable beta release version preceding the imminent
     release of version 1.0.
@@ -168,6 +280,14 @@ VERSION
     changes in the Template Toolkit between releases. The TODO file
     contains details of known bugs, planned enhancements, features,
     fixes, etc.
+
+    The latest version of the Template Toolkit can be downloaded
+    from any CPAN site:
+
+        /authors/id/ABW/Template-Toolkit-<version>.tar.gz
+
+    Information regarding interim and development versions is posted
+    to the templates mailing list.
 
 COPYRIGHT
     Copyright (C) 1996-1999 Andy Wardley. All Rights Reserved.

@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filter.pm,v 1.3 1999/08/10 11:09:10 abw Exp $
+# $Id: Filter.pm,v 1.4 1999/08/12 21:53:55 abw Exp $
 #
 #============================================================================
 
@@ -30,7 +30,7 @@ use vars qw( @ISA $VERSION );
 use Template::Plugin;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
 
 my $FILTERS = {
     'html'   => sub { return \&html_filter },
@@ -46,6 +46,7 @@ sub new {
 
     &$filter(@params);
 }
+
 
 #========================================================================
 # Filter constructors
@@ -77,6 +78,55 @@ sub html_filter {
 
 
 1;
+
+
+=head1 NAME
+
+Template::Plugin::Filter - plugin implementing filtering functions
+
+=head1 SYNOPSIS
+
+    [% FILTER html %]
+       x < 10 && y != 0
+    [% END %]
+
+    [% FILTER format('<!-- %-40s -->') %]
+    This will end up formatted, line-by-line,
+    as HTML comments...
+    [% END %]
+
+=head1 DESCRIPTION
+
+The Filter plugin module defines filters for the FILTER directive.
+
+The 'html' filter converts the characters '<', '>' and '&' to '&lt;', 
+'&gt;' and '&amp', respectively, protecting them from being interpreted 
+as representing HTML tags or entities.  
+
+The 'format' filter takes a format string as a parameter (as per printf()) 
+and formats each line of text accordingly.
+
+=head1 AUTHOR
+
+Andy Wardley E<lt>cre.canon.co.ukE<gt>
+
+=head1 REVISION
+
+$Revision: 1.4 $
+
+=head1 COPYRIGHT
+
+Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
+Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+L<Template::Plugin|Template::Plugin>, 
+
+=cut
 
 
 

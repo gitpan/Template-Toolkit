@@ -38,7 +38,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Iterator.pm,v 1.4 1999/07/28 14:26:22 abw Exp $
+# $Id: Iterator.pm,v 1.5 1999/08/12 21:53:47 abw Exp $
 #
 #============================================================================
 
@@ -52,7 +52,7 @@ use Template::Constants qw( :status :error );
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 
@@ -84,9 +84,6 @@ sub new {
 	unless UNIVERSAL::isa($data, 'ARRAY');
 
     $self->{ _DATA } = $data;
-#    foreach my $k (keys %$self) {
-#	printf ("iter:  %-6s => $self->{ $k }\n", $k);
-#    }
     bless $self, $class;
 }
 
@@ -269,20 +266,41 @@ Template::Iterator - Base iterator class used by the FOREACH directive.
 
 =head1 SYNOPSIS
 
-=head1 DOCUMENTATION NOTES
-
-This documentation describes the Template::Iterator module and is aimed at 
-people who wish to understand, extend or build template processing 
-applications with the Template Toolkit.
-
-For a general overview and information of how to use the modules, write
-and render templates, see L<Template-Toolkit>.
+    my $iter = Template::Iterator->new(\@data, \%options);
 
 =head1 DESCRIPTION
 
+THe Template::Iterator module defines a generic data iterator for use 
+by the FOREACH directive.  
+
+It may be used as the base class for custom iterators.
+
 =head1 PUBLIC METHODS
     
-=head2 new(\@data) 
+=head2 new(\@data, \%options) 
+
+Constructor method.  A reference to a list of values is passed as the
+first parameter and subsequent first() and next() calls will return
+each element.
+
+The second optional parameter may be a hash reference containing the
+following items:
+
+=over 4
+
+=item ORDER
+
+A code reference which will be called to pre-sort the data items.  A
+list reference is passed in and should be returned, along with any
+status code.  The ORDER option may also be either of the strings
+'sorted' or 'reverse'.
+
+=item ACTION   
+
+A code ref to be called on each iteration.  The data item is passed.
+The modified data should be returned.
+
+=back
 
 =head2 first()
 
@@ -301,7 +319,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.4 $
+$Revision: 1.5 $
 
 =head1 COPYRIGHT
 
@@ -313,7 +331,7 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template-Toolkit|Template-Toolkit>
+L<Template|Template>
 
 =cut
 

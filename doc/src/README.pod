@@ -1,0 +1,5 @@
+[% FOREACH section = ['name' 'prereq' 'installing' 'overview' 'features'
+                      'example' 'maillist' 'author' 'version' 'copyright' ]
+ -%]
+[% INCLUDE $section %]
+[% END %]
