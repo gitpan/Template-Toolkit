@@ -27,7 +27,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Provider.pm,v 2.62 2002/07/30 12:44:58 abw Exp $
+# $Id: Provider.pm,v 2.67 2003/03/18 13:09:23 abw Exp $
 #
 #============================================================================
 
@@ -44,7 +44,7 @@ use Template::Document;
 use File::Basename;
 use File::Spec;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.62 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.67 $ =~ /(\d+)\.(\d+)/);
 
 # name of document class
 $DOCUMENT = 'Template::Document' unless defined $DOCUMENT;
@@ -321,6 +321,7 @@ sub _init {
     my $path = $params->{ INCLUDE_PATH } || '.';
     my $cdir = $params->{ COMPILE_DIR  } || '';
     my $dlim = $params->{ DELIMITER    };
+    my $debug;
 
     # tweak delim to ignore C:/
     unless (defined $dlim) {
@@ -336,11 +337,19 @@ sub _init {
     $size = 2 
 	if defined $size && ($size == 1 || $size < 0);
 
-    if ($DEBUG) {
+    if (defined ($debug = $params->{ DEBUG })) {
+        $self->{ DEBUG } = $debug & ( Template::Constants::DEBUG_PROVIDER
+                                    | Template::Constants::DEBUG_FLAGS );
+    }
+    else {
+        $self->{ DEBUG } = $DEBUG;
+    }
+
+    if ($self->{ DEBUG }) {
 	local $" = ', ';
-	print(STDERR "creating cache of ", 
+	$self->debug("creating cache of ", 
 	      defined $size ? $size : 'unlimited',
-	      " slots for [ @$path ]\n");
+	      " slots for [ @$path ]");
     }
 
     # create COMPILE_DIR and sub-directories representing each INCLUDE_PATH
@@ -402,8 +411,7 @@ sub _fetch {
     my $size = $self->{ SIZE };
     my ($slot, $data, $error);
 
-    print STDERR "_fetch($name)\n"
-	if $DEBUG;
+    $self->debug("_fetch($name)") if $self->{ DEBUG };
 
     my $compiled = $self->_compiled_filename($name);
 
@@ -464,8 +472,7 @@ sub _fetch_path {
     my ($dir, $paths, $path, $compiled, $slot, $data, $error);
     local *FH;
 
-    print STDERR "_fetch_path($name)\n"
-	if $DEBUG;
+    $self->debug("_fetch_path($name)") if $self->{ DEBUG };
 
     # caching is enabled if $size is defined and non-zero or undefined
     my $caching = (! defined $size || $size);
@@ -491,7 +498,7 @@ sub _fetch_path {
 	foreach $dir (@$paths) {
 	    $path = "$dir/$name";
 
-	    print STDERR "looking for $path\n" if $DEBUG;
+	    $self->debug("searching path: $path\n") if $self->{ DEBUG };
 
 	    if ($caching && ($slot = $self->{ LOOKUP }->{ $path })) {
 		# cached entry exists, so refresh slot and extract data
@@ -603,8 +610,8 @@ sub _load {
 
     $alias = $name unless defined $alias or ref $name;
 
-    print STDERR "_load($name, $alias)\n"
-	if $DEBUG;
+    $self->debug("_load($name, ", defined $alias ? $alias : '<no alias>', 
+                 ')') if $self->{ DEBUG };
 
     LOAD: {
 	if (ref $name eq 'SCALAR') {
@@ -667,8 +674,10 @@ sub _refresh {
     my ($self, $slot) = @_;
     my ($head, $file, $data, $error);
 
-    print STDERR "_refresh([ @$slot ])\n"
-	if $DEBUG;
+
+    $self->debug("_refresh([ ", 
+                 join(', ', map { defined $_ ? $_ : '<undef>' } @$slot),
+                 '])') if $self->{ DEBUG };
 
     # if it's more than $STAT_TTL seconds since we last performed a 
     # stat() on the file then we need to do it again and see if the file
@@ -678,8 +687,8 @@ sub _refresh {
 
 	if ( (stat(_))[9] != $slot->[ LOAD ]) {
 
-	    print STDERR "refreshing cache file ", $slot->[ NAME ], "\n"
-		if $DEBUG;
+	    $self->debug("refreshing cache file ", $slot->[ NAME ]) 
+                if $self->{ DEBUG };
 	    
 	    ($data, $error) = $self->_load($slot->[ NAME ],
 					   $slot->[ DATA ]->{ name });
@@ -741,14 +750,12 @@ sub _store {
     my $load = (stat($name))[9];
     $data = $data->{ data };
 
-    print STDERR "_store($name, $data)\n"
-	if $DEBUG;
+    $self->debug("_store($name, $data)") if $self->{ DEBUG };
 
     if (defined $size && $self->{ SLOTS } >= $size) {
 	# cache has reached size limit, so reuse oldest entry
 
-	print STDERR "reusing oldest cache entry (size limit reached: $size)\nslots: $self->{ SLOTS }\n"
-	    if $DEBUG;
+	$self->debug("reusing oldest cache entry (size limit reached: $size)\nslots: $self->{ SLOTS }") if $self->{ DEBUG };
 
 	# remove entry from tail of list
 	$slot = $self->{ TAIL };
@@ -770,8 +777,7 @@ sub _store {
     else {
 	# cache is under size limit, or none is defined
 
-	print STDERR "adding new cache entry\n"
-	    if $DEBUG;
+	$self->debug("adding new cache entry") if $self->{ DEBUG };
 
 	# add new node to head of list
 	$head = $self->{ HEAD };
@@ -810,8 +816,9 @@ sub _compile {
     my $text = $data->{ text };
     my ($parsedoc, $error);
 
-    print STDERR "_compile($data, $compfile)\n"
-	if $DEBUG;
+    $self->debug("_compile($data, ", 
+                 defined $compfile ? $compfile : '<no compfile>', ')') 
+        if $self->{ DEBUG };
 
     my $parser = $self->{ PARSER } 
 	||= Template::Config->parser($self->{ PARAMS })
@@ -866,7 +873,8 @@ sub _compile {
 	}
     }
     else {
-	$error = 'parse error: ' . $data->{ name } . ' ' . $parser->error();
+	$error = Template::Exception->new( 'parse', "$data->{ name } " .
+                                           $parser->error() );
     }
 
     # return STATUS_ERROR, or STATUS_DECLINED if we're being tolerant
@@ -1347,6 +1355,20 @@ an alternate parser object.
 
 
 
+=item DEBUG
+
+The DEBUG option can be used to enable debugging messages from the
+Template::Provider module by setting it to include the DEBUG_PROVIDER
+value.
+
+    use Template::Constants qw( :debug );
+
+    my $template = Template->new({
+	DEBUG => DEBUG_PROVIDER,
+    });
+
+
+
 =back
 
 =head2 fetch($name)
@@ -1395,8 +1417,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.61, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.67, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

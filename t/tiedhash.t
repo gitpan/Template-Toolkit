@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: tiedhash.t,v 2.3 2002/01/24 09:24:53 abw Exp $
+# $Id: tiedhash.t,v 2.4 2002/08/12 11:07:17 abw Exp $
 #
 #========================================================================
 
@@ -23,10 +23,11 @@ use Template::Stash;
 $^W = 1;
 
 eval {
-  require Template::Stash::XS;
+    require Template::Stash::XS;
 };
 if ($@) {
-  exit(0);
+    warn $@;
+    skip_all('cannot load Template::Stash::XS');
 }
 
 #print "stash: $Template::Config::STASH\n";

@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: file.t,v 2.5 2001/09/12 14:53:07 abw Exp $
+# $Id: file.t,v 2.6 2002/08/12 11:07:14 abw Exp $
 #
 #========================================================================
 
@@ -22,8 +22,7 @@ use Template::Plugin::File;
 $^W = 1;
 
 if ($^O eq 'MSWin32') {
-    print "1..0\n";
-    exit(0);
+    skip_all('skipping tests on MS Win 32 platform');
 }
 
 #

@@ -320,15 +320,33 @@ Plugin to create HTML elements
 
 
 
+=item L<Template::Plugin::Image|Template::Plugin::Image>
+
+Plugin access to image sizes
+
+
+
 =item L<Template::Plugin::Iterator|Template::Plugin::Iterator>
 
 Plugin to create iterators (Template::Iterator)
 
 
 
+=item L<Template::Plugin::Math|Template::Plugin::Math>
+
+Plugin interface to mathematical functions
+
+
+
 =item L<Template::Plugin::Pod|Template::Plugin::Pod>
 
 Plugin interface to Pod::POM (Pod Object Model)
+
+
+
+=item L<Template::Plugin::Procedural|Template::Plugin::Procedural>
+
+Base class for procedural plugins
 
 
 
@@ -407,7 +425,7 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.08, released on 30 July 2002.
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

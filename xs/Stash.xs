@@ -26,7 +26,7 @@
 *
 *---------------------------------------------------------------------
 *
-* $Id: Stash.xs,v 1.13 2002/07/19 14:45:34 abw Exp $
+* $Id: Stash.xs,v 1.14 2003/03/17 23:05:27 abw Exp $
 *
 *=====================================================================*/
 
@@ -94,7 +94,7 @@ static SV*      scalar_dot_defined(pTHX_ SV*, AV*);
 static SV*      scalar_dot_length(pTHX_ SV*, AV*);
 
 static char rcsid[] = 
-	"$Id: Stash.xs,v 1.13 2002/07/19 14:45:34 abw Exp $";
+	"$Id: Stash.xs,v 1.14 2003/03/17 23:05:27 abw Exp $";
 
 /* dispatch table for XS versions of special "virtual methods",
  * names must be in alphabetical order 		
@@ -681,11 +681,12 @@ static SV *assign(pTHX_ SV *root, SV *key_sv, AV *args, SV *value, int flags) {
 		    return &PL_sv_undef;
 	    }
 
+            newsv = newSVsv(value);
 	    if (looks_like_number(key_sv)) {
-		if (av_store(rootav, SvIV(key_sv), value))
-		    SvREFCNT_inc(value);
+                if (av_store(rootav, SvIV(key_sv), newsv))
+                   SvREFCNT_inc(newsv);
 		else 
-		    SvSETMAGIC(value);
+                    SvSETMAGIC(newsv);
 
 		return value;
 	    }

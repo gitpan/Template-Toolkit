@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: service.t,v 2.0 2000/08/10 14:56:31 abw Exp $
+# $Id: service.t,v 2.1 2002/08/08 12:00:55 abw Exp $
 #
 #========================================================================
 
@@ -21,6 +21,9 @@ use lib qw( ./lib ../lib );
 use Template::Test;
 use Template::Service;
 use Template::Document;
+use Template::Constants qw( :debug );
+
+my $DEBUG = grep(/^--?d(debug)?$/, @ARGV);
 
 my $dir    = -d 't' ? 't/test' : 'test';
 my $config = {
@@ -35,6 +38,7 @@ my $config = {
 	barf     => 'barfed',
 	default  => 'error',
     },
+    DEBUG => $DEBUG ? DEBUG_SERVICE : 0,
 };
 my $tt1 = Template->new($config);
 

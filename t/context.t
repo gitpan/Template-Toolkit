@@ -13,14 +13,16 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: context.t,v 2.3 2001/06/29 13:09:00 abw Exp $
+# $Id: context.t,v 2.4 2002/08/08 12:00:54 abw Exp $
 #
 #========================================================================
 
 use strict;
 use lib qw( ./lib ../lib );
 use Template::Test;
+use Template::Constants qw( :debug );
 
+my $DEBUG = grep(/^--?d(debug)?$/, @ARGV);
 #$Template::Test::DEBUG = 1;
 
 ntests(54);
@@ -31,6 +33,7 @@ my $tt = Template->new({
     INCLUDE_PATH => "$dir/src:$dir/lib",	
     TRIM         => 1,
     POST_CHOMP   => 1,
+    DEBUG        => $DEBUG ? DEBUG_CONTEXT : 0,
 });
 
 my $ttperl = Template->new({
@@ -38,6 +41,7 @@ my $ttperl = Template->new({
     TRIM         => 1,
     EVAL_PERL    => 1,
     POST_CHOMP   => 1,
+    DEBUG        => $DEBUG ? DEBUG_CONTEXT : 0,
 });
 
 #------------------------------------------------------------------------

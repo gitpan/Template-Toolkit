@@ -241,7 +241,8 @@ my %opts = (
     'DIR'          => [ ],
     'PREREQ_PM'    => { 
 	'AppConfig'  => 1.52,
-	'File::Spec' => 0.6,
+	'File::Spec' => 0.8,
+        'File::Temp' => 0.12,
     },
     'dist'         => {
 	'COMPRESS' => 'gzip',
@@ -414,6 +415,8 @@ EOF
 		       [ 'GD::Text'    => undef         ],
 		       [ 'GD::Graph'   => undef         ],
 		       [ 'GD::Graph3d' => undef         ],
+		       [ 'Image::Info' => undef         ],
+		       [ 'Image::Size' => undef         ],
 		       [ 'Date::Calc'  => undef         ],
 		       [ 'Pod::POM'    => undef         ],
 		       [ 'Tie::DBI'    => undef         ],

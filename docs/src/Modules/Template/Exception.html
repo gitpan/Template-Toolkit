@@ -64,7 +64,7 @@ or by calling the throw() method on the current Template::Context object,
 <p>
 or from Perl code by calling die() with a Template::Exception object,
 </p>
-<pre>    die Template::Exception-&gt;new('user.denied', 'Invalid User ID');</pre>
+<pre>    die (Template::Exception-&gt;new('user.denied', 'Invalid User ID'));</pre>
 <p>
 or by simply calling die() with an error string.  This is
 automagically caught and converted to an  exception of 'undef'
@@ -91,8 +91,8 @@ Andy Wardley &lt;abw@andywardley.com&gt;
 [% WRAPPER section
     title="VERSION"
 -%]<p>
-2.50, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.56, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 </p>
 [%- END %]
 [% WRAPPER section

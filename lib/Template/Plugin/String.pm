@@ -15,7 +15,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: String.pm,v 2.21 2002/07/30 12:45:35 abw Exp $
+#   $Id: String.pm,v 2.25 2002/11/04 19:47:15 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use vars qw( $VERSION $ERROR);
 use overload q|""| => "text",
              fallback => 1;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.21 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.25 $ =~ /(\d+)\.(\d+)/);
 $ERROR   = '';
 
 *centre  = \*center;
@@ -97,7 +97,7 @@ sub copy {
 sub throw {
     my $self = shift;
 
-    die Template::Exception->new('String', join('', @_));
+    die (Template::Exception->new('String', join('', @_)));
 }
 
 
@@ -770,8 +770,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.20, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.25, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

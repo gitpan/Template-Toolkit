@@ -14,7 +14,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Directory.pm,v 2.52 2002/07/30 12:45:32 abw Exp $
+#   $Id: Directory.pm,v 2.56 2002/11/04 19:47:08 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ use Template::Plugin::File;
 use vars qw( $VERSION );
 use base qw( Template::Plugin::File );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.52 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -160,7 +160,7 @@ sub content {
 
 sub throw {
     my ($self, $error) = @_;
-    die Template::Exception->new('Directory', $error);
+    die (Template::Exception->new('Directory', $error));
 }
 
 __END__
@@ -388,14 +388,14 @@ a subset of files.
 =head1 AUTHORS
 
 Michael Stevens E<lt>michael@etla.orgE<gt> wrote the original Directory plugin
-on which this is based.  Andy Wardley E<lt>abw@kfs.orgE<gt> split it into 
+on which this is based.  Andy Wardley E<lt>abw@wardley.orgE<gt> split it into 
 separate File and Directory plugins, added some extra code and documentation
 for VIEW support, and made a few other minor tweaks.
 
 =head1 VERSION
 
-2.51, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.56, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 
 

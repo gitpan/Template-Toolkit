@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugin.pm,v 2.54 2002/07/30 12:44:58 abw Exp $
+# $Id: Plugin.pm,v 2.57 2002/11/04 19:46:03 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Base;
 use vars qw( $VERSION $DEBUG $ERROR $AUTOLOAD );
 use base qw( Template::Base );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.54 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.57 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 
@@ -383,8 +383,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.53, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.57, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

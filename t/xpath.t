@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: xpath.t,v 2.8 2002/03/12 15:58:23 abw Exp $
+# $Id: xpath.t,v 2.9 2002/08/12 11:07:18 abw Exp $
 # 
 #========================================================================
 
@@ -29,7 +29,7 @@ my $shut_up_warnings = $XML::XPath::VERSION;
 eval "use XML::XPath";
 
 if ($@ || $XML::XPath::VERSION < 1.0) {
-    exit(0);
+    skip_all('XML::XPath v1.0 or later not installed');
 }
 
 # account for script being run in distribution root or 't' directory

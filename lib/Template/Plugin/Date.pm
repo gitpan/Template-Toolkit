@@ -18,22 +18,22 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Date.pm,v 2.56 2002/07/30 12:45:32 abw Exp $
+# $Id: Date.pm,v 2.63 2002/11/04 19:47:07 abw Exp $
 #
 #============================================================================
 
 package Template::Plugin::Date;
 
 use strict;
-use vars qw( @ISA $VERSION $FORMAT );
+use vars qw( $VERSION $FORMAT @LOCALE_SUFFIX );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
 use POSIX ();
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.63 $ =~ /(\d+)\.(\d+)/);
 $FORMAT  = '%H:%M:%S %d-%b-%Y';    # default strftime() format
-
+@LOCALE_SUFFIX = qw( .ISO8859-1 .ISO_8859-15 .US-ASCII .UTF-8 );
 
 #------------------------------------------------------------------------
 # new(\%options)
@@ -109,17 +109,25 @@ sub format {
 	$time = &POSIX::mktime(@date);
     }
     
-
     if ($locale) {
 	# format the date in a specific locale, saving and subsequently
-	# restoring the current locale.
-	my $old_locale = &POSIX::setlocale(&POSIX::LC_ALL);
-	&POSIX::setlocale(&POSIX::LC_ALL, $locale);
-	$datestr = &POSIX::strftime($format, @date);
-	&POSIX::setlocale(&POSIX::LC_ALL, $old_locale);
+        # restoring the current locale.
+        my $old_locale = &POSIX::setlocale(&POSIX::LC_ALL);
+
+        # some systems expect locales to have a particular suffix
+        for my $suffix ('', @LOCALE_SUFFIX) {
+            my $try_locale = $locale.$suffix;
+	    my $setlocale = &POSIX::setlocale(&POSIX::LC_ALL, $try_locale);
+            if (defined $setlocale && $try_locale eq $setlocale) {
+                $locale = $try_locale;
+                last;
+            }
+        }
+        $datestr = &POSIX::strftime($format, @date);
+        &POSIX::setlocale(&POSIX::LC_ALL, $old_locale);
     }
     else {
-	$datestr = &POSIX::strftime($format, @date);
+        $datestr = &POSIX::strftime($format, @date);
     }
 
     return $datestr;
@@ -127,17 +135,29 @@ sub format {
 
 sub calc {
     my $self = shift;
-    eval {
-	require "Date/Calc.pm";
-    };
-    $self->throw("failed to load Date::Calc: $@")
-	if $@;
+    eval { require "Date/Calc.pm" };
+    $self->throw("failed to load Date::Calc: $@") if $@;
     return Template::Plugin::Date::Calc->new('no context');
 }
+
+sub manip {
+    my $self = shift;
+    eval { require "Date/Manip.pm" };
+    $self->throw("failed to load Date::Manip: $@") if $@;
+    return Template::Plugin::Date::Manip->new('no context');
+}
+
+
+sub throw {
+    my $self = shift;
+    die (Template::Exception->new('date', join(', ', @_)));
+}
+
 
 package Template::Plugin::Date::Calc;
 use base qw( Template::Plugin );
 use vars qw( $AUTOLOAD );
+*throw = \&Template::Plugin::Date::throw;
 
 sub AUTOLOAD {
     my $self = shift;
@@ -153,11 +173,24 @@ sub AUTOLOAD {
     &$sub(@_);
 }
 
-sub throw {
-    my $self = shift;
-    die Template::Exception->new('date', join(', ', @_));
-}
+package Template::Plugin::Date::Manip;
+use base qw( Template::Plugin );
+use vars qw( $AUTOLOAD );
+*throw = \&Template::Plugin::Date::throw;
 
+sub AUTOLOAD {
+    my $self = shift;
+    my $method = $AUTOLOAD;
+    
+    $method =~ s/.*:://;
+    return if $method eq 'DESTROY';
+    
+    my $sub = \&{"Date::Manip::$method"};
+    $self->throw("no such Date::Manip method: $method")
+        unless $sub;
+    
+    &$sub(@_);
+}
     
     
 1;
@@ -291,6 +324,12 @@ module (if installed on your system).
     [% calc = date.calc %]
     [% calc.Monday_of_Week(22, 2001).join('/') %]
 
+The manip() method can be used to create an interface to the Date::Manip
+module (if installed on your system).
+
+    [% manip = date.manip %]
+    [% manip.UnixDate("Noon Yesterday","%Y %b %d %H:%M") %]
+
 =head1 AUTHORS
 
 Thierry-Michel Barral E<lt>kktos@electron-libre.comE<gt> wrote the original
@@ -299,10 +338,13 @@ plugin.
 Andy Wardley E<lt>abw@cre.canon.co.ukE<gt> provided some minor
 fixups/enhancements, a test script and documentation.
 
+Mark D. Mills E<lt>mark@hostile.orgE<gt> cloned Date::Manip from the
+cute Date::Calc sub-plugin.
+
 =head1 VERSION
 
-2.55, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.63, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 
 

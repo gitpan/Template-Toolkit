@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 2.68 2002/07/30 12:44:59 abw Exp $
+# $Id: Stash.pm,v 2.72 2003/03/17 22:24:10 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.68 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.72 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -176,8 +176,9 @@ $LIST_OPS = {
 	     map { defined $_ ? $_ : '' } @$list) 
     },
     'sort'    => sub {
+        $^W = 0;
         my ($list, $field) = @_;
-        return $list unless $#$list;        # no need to sort 1 item lists
+        return $list unless @$list > 1;     # no need to sort 1 item lists
         return $field                       # Schwartzian Transform 
             ?  map  { $_->[0] }             # for case insensitivity
                sort { $a->[1] cmp $b->[1] }
@@ -938,8 +939,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.67, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.72, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

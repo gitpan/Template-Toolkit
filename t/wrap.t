@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: wrap.t,v 2.2 2000/12/01 15:29:35 abw Exp $
+# $Id: wrap.t,v 2.3 2002/08/12 11:07:17 abw Exp $
 #
 #========================================================================
 
@@ -28,8 +28,7 @@ $Template::Test::DEBUG = 0;
 eval "use Text::Wrap";
 
 if ($@) {
-    print "1..0\n";
-    exit(0);
+    skip_all('Text::Wrap not installed');
 }
 
 test_expect(\*DATA);

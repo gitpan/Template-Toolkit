@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: autoform.t,v 2.4 2001/06/23 08:41:59 abw Exp $
+# $Id: autoform.t,v 2.5 2002/08/12 11:07:13 abw Exp $
 #
 #========================================================================
 
@@ -29,7 +29,10 @@ $Template::Test::PRESERVE = 1;
 eval "use Text::Autoformat";
 
 if ($@) {
-    exit(0);
+    skip_all('Text::Autoformat module not installed');
+}
+if ($] == 5.008) {
+     skip_all('Text::Autoformat tests unreliable under 5.8.0');
 }
 
 # for testing known bug with locales that don't use '.' as a decimal 

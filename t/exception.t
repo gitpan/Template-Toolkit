@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: exception.t,v 2.1 2001/08/29 08:46:35 abw Exp $
+# $Id: exception.t,v 2.2 2003/01/28 13:32:27 mark Exp $
 #
 #========================================================================
 
@@ -51,3 +51,6 @@ ok( $e3 );
 ok( $e3->text() eq '');
 ok( $e3->as_string() eq 'e3.type error - e3.info' );
 
+# test to check that overloading fallback works properly
+# by using a non explicitly defined op
+ok( $e3 ne "fish");

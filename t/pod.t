@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: pod.t,v 2.5 2001/06/23 08:42:00 abw Exp $
+# $Id: pod.t,v 2.6 2002/08/12 11:07:17 abw Exp $
 #
 #========================================================================
 
@@ -27,7 +27,7 @@ $Template::Test::PRESERVE = 1;
 
 eval "use Pod::POM";
 if ($@) {
-    exit(0);
+    skip_all('Pod::POM not installed');
 }
 
 my $config = {

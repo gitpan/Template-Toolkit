@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Template.pm,v 2.52 2002/07/30 12:44:54 abw Exp $
+#   $Id: Template.pm,v 2.60 2003/04/23 12:44:32 abw Exp $
 #
 #========================================================================
  
@@ -30,18 +30,21 @@ use strict;
 use vars qw( $VERSION $AUTOLOAD $ERROR $DEBUG $BINMODE );
 use Template::Base;
 use Template::Config;
+use Template::Constants;
 use Template::Provider;  
 use Template::Service;
 use File::Basename;
 use File::Path;
-# use Template::Parser;    # autoloaded on demand
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '2.08';
+$VERSION     = '2.09';
 $ERROR       = '';
 $DEBUG       = 0;
 $BINMODE     = ($^O eq 'MSWin32') ? 1 : 0;
+
+# preload all modules if we're running under mod_perl
+Template::Config->preload() if $ENV{ MOD_PERL };
 
 
 #------------------------------------------------------------------------
@@ -113,6 +116,11 @@ sub context {
 sub _init {
     my ($self, $config) = @_;
 
+    # convert any textual DEBUG args to numerical form
+    my $debug = $config->{ DEBUG };
+    $config->{ DEBUG } = Template::Constants::debug_flags($self, $debug)
+        || return if defined $debug && $debug !~ /^\d+$/;
+        
     # prepare a namespace handler for any CONSTANTS definition
     if (my $constants = $config->{ CONSTANTS }) {
 	my $ns  = $config->{ NAMESPACE } ||= { };
@@ -551,8 +559,7 @@ Directory into which output files can be written.
 
 =item DEBUG
 
-Flag which, when enabled, causes any access to an undefined variable
-to be raised as an 'undef' error.
+Enable debugging messages.
 
 =back
 
@@ -902,7 +909,7 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.08, released on 30 July 2002.
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: DOM.pm,v 2.43 2002/07/30 12:46:06 abw Exp $
+# $Id: DOM.pm,v 2.47 2002/11/04 19:47:44 abw Exp $
 #
 #============================================================================
 
@@ -141,7 +141,7 @@ sub parse {
 
 sub _throw {
     my ($self, $error) = @_;
-    die Template::Exception->new('XML.DOM', $error);
+    die (Template::Exception->new('XML.DOM', $error));
 }
 
 
@@ -790,7 +790,7 @@ To print just the content of the report node (i.e. don't process the
 
 =head1 AUTHORS
 
-This plugin module was written by Andy Wardley E<lt>abw@kfs.orgE<gt>
+This plugin module was written by Andy Wardley E<lt>abw@wardley.orgE<gt>
 and Simon Matthews E<lt>sam@knowledgepool.comE<gt>.
 
 The XML::DOM module is by Enno Derksen E<lt>enno@att.comE<gt> and Clark 
@@ -801,7 +801,7 @@ library.
 =head1 VERSION
 
 2.6, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+Template Toolkit version 2.09, released on 23 April 2003.
 
 
 

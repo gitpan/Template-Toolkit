@@ -25,7 +25,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 2.16 2002/07/19 13:29:38 abw Exp $
+# $Id: Directive.pm,v 2.17 2002/08/08 11:59:15 abw Exp $
 #
 #============================================================================
 
@@ -41,7 +41,7 @@ use Template::Exception;
 use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $PRETTY $WHILE_MAX );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.16 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.17 $ =~ /(\d+)\.(\d+)/);
 
 $WHILE_MAX = 1000 unless defined $WHILE_MAX;
 $PRETTY    = 0 unless defined $PRETTY;
@@ -994,8 +994,7 @@ sub debug {
     my $hash = shift @$args;
     $args  = join(', ', @$file, @$args);
     $args .= @$hash ? ', { ' . join(', ', @$hash) . ' }' : '';
-#    print STDERR "factory debug($args)\n";
-    return "$OUTPUT \$context->debug($args); ## DEBUG ##"; 
+    return "$OUTPUT \$context->debugging($args); ## DEBUG ##"; 
 }
 
 

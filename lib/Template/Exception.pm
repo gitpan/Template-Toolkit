@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Exception.pm,v 2.51 2002/07/30 12:44:57 abw Exp $
+# $Id: Exception.pm,v 2.56 2003/01/28 13:32:24 mark Exp $
 #
 #========================================================================
 
@@ -33,10 +33,10 @@ use vars qw( $VERSION );
 use constant TYPE  => 0;
 use constant INFO  => 1;
 use constant TEXT  => 2;
-use overload q|""| => "as_string";
+use overload q|""| => "as_string", fallback => 1;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.51 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -201,7 +201,7 @@ or by calling the throw() method on the current Template::Context object,
 
 or from Perl code by calling die() with a Template::Exception object,
 
-    die Template::Exception->new('user.denied', 'Invalid User ID');
+    die (Template::Exception->new('user.denied', 'Invalid User ID'));
 
 or by simply calling die() with an error string.  This is
 automagically caught and converted to an  exception of 'undef'
@@ -228,8 +228,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.50, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.56, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

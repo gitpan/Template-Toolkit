@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: HTML.pm,v 2.45 2002/07/30 12:45:34 abw Exp $
+# $Id: HTML.pm,v 2.48 2002/11/04 19:47:12 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use vars qw( $VERSION );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.45 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.48 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my ($class, $context, @args) = @_;
@@ -171,8 +171,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.44, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.48, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

@@ -12,13 +12,13 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.12 2002/05/03 13:56:34 abw Exp $
+# $Id: stash.t,v 2.13 2002/08/08 12:00:55 abw Exp $
 #
 #========================================================================
 
 use strict;
 use lib qw( ./lib ../lib );
-use Template::Constants qw( :status );
+use Template::Constants qw( :status :debug );
 use Template;
 use Template::Stash;
 use Template::Config;
@@ -64,7 +64,7 @@ match( $stash->get('bar.buz'), 100 );
 
 my $ttlist = [
     'default' => Template->new(),
-    'warn'    => Template->new(DEBUG => 1, DEBUG_FORMAT => ''),
+    'warn'    => Template->new(DEBUG => DEBUG_UNDEF, DEBUG_FORMAT => ''),
 ];
 
 test_expect(\*DATA, $ttlist, $data);

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash-xs.t,v 2.4 2002/03/13 15:33:29 abw Exp $
+# $Id: stash-xs.t,v 2.5 2002/08/12 11:07:17 abw Exp $
 #
 #========================================================================
 
@@ -25,11 +25,11 @@ use Template::Test;
 $^W = 1;
 
 eval {
-  require Template::Stash::XS;
+    require Template::Stash::XS;
 };
 if ($@) {
-  warn $@;
-  exit(0);
+    warn $@;
+    skip_all('cannot load Template::Stash::XS');
 }
 
 my $count = 20;

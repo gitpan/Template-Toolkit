@@ -19,7 +19,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: tpage,v 2.50 2002/07/30 12:44:05 abw Exp $
+# $Id: tpage,v 2.54 2002/11/07 15:36:55 darren Exp $
 #
 #========================================================================
 
@@ -34,7 +34,7 @@ if (grep /^--?h(elp)?/, @ARGV) {
 my $vars = { };
 my ($var, $val);
 
-while ($ARGV[0] && $ARGV[0] =~ /--?d(efine)?/) {
+while ($ARGV[0] && $ARGV[0] =~ /^--?d(efine)?/) {
     shift(@ARGV);
     die "--define expect a 'variable=value' argument\n" 
 	unless defined ($var = shift(@ARGV));
@@ -112,8 +112,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.54, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.60, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

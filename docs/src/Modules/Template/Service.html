@@ -370,7 +370,7 @@ or by calling the throw() method on the current Template::Context object,
 <p>
 or from Perl code by calling die() with a Template::Exception object,
 </p>
-<pre>    die Template::Exception-&gt;new('user.denied', 'Invalid User ID');</pre>
+<pre>    die (Template::Exception-&gt;new('user.denied', 'Invalid User ID'));</pre>
 <p>
 or by simply calling die() with an error string.  This is
 automagically caught and converted to an  exception of 'undef'
@@ -394,6 +394,17 @@ for the Template::Context object.  Subsequent BLOCK definitions in templates
 will over-ride these but they will be reinstated on each reset if AUTO_RESET
 is enabled (default), or if the Template::Context reset() method is called.
 </p>
+
+<li><b>DEBUG</b><br>
+<p>
+The DEBUG option can be used to enable debugging messages from the
+Template::Service module by setting it to include the DEBUG_SERVICE
+value.
+</p>
+<pre>    use Template::Constants qw( :debug );</pre>
+<pre>    my $template = Template-&gt;new({
+	DEBUG =&gt; DEBUG_SERVICE,
+    });</pre>
 
 </ul>
 [%- END %]
@@ -443,8 +454,8 @@ Andy Wardley &lt;abw@andywardley.com&gt;
 [% WRAPPER section
     title="VERSION"
 -%]<p>
-2.61, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.67, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 </p>
 [%- END %]
 [% WRAPPER section

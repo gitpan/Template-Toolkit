@@ -65,7 +65,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.47 2002/07/30 12:46:11 abw Exp $
+# $Id: Context.pm,v 1.50 2002/11/04 19:47:48 abw Exp $
 #
 #============================================================================
 
@@ -77,7 +77,7 @@ use strict;
 use Template::Stash;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.47 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.50 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -765,8 +765,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.46, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+1.50, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

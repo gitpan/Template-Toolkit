@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dom.t,v 2.7 2001/06/23 08:41:59 abw Exp $
+# $Id: dom.t,v 2.8 2002/08/12 11:07:14 abw Exp $
 # 
 #========================================================================
 
@@ -32,7 +32,7 @@ my $shut_up_warnings = $XML::DOM::VERSION;
 
 eval "use XML::DOM";
 if ($@ ||  $XML::DOM::VERSION < 1.27) {
-    exit(0);
+    skip_all("XML::DOM v1.27 or later not installed");
 }
 
 # account for script being run in distribution root or 't' directory

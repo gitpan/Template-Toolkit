@@ -17,7 +17,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Config.pm,v 2.55 2002/07/30 12:44:56 abw Exp $
+#   $Id: Config.pm,v 2.59 2002/11/04 19:45:56 abw Exp $
 #
 #========================================================================
  
@@ -30,9 +30,9 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $ERROR $INSTDIR
 	     $PARSER $PROVIDER $PLUGINS $FILTERS $ITERATOR 
              $LATEX_PATH $PDFLATEX_PATH $DVIPS_PATH
-	     $STASH $SERVICE $CONTEXT $CONSTANTS );
+	     $STASH $SERVICE $CONTEXT $CONSTANTS @PRELOAD );
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 2.55 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 2.59 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0 unless defined $DEBUG;
 $ERROR     = '';
 $CONTEXT   = 'Template::Context';
@@ -44,6 +44,9 @@ $PROVIDER  = 'Template::Provider';
 $SERVICE   = 'Template::Service';
 $STASH     = 'Template::Stash';
 $CONSTANTS = 'Template::Namespace::Constants';
+
+@PRELOAD   = ( $CONTEXT, $FILTERS, $ITERATOR, $PARSER,
+               $PLUGINS, $PROVIDER, $SERVICE, $STASH );
 
 # the following is set at installation time by the Makefile.PL 
 $INSTDIR  = '';
@@ -57,6 +60,23 @@ $DVIPS_PATH    = '';
 #========================================================================
 #                       --- CLASS METHODS ---
 #========================================================================
+
+#------------------------------------------------------------------------
+# preload($module, $module, ...)
+#
+# Preloads all the standard TT modules that are likely to be used, along
+# with any other passed as arguments.
+#------------------------------------------------------------------------
+
+sub preload {
+    my $class = shift;
+
+    foreach my $module (@PRELOAD, @_) {
+        $class->load($module) || return;
+    };
+    return 1;
+}
+
 
 #------------------------------------------------------------------------
 # load($module)
@@ -349,6 +369,12 @@ Load a module via require().  Any occurences of '::' in the module name
 are be converted to '/' and '.pm' is appended.  Returns 1 on success
 or undef on error.  Use $class-E<gt>error() to examine the error string.
 
+=head2 preload()
+
+This method preloads all the other Template::* modules that are likely
+to be used.  It is called by the Template module when running under 
+mod_perl ($ENV{MOD_PERL} is set).
+
 =head2 parser(\%config)
 
 Instantiate a new parser object of the class whose name is denoted by
@@ -372,8 +398,9 @@ Returns an object reference or undef on error, as above.
 
 =head2 stash(\%vars)
 
-Instantiate a new stash object (default: Template::Templates) using the 
-contents of the optional hash array passed by parameter as initial variable
+Instantiate a new stash object (Template::Stash or Template::Stash::XS
+depending on the default set at installation time) using the contents
+of the optional hash array passed by parameter as initial variable
 definitions.  Returns an object reference or undef on error, as above.
 
 =head2 context(\%config)
@@ -414,8 +441,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.54, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.59, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

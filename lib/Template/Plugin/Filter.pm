@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Filter.pm,v 1.19 2002/07/30 12:45:33 abw Exp $
+#   $Id: Filter.pm,v 1.22 2002/11/04 19:47:11 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 use base qw( Template::Plugin );
 use vars qw( $VERSION $DYNAMIC );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
 $DYNAMIC = 0 unless defined $DYNAMIC;
 
 
@@ -113,6 +113,7 @@ sub install_filter {
     $self->{ _CONTEXT }->define_filter( $name => $self->factory() );
     return $self;
 }
+
 
 
 1;
@@ -409,8 +410,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.18, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+1.22, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugins.pm,v 2.58 2002/07/30 12:44:58 abw Exp $
+# $Id: Plugins.pm,v 2.62 2002/11/04 19:46:03 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $STD_PLUGINS );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.58 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.62 $ =~ /(\d+)\.(\d+)/);
 
 $STD_PLUGINS   = {
     'autoformat' => 'Template::Plugin::Autoformat',
@@ -45,6 +45,7 @@ $STD_PLUGINS   = {
     'file'       => 'Template::Plugin::File',
     'format'     => 'Template::Plugin::Format',
     'html'       => 'Template::Plugin::HTML',
+    'image'      => 'Template::Plugin::Image',
     'iterator'   => 'Template::Plugin::Iterator',
     'pod'        => 'Template::Plugin::Pod',
     'table'      => 'Template::Plugin::Table',
@@ -86,6 +87,11 @@ $STD_PLUGINS   = {
 sub fetch {
     my ($self, $name, $args, $context) = @_;
     my ($factory, $plugin, $error);
+
+    $self->debug("fetch($name, ", 
+                 defined $args ? ('[ ', join(', ', @$args), ' ]') : '<no args>', ', ',
+                 defined $context ? $context : '<no context>', 
+                 ')') if $self->{ DEBUG };
 
     # NOTE:
     # the $context ref gets passed as the first parameter to all regular
@@ -152,6 +158,8 @@ sub _init {
     $self->{ TOLERANT    } = $params->{ TOLERANT }  || 0;
     $self->{ LOAD_PERL   } = $params->{ LOAD_PERL } || 0;
     $self->{ FACTORY     } = $factory || { };
+    $self->{ DEBUG       } = ( $params->{ DEBUG } || 0 )
+                             & Template::Constants::DEBUG_PLUGINS;
 
     return $self;
 }
@@ -175,8 +183,8 @@ sub _load {
 	$pkg = $module;
 	($file = $module) =~ s|::|/|g;
 	$file =~ s|::|/|g;
-	print STDERR "fetch() loading $module.pm (PLUGIN_NAME)\n"
-	    if $DEBUG;
+	$self->debug("loading $module.pm (PLUGIN_NAME)")
+            if $self->{ DEBUG };
 	$ok = eval { require "$file.pm" };
 	$error = $@;
     }
@@ -188,8 +196,8 @@ sub _load {
 	    $pkg = $base . '::' . $module;
 	    ($file = $pkg) =~ s|::|/|g;
 
-	    print STDERR "fetch() attempting to load $file.pm (PLUGIN_BASE)\n"
-		if $DEBUG;
+	    $self->debug("loading $file.pm (PLUGIN_BASE)")
+                if $self->{ DEBUG };
 
 	    $ok = eval { require "$file.pm" };
 	    last unless $@;
@@ -200,8 +208,7 @@ sub _load {
     }
 
     if ($ok) {
-	print STDERR "fetch() attempting to call $pkg->load()\n"
-	    if $DEBUG;
+	$self->debug("calling $pkg->load()") if $self->{ DEBUG };
 
 	$factory = eval { $pkg->load($context) };
 	$error   = '';
@@ -230,8 +237,7 @@ sub _load {
     }
 
     if ($factory) {
-	print STDERR "load($name) => $factory\n"
-	    if $DEBUG;
+	$self->debug("$name => $factory") if $self->{ DEBUG };
 	return $factory;
     }
     elsif ($error) {
@@ -488,6 +494,21 @@ responsibility for providing the resource, rather than failing the
 request outright.  If all providers decline to service the request,
 either through tolerated failure or a genuine disinclination to
 comply, then a 'E<lt>resourceE<gt> not found' exception is raised.
+
+
+
+
+=item DEBUG
+
+The DEBUG option can be used to enable debugging messages from the
+Template::Plugins module by setting it to include the DEBUG_PLUGINS
+value.
+
+    use Template::Constants qw( :debug );
+
+    my $template = Template->new({
+	DEBUG => DEBUG_FILTERS | DEBUG_PLUGINS,
+    });
 
 
 
@@ -788,7 +809,7 @@ way (as discussed recently on the mod_perl mailing list).
     [% HTML.attributes(border => 1, cellpadding => 2) %]
     [% HTML.element(table => { border => 1, cellpadding => 2 }) %]
 
-See L<Template::Plugin::Iterator> for further details.
+See L<Template::Plugin::HTML> for further details.
 
 =head2 Iterator
 
@@ -809,7 +830,7 @@ L<Template::Plugin::Iterator> for further details.
 
 =head2 Pod
 
-This plugin provides an interface to the L<Pod::POD|Pod::POD> module
+This plugin provides an interface to the L<Pod::POM|Pod::POM> module
 which parses POD documents into an internal object model which can
 then be traversed and presented through the Template Toolkit.
 
@@ -994,8 +1015,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.57, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.62, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: mixed.pm,v 1.44 2002/07/30 12:45:57 abw Exp $
+# $Id: mixed.pm,v 1.49 2003/03/17 23:32:35 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Graph::mixed Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.44 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.49 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -47,6 +47,14 @@ sub set
 
     push(@_, %{pop(@_)}) if ( @_ & 1 && ref($_[@_-1]) eq "HASH" );
     $self->SUPER::set(@_);
+}
+
+
+sub set_legend
+{
+    my $self = shift;
+	
+    $self->SUPER::set_legend(ref $_[0] ? @{$_[0]} : @_);
 }
 
 1;
@@ -140,8 +148,8 @@ The GD::Graph module was written by Martien Verbruggen.
 
 =head1 VERSION
 
-1.43, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+1.49, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

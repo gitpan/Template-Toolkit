@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 # 
 # REVISION
-#   $Id: Context.pm,v 2.69 2002/07/30 12:40:09 abw Exp $
+#   $Id: Context.pm,v 2.76 2003/03/18 13:10:38 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.69 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.76 $ =~ /(\d+)\.(\d+)/);
 $DEBUG_FORMAT = "\n## \$file line \$line : [% \$text %] ##\n";
 
 
@@ -78,6 +78,8 @@ sub template {
     my ($prefix, $blocks, $defblocks, $provider, $template, $error);
     my ($shortname, $blockname, $providers);
 
+    $self->debug("template($name)") if $self->{ DEBUG };
+
     # references to Template::Document (or sub-class) objects objects, or
     # CODE references are assumed to be pre-compiled templates and are
     # returned intact
@@ -88,6 +90,9 @@ sub template {
     $shortname = $name;
 
     unless (ref $name) {
+
+	$self->debug("looking for block [$name]") if $self->{ DEBUG };
+
 	# we first look in the BLOCKS hash for a BLOCK that may have 
 	# been imported from a template (via PROCESS)
 	return $template
@@ -127,14 +132,21 @@ sub template {
 
     $blockname = '';
     while ($shortname) {
-	$self->DEBUG("looking for [$shortname] [$blockname]\n") if $DEBUG;
+	$self->debug("asking providers for [$shortname] [$blockname]") 
+            if $self->{ DEBUG };
 
 	foreach my $provider (@$providers) {
 	    ($template, $error) = $provider->fetch($shortname, $prefix);
 	    if ($error) {
 		if ($error == Template::Constants::STATUS_ERROR) {
-		    $self->throw($template) if ref $template;
-		    $self->throw(Template::Constants::ERROR_FILE, $template);
+                    # $template contains exception object
+                    if (UNIVERSAL::isa($template, 'Template::Exception')
+                        && $template->type() eq Template::Constants::ERROR_FILE) {
+                        $self->throw($template);
+                    }
+                    else {
+                        $self->throw( Template::Constants::ERROR_FILE => $template );
+                    }
 		}
 		# DECLINE is ok, carry on
 	    }
@@ -171,6 +183,9 @@ sub plugin {
     my ($self, $name, $args) = @_;
     my ($provider, $plugin, $error);
 
+    $self->debug("plugin($name, ", defined $args ? @$args : '[ ]', ')')
+        if $self->{ DEBUG };
+
     # request the named plugin from each of the LOAD_PLUGINS providers in turn
     foreach my $provider (@{ $self->{ LOAD_PLUGINS } }) {
 	($plugin, $error) = $provider->fetch($name, $args, $self);
@@ -196,6 +211,11 @@ sub plugin {
 sub filter {
     my ($self, $name, $args, $alias) = @_;
     my ($provider, $filter, $error);
+
+    $self->debug("filter($name, ", 
+                 defined $args  ? @$args : '[ ]', 
+                 defined $alias ? $alias : '<no alias>', ')')
+        if $self->{ DEBUG };
 
     # use any cached version of the filter if no params provided
     return $filter 
@@ -253,8 +273,8 @@ sub view {
 
 
 #------------------------------------------------------------------------
-# process($template, \%params)            [% PROCESS template   var = val, ... %]
-# process($template, \%params, $localize) [% INCLUDE template   var = val, ... %]
+# process($template, \%params)         [% PROCESS template var=val ... %]
+# process($template, \%params, $local) [% INCLUDE template var=val ... %]
 #
 # Processes the template named or referenced by the first parameter.
 # The optional second parameter may reference a hash array of variable
@@ -277,6 +297,11 @@ sub process {
     my $output = '';
 
     $template = [ $template ] unless ref $template eq 'ARRAY';
+
+    $self->debug("process([ ", join(', '), @$template, ' ], ', 
+                 defined $params ? $params : '<no params>', ', ', 
+                 $localize ? '<localized>' : '<unlocalized>', ')')
+        if $self->{ DEBUG };
 
     # fetch compiled template for each name specified
     foreach $name (@$template) {
@@ -375,6 +400,10 @@ sub insert {
 
     my $files = ref $file eq 'ARRAY' ? $file : [ $file ];
 
+    $self->debug("insert([ ", join(', '), @$files, " ])") 
+        if $self->{ DEBUG };
+
+
     FILE: foreach $file (@$files) {
 	my $name = $file;
 
@@ -449,11 +478,11 @@ sub throw {
 	die $error;
     }
     elsif (defined $info) {
-	die Template::Exception->new($error, $info, $output);
+	die (Template::Exception->new($error, $info, $output));
     }
     else {
 	$error ||= '';
-	die Template::Exception->new('undef', $error, $output);
+	die (Template::Exception->new('undef', $error, $output));
     }
 
     # not reached
@@ -620,7 +649,7 @@ sub stash {
 
 
 #------------------------------------------------------------------------
-# debug($command, @args, \%params)
+# debugging($command, @args, \%params)
 #
 # Method for controlling the debugging status of the context.  The first
 # argument can be 'on' or 'off' to enable/disable debugging, 'format'
@@ -629,7 +658,7 @@ sub stash {
 # according to the current debug format.
 #------------------------------------------------------------------------
 
-sub debug {
+sub debugging {
     my $self = shift;
     my $hash = ref $_[-1] eq 'HASH' ? pop : { };
     my @args = @_;
@@ -637,17 +666,18 @@ sub debug {
 #    print "*** debug(@args)\n";
     if (@args) {
 	if ($args[0] =~ /^on|1$/i) {
-	    $self->{ DEBUG } = 1;
+	    $self->{ DEBUG_DIRS } = 1;
 	    shift(@args);
 	}
 	elsif ($args[0] =~ /^off|0$/i) {
-	    $self->{ DEBUG } = 0;
+	    $self->{ DEBUG_DIRS } = 0;
 	    shift(@args);
 	}
     }
 
     if (@args) {
 	if ($args[0] =~ /^msg$/i) {
+            return unless $self->{ DEBUG_DIRS };
 	    my $format = $self->{ DEBUG_FORMAT };
 	    $format = $DEBUG_FORMAT unless defined $format;
 	    $format =~ s/\$(\w+)/$hash->{ $1 }/ge;
@@ -746,7 +776,10 @@ sub _init {
 		    || { };
 
 	# hack to get stash to know about debug mode
-	$predefs->{ _DEBUG } = $config->{ DEBUG } || 0;
+	$predefs->{ _DEBUG } = ( ($config->{ DEBUG } || 0)
+                               & &Template::Constants::DEBUG_UNDEF ) ? 1 : 0
+            unless defined $predefs->{ _DEBUG };
+                                
 	Template::Config->stash($predefs)
 	    || return $self->error($Template::Config::ERROR);
     };
@@ -767,20 +800,30 @@ sub _init {
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # RECURSION - flag indicating is recursion into templates is supported
     # EVAL_PERL - flag indicating if PERL blocks should be processed
-#    # DELIMITER - used to detect template prefixes
     # TRIM      - flag to remove leading and trailing whitespace from output
     # BLKSTACK  - list of hashes of BLOCKs defined in current template(s)
     # CONFIG    - original configuration hash
+    # EXPOSE_BLOCKS - make blocks visible as pseudo-files
+    # DEBUG_FORMAT  - format for generating template runtime debugging messages
+    # DEBUG         - format for generating template runtime debugging messages
 
     $self->{ RECURSION } = $config->{ RECURSION } || 0;
     $self->{ EVAL_PERL } = $config->{ EVAL_PERL } || 0;
     $self->{ TRIM      } = $config->{ TRIM } || 0;
     $self->{ BLKSTACK  } = [ ];
     $self->{ CONFIG    } = $config;
-    $self->{ DEBUG_FORMAT  } = $config->{ DEBUG_FORMAT };
     $self->{ EXPOSE_BLOCKS } = defined $config->{ EXPOSE_BLOCKS }
                                      ? $config->{ EXPOSE_BLOCKS } 
                                      : 0;
+
+    $self->{ DEBUG_FORMAT  } =  $config->{ DEBUG_FORMAT };
+    $self->{ DEBUG_DIRS    } = ($config->{ DEBUG } || 0) 
+                               & Template::Constants::DEBUG_DIRS;
+    $self->{ DEBUG } = defined $config->{ DEBUG } 
+        ? $config->{ DEBUG } & ( Template::Constants::DEBUG_CONTEXT
+                               | Template::Constants::DEBUG_FLAGS )
+        : $DEBUG;
+
     return $self;
 }
 
@@ -1250,6 +1293,52 @@ version 1.
 
 
 
+=item DEBUG
+
+The DEBUG option can be used to enable various debugging features
+of the Template::Context module.  
+
+    use Template::Constants qw( :debug );
+
+    my $template = Template->new({
+	DEBUG => DEBUG_CONTEXT | DEBUG_DIRS,
+    });
+
+The DEBUG value can include any of the following.  Multiple values
+should be combined using the logical OR operator, '|'.
+
+=over 4
+
+=item DEBUG_CONTEXT
+
+Enables general debugging messages for the
+L<Template::Context|Template::Context> module.
+
+=item DEBUG_DIRS
+
+This option causes the Template Toolkit to generate comments
+indicating the source file, line and original text of each directive
+in the template.  These comments are embedded in the template output
+using the format defined in the DEBUG_FORMAT configuration item, or a
+simple default format if unspecified.
+
+For example, the following template fragment:
+
+    
+    Hello World
+
+would generate this output:
+
+    ## input text line 1 :  ##
+    Hello 
+    ## input text line 2 : World ##
+    World
+
+
+=back
+
+
+
 
 
 =back
@@ -1385,7 +1474,7 @@ throws a 'filter' exception on error.
 =head2 localise(\%vars)
 
 Clones the stash to create a context with localised variables.  Returns a 
-reference to the newly cloned Template::Stash object which is also stored
+reference to the newly cloned stash object which is also stored
 internally.
 
     $stash = $context->localise();
@@ -1433,8 +1522,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.67, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.76, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

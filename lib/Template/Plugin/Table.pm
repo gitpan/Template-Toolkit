@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Table.pm,v 2.53 2002/07/30 12:45:35 abw Exp $
+# $Id: Table.pm,v 2.56 2002/11/04 19:47:16 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use vars qw( @ISA $VERSION $AUTOLOAD );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.53 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -438,8 +438,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.52, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.56, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

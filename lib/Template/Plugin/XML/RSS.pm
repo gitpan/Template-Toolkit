@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: RSS.pm,v 2.52 2002/07/30 12:46:08 abw Exp $
+# $Id: RSS.pm,v 2.56 2003/04/11 12:26:02 darren Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use XML::RSS;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.52 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 
 sub load {
     return $_[0];
@@ -47,7 +47,16 @@ sub new {
     my $rss = XML::RSS->new
 	or return $class->fail('failed to create XML::RSS');
 
-    eval { $rss->parsefile($filename) } and not $@
+    # Attempt to determine if $filename is an XML string or
+    # a filename.  Based on code from the XML.XPath plugin.
+    eval {
+        if ($filename =~ /\</) {
+	    $rss->parse($filename);
+        }
+        else {
+	    $rss->parsefile($filename)
+        }
+    } and not $@
 	or return $class->fail("failed to parse $filename: $@");
 
     return $rss;
@@ -158,7 +167,7 @@ The list of news items can be retrieved using the 'items' method:
 
 =head1 AUTHORS
 
-This plugin was written by Andy Wardley E<lt>abw@kfs.orgE<gt>,
+This plugin was written by Andy Wardley E<lt>abw@wardley.orgE<gt>,
 inspired by an article in Web Techniques by Randal Schwartz
 E<lt>merlyn@stonehenge.comE<gt>.
 
@@ -168,8 +177,8 @@ E<lt>eisen@pobox.comE<gt>.
 
 =head1 VERSION
 
-2.51, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.56, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

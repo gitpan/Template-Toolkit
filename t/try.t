@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: try.t,v 2.2 2001/03/29 23:00:54 abw Exp $
+# $Id: try.t,v 2.3 2002/11/01 18:57:39 abw Exp $
 #
 #========================================================================
 
@@ -31,7 +31,7 @@ my $ttcfg = {
 };
 my $replace = &callsign();
 $replace->{ throw_egg } = sub { 
-    die Template::Exception->new('egg', 'scrambled');
+    die (Template::Exception->new('egg', 'scrambled'));
 };
 $replace->{ throw_any } = sub { 
     die "undefined error\n";

@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: html.t,v 2.7 2002/03/13 15:32:48 abw Exp $
+# $Id: html.t,v 2.11 2002/11/01 14:35:12 mark Exp $
 #
 #========================================================================
 
@@ -22,8 +22,9 @@ use Template::Test;
 use Template::Plugin::HTML;
 $^W = 1;
 
-$Template::Test::DEBUG = 0;
-$Template::Test::PRESERVE = 1;
+my $DEBUG = grep(/-d/, @ARGV);
+$Template::Test::DEBUG =  $DEBUG;
+$Template::Test::PRESERVE = $DEBUG;
 
 #------------------------------------------------------------------------
 # behaviour of html filter depends on these being available
@@ -52,12 +53,14 @@ test_expect(\*DATA, $cfg, $vars);
 
 __DATA__
 -- test --
+-- name html plugin --
 [% USE HTML -%]
 OK
 -- expect --
 OK
 
 -- test --
+-- name html filter --
 [% FILTER html -%]
 < &amp; >
 [%- END %]
@@ -65,18 +68,22 @@ OK
 &lt; &amp;amp; &gt;
 
 -- test --
+-- name html entity --
 [% TRY; 
+     text =
       "Léon Brocard" | html_entity;
    CATCH;
      error;
-   END
+   END;
+ "passed" IF text == "L&eacute;on Brocard";
+ "passed" IF text == "L&#233;on Brocard";
 %]
 -- expect --
 -- process --
 [%  IF entities -%]
-L&eacute;on Brocard
+passed
 [%- ELSE -%]
-html_all error - cannot locate Apache::Util or HTML::Entities
+html_entity error - cannot locate Apache::Util or HTML::Entities
 [%- END %]
 
 -- test --
@@ -85,18 +92,21 @@ html_all error - cannot locate Apache::Util or HTML::Entities
 my%20file.html
 
 -- test --
+-- name escape --
 [% USE HTML -%]
 [% HTML.escape("if (a < b && c > d) ...") %]
 -- expect --
 if (a &lt; b &amp;&amp; c &gt; d) ...
 
 -- test --
+-- name sorted --
 [% USE HTML(sorted=1) -%]
 [% HTML.element(table => { border => 1, cellpadding => 2 }) %]
 -- expect --
 <table border="1" cellpadding="2">
 
 -- test --
+-- name attributes --
 [% USE HTML -%]
 [% HTML.attributes(border => 1, cellpadding => 2).split.sort.join %]
 -- expect --

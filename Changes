@@ -3,14 +3,14 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for the Template Toolkit version 2.08, detailing
+#   Revision history for the Template Toolkit version 2.09, detailing
 #   significant changes between versions, most recent first.  Some 
 #   way down the file you'll find a section detailing major changes from 
 #   version 1.* to 2.* and a list of "Gotchas!" that you might have to 
 #   look out for when upgrading between major versions.
 #
 # AUTHOR
-#   Andy Wardley   <abw@kfs.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 # NOTE
 #   This file is built from a source template distributed as part of 
@@ -19,8 +19,106 @@
 #   Any changes you make here may be lost!
 #
 #------------------------------------------------------------------------
-# $Id: Changes,v 2.67 2002/07/30 12:44:03 abw Exp $
+# $Id: Changes.tt2,v 1.84 2003/04/23 12:52:50 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 2.09 - April 23rd 2003
+#------------------------------------------------------------------------
+
+* Bumped version number for release.
+
+
+#------------------------------------------------------------------------
+# Version 2.08e - March 18th 2003                 ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* changed Template::Provider and Template::Context to propagate nested
+  exceptions (e.g. [ file => [ parse => 'blah blah' ] ]) to allow the 
+  caller to accurately differentiate between parse errors and missing
+  file or other errors.
+  http://tt2.org/pipermail/templates/2003-March/004359.html
+
+* applied a patch from Gervase Markham to add set_legend() to the
+  various GD::Graph modules that works with a list of arguments.
+  http://tt2.org/pipermail/templates/2003-March/004316.html
+
+
+#------------------------------------------------------------------------
+# Version 2.08d - March 18th 2003                 ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Made Template::Exception DTRT with overloading (mark)
+
+* Applied a patch from Jonas Liljegren to lower the chunking limit of
+  the parser regex to prevent a segfault.  See
+  http://tt2.org/pipermail/templates/2003-February/004290.html
+
+* Applied Pudge's patch for the XS Stash bug.  See
+  http://tt2.org/pipermail/templates/2003-February/004289.html
+
+
+#------------------------------------------------------------------------
+# Version 2.08c - November 4th 2002               ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Applied a patch from Bradley Baetz to work around a bug in Perl when 
+  using an overridden die(), as CGI::Carp does, for example.
+
+* Added the Image plugin interfacing to the Image::Size module, based
+  on examples posted to the mailing list by Darren and Mark.  See
+  http://tt2.org/pipermail/templates/2002-November/003876.html
+
+
+#------------------------------------------------------------------------
+# Version 2.08b - November 1st 2002               ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Applied two patches from Leon to fix bug in constant folding with
+  multiple replacements (a missing 'g' on a s///)
+
+* Applied a patch from Tatsuhiko Miyagawa to Template::Constants to 
+  replace 'our' perl5.6isms.
+
+* Added the Template::Plugin::Procedural module for creating plugins that
+  use subroutines rather than method calls.
+
+* Fixed a html.t test to allow numerical instead of named entities (mark)
+
+* Added the params() method to the CGI plugin.
+
+* Changed File::Temp and File::Basename to be loaded dynamically in 
+  Template::Document as and when needed.  Thanks to a patch from 
+  Bradley Baetz.
+
+* Added a preload() method to Template::Config to preload in advance 
+  all the Template::* modules typically used.  Also added call to 
+  preload() from Template module if $ENV{MOD_PERL} is set.
+
+* Applied a patch from Randal Schwartz to fix rowspan attribute in 
+  templates/html/cell and templates/html/row
+
+
+#------------------------------------------------------------------------
+# Version 2.08a - August 14th 2002                ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Totally re-implemented the handling of the DEBUG parameter.  Added 
+  DEBUG_* constants to Template::Constants which can be used to enable
+  different debugging options and messages.
+
+* Added skip_all($reason) to Template::Test and fixed up a whole bunch
+  of tests to use it.  Also made other minor fixes to the tests to run
+  nicely (or bail politely) under Perl 5.8.0
+
+* Applied patch from Slaven Rezic to Template::Plugin::Data which 
+  modifies the locale loading to append various suffixes (e.g. '.UTF-8')
+  in the case that the unadorned locale can't be loaded.
+
+* Bumped version number of File::Spec to 0.8 in Makefile.PL PREREQ_PM.
+  Previous versions didn't include splitdir().  Thanks to Slaven Rezic
+  for reporting the problem.
+
 
 #------------------------------------------------------------------------
 # Version 2.08 - July 30th 2002
@@ -122,6 +220,7 @@
 * Applied Makefile.PL portability patch from Chris Nandor.
 
 * Minor documentation fixes.
+
 
 #------------------------------------------------------------------------
 # Version 2.07 - April 17th 2002 
@@ -2553,7 +2652,7 @@ out.
   All errors should be thrown via one of the following:
 
     die $error_msg;
-    die Template::Exception->new($type, $info);
+    die (Template::Exception->new($type, $info));
     $context->throw($msg);
     $context->throw($type, $info);
     $context->throw($exception);

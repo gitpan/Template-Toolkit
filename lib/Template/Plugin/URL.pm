@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: URL.pm,v 2.53 2002/07/30 12:45:36 abw Exp $
+# $Id: URL.pm,v 2.56 2002/11/04 19:47:17 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use vars qw( @ISA $VERSION );
 use Template::Plugin;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 2.53 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -210,8 +210,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.52, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.56, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

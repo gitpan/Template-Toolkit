@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 2.14 2002/01/17 11:49:54 abw Exp $
+# $Id: filter.t,v 2.19 2003/03/18 13:24:08 abw Exp $
 #
 #========================================================================
 
@@ -22,7 +22,10 @@ use Template::Filters;
 use Template qw( :status );
 use Template::Parser;
 use Template::Test;
+use Template::Constants qw( :debug );
 $^W = 1;
+
+my $DEBUG = grep(/^--?d(debug)?$/, @ARGV);
 
 $Template::Test::DEBUG = 0;
 $Template::Test::EXTRA = 1;     # ensure redirected file is created
@@ -97,7 +100,7 @@ $tt2->context->define_filter('another', \&another, 1);
 
 test_expect(\*DATA, [ default => $tt1, evalperl => $tt2 ], $params);
 
-ok( -f "$dir/$file" );
+ok( -f "$dir/$file", "$dir/$file exists" );
 unlink "$dir/$file" if -f "$dir/$file";
 
 
@@ -143,7 +146,7 @@ sub barf_up {
 	die "keeled over\n";
     }
     else {
-	die Template::Exception->new('unwell', 'sick as a parrot');
+	die (Template::Exception->new('unwell', 'sick as a parrot'));
     }
 }
 
@@ -407,13 +410,39 @@ if I can't wait until then?  I'm hungry!
 
 -- expect --
 The cat sat on the mat
-<br>
-<br>
+<br />
+<br />
 Mary had a little Lamb
-<br>
-<br>
+<br />
+<br />
 You shall have a fishy on a little dishy, when the boat comes in.  What 
 if I can't wait until then?  I'm hungry!
+
+-- test --
+[% global.blocktext FILTER html_para_break %]
+
+-- expect --
+The cat sat on the mat
+<br />
+<br />
+Mary had a little Lamb
+<br />
+<br />
+You shall have a fishy on a little dishy, when the boat comes in.  What 
+if I can't wait until then?  I'm hungry!
+
+-- test --
+[% global.blocktext FILTER html_line_break %]
+
+-- expect --
+The cat sat on the mat<br />
+<br />
+Mary had a little Lamb<br />
+<br />
+<br />
+<br />
+You shall have a fishy on a little dishy, when the boat comes in.  What <br />
+if I can't wait until then?  I'm hungry!<br />
 
 -- test --
 [% global.blocktext FILTER truncate(10) %]
@@ -560,7 +589,7 @@ FILTER [alpha blah blah bravo]
 error: [[% error.type %]] [[% error.info %]]
 [% END %]
 -- expect --
-error: [file] [parse error: input text line 1: unexpected token (1)
+error: [file] [parse error - input text line 1: unexpected token (1)
   [% FOREACH a = { 1 2 3 } %]]
 
 

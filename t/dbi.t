@@ -7,7 +7,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dbi.t,v 2.13 2002/04/19 18:40:30 abw Exp $
+# $Id: dbi.t,v 2.16 2002/09/04 12:04:01 darren Exp $
 #
 #========================================================================
 
@@ -23,7 +23,7 @@ $Template::Test::PRESERVE = 1;
 
 eval "use DBI";
 if ($@) {
-    exit(0);
+    skip_all("DBI module not installed");
 }
 eval "use Tie::DBI";
 my $tiedbi = $@ ? 0 : 1;
@@ -32,9 +32,12 @@ my $tiedbi = $@ ? 0 : 1;
 
 # load the configuration file created by Makefile.PL which defines
 # the $run, $dsn, $user and $pass variables.
-require 'dbi_test.cfg';
+eval { require 'dbi_test.cfg' };
+if ($@) {
+    skip_all("cannot load t/dbi_test.cfg");
+}
 unless ($run) {
-    exit(0);
+    skip_all('skipping DBI tests at user request');
 }
 
 # new feature in DBI plugin v2.30+ is to allow user to drop initial 'dbi:'
@@ -263,7 +266,7 @@ DBI error - data source not defined
 
 -- test --
 [% USE dbi -%]
-[% dbi.connect(short, user, pass) -%]
+[% dbi.connect(short, user, pass ChopBlanks=1) -%]
 [% FOREACH user = dbi.query("SELECT name FROM usr WHERE id='abw'") -%]
 * [% user.name %]
 [% END %]

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Align.pm,v 1.44 2002/07/30 12:46:01 abw Exp $
+# $Id: Align.pm,v 1.47 2002/11/04 19:47:42 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Text::Align Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.44 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.47 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -119,8 +119,8 @@ The GD::Text module was written by Martien Verbruggen.
 
 =head1 VERSION
 
-1.43, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+1.47, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

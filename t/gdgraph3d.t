@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: gdgraph3d.t,v 2.3 2001/07/04 14:45:53 abw Exp $
+# $Id: gdgraph3d.t,v 2.4 2002/08/12 11:07:15 abw Exp $
 # 
 #========================================================================
 
@@ -24,7 +24,7 @@ $^W = 1;
 eval "use GD; use GD::Graph; use GD::Graph::bars3d;";
 
 if ( $@ || $GD::VERSION < 1.20 ) {
-    exit(0);
+    skip_all('GD module(s) not installed');
 }
 
 test_expect(\*DATA, { FILTERS => {

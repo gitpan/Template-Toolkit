@@ -3,25 +3,20 @@
 # TODO
 #
 # DESCRIPTION
-#   TODO list for the Template Toolkit version 2.08, containing
+#   TODO list for the Template Toolkit version 2.09, containing
 #   known bugs, limitations, planned enhancements, long term visions 
 #   and a few whacky ideas.
 #
 # AUTHOR
-#   Andy Wardley   <abw@kfs.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 #------------------------------------------------------------------------
-# $Id: TODO,v 2.67 2002/07/30 12:44:04 abw Exp $
+# $Id: TODO.tt2,v 1.16 2003/04/23 12:57:38 abw Exp $
 #========================================================================
 
 #------------------------------------------------------------------------
 # Miscellaneous
 #------------------------------------------------------------------------
-
-* Errors thrown via the Error module are not correctly caught.  I looked
-  at this briefly but the problem wasn't immediately obvious and needs some
-  more considered investigation.  There are also problems with CGI::Carp
-  throwing errors that don't get properly caught.
 
 * The 'eval' filter leaks memory, as reported by Colin Johnson.  The
   filter subroutine created contains a reference to the context and then

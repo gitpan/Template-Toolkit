@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: cgi.t,v 2.5 2001/03/22 12:23:14 abw Exp $
+# $Id: cgi.t,v 2.7 2002/11/01 16:25:59 abw Exp $
 # 
 #========================================================================
 
@@ -28,8 +28,7 @@ $^W = 1;
 
 eval "use CGI";
 if ($@) {
-    print "1..0\n";
-    exit(0);
+    skip_all("no CGI module");
 }
 
 
@@ -89,4 +88,14 @@ name: Andy Wardley
 -- process --
 [% cgicheck %]
 
+-- test --
+[% USE cgi('item=foo&items=one&items=two') -%]
+item: [% cgi.params.item %]
+item: [% cgi.params.item.join(', ') %]
+items: [% cgi.params.items.join(', ') %]
+
+-- expect --
+item: foo
+item: foo
+items: one, two
 

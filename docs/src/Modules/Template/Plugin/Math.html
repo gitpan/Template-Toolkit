@@ -1,0 +1,349 @@
+[%#
+  # IMPORTANT NOTE
+  #   This documentation is generated automatically from source
+  #   templates.  Any changes you make here may be lost.
+  # 
+  #   The 'docsrc' documentation source bundle is available for download
+  #   from http://www.template-toolkit.org/docs.html and contains all
+  #   the source templates, XML files, scripts, etc., from which the
+  #   documentation for the Template Toolkit is built.
+-%]
+[% META book = 'Modules'
+        page = 'Plugin_Math'
+%]
+[%  WRAPPER toc;
+	PROCESS tocitem 
+	        title ="SYNOPSIS"
+                subs  = [];
+	PROCESS tocitem 
+	        title ="DESCRIPTION"
+                subs  = [];
+	PROCESS tocitem 
+	        title ="METHODS"
+                subs  = [];
+	PROCESS tocitem 
+	        title ="AUTHOR"
+                subs  = [];
+	PROCESS tocitem 
+	        title ="VERSION"
+                subs  = [];
+	PROCESS tocitem 
+	        title ="COPYRIGHT"
+                subs  = [];
+	PROCESS tocitem 
+	        title ="SEE ALSO"
+                subs  = [];
+    END
+%]
+<!-- Pod to HTML conversion by the Template Toolkit version 2 -->
+[% WRAPPER section
+    title="SYNOPSIS"
+-%]<pre>    [% tt_start_tag %] USE Math [% tt_end_tag %]</pre>
+<pre>    [% tt_start_tag %] Math.sqrt(9) [% tt_end_tag %]</pre>
+[%- END %]
+[% WRAPPER section
+    title="DESCRIPTION"
+-%]<p>
+The Math plugin provides numerous mathematical functions for use
+within templates.
+</p>
+[%- END %]
+[% WRAPPER section
+    title="METHODS"
+-%]<p>
+Template::Plugin::Math makes available the following functions from
+the Perl core:
+</p>
+<ul>
+<li><b>o</b><br>
+<p>
+abs
+</p>
+
+<li><b>o</b><br>
+<p>
+atan2
+</p>
+
+<li><b>o</b><br>
+<p>
+cos
+</p>
+
+<li><b>o</b><br>
+<p>
+exp
+</p>
+
+<li><b>o</b><br>
+<p>
+hex
+</p>
+
+<li><b>o</b><br>
+<p>
+int
+</p>
+
+<li><b>o</b><br>
+<p>
+log
+</p>
+
+<li><b>o</b><br>
+<p>
+oct
+</p>
+
+<li><b>o</b><br>
+<p>
+rand
+</p>
+
+<li><b>o</b><br>
+<p>
+sin
+</p>
+
+<li><b>o</b><br>
+<p>
+sqrt
+</p>
+
+<li><b>o</b><br>
+<p>
+srand
+</p>
+
+</ul>
+<p>
+In addition, if the Math::Trig module can be loaded, the following
+functions are also available:
+</p>
+<ul>
+<li><b>o</b><br>
+<p>
+pi
+</p>
+
+<li><b>o</b><br>
+<p>
+tan
+</p>
+
+<li><b>o</b><br>
+<p>
+csc
+</p>
+
+<li><b>o</b><br>
+<p>
+cosec
+</p>
+
+<li><b>o</b><br>
+<p>
+sec
+</p>
+
+<li><b>o</b><br>
+<p>
+cot
+</p>
+
+<li><b>o</b><br>
+<p>
+cotan
+</p>
+
+<li><b>o</b><br>
+<p>
+asin
+</p>
+
+<li><b>o</b><br>
+<p>
+acos
+</p>
+
+<li><b>o</b><br>
+<p>
+atan
+</p>
+
+<li><b>o</b><br>
+<p>
+acsc
+</p>
+
+<li><b>o</b><br>
+<p>
+acosec
+</p>
+
+<li><b>o</b><br>
+<p>
+asec
+</p>
+
+<li><b>o</b><br>
+<p>
+acot
+</p>
+
+<li><b>o</b><br>
+<p>
+acotan
+</p>
+
+<li><b>o</b><br>
+<p>
+sinh
+</p>
+
+<li><b>o</b><br>
+<p>
+cosh
+</p>
+
+<li><b>o</b><br>
+<p>
+tanh
+</p>
+
+<li><b>o</b><br>
+<p>
+csch
+</p>
+
+<li><b>o</b><br>
+<p>
+cosech
+</p>
+
+<li><b>o</b><br>
+<p>
+sech
+</p>
+
+<li><b>o</b><br>
+<p>
+coth
+</p>
+
+<li><b>o</b><br>
+<p>
+cotanh
+</p>
+
+<li><b>o</b><br>
+<p>
+asinh
+</p>
+
+<li><b>o</b><br>
+<p>
+acosh
+</p>
+
+<li><b>o</b><br>
+<p>
+atanh
+</p>
+
+<li><b>o</b><br>
+<p>
+acsch
+</p>
+
+<li><b>o</b><br>
+<p>
+acosech
+</p>
+
+<li><b>o</b><br>
+<p>
+asech
+</p>
+
+<li><b>o</b><br>
+<p>
+acoth
+</p>
+
+<li><b>o</b><br>
+<p>
+acotanh
+</p>
+
+<li><b>o</b><br>
+<p>
+rad2deg
+</p>
+
+<li><b>o</b><br>
+<p>
+rad2grad
+</p>
+
+<li><b>o</b><br>
+<p>
+deg2rad
+</p>
+
+<li><b>o</b><br>
+<p>
+deg2grad
+</p>
+
+<li><b>o</b><br>
+<p>
+grad2rad
+</p>
+
+<li><b>o</b><br>
+<p>
+grad2deg
+</p>
+
+</ul>
+<p>
+If the Math::TrulyRandom module is available, and you've got the time
+to wait, the <code>'truly_random_number'</code> method is available:
+</p>
+<pre>    [% tt_start_tag %] Math.truly_random_number [% tt_end_tag %]</pre>
+[%- END %]
+[% WRAPPER section
+    title="AUTHOR"
+-%]<p>
+Andy Wardley &lt;abw@andywardley.com&gt;
+</p>
+<p>
+[% ttlink('http://www.andywardley.com/', 'http://www.andywardley.com/') -%]
+</p>
+[%- END %]
+[% WRAPPER section
+    title="VERSION"
+-%]<p>
+1.02, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
+</p>
+[%- END %]
+[% WRAPPER section
+    title="COPYRIGHT"
+-%]<pre>  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.</pre>
+<p>
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+</p>
+[%- END %]
+[% WRAPPER section
+    title="SEE ALSO"
+-%]<p>
+[% ttlink('Template::Plugin', 'Template::Plugin') -%]
+</p>
+[%- END %]
+
+
+

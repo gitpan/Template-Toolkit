@@ -16,7 +16,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Simple.pm,v 2.50 2002/07/30 12:46:09 abw Exp $
+# $Id: Simple.pm,v 2.54 2002/11/04 19:47:46 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use XML::Simple;
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.50 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.54 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -57,7 +57,7 @@ sub new {
 
 sub _throw {
     my ($self, $error) = @_;
-    die Template::Exception->new('XML.XPath', $error);
+    die (Template::Exception->new('XML.XPath', $error));
 }
 
 
@@ -100,15 +100,15 @@ installed.  These are available from CPAN:
 =head1 AUTHORS
 
 This plugin wrapper module was written by Andy Wardley
-E<lt>abw@kfs.orgE<gt>.
+E<lt>abw@wardley.orgE<gt>.
 
 The XML::Simple module which implements all the core functionality 
 was written by Grant McLean E<lt>grantm@web.co.nzE<gt>.
 
 =head1 VERSION
 
-2.49, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.54, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

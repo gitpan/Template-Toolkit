@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: date.t,v 2.7 2002/07/08 11:06:17 abw Exp $
+# $Id: date.t,v 2.9 2002/08/16 08:40:02 abw Exp $
 #
 #========================================================================
 
@@ -53,7 +53,16 @@ my $params = {
     },
     nowloc  => sub { my ($time, $format, $locale) = @_;
 	my $old_locale = &POSIX::setlocale(&POSIX::LC_ALL);
-	&POSIX::setlocale(&POSIX::LC_ALL, $locale);
+
+        # some systems expect locales to have a particular suffix
+        for my $suffix ('', @Template::Plugin::Date::LOCALE_SUFFIX) {
+            my $try_locale = $locale.$suffix;
+	    my $setlocale = &POSIX::setlocale(&POSIX::LC_ALL, $try_locale);
+            if (defined $setlocale && $try_locale eq $setlocale) {
+                $locale = $try_locale;
+                last;
+            }
+        }
 	my $datestr = &POSIX::strftime($format, localtime($time));
 	&POSIX::setlocale(&POSIX::LC_ALL, $old_locale);
 	return $datestr;

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: latex2pdf.t,v 2.2 2001/08/29 08:49:01 abw Exp $
+# $Id: latex2pdf.t,v 2.3 2002/08/12 11:07:16 abw Exp $
 # 
 #========================================================================
 
@@ -28,7 +28,7 @@ my($LaTeXPath, $PdfLaTeXPath, $DviPSPath) = @{Template::Config->latexpaths()};
 # We need a non-empty $PdfLaTeXPath to convert to PDF
 #
 if ( $PdfLaTeXPath eq "" ) {
-    exit(0);
+    skip_all('LaTeX not installed');
 }
 
 test_expect(\*DATA, { FILTERS => {

@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: XPath.pm,v 2.55 2002/07/30 12:46:09 abw Exp $
+# $Id: XPath.pm,v 2.60 2003/04/11 12:28:27 darren Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use XML::XPath;
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.55 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.60 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -64,11 +64,11 @@ sub new {
 	    $args->{ filename } = $content;
 	}
     }
-    elsif ($content = $args->{ text }) {
+    elsif ($content = $args->{ text } || $args->{ xml }) {
 	$about = 'xml text';
 	$args->{ xml } = $content;
     }
-    elsif ($content = $args->{ file }) {
+    elsif ($content = $args->{ file } || $args->{ filename }) {
 	$about = "xml file $content";
 	$args->{ filename } = $content;
     }
@@ -91,7 +91,7 @@ sub new {
 sub _throw {
     my ($self, $error) = @_;
 #    print STDERR "about to throw $error\n";
-    die Template::Exception->new('XML.XPath', $error);
+    die (Template::Exception->new('XML.XPath', $error));
 }
 
 
@@ -251,14 +251,14 @@ view "view", followed by the end tag.
 
 =head1 AUTHORS
 
-This plugin module was written by Andy Wardley E<lt>abw@kfs.orgE<gt>.
+This plugin module was written by Andy Wardley E<lt>abw@wardley.orgE<gt>.
 
 The XML::XPath module is by Matt Sergeant E<lt>matt@sergeant.orgE<gt>.
 
 =head1 VERSION
 
-2.54, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.60, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

@@ -20,7 +20,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.56 2002/07/30 12:44:56 abw Exp $
+# $Id: Document.pm,v 2.62 2002/11/04 19:45:57 abw Exp $
 #
 #============================================================================
 
@@ -32,11 +32,8 @@ use strict;
 use vars qw( $VERSION $ERROR $COMPERR $DEBUG $AUTOLOAD );
 use base qw( Template::Base );
 use Template::Constants;
-#use Fcntl qw(O_WRONLY O_CREAT O_TRUNC);
-use File::Temp qw( tempfile );
-use File::Basename;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.62 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -278,12 +275,15 @@ sub write_perl_file {
 	unless $file =~ /^(.+)$/s;
 
     eval {
-	($fh, $tmpfile) = tempfile( DIR => dirname($file) );
+        require File::Temp;
+        require File::Basename;
+        ($fh, $tmpfile) = File::Temp::tempfile( 
+            DIR => File::Basename::dirname($file) 
+        );
 	print $fh $class->as_perl($content) || die $!;
 	close($fh);
     };
     return $class->error($@) if $@;
-
     return rename($tmpfile, $file)
 	|| $class->error($!);
 }
@@ -466,8 +466,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.55, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.62, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

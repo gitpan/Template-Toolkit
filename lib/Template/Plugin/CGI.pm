@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: CGI.pm,v 2.52 2002/07/30 12:45:31 abw Exp $
+# $Id: CGI.pm,v 2.56 2002/11/04 19:47:04 abw Exp $
 #
 #============================================================================
 
@@ -32,12 +32,32 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use CGI;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.52 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my $class   = shift;
     my $context = shift;
     CGI->new(@_);
+}
+
+package CGI;
+
+sub params {
+    my $self = shift;
+    local $" = ', ';
+
+    return $self->{ _TT_PARAMS } ||= do {
+        # must call Vars() in a list context to receive
+        # plain list of key/vals rather than a tied hash
+        my $params = { $self->Vars() };
+
+        # convert any null separated values into lists
+        @$params{ keys %$params } = map { 
+            /\0/ ? [ split /\0/ ] : $_ 
+        } values %$params;
+
+        $params;
+    };
 }
 
 1;
@@ -96,6 +116,21 @@ constructor:
     [% USE cgiprm = CGI('uid=abw&name=Andy+Wardley') %]
     [% cgiprm.param('uid') %]
 
+=head1 METHODS
+
+In addition to all the methods supported by the CGI module, this
+plugin defines the following.
+
+=head2 params()
+
+This method returns a reference to a hash of all the CGI parameters.
+Any parameters that have multiple values will be returned as lists.
+
+    [% USE CGI('user=abw&item=foo&item=bar') %]
+
+    [% CGI.params.user %]            # abw
+    [% CGI.params.item.join(', ') %] # foo, bar
+
 =head1 AUTHOR
 
 Andy Wardley E<lt>abw@andywardley.comE<gt>
@@ -107,8 +142,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.51, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.56, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 =head1 COPYRIGHT
 

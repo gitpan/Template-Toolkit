@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: xmlstyle.t,v 1.4 2002/04/17 07:37:08 abw Exp $
+# $Id: xmlstyle.t,v 1.5 2003/03/17 22:34:14 abw Exp $
 # 
 #========================================================================
 
@@ -239,3 +239,4 @@ __END__
     <td class="videoPrice">10.99</td>
   </tr>
 </table>
+

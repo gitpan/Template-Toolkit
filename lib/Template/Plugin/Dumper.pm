@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------------
 #
-# $Id: Dumper.pm,v 2.52 2002/07/30 12:45:32 abw Exp $
+# $Id: Dumper.pm,v 2.55 2002/11/04 19:47:09 abw Exp $
 # 
 #==============================================================================
 
@@ -33,7 +33,7 @@ use Data::Dumper;
 use vars qw( $VERSION $DEBUG $AUTOLOAD );
 use base qw( Template::Plugin );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.52 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.55 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 
 #==============================================================================
@@ -159,8 +159,8 @@ Simon Matthews E<lt>sam@knowledgepool.comE<gt>
 
 =head1 VERSION
 
-2.51, distributed as part of the
-Template Toolkit version 2.08, released on 30 July 2002.
+2.55, distributed as part of the
+Template Toolkit version 2.09, released on 23 April 2003.
 
 
 
