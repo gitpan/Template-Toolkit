@@ -31,7 +31,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 2.76 2003/07/24 16:16:27 abw Exp $
+# $Id: Parser.pm,v 2.79 2004/01/12 12:37:55 abw Exp $
 #
 #============================================================================
 
@@ -54,7 +54,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.76 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.79 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 $ERROR   = '';
 
@@ -1404,8 +1404,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.76, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+2.78, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
  
 

@@ -27,7 +27,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Provider.pm,v 2.75 2003/12/02 13:15:44 abw Exp $
+# $Id: Provider.pm,v 2.78 2004/01/12 12:37:55 abw Exp $
 #
 #============================================================================
 
@@ -44,7 +44,7 @@ use Template::Document;
 use File::Basename;
 use File::Spec;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.75 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.78 $ =~ /(\d+)\.(\d+)/);
 
 # name of document class
 $DOCUMENT = 'Template::Document' unless defined $DOCUMENT;
@@ -1423,8 +1423,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.75, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+2.77, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 
@@ -1437,3 +1437,13 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template|Template>, L<Template::Parser|Template::Parser>, L<Template::Context|Template::Context>
+
+=cut
+
+# Local Variables:
+# mode: perl
+# perl-indent-level: 4
+# indent-tabs-mode: nil
+# End:
+#
+# vim: expandtab shiftwidth=4:

@@ -15,7 +15,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: String.pm,v 2.29 2003/07/24 16:16:36 abw Exp $
+#   $Id: String.pm,v 2.32 2004/01/12 12:38:33 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use vars qw( $VERSION $ERROR);
 use overload q|""| => "text",
              fallback => 1;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.29 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.32 $ =~ /(\d+)\.(\d+)/);
 $ERROR   = '';
 
 *centre  = \*center;
@@ -770,8 +770,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.29, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+2.31, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 
@@ -784,3 +784,13 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Plugin|Template::Plugin>
+
+=cut
+
+# Local Variables:
+# mode: perl
+# perl-indent-level: 4
+# indent-tabs-mode: nil
+# End:
+#
+# vim: expandtab shiftwidth=4:

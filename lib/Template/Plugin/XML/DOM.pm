@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: DOM.pm,v 2.51 2003/07/24 16:16:48 abw Exp $
+# $Id: DOM.pm,v 2.53 2004/01/12 11:54:19 abw Exp $
 #
 #============================================================================
 
@@ -801,7 +801,7 @@ library.
 =head1 VERSION
 
 2.6, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+Template Toolkit version 2.12, released on 12 January 2004.
 
 
 

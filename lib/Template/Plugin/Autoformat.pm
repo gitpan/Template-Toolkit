@@ -21,7 +21,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Autoformat.pm,v 2.60 2003/07/24 16:16:34 abw Exp $
+# $Id: Autoformat.pm,v 2.63 2004/01/12 12:38:32 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use Text::Autoformat;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.60 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.63 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my ($class, $context, $options) = @_;
@@ -224,8 +224,8 @@ module (in his copious spare time :-) which does all the clever stuff.
 
 =head1 VERSION
 
-2.60, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+2.62, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 
 

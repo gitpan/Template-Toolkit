@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Constants.pm,v 1.18 2003/07/24 16:16:34 abw Exp $
+#   $Id: Constants.pm,v 1.21 2004/01/12 12:38:28 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Exception;
 use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 
 
@@ -179,8 +179,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.18, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+1.20, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 
@@ -193,3 +193,13 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Directive|Template::Directive>
+
+=cut
+
+# Local Variables:
+# mode: perl
+# perl-indent-level: 4
+# indent-tabs-mode: nil
+# End:
+#
+# vim: expandtab shiftwidth=4:

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Align.pm,v 1.51 2003/07/24 16:16:47 abw Exp $
+# $Id: Align.pm,v 1.54 2004/01/12 12:38:47 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Text::Align Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.51 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.54 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -119,8 +119,8 @@ The GD::Text module was written by Martien Verbruggen.
 
 =head1 VERSION
 
-1.51, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+1.53, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 
@@ -135,3 +135,13 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Plugin|Template::Plugin>, L<Template::Plugin::GD|Template::Plugin::GD>, L<Template::Plugin::GD::Text|Template::Plugin::GD::Text>, L<Template::Plugin::GD::Text::Wrap|Template::Plugin::GD::Text::Wrap>, L<GD|GD>, L<GD::Text::Align|GD::Text::Align>
+
+=cut
+
+# Local Variables:
+# mode: perl
+# perl-indent-level: 4
+# indent-tabs-mode: nil
+# End:
+#
+# vim: expandtab shiftwidth=4:

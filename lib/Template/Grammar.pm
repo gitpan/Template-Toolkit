@@ -26,7 +26,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm.skel,v 2.10 2003/04/28 17:29:10 abw Exp $
+# $Id: Grammar.pm,v 2.20 2004/01/06 18:27:15 abw Exp $
 #
 #========================================================================
 
@@ -37,7 +37,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.10 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.20 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, %CMPOP, $LEXTABLE, $RULES, $STATES);
 my ($factory, $rawstart);

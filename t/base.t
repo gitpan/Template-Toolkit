@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: base.t,v 2.0 2000/08/10 14:56:15 abw Exp $
+# $Id: base.t,v 2.2 2004/01/12 12:08:37 abw Exp $
 #
 #========================================================================
 
@@ -20,7 +20,7 @@ use strict;
 use lib qw( ./lib ../lib );
 use Template::Test;
 
-ntests(21);
+ntests(24);
 
 
 #------------------------------------------------------------------------
@@ -55,6 +55,16 @@ sub _init {
 sub name {
     $_[0]->{ NAME };
 }
+
+
+#------------------------------------------------------------------------
+# module to test version
+#------------------------------------------------------------------------
+package Template::Version;
+use Template::Base;
+use base qw( Template::Base );
+use vars qw( $ERROR $VERSION );
+$VERSION = 3.14;
 
 
 #------------------------------------------------------------------------
@@ -110,3 +120,16 @@ ok( $pkg->error eq 'No name!' );
 $mod = $pkg->new({ name => 'bar' });
 ok( $mod && $mod->name eq 'bar' );
 ok( ! $mod->error );
+
+#------------------------------------------------------------------------
+# test module_version() method
+#------------------------------------------------------------------------
+
+$pkg = 'Template::Version';
+is( $pkg->module_version(), 3.14, 'package version' );
+
+my $obj = $pkg->new() || die $pkg->error();
+ok( $obj, 'created a version object' );
+is( $obj->module_version(), 3.14, 'object version' );
+
+

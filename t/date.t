@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: date.t,v 2.12 2003/08/03 19:54:13 abw Exp $
+# $Id: date.t,v 2.14 2004/01/12 11:55:20 abw Exp $
 #
 #========================================================================
 
@@ -186,14 +186,17 @@ In French, today's day is: [% nowloc(time, '%A', 'fr_FR') +%]
 04
 
 -- test --
+-- name September 13th 2000 --
 [% USE day = date(format => '%A', locale => 'en_GB') %]
-[% day.format('4:20:00 9-13-2000') %]
+[% day.format('4:20:00 13-9-2000') %]
+
 
 -- expect --
 -- process --
-[% # 4:20:00 9-13-2000 equals 979010400 seconds since the epoch
-   nowloc(979010400, '%A', 'en_GB')
+[% # 4:20:00 9-13-2000 equals 968818800 seconds since the epoch
+   nowloc(968818800, '%A', 'en_GB')
 %]
+
 
 -- test --
 [% TRY %]

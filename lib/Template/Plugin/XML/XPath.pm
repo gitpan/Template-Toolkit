@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: XPath.pm,v 2.65 2003/07/24 16:16:49 abw Exp $
+# $Id: XPath.pm,v 2.68 2004/01/12 12:38:50 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use XML::XPath;
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.65 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.68 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -267,8 +267,8 @@ The XML::XPath module is by Matt Sergeant E<lt>matt@sergeant.orgE<gt>.
 
 =head1 VERSION
 
-2.65, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+2.67, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 

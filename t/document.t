@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: document.t,v 2.1 2000/09/12 15:25:23 abw Exp $
+# $Id: document.t,v 2.2 2004/01/12 11:55:20 abw Exp $
 #
 #========================================================================
 
@@ -139,5 +139,4 @@ title: My Template Title
 [% INCLUDE $mydoc %]
 -- expect --
 some output
-
 

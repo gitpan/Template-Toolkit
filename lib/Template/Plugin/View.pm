@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: View.pm,v 2.59 2003/07/24 16:16:36 abw Exp $
+#   $Id: View.pm,v 2.62 2004/01/12 12:38:33 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ use Template::Plugin;
 use vars qw( $VERSION );
 use base qw( Template::Plugin );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.59 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.62 $ =~ /(\d+)\.(\d+)/);
 
 use Template::View;
 
@@ -101,8 +101,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.59, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+2.61, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 
@@ -115,3 +115,13 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Plugin|Template::Plugin>, L<Template::View|Template::View>
+
+=cut
+
+# Local Variables:
+# mode: perl
+# perl-indent-level: 4
+# indent-tabs-mode: nil
+# End:
+#
+# vim: expandtab shiftwidth=4:

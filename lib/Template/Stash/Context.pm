@@ -65,7 +65,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.54 2003/07/24 16:16:49 abw Exp $
+# $Id: Context.pm,v 1.57 2004/01/12 12:38:54 abw Exp $
 #
 #============================================================================
 
@@ -77,7 +77,7 @@ use strict;
 use Template::Stash;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.54 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.57 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -765,8 +765,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.54, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+1.56, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 
@@ -779,3 +779,13 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Stash|Template::Stash>
+
+=cut
+
+# Local Variables:
+# mode: perl
+# perl-indent-level: 4
+# indent-tabs-mode: nil
+# End:
+#
+# vim: expandtab shiftwidth=4:

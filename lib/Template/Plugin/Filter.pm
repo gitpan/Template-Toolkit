@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Filter.pm,v 1.26 2003/07/24 16:16:35 abw Exp $
+#   $Id: Filter.pm,v 1.29 2004/01/12 12:38:33 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 use base qw( Template::Plugin );
 use vars qw( $VERSION $DYNAMIC );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.29 $ =~ /(\d+)\.(\d+)/);
 $DYNAMIC = 0 unless defined $DYNAMIC;
 
 
@@ -410,8 +410,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.26, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+1.28, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 
@@ -424,3 +424,13 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template::Plugin|Template::Plugin>, L<Template::Filters|Template::Filters>, L<Template::Manual::Filters|Template::Manual::Filters>
+
+=cut
+
+# Local Variables:
+# mode: perl
+# perl-indent-level: 4
+# indent-tabs-mode: nil
+# End:
+#
+# vim: expandtab shiftwidth=4:

@@ -17,7 +17,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Config.pm,v 2.63 2003/07/24 16:16:27 abw Exp $
+#   $Id: Config.pm,v 2.66 2004/01/12 12:37:54 abw Exp $
 #
 #========================================================================
  
@@ -32,7 +32,7 @@ use vars qw( $VERSION $DEBUG $ERROR $INSTDIR
              $LATEX_PATH $PDFLATEX_PATH $DVIPS_PATH
 	     $STASH $SERVICE $CONTEXT $CONSTANTS @PRELOAD );
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 2.63 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 2.66 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0 unless defined $DEBUG;
 $ERROR     = '';
 $CONTEXT   = 'Template::Context';
@@ -441,8 +441,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.63, distributed as part of the
-Template Toolkit version 2.11, released on 06 January 2004.
+2.65, distributed as part of the
+Template Toolkit version 2.12, released on 12 January 2004.
 
 =head1 COPYRIGHT
 
@@ -455,3 +455,13 @@ modify it under the same terms as Perl itself.
 =head1 SEE ALSO
 
 L<Template|Template>
+
+=cut
+
+# Local Variables:
+# mode: perl
+# perl-indent-level: 4
+# indent-tabs-mode: nil
+# End:
+#
+# vim: expandtab shiftwidth=4:
