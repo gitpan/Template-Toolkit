@@ -73,7 +73,7 @@ handled transparently by the FOREACH directive.
 =item -
 
 Provides an extensible framework for other template languages, processors
-and applications.
+and applications, servers, etc.
 
 =item -
 
@@ -105,5 +105,4 @@ Mailing list: send email to majordomo@cre.canon.co.uk containing the
 text "subscribe templates".
 
 =back
-
 

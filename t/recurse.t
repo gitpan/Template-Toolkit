@@ -12,19 +12,18 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: recurse.t,v 1.1 1999/08/28 04:55:19 abw Exp $
+# $Id: recurse.t,v 1.2 1999/11/25 17:51:28 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template::Constants qw( :status );
 use Template;
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 1;
+$Template::Test::DEBUG = 1;
 
 my $tree = { 
     name  => 'foo',

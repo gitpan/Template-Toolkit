@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.20 1999/10/07 13:08:29 abw Exp $
+# $Id: Directive.pm,v 1.22 1999/11/20 09:50:39 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -43,6 +43,7 @@ $DEBUG = 0;
 
 # table defining parameters for each directive type
 my %param_tbl = (
+    'Text'      => [ qw( TEXT                   ) ],
     'Get'       => [ qw( TERM                   ) ],
     'Set'       => [ qw( ARGS                   ) ],
     'Include'   => [ qw( FILE ARGS              ) ],
@@ -53,12 +54,12 @@ my %param_tbl = (
     'While'     => [ qw( EXPR BLOCK             ) ],
     'Filter'    => [ qw( NAME ARGS ALIAS BLOCK  ) ],
     'Block'     => [ qw( CONTENT                ) ],
-    'Text'      => [ qw( TEXT                   ) ],
     'Catch'     => [ qw( ETYPE BLOCK            ) ],
     'Throw'     => [ qw( ETYPE INFO             ) ],
     'Error'     => [ qw( INFO                   ) ],
     'Return'    => [ qw( RETVAL                 ) ],
     'Perl'      => [ qw( PERLCODE               ) ],    
+    'Macro'     => [ qw( NAME DIRECTIVE ARGS    ) ],    
 );
 
 my $PKGVAR = 'PARAMS';
@@ -127,7 +128,22 @@ sub _report {
 #========================================================================
 
 #------------------------------------------------------------------------
-# SET				    [% SET args %]
+# TEXT
+#------------------------------------------------------------------------
+
+package Template::Directive::Text;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
+
+sub process {
+    my ($self, $context) = @_;
+    $context->output($self->{ TEXT });
+    return Template::Constants::STATUS_OK;
+}
+
+
+#------------------------------------------------------------------------
+# SET				                           [% SET args %]
 #------------------------------------------------------------------------
 
 package Template::Directive::Set;
@@ -169,7 +185,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# INCLUDE			    [% INCLUDE file args %]
+# INCLUDE			                  [% INCLUDE file args %]
 #
 # The INCLUDE directive calls on the context process() method to 
 # process another template file or block.  Parameters may be defined
@@ -213,7 +229,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# PROCESS			    [% PROCESS ident params %]
+# PROCESS                                      [% PROCESS ident params %]
 #
 # The PROCESS directive is similar to INCLUDE except that variables are
 # not localised.  This allows variables defined in a sub-template to
@@ -253,7 +269,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# IF				    [% IF expr %]
+# IF				            [% IF expr %] block [% END %]
 #
 # Iterates through the expression stored in $self->{ EXPR } and calls the 
 # process() method of the $self->{ BLOCK } if it evaluates true.  If it 
@@ -288,7 +304,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# WHILE				    [% WHILE expr %]
+# WHILE				         [% WHILE expr %] block [% END %]
 #
 # Iterates through the following block while the expression evaluates
 # true.
@@ -329,7 +345,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# FOR				    [% FOREACH item list block %]
+# FOR				  [% FOREACH item list %] block [% END %]
 #------------------------------------------------------------------------
  
 package Template::Directive::For;
@@ -341,6 +357,8 @@ sub process {
     my $stash = $context->{ STASH };
     my ($item, $list) = @$self{ qw( ITEM LIST ) };
     my ($iterator, $value, $error);
+    my $LOOPVAR = 'loop';
+
 
     require Template::Iterator;
 
@@ -364,7 +382,7 @@ sub process {
     $context->localise()
 	unless $item;
 
-    $context->{ STASH }->set('loop' => $iterator);
+    $context->{ STASH }->set($LOOPVAR => $iterator);
 
     # loop
     while (! $error) {
@@ -391,7 +409,7 @@ sub process {
 	($value, $error) = $iterator->get_next();
     }
 
-    $context->{ STASH }->set('iter' => undef);
+    $context->{ STASH }->set($LOOPVAR => undef);
 
     # declone the stash (revert to parent context)
     $context->delocalise()
@@ -405,7 +423,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# FILTER			  [% FILTER alias = name(args) ; block %]
+# FILTER		  [% FILTER alias = name(args) %] block [% END %]
 #------------------------------------------------------------------------
 
 package Template::Directive::Filter;
@@ -452,7 +470,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# USE			    [% USE alias = name(args) %]
+# USE			                     [% USE alias = name(args) %]
 #------------------------------------------------------------------------
  
 package Template::Directive::Use;
@@ -486,7 +504,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# BLOCK			    [% BLOCK content %]
+# BLOCK			                    [% BLOCK %] content [% END %]
 #------------------------------------------------------------------------
 
 package Template::Directive::Block;
@@ -513,22 +531,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# TEXT			    [% BLOCK content %]
-#------------------------------------------------------------------------
-
-package Template::Directive::Text;
-use vars qw( @ISA );
-@ISA = qw( Template::Directive );
-
-sub process {
-    my ($self, $context) = @_;
-    $context->output($self->{ TEXT });
-    return Template::Constants::STATUS_OK;
-}
-
-
-#------------------------------------------------------------------------
-# THROW			    [% THROW etype einfo %]
+# THROW			                          [% THROW etype einfo %]
 #------------------------------------------------------------------------
  
 package Template::Directive::Throw;
@@ -549,7 +552,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# CATCH			    [% CATCH etype block %]
+# CATCH			                [% CATCH etype %] block [% END %]
 #------------------------------------------------------------------------
  
 package Template::Directive::Catch;
@@ -563,7 +566,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# ERROR			    [% ERROR info %]
+# ERROR			                                 [% ERROR info %]
 #------------------------------------------------------------------------
  
 package Template::Directive::Error;
@@ -581,7 +584,7 @@ sub process {
 
 
 #------------------------------------------------------------------------
-# RETURN		    [% RETURN retval %]
+# RETURN		                              [% RETURN retval %]
 #------------------------------------------------------------------------
  
 package Template::Directive::Return;
@@ -596,6 +599,73 @@ sub process {
 	unless defined ($retval = $self->{ RETVAL });
 
     return $retval;
+}
+
+
+#------------------------------------------------------------------------
+# PERL			                    [% PERL %] perlcode [% END %]
+#------------------------------------------------------------------------
+ 
+package Template::Directive::Perl;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
+
+sub process {
+    my ($self, $context) = @_;
+
+    $context->output("PERL directive not yet implemented\n");
+
+    return Template::Constants::STATUS_OK;
+}
+
+
+#------------------------------------------------------------------------
+# MACRO			                 [% MACRO name(args) directive %]
+#------------------------------------------------------------------------
+ 
+package Template::Directive::Macro;
+use vars qw( @ISA );
+@ISA = qw( Template::Directive );
+
+sub process {
+    my ($self, $context) = @_;
+    my ($name, $directive, $args) =
+	@$self{ qw( NAME DIRECTIVE ARGS ) };
+
+
+    my $callback = sub {
+	my ($params, $error);
+
+	# see if any mandatory arguments are expected
+	if ($args) {
+	    my %args;
+	    @args{@$args} = splice(@_, 0, scalar @$args);
+
+	    # hash may follow mandatory args
+	    $params = shift;
+	    $params = { } unless ref($params) eq 'HASH';
+	    $params = { %args, %$params };
+	}
+	# otherwise just look for a hash
+	else {
+	    $params = $_[0] if ref($_[0]) eq 'HASH';
+	}
+
+	# set passed variable values in a local context
+	$context->localise($params)
+	    if $params;
+
+	$error = $directive->process($context);
+
+	# restore original context
+	$context->delocalise()
+	    if $params;
+	
+	return ('', $error);
+    };
+    $context->{ STASH }->set($name, $callback);
+
+    return Template::Constants::STATUS_OK;
 }
 
 
@@ -670,7 +740,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.20 $
+$Revision: 1.22 $
 
 =head1 COPYRIGHT
 

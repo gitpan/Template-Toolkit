@@ -12,19 +12,18 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: accessor.t,v 1.1 1999/08/12 23:12:25 abw Exp $
+# $Id: accessor.t,v 1.2 1999/11/25 17:51:21 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template qw( :status );
+use Template::Test;
 use Template::Exception;
-require 'texpect.pl';
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 
 #------------------------------------------------------------------------

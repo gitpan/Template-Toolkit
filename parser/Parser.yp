@@ -3,6 +3,7 @@
 %left NOT
 %left DOT
 %left COMPOP
+%left BINOP
 %left TO 
 #STEP
 
@@ -31,6 +32,7 @@ directive:  atomdir
 	|   loop
 	|   defblock
 	|   perl
+	|   macro
 	|   debug
 	|   /* NULL - empty directive */
 ;
@@ -47,7 +49,7 @@ atomdir:    GET term	    	{ $factory->create(Get     => $_[2])    }
 	|   USE useparam    	{ $factory->create(Use     => @{$_[2]}) }
 	|   INCLUDE file setopt { $factory->create(Include => @_[2,3])  }
 	|   PROCESS file setopt { $factory->create(Process => @_[2,3])  }
-	|   THROW IDENT term    { $factory->create(Throw   => @_[2,3])  }
+	|   THROW textdot term  { $factory->create(Throw   => @_[2,3])  }
 	|   ERROR term	    	{ $factory->create(Error   => $_[2])    }
 	|   return		{ $factory->create(Return  => $_[1])    }
 	|   setlist		{ $factory->create(Set     => $_[1])    }
@@ -60,7 +62,7 @@ return:	    RETURN		{ STATUS_RETURN }
 	|   BREAK		{ STATUS_DONE   }
 ;
 
-catch:	    CATCH IDENT ';' 
+catch:	    CATCH textdot ';' 
 	      block END		{ $factory->create(Catch =>, @_[2, 4])    }
 	|   CATCH ';' 
 	      block END		{ $factory->create(Catch => undef, $_[3]) }
@@ -102,10 +104,18 @@ filter:	    FILTER useparam ';'
 
 defblock:   BLOCK textdot ';' 
 	      block END	    	{ $_[0]->define_block(@_[2, 4]); undef  }
+	|   BLOCK ';' 
+	      block END	    	{ $_[3] }
 ;
 
 perl:	    PERL ';'
 	      block END		{ $factory->create(Perl  => $_[3]) }
+;
+
+macro:	    MACRO IDENT directive 
+				{ $factory->create(Macro => @_[2, 3]) }
+	|   MACRO IDENT '(' mlist ')' directive 
+				{ $factory->create(Macro => @_[2, 6, 4]) }
 ;
 
 debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2]) }
@@ -116,14 +126,17 @@ debug:	    DEBUG TEXT	    	{ $factory->create(Debug => $_[2]) }
 # FUNDAMENTAL ELEMENT RULES
 #------------------------------------------------------------------------
 
-term:	    LITERAL			{ [ OP_LITERAL, $_[1]    ] }
+term:       LITERAL			{ [ OP_LITERAL, $_[1]    ] }
 	|   ident			{ [ OP_IDENT,   $_[1]    ] }
 	|   '[' range ']'		{ [ OP_RANGE,   $_[2]    ] }
 	|   '[' list ']'		{ [ OP_LIST,    $_[2]    ] }
 	|   '[' list ']' '(' args ')'	{ [ OP_ITER,    @_[2, 5] ] }
 	|   '{' params '}'		{ [ OP_HASH,    $_[2]    ] }
 	|   '"' quoted '"'		{ [ OP_QUOTE,   $_[2]    ] }
+	|   term BINOP term             { push(@{$_[1]}, @{$_[3]}, 
+						OP_BINOP, $_[2]); $_[1]  }
 ;
+
 
 ident:	    ident DOT item		{ push(@{$_[1]}, $_[3]); $_[1] }
 	|   ident DOT LITERAL		{ push(@{$_[1]}, [ $_[3], 0 ]); $_[1] }
@@ -185,6 +198,12 @@ arglist:    arglist arg			{ push(@{$_[1]}, $_[2]); $_[1] }
 
 args:	    arglist			{ [ OP_ARGS, $_[1] ]  }
 	|   /* NULL */			{ [ OP_LITERAL, [ ] ] }
+;
+
+# list of macro arguments
+mlist:	    mlist IDENT			{ push(@{$_[1]}, $_[2]); $_[1] }
+	|   mlist COMMA                 { $_[1] }
+	|   IDENT                       { [ $_[1] ] }
 ;
 
 expr:	    expr COMPOP expr		{ push(@{$_[1]}, @{$_[3]}, 

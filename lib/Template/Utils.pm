@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Utils.pm,v 1.6 1999/08/28 04:52:23 abw Exp $
+# $Id: Utils.pm,v 1.7 1999/11/25 17:51:20 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use File::Basename;
 use File::Path;
 
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
 
 
 
@@ -126,7 +126,7 @@ sub output_handler {
 	$output = sub { local $"=''; $$where .= "@_"; 1 };
     }
     # create a sub to call the print() method on an IO::Handle
-    elsif (UNIVERSAL::isa($where, 'IO::Handle')) {
+    elsif (UNIVERSAL::can($where, 'print')) {
 	$output = sub { $where->print(@_) };
     }
     # a simple string is taken as a filename
@@ -225,7 +225,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.6 $
+$Revision: 1.7 $
 
 =head1 COPYRIGHT
 

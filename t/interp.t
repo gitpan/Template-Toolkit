@@ -12,17 +12,16 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: interp.t,v 1.5 1999/08/10 11:09:15 abw Exp $
+# $Id: interp.t,v 1.6 1999/11/25 17:51:25 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
-require 'texpect.pl';
+use lib qw( ../lib );
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my ($a, $b, $c, $d, $w) = qw( alpha bravo charlie delta whisky );
 my $params = {

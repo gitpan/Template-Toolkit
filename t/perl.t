@@ -1,8 +1,8 @@
 #============================================================= -*-perl-*-
 #
-# t/literal.t
+# t/perl.t
 #
-# Template script testing literal lvalues.
+# Template script testing PERL directive
 #
 # Written by Andy Wardley <abw@cre.canon.co.uk>
 #
@@ -12,39 +12,41 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: literal.t,v 1.2 1999/11/25 17:51:26 abw Exp $
-# 
+# $Id: perl.t,v 1.2 1999/11/25 17:51:28 abw Exp $
+#
 #========================================================================
 
 use strict;
 use lib qw( ../lib );
-use Template qw( :status );
-$Template::Context::DEBUG = 0;
 use Template::Test;
 $^W = 1;
 
 $Template::Test::DEBUG = 0;
 
-my ($a, $b, $c, $d, $e, $f ) = 
-	qw( alpha bravo charlie delta echo foxtrot);
+my ($a, $b, $c, $d, $w) = qw( alpha bravo charlie delta whisky );
 my $params = {
     'a'    => $a,
     'b'    => $b,
     'c'    => $c,
-    'd'    => {
-	'e' => $e,
-	'f' => $f,
-    },
+    'd'    => $d,
+    'w'    => $w,
 };
 
+my $template = Template->new({
+	INTERPOLATE => 1,
+	POST_CHOMP  => 1,
+});
 
-test_expect(\*DATA, undef, $params);
+test_expect(\*DATA, $template, $params);
 
 __DATA__
-[% a %]
-[% a = b; a %]
-[% 'a' = c; a %]
+before perl
+[% PERL %]
+my $name = get_username($uid);
+[% END %]
+after perl
+
 -- expect --
-alpha
-bravo
-charlie
+before perl
+PERL directive not yet implemented
+after perl

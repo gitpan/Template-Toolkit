@@ -12,18 +12,17 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: listndx.t,v 1.1 1999/09/29 10:18:01 abw Exp $
+# $Id: listndx.t,v 1.2 1999/11/25 17:51:26 abw Exp $
 # 
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template qw( :status );
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my $data = {
     'days' => [ qw( Mon Tue Wed Thu Fri Sat Sun ) ],

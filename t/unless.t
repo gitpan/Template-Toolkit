@@ -12,17 +12,16 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: unless.t,v 1.5 1999/08/10 11:09:19 abw Exp $
+# $Id: unless.t,v 1.6 1999/11/25 17:51:31 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
-require 'texpect.pl';
+use lib qw( ../lib );
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my $params = {
     'true'      => 1,

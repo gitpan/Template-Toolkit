@@ -12,20 +12,19 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: list.t,v 1.4 1999/09/14 23:07:16 abw Exp $
+# $Id: list.t,v 1.5 1999/11/25 17:51:26 abw Exp $
 # 
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template;
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
 #use Template::Context;
 #$Template::Context::DEBUG = 1;
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1}, callsign());
 

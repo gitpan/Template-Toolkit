@@ -12,18 +12,17 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: format.t,v 1.5 1999/09/29 10:35:32 abw Exp $
+# $Id: format.t,v 1.6 1999/11/25 17:51:24 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template qw( :status );
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my ($a, $b, $c, $d) = qw( alpha bravo charlie delta );
 my @days = qw( Monday Tuesday Wednesday Thursday Friday Saturday Sunday );

@@ -222,7 +222,7 @@ which can I<always> be expressed in lower, or indeed any case.
 =item PLUGIN_BASE
 
 This option allows you to define a base package for plugin objects loaded
-and used via the USE directive.  The default base is 'Template::Plugin'.
+and used via the USE directive.  The default value is 'Template::Plugin'.
 Periods in a plugin name are converted to '::' and the name is appended
 to the PLUGIN_BASE.  Thus the following directive:
 
@@ -241,15 +241,10 @@ name before falling back on the default 'Template::Plugin'.
 In the above example, the [% USE Magic.Wand %] directive, would resolve
 to 'MyOrg::Template::Plugin::Magic::Wand' or 'Template::Plugin::Magic::Wand'
 in that order.  Thus, a module defined in a 'local' PLUGIN_BASE will be
-used in preference to the default Template Toolkit equivalent.
+used in preference to the default Template Toolkit equivalent.  In other
+words, the default 'Template::Plugin' location is always searched, but
+after any user defined values.  
 
-To stop the processor from looking in the default location at all, 
-specify the PLUGIN_BASE as an array reference.  Only those locations
-listed in the array will be searched.
-
-    my $tproc = Template->new({
-	PLUGIN_BASE => [ 'MyOrg::Template::Plugin' ],
-    });
 
 =item PLUGINS
 
@@ -394,20 +389,37 @@ writing the output to F</tmp/dest/foo> and F</tmp/dest/bar> respectively.
 
 =item OUTPUT, ERROR
 
-The OUTPUT and ERROR options may be specified to redirect template output
-and/or error messages.  The value for these options should be a file GLOB
-or IO::Handle to which the output/error is directed, a CODE reference
-which is called to handle messages, a reference to a text string (SCALAR)
-to which output or error messages are appended or a plain string which 
-represents a filename relative to OUTPUT_PATH which will be opened and
-written to.
+The OUTPUT and ERROR options may be specified to redirect template
+output and/or error messages.  The values for these options may be one
+of; a plain string indicating a filename which will be opened
+(relative to OUTPUT_PATH) and written to; a file GLOB opened ready 
+for output; a reference to a scalar to which output/error is appended;
+or any object reference which implements a 'print' method.  This final
+option allows IO::Handle, Apache::Request, or other such objects to be
+passed in directly. 
 
     my $output = '';
 
     my $template = Template->new({
-        OUTPUT = \$output,
-        ERROR  = sub { print STDERR "Most Bogus Error: ", @_ }
+        OUTPUT => \$output,
+        ERROR  => sub { print STDERR "Most Bogus Error: ", @_ }
     };
+
+In an Apache/mod_perl handler:
+
+    sub handler {
+	my $r    = shift;
+	my $file = $r->path_info();
+
+        my $template = Template->new({ OUTPUT => $r });
+
+	$template->process($file) || do {
+	    $r->log_reason($template->error());
+	    return SERVER_ERROR;
+	};
+
+	return OK;
+    }
 
 The redirect() method can be subsequently called to define new 
 output or error options.
@@ -541,25 +553,17 @@ and does not represent a filename.
 =head2 redirect($what, $where)
 
 The redirect() method can be called to redirect the output or error
-stream for the template processing system.  This method simply delegates
-to the underlying Template::Context object().
+stream for the template processing system.  Redirections can also be
+established when the object is created with the OUTPUT and ERROR
+options.
 
-The first parameter should specify 'output' or 'error' (defined as the 
-constants TEMPLATE_OUTPUT and TEMPLATE_ERROR in Template::Constants).
-
-The second parameter should contain a file name (relative to
-OUTPUT_PATH), a file handle (GLOB or IO::handle) to which the output
-or error stream should be written, a reference to a scalar variable to
-which output is appended or a code reference which is called to handle
-output.
-
-    use Template::Context;
-    use Template::Constants qw( :template );
-
-    my $context = Template::Context->new();
-    my $output  = '';
-    $context->redirect(TEMPLATE_OUTPUT, \$output);
-    $context->redirect(TEMPLATE_ERROR, \*STDOUT);
+This method simply delegates to the underlying Template::Context
+object().  The first parameter should specify 'output' or 'error'
+(defined as the constants TEMPLATE_OUTPUT and TEMPLATE_ERROR in
+Template::Constants).  The second parameter should contain a file name
+(relative to OUTPUT_PATH), a reference to a scalar variable to which
+output is appended, a code reference which is called to handle output,
+or any object that supports a print method.
 
 =head2 error()
 
@@ -570,5 +574,8 @@ If no error occurred, the method returns a numerical value representing
 the return code of the last directive processed.  This will generally 
 be STATUS_OK (0), STATUS_STOP or STATUS_RETURN.  Constants representing
 the values are defined in Template::Constants. 
+
+
+
 
 

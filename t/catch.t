@@ -13,18 +13,17 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: catch.t,v 1.8 1999/09/09 17:02:00 abw Exp $
+# $Id: catch.t,v 1.9 1999/11/25 17:51:22 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template::Constants qw( :status );
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my $tproc = Template->new({	
     CATCH => {
@@ -36,7 +35,8 @@ my $tproc = Template->new({
 		      $context->output("FILE ERROR ($info)");
 		      return STATUS_OK;
 		  },
-	'default' => STATUS_STOP,
+	'default' => sub { STATUS_STOP },
+#	'default' => STATUS_STOP,
     },
     DEBUG => 1,
 });

@@ -12,21 +12,20 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: cache.t,v 1.8 1999/09/09 17:01:59 abw Exp $
+# $Id: cache.t,v 1.9 1999/11/25 17:51:22 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template::Cache;
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
 #use Template::Context;
 #$Template::Context::DEBUG = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my $cache = Template::Cache->new()
     || die "Failed to create cache\n";

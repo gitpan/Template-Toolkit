@@ -15,17 +15,16 @@
 # TODO: this should test the binary comparison and boolean operators
 #    more thoroughly, including parenthesised sub-expressions, etc.
 #
-# $Id: if.t,v 1.9 1999/08/10 11:09:14 abw Exp $
+# $Id: if.t,v 1.10 1999/11/25 17:51:25 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
-require 'texpect.pl';
+use lib qw( ../lib );
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my ($a, $b, $c, $r) = qw( alpha bravo charlie romeo );
 my $params = {

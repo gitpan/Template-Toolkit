@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 1.13 1999/11/05 10:27:02 abw Exp $
+# $Id: ttree,v 1.14 1999/11/09 16:14:00 abw Exp $
 #
 #========================================================================
 
@@ -39,7 +39,7 @@ use File::Basename;
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
@@ -300,8 +300,7 @@ sub read_config {
         'template_start_tag|start_tag|starttag=s',
         'template_end_tag|end_tag|endtag=s',
         'template_tag_style|tag_style|tagstyle=s',
-	'template_plugin_base|plugin_base|pluginbase|p=s@'
-				=> { DEFAULT => 'Template::Plugin' },
+	'template_plugin_base|plugin_base|pluginbase|p=s@',
 	'perl5lib|perllib=s@'
     );
     # define this option now that we have $config context
@@ -506,7 +505,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.13 $
+$Revision: 1.14 $
 
 =head1 COPYRIGHT
 

@@ -4,16 +4,16 @@ NAME
 OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
     The Template Toolkit module bundle is available from CPAN as:
 
-        /authors/id/ABW/Template-Toolkit-0.28.tar.gz
+        /authors/id/ABW/Template-Toolkit-1.00.tar.gz
 
     Unpack the archive to create an installation directory.
     Something like this:
 
-        zcat Template-Toolkit-0.28.tar.gz | tar xvf -
+        zcat Template-Toolkit-1.00.tar.gz | tar xvf -
 
     'cd' into that directory, make, test and install the modules:
 
-        cd Template-Toolkit-0.28
+        cd Template-Toolkit-1.00
         perl Makefile.PL
         make
         make test
@@ -264,7 +264,7 @@ FEATURES
         This is handled transparently by the FOREACH directive.
 
     -   Provides an extensible framework for other template languages,
-        processors and applications.
+        processors and applications, servers, etc.
 
     -   Template language is independent (theoretically at least) of the
         implementation language, platform, operating system, etc.
@@ -339,6 +339,25 @@ EXAMPLE
            <li>baz
         </ul>
 
+    Apache/mod_perl handler:
+
+        sub handler {
+            my $r    = shift;
+            my $file = $r->path_info();  # or some other mapping
+
+            my $template = Template->new({ 
+                INCLUDE_PATH => '/where/to/look/for/templates',
+                OUTPUT       => $r,
+            });
+
+            $template->process($file) || do {
+                $r->log_reason($template->error());
+                return SERVER_ERROR;
+            };
+
+            return OK;
+        }
+
 MAILING LIST
     A mailing list exists for up-to-date information on the Template
     Toolkit and for following and contributing to the development
@@ -354,10 +373,7 @@ AUTHOR
         http://www.cre.canon.co.uk/perl
 
 VERSION
-    This is version 0.28 of the Template Toolkit.
-
-    It is a stable beta release version preceding the imminent
-    release of version 1.0.
+    This is version 1.00 of the Template Toolkit.
 
     Please consult the Changes file for information about visible
     changes in the Template Toolkit between releases. The TODO file

@@ -10,7 +10,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.50 1999/11/03 01:20:16 abw Exp $
+# $Id: TODO,v 1.58 1999/12/02 16:14:11 abw Exp $
 #
 #============================================================================
 
@@ -46,14 +46,13 @@ Possible Features
 
 General Improvements
 --------------------
+  * A more general way than macros to capture and handler a template block 
+    definiton.  The current macro wraps it up in a function which makes it 
+    hard to get at.
 
   * Should plugins be able to throw exceptions on creation failure
     rather than reporting errors via Template::Plugin::fail() and 
     returning undef?
-
-  * should you be able to break out of an IF block?  At present, if you 
-    BREAK outside of a FOREACH, then a STATUS_DONE value is returned to
-    the caller.
 
   * It is currently impossible to create a list and then pass the members 
     of that list to a code ref/method.  The following would pass the list
@@ -115,5 +114,8 @@ ttree
   * Better documentation describing the use of ttree in building document
     systems.  Examples of web sites, using config profiles, defining 
     template variables in 'config' templates that get pre-processed, etc.
+
+
+
 
 

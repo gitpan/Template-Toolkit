@@ -272,7 +272,7 @@ of its case.  Reserved words are:
 
     GET, SET, DEFAULT, INCLUDE, PROCESS, IMPORT, FILTER, USE
     FOR, FOREACH, IF, UNLESS, ELSE, ELSIF, AND, OR, NOT 
-    BLOCK, END, THROW, CATCH, ERROR, RETURN, STOP, PERL
+    BLOCK, MACRO, END, THROW, CATCH, ERROR, RETURN, STOP, PERL
 
 e.g.
 
@@ -452,6 +452,16 @@ written:
        bar  = foo
        cost = '$100'
        item = "$bar: ${cost}.00"
+    %]
+
+The basic binary mathematic operators (+ - * div and mod) can also be used.
+
+    [% ten    = 10 
+       twenty = 20
+       thirty = twenty + ten
+       forty  = 2 * twenty 
+       fifty  = 100 div 2
+       six    = twenty mod 7
     %]
 
 =head2 VARIABLE LISTS
@@ -1204,8 +1214,9 @@ directive and are parsed, compiled and cached as for files.
     [% INCLUDE tabrow  name='Alan'  email='alan@nowhere.com' %]
     </table>
 
-A BLOCK definition may be used before it is defined, as long as the 
-definition resides in he same file.
+A BLOCK definition may be used before it is defined, as long as the
+definition resides in he same file.  The block definition itself does
+not generate any output.
 
     [% INCLUDE tmpblk %]
 
@@ -1216,6 +1227,56 @@ attempt is made to recurse into the same template file (e.g. by calling
 [% INCLUDE myself %] from within the template 'myself').  The RECURSION
 option can be enabled to permit recursion for some special cases.  It is 
 assumed that you know what you're doing if you take this step.
+
+=head2 DEFINING MACROS
+
+The MACRO directive allows you to define a directive or directive block
+which is then repeatedly evaluated each time the macro is called. 
+
+    [% MACRO header INCLUDE header %]
+
+    [% header %]             # => [% INCLUDE header %]
+
+Macros can be passed named parameters when called.  These values remain 
+local to the macro.
+
+    [% header(title='Hello World') %]  
+                             # => [% INCLUDE header title='Hello World' %]
+
+A MACRO definition may include parameter names.  Values passed to the 
+macros are then mapped to these local variables.  Other named parameters
+may follow these.
+
+    [% MACRO header(title) INCLUDE header %]
+
+    [% header('Hello World') %]
+    [% header('Hello World', bgcol='#123456') %]
+
+equivalent to:
+
+    [% INCLUDE header title='Hello World' %]
+    [% INCLUDE header title='Hello World' bgcol='#123456# %]
+
+A MACRO may preceed any directive and must conform to the structure 
+of the directive.
+
+    [% MACRO header IF frames %]
+       [% INCLUDE frames/header %]
+    [% ELSE %]
+       [% INCLUDE header %]
+    [% END %]
+
+    [% header %]
+
+A MACRO may also be defined as an anonymous BLOCK.  The block will be 
+evaluated each time the macro is called.  A macro must be defined before
+it is used.
+
+    [% MACRO header BLOCK %]
+       ...content...
+    [% END %]
+
+    [% header %]
 
 =head2 PLUGIN OBJECTS AND LIBRARIES
 
@@ -1290,9 +1351,7 @@ returns an instance of Lincoln Stein's CGI.pm module.
 Simon Matthews E<lt>sam@knowledgepool.comE<gt> has written a DBI
 plugin which provides an interfaces to the DBI module.
 
-    # NOTE: provisional - see Template::Plugin::DBI for details
-
-    [% USE DBI('driver:dbase:etc') %]
+    [% USE DBI('DBI:mSQL:mydbname') %]
     [% FOREACH user = DBI.query('SELECT * FROM users') %]
        [% user.id %] [% user.name %] [% user.etc.etc %]
     [% END %]
@@ -1454,6 +1513,13 @@ the error type as 'default'.
             'default' => STATUS_OK,
         },
     });
+
+As from version 1.00, exception types may also be dotted values, e.g. 
+'foo.bar'.  If a specific handler does not exist for the exception type, 
+then elements of the name are progressively stripped from the end until 
+a handler is found that represents the remaining part.  An exception type
+'foo.bar' could thus be handled by a 'foo.bar' or 'foo' handler.  The 
+'default' handler will be used, if it exists, as a last resort.
 
 Any user-defined exception types can be created, returned, thrown and caught 
 at will.  User code may return an exception as the status code to indicate

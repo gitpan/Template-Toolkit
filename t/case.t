@@ -12,18 +12,17 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: case.t,v 1.2 1999/08/10 11:09:11 abw Exp $
+# $Id: case.t,v 1.3 1999/11/25 17:51:22 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template::Constants qw( :status );
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 test_expect(\*DATA, { CASE => 1, POST_CHOMP => 1 }, callsign());
 

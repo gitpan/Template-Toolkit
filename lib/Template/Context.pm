@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.34 1999/11/03 01:20:30 abw Exp $
+# $Id: Context.pm,v 1.38 1999/12/02 16:14:12 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.34 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.38 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -51,8 +51,11 @@ my $binop  = {
     '<='  => sub { local $^W = 0; $_[0] <= $_[1] ? 1 : 0 },
     '>'   => sub { local $^W = 0; $_[0] >  $_[1] ? 1 : 0 },
     '>='  => sub { local $^W = 0; $_[0] >= $_[1] ? 1 : 0 },
-#    '&&'  => sub { $_[0] && $_[1] ? 1 : 0 },
-#    '||'  => sub { $_[0] || $_[1] ? 1 : 0 },
+    '-'   => sub { local $^W = 0; $_[0] - $_[1] },
+    '+'   => sub { local $^W = 0; $_[0] + $_[1] },
+    '*'   => sub { local $^W = 0; $_[0] * $_[1] },
+    'DIV' => sub { local $^W = 0; $_[0] / $_[1] },
+    'MOD' => sub { local $^W = 0; $_[0] % $_[1] },
 };
 
 
@@ -88,9 +91,11 @@ sub new {
 	unless ref $cache;
     
     # PLUGIN_BASE is a single directory or array ref (may also be undef)
-    $pbase = ref $pbase eq 'ARRAY' 
-	     ?   $pbase 
-	     : [ $pbase || 'Template::Plugin'];
+    # 'Template::Plugin' gets added to the end
+    if (ref $pbase ne 'ARRAY') {
+	$pbase = $pbase ? [ $pbase ] : [ ];
+    }
+    push(@$pbase, 'Template::Plugin');
 
     my $self = bless {
 	STASH        => $stash,
@@ -248,10 +253,19 @@ sub throw {
 	$exception->thrown(1);
     }
 
-    # look for specific, then default throw definition
-    $catch = $handlers->{ $type };
-    $catch = $handlers->{'default'}
-	unless defined $catch;
+    # we first examine the exception type to see if a handler is defined.
+    # if not, we strip off dotted elements from the end of the type to 
+    # find a more general handler within the same group (i.e. 'foo' would
+    # catch 'foo.bar').  Finally, we fall back on the 'default' handler.
+    # e.g. 'foo.bar' would be caught by 'foo.bar', 'foo' or 'default'.
+    CATCH: {
+	last CATCH if $catch = $handlers->{ $type };
+	my $owner = $type;
+	while ($owner =~ s/\.([^\.]+)//) {
+	    last CATCH if $catch = $handlers->{ $owner };
+	}
+	$catch = $handlers->{'default'}
+    }
 
     # THROWING is used to avoid recursive throws (i.e. disable interupts)
     return STATUS_OK
@@ -315,6 +329,7 @@ sub catch {
 sub use_plugin {
     my ($self, $name, $params) = @_;
     my ($factory, $module, $base, $package, $filename, $plugin, $ok);
+    my $error = '';
 
     require Template::Plugin;
 
@@ -333,14 +348,15 @@ sub use_plugin {
 
 	    $ok = eval { require $filename };
 	    last unless $@;
+	    $error .= "filename: $@\n";
 	}
 	return (undef, Template::Exception->new(ERROR_UNDEF,
-			"failed to load plugin module $name"))
+			"failed to load plugin module $name:\n$error"))
 	    unless $ok;
 
 	$factory = eval { $package->load($self) };
 	return (undef, Template::Exception->new(ERROR_UNDEF, 
-			"failed to initialise plugin module $name"))
+			"failed to initialise plugin module $name: $@"))
 	    if $@ || ! $factory;
 
 	$self->{ PLUGINS }->{ $name } = $factory;
@@ -560,24 +576,28 @@ sub _evaluate {
     @stack = ();
 
 # DEBUG
-    local $" = ', ';
-    print "nops = ", $nops / 2, "\nops: [@$ops]\n" if $DEBUG;
-    $ip = 0;
+#    local $" = ', ';
+#    print "nops = ", $nops / 2, "\nops: [@$ops]\n" if $DEBUG;
+#    $ip = 0;
 # /DEBUG
 
     while ($op = shift @pending) {
-	printf("#$ip:  %02d %-8s\n", $op, $OP_NAME[$op])  if $DEBUG;
-	print(scalar @pending, " items remain on pending, ", 
-	      scalar @stack, " item on stack\n") if $DEBUG;
-	print "stack: @stack\n" if $DEBUG;
-	$ip++;
+# DEBUG
+#	printf("#$ip:  %02d %-8s\n", $op, $OP_NAME[$op])  if $DEBUG;
+#	print(scalar @pending, " items remain on pending, ", 
+#	      scalar @stack, " item on stack\n") if $DEBUG;
+#	print "stack: @stack\n" if $DEBUG;
+#	$ip++;
+# /DEBUG
 
 	next unless $op;		    # NULLOP
 
 	if ($op == OP_LITERAL) {
 	    # push literal text straight onto the stack
 	    push(@stack, shift @pending);
-	    print "  <- literal ($stack[-1])\n" if $DEBUG;
+# DEBUG
+#	    print "  <- literal ($stack[-1])\n" if $DEBUG;
+# /DEBUG
 	}
 	elsif ($op == OP_QUOTE) {
 	    # push individual items onto front of pending op queue followed
@@ -585,28 +605,28 @@ sub _evaluate {
 	    $x = shift @pending;
 	    unshift(@pending, (map { @{ $_ } } @$x), 
 		    OP_STRCAT, scalar @$x);
-	    print "   + ", scalar @$x, " quote items\n" if $DEBUG;
+#	    print "   + ", scalar @$x, " quote items\n" if $DEBUG;
 	}
 	elsif ($op == OP_STRCAT) {
 	    # concatentate top n items on stack
 	    $x = shift @pending; 
 	    push(@stack, join('', map { defined $_ ? $_ : '' } 
 					splice(@stack, -$x)));
-	    print "  <- strcat ($stack[-1])\n" if $DEBUG;
+#	    print "  <- strcat ($stack[-1])\n" if $DEBUG;
 	}	
 	elsif ($op == OP_LIST) {
 	    # expand list items onto front of pending list, followed by
 	    # an opcode to fold top n stack items into a list
 	    $x = shift @pending;
 	    unshift(@pending, (map { @$_ } @$x), OP_LISTFOLD, scalar @$x);
-	    print "   + ", scalar @$x, " list items\n" if $DEBUG;
+#	    print "   + ", scalar @$x, " list items\n" if $DEBUG;
 	}
 	elsif ($op == OP_LISTFOLD) {
 	    # pop top $item items off the stack and push a new list
 	    $x = shift @pending;
 	    push(@stack, [ splice(@stack, -$x) ]);
-	    print("  -> pop $x items\n",
-		  "  <- list ($stack[-1])\n") if $DEBUG;
+#	    print("  -> pop $x items\n",
+#		  "  <- list ($stack[-1])\n") if $DEBUG;
 	}
 	elsif ($op == OP_ARGS) {
 	    # args is a list of [ key => value ] or [ 0, value ] pairs.
@@ -623,9 +643,9 @@ sub _evaluate {
 	    push(@expand, [ OP_HASH, $hash ]) if @$hash;
 	    unshift(@pending, (map { @$_ } @expand), 
 		    OP_LISTFOLD, scalar @expand);
-	    print("   + ", scalar @expand, " list args ",
-		  @$hash ? "with" : "without", " named param hash\n") 
-		if $DEBUG;
+#	    print("   + ", scalar @expand, " list args ",
+#		  @$hash ? "with" : "without", " named param hash\n") 
+#		if $DEBUG;
 	}
 	elsif ($op == OP_HASH) {
 	    # expand each [key, value] pair onto the stack followed by an
@@ -636,15 +656,15 @@ sub _evaluate {
 			( ref $_->[0] ? @{$_->[0]} : (OP_LITERAL, $_->[0]),
 		          @{$_->[1]} ) 
 			} @$x ), OP_HASHFOLD, scalar @$x);
-	    print "   + ", scalar @$x, " hash items\n" if $DEBUG;
+#	    print "   + ", scalar @$x, " hash items\n" if $DEBUG;
 	}
 	elsif ($op == OP_HASHFOLD) {
 	    # pop top ($item * 2) items off the stack and push a new hash
 	    $x = shift @pending;
 	    if ($x) { push(@stack, { splice(@stack, -($x * 2)) }); }
 	    else    { push(@stack, { }); } # empty hash
-	    print("  -> pop $x items\n",
-		  "  <- hash ($stack[-1])\n") if $DEBUG;
+#	    print("  -> pop $x items\n",
+#		  "  <- hash ($stack[-1])\n") if $DEBUG;
 	}
 	elsif ($op == OP_ITER) {
 	    # expand list items onto front of pending list, followed by
@@ -652,7 +672,7 @@ sub _evaluate {
 	    ($x, $p) = splice(@pending, 0, 2);
 	    unshift(@pending, (map { @$_ } @$x), @$p, 
 		    OP_ITERFOLD, scalar @$x);
-	    print "   + ", scalar @$x, " list items\n" if $DEBUG;
+#	    print "   + ", scalar @$x, " list items\n" if $DEBUG;
 	}
 	elsif ($op == OP_ITERFOLD) {
 	    $x = shift @pending;  # next item is list size
@@ -660,20 +680,20 @@ sub _evaluate {
 	    require Template::Iterator;
 	    push(@stack, 
 	         Template::Iterator->new([ splice(@stack, -$x) ], @$p));
-	    print("  -> pop $x items\n",
-		  "  <- list ($stack[-1])\n") if $DEBUG;
+#	    print("  -> pop $x items\n",
+#		  "  <- list ($stack[-1])\n") if $DEBUG;
 	}
 	elsif ($op == OP_RANGE) {
 	    $x = shift @pending;
 	    unshift(@pending, (map { @$_ } @$x), 
 		    OP_LISTFOLD, scalar @$x, OP_RANGEFOLD);
-	    print "   + range items (@$x)\n" if $DEBUG;
+#	    print "   + range items (@$x)\n" if $DEBUG;
 	}
 	elsif ($op == OP_RANGEFOLD) {
 	    require Template::Iterator;
 	    $p = pop @stack;
 	    push(@stack, Template::Iterator->new([ $p->[0] .. $p->[1] ]));
-	    print "  <- range (@$p)\n" if $DEBUG;
+#	    print "  <- range (@$p)\n" if $DEBUG;
 	}
 	elsif ($op == OP_BINOP) {
 	    $x = shift @pending;
@@ -681,8 +701,8 @@ sub _evaluate {
 	    warn("illegal binary op: $x\n"), return
 		unless $y;
 	    push(@stack, &$y(splice(@stack, -2)));
-	    print("  <- binary op $x (", $stack[-1] ? 'true' : 'false', 
-		  ")\n")if $DEBUG;
+#	    print("  <- binary op $x (", $stack[-1] ? 'true' : 'false', 
+#		  ")\n")if $DEBUG;
 	}
 	elsif ($op == OP_AND) {
 	    # LHS has been evaluated and is on the top of the stack.
@@ -693,15 +713,15 @@ sub _evaluate {
 	    # RHS opcodes onto the front of @pending for subsequent 
 	    # evaluation
 	    $x = shift @pending;
-	    print "  <- and (LHS: ", $stack[-1] ? 'true' : 'false', 
-		  ")\n"if $DEBUG;
+#	    print "  <- and (LHS: ", $stack[-1] ? 'true' : 'false', 
+#		  ")\n"if $DEBUG;
 	    unshift(@pending, @$x), pop(@stack) if $stack[-1];
 	}
 	elsif ($op == OP_OR) {
 	    # same as per OP_AND, with the obvious exception
 	    $x = shift @pending;
-	    print "  <- or (LHS: ", $stack[-1] ? 'true' : 'false', 
-		  ")\n"if $DEBUG;
+#	    print "  <- or (LHS: ", $stack[-1] ? 'true' : 'false', 
+#		  ")\n"if $DEBUG;
 	    unshift(@pending, @$x), pop(@stack) unless $stack[-1];
 	}
 	elsif ($op == OP_NOT) {
@@ -722,8 +742,8 @@ sub _evaluate {
 	    }
 	    unshift(@pending, @expand);
 # DEBUG
-	    my $iname = join('.', (map { ref($_) ? $_->[0] : $_ } @$x));
-	    print "   + ident ($iname)\n" if $DEBUG;
+#	    my $iname = join('.', (map { ref($_) ? $_->[0] : $_ } @$x));
+#	    print "   + ident ($iname)\n" if $DEBUG;
 	}
 	elsif ($op == OP_ASSIGN) {
 	    # the term on the RHS of the assignment is on the top of
@@ -749,7 +769,7 @@ sub _evaluate {
 	    $expand[-1] = OP_LSET;
 	    push(@stack, $root);
 	    unshift(@pending, @expand);
-	    print "   + assign\n" if $DEBUG;
+#	    print "   + assign\n" if $DEBUG;
 	}
 	elsif ($op == OP_DOT || $op == OP_LDOT) {
 	    ($x, $y, $p) = splice(@stack, -3);    # x.y(p)
@@ -770,7 +790,6 @@ sub _evaluate {
 	    }
 	    elsif (UNIVERSAL::isa($x, 'Template::Stash')) {
 		($z, $err) = $x->get($y, $p, $self, $lflag);
-## IMPLICIT CODE
 		unless (defined $z || $err) {
 		    # create an intermediate namespace hash if the item 
 		    # doesn't exist and this is an OP_LDOT (lvalue)
@@ -788,7 +807,6 @@ sub _evaluate {
 		if (defined($z = $x->{ $y })) {
 		    ($z, $err) = &$z(@$p)   # execute any code binding
 			if $z && ref($z) eq 'CODE';
-## CODE
 		}
 		elsif ($lflag) {
 		    # create empty hash if OP_LDOT
@@ -828,7 +846,7 @@ sub _evaluate {
 	    return (undef, $err) if $err;
 
 	    push(@stack, $z);
-	    print "  <- dot (", $stack[-1] || '<undef>', ")\n" if $DEBUG;
+#	    print "  <- dot (", $stack[-1] || '<undef>', ")\n" if $DEBUG;
 	}
 	elsif ($op == OP_LSET) {
 	    ($z, $x, $y, $p) = splice(@stack, -4);   # x.y(p) = z
@@ -866,7 +884,7 @@ sub _evaluate {
 	    return (undef, $err) if $err;
 
 	    push(@stack, $z);
-	    print "  <- lset ($stack[-1])\n" if $DEBUG;
+#	    print "  <- lset ($stack[-1])\n" if $DEBUG;
 	}
 	else {
 	    print "Bad, bad OP ($op).\n";
@@ -968,7 +986,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.34 $
+$Revision: 1.38 $
 
 =head1 COPYRIGHT
 

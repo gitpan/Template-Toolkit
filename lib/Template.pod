@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pod,v 1.19 1999/11/05 10:27:23 abw Exp $
+#   $Id: Template.pod,v 1.28 1999/12/02 16:15:22 abw Exp $
 #
 #========================================================================
 
@@ -121,6 +121,9 @@ Template Toolkit - a Perl toolkit for template processing.
               [% BLOCK template %]
                  content
 	      [% END %]
+
+  MACRO     - create a named macro for some other directive or block
+              [% MACRO directive %]
 
   FILTER    - post-process block through a filter
               [% FILTER name %]
@@ -604,7 +607,7 @@ of its case.  Reserved words are:
 
     GET, SET, DEFAULT, INCLUDE, PROCESS, IMPORT, FILTER, USE
     FOR, FOREACH, IF, UNLESS, ELSE, ELSIF, AND, OR, NOT 
-    BLOCK, END, THROW, CATCH, ERROR, RETURN, STOP, PERL
+    BLOCK, MACRO, END, THROW, CATCH, ERROR, RETURN, STOP, PERL
 
 e.g.
 
@@ -784,6 +787,16 @@ written:
        bar  = foo
        cost = '$100'
        item = "$bar: ${cost}.00"
+    %]
+
+The basic binary mathematic operators (+ - * div and mod) can also be used.
+
+    [% ten    = 10 
+       twenty = 20
+       thirty = twenty + ten
+       forty  = 2 * twenty 
+       fifty  = 100 div 2
+       six    = twenty mod 7
     %]
 
 =head2 VARIABLE LISTS
@@ -1536,8 +1549,9 @@ directive and are parsed, compiled and cached as for files.
     [% INCLUDE tabrow  name='Alan'  email='alan@nowhere.com' %]
     </table>
 
-A BLOCK definition may be used before it is defined, as long as the 
-definition resides in he same file.
+A BLOCK definition may be used before it is defined, as long as the
+definition resides in he same file.  The block definition itself does
+not generate any output.
 
     [% INCLUDE tmpblk %]
 
@@ -1548,6 +1562,56 @@ attempt is made to recurse into the same template file (e.g. by calling
 [% INCLUDE myself %] from within the template 'myself').  The RECURSION
 option can be enabled to permit recursion for some special cases.  It is 
 assumed that you know what you're doing if you take this step.
+
+=head2 DEFINING MACROS
+
+The MACRO directive allows you to define a directive or directive block
+which is then repeatedly evaluated each time the macro is called. 
+
+    [% MACRO header INCLUDE header %]
+
+    [% header %]             # => [% INCLUDE header %]
+
+Macros can be passed named parameters when called.  These values remain 
+local to the macro.
+
+    [% header(title='Hello World') %]  
+                             # => [% INCLUDE header title='Hello World' %]
+
+A MACRO definition may include parameter names.  Values passed to the 
+macros are then mapped to these local variables.  Other named parameters
+may follow these.
+
+    [% MACRO header(title) INCLUDE header %]
+
+    [% header('Hello World') %]
+    [% header('Hello World', bgcol='#123456') %]
+
+equivalent to:
+
+    [% INCLUDE header title='Hello World' %]
+    [% INCLUDE header title='Hello World' bgcol='#123456# %]
+
+A MACRO may preceed any directive and must conform to the structure 
+of the directive.
+
+    [% MACRO header IF frames %]
+       [% INCLUDE frames/header %]
+    [% ELSE %]
+       [% INCLUDE header %]
+    [% END %]
+
+    [% header %]
+
+A MACRO may also be defined as an anonymous BLOCK.  The block will be 
+evaluated each time the macro is called.  A macro must be defined before
+it is used.
+
+    [% MACRO header BLOCK %]
+       ...content...
+    [% END %]
+
+    [% header %]
 
 =head2 PLUGIN OBJECTS AND LIBRARIES
 
@@ -1622,9 +1686,7 @@ returns an instance of Lincoln Stein's CGI.pm module.
 Simon Matthews E<lt>sam@knowledgepool.comE<gt> has written a DBI
 plugin which provides an interfaces to the DBI module.
 
-    # NOTE: provisional - see Template::Plugin::DBI for details
-
-    [% USE DBI('driver:dbase:etc') %]
+    [% USE DBI('DBI:mSQL:mydbname') %]
     [% FOREACH user = DBI.query('SELECT * FROM users') %]
        [% user.id %] [% user.name %] [% user.etc.etc %]
     [% END %]
@@ -1786,6 +1848,13 @@ the error type as 'default'.
             'default' => STATUS_OK,
         },
     });
+
+As from version 1.00, exception types may also be dotted values, e.g. 
+'foo.bar'.  If a specific handler does not exist for the exception type, 
+then elements of the name are progressively stripped from the end until 
+a handler is found that represents the remaining part.  An exception type
+'foo.bar' could thus be handled by a 'foo.bar' or 'foo' handler.  The 
+'default' handler will be used, if it exists, as a last resort.
 
 Any user-defined exception types can be created, returned, thrown and caught 
 at will.  User code may return an exception as the status code to indicate
@@ -2129,7 +2198,7 @@ which can I<always> be expressed in lower, or indeed any case.
 =item PLUGIN_BASE
 
 This option allows you to define a base package for plugin objects loaded
-and used via the USE directive.  The default base is 'Template::Plugin'.
+and used via the USE directive.  The default value is 'Template::Plugin'.
 Periods in a plugin name are converted to '::' and the name is appended
 to the PLUGIN_BASE.  Thus the following directive:
 
@@ -2148,15 +2217,10 @@ name before falling back on the default 'Template::Plugin'.
 In the above example, the [% USE Magic.Wand %] directive, would resolve
 to 'MyOrg::Template::Plugin::Magic::Wand' or 'Template::Plugin::Magic::Wand'
 in that order.  Thus, a module defined in a 'local' PLUGIN_BASE will be
-used in preference to the default Template Toolkit equivalent.
+used in preference to the default Template Toolkit equivalent.  In other
+words, the default 'Template::Plugin' location is always searched, but
+after any user defined values.  
 
-To stop the processor from looking in the default location at all, 
-specify the PLUGIN_BASE as an array reference.  Only those locations
-listed in the array will be searched.
-
-    my $tproc = Template->new({
-	PLUGIN_BASE => [ 'MyOrg::Template::Plugin' ],
-    });
 
 =item PLUGINS
 
@@ -2301,20 +2365,37 @@ writing the output to F</tmp/dest/foo> and F</tmp/dest/bar> respectively.
 
 =item OUTPUT, ERROR
 
-The OUTPUT and ERROR options may be specified to redirect template output
-and/or error messages.  The value for these options should be a file GLOB
-or IO::Handle to which the output/error is directed, a CODE reference
-which is called to handle messages, a reference to a text string (SCALAR)
-to which output or error messages are appended or a plain string which 
-represents a filename relative to OUTPUT_PATH which will be opened and
-written to.
+The OUTPUT and ERROR options may be specified to redirect template
+output and/or error messages.  The values for these options may be one
+of; a plain string indicating a filename which will be opened
+(relative to OUTPUT_PATH) and written to; a file GLOB opened ready 
+for output; a reference to a scalar to which output/error is appended;
+or any object reference which implements a 'print' method.  This final
+option allows IO::Handle, Apache::Request, or other such objects to be
+passed in directly. 
 
     my $output = '';
 
     my $template = Template->new({
-        OUTPUT = \$output,
-        ERROR  = sub { print STDERR "Most Bogus Error: ", @_ }
+        OUTPUT => \$output,
+        ERROR  => sub { print STDERR "Most Bogus Error: ", @_ }
     };
+
+In an Apache/mod_perl handler:
+
+    sub handler {
+	my $r    = shift;
+	my $file = $r->path_info();
+
+        my $template = Template->new({ OUTPUT => $r });
+
+	$template->process($file) || do {
+	    $r->log_reason($template->error());
+	    return SERVER_ERROR;
+	};
+
+	return OK;
+    }
 
 The redirect() method can be subsequently called to define new 
 output or error options.
@@ -2448,25 +2529,17 @@ and does not represent a filename.
 =head2 redirect($what, $where)
 
 The redirect() method can be called to redirect the output or error
-stream for the template processing system.  This method simply delegates
-to the underlying Template::Context object().
+stream for the template processing system.  Redirections can also be
+established when the object is created with the OUTPUT and ERROR
+options.
 
-The first parameter should specify 'output' or 'error' (defined as the 
-constants TEMPLATE_OUTPUT and TEMPLATE_ERROR in Template::Constants).
-
-The second parameter should contain a file name (relative to
-OUTPUT_PATH), a file handle (GLOB or IO::handle) to which the output
-or error stream should be written, a reference to a scalar variable to
-which output is appended or a code reference which is called to handle
-output.
-
-    use Template::Context;
-    use Template::Constants qw( :template );
-
-    my $context = Template::Context->new();
-    my $output  = '';
-    $context->redirect(TEMPLATE_OUTPUT, \$output);
-    $context->redirect(TEMPLATE_ERROR, \*STDOUT);
+This method simply delegates to the underlying Template::Context
+object().  The first parameter should specify 'output' or 'error'
+(defined as the constants TEMPLATE_OUTPUT and TEMPLATE_ERROR in
+Template::Constants).  The second parameter should contain a file name
+(relative to OUTPUT_PATH), a reference to a scalar variable to which
+output is appended, a code reference which is called to handle output,
+or any object that supports a print method.
 
 =head2 error()
 
@@ -2477,6 +2550,9 @@ If no error occurred, the method returns a numerical value representing
 the return code of the last directive processed.  This will generally 
 be STATUS_OK (0), STATUS_STOP or STATUS_RETURN.  Constants representing
 the values are defined in Template::Constants. 
+
+
+
 
 
 =head1 EXAMPLES
@@ -2623,10 +2699,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 VERSION
 
-This is version 0.28 of the Template Toolkit.  
-
-It is a stable beta release version preceding the imminent release 
-of version 1.0.
+This is version 1.00 of the Template Toolkit.  
 
 Please consult the F<Changes> file for information about visible changes
 in the Template Toolkit between releases.  The F<TODO> file contains 
@@ -2663,9 +2736,9 @@ development to compliment the Template Toolkit.
 
 Many people have contributed ideas, inspiration, bug reports and fixes
 to Text::MetaText and the Template Toolkit, but none more so than
-Simon Matthews E<lt>sam@knowledegpool.comE<gt>.  He deserves special
-mention (and wins many beer tokens) for his continued effort and
-interest over a number of years.
+Simon Matthews E<lt>sam@knowledegpool.comE<gt>, aka "SAM".  He
+deserves special mention (and wins many beer tokens) for his continued
+effort and interest over a number of years.
 
 =head1 SEE ALSO
 

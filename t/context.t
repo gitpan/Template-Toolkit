@@ -17,19 +17,18 @@
 #   these get so thoroughly tested by so many things that any problems 
 #   there would show up immediately and blow smoke.
 #
-# $Id: context.t,v 1.7 1999/08/12 04:40:14 abw Exp $
+# $Id: context.t,v 1.8 1999/11/25 17:51:23 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template::Constants qw( :template :status );
 use Template::Context;
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 # number of tests
 ntests(11);

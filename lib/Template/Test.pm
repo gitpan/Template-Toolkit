@@ -1,68 +1,84 @@
 #============================================================= -*-Perl-*-
 #
-# t/texpect.pl
+# Template::Test
 #
-# Test script function for processing some template input and then 
-# comparing the output against a pre-define expected output.
+# DESCRIPTION
+#   Module defining a test harness which processes template input and
+#   then compares the output against pre-define expected output.
+#   Generates test output compatible with Test::Harness.  This was 
+#   originally the t/texpect.pl script.
 #
-# Written by Andy Wardley <abw@cre.canon.co.uk>
-#
-# Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
-# All Rights Reserved.
-#
-# This is free software; you can redistribute it and/or modify it
-# under the same terms as Perl itself.
-#
-#------------------------------------------------------------------------
 # USAGE:
-#    use lib qw( . ./t ../lib );
-#    use vars qw( $DEBUG );
-#    use Template;
-#    require 'texpect.pl';
+#     use Template::Test;
+#    
+#     $Template::Test::DEBUG = 0;   # set this true to see each test running
+#    
+#     extra_tests($n);  # some extra tests follow test_expect()...
+#     pre_ok($truth);   # a pre-check test
+#     test_expect($input, \%tproc_config, \%vars)
+#     ok( $truth )      # for 1..$n extra tests
 #
-#    $DEBUG = 0;       # set this true to see each test running
+#   The test_expect() sub splits the input source into a number of tests:
 #
-#    extra_tests($n);  # some extra tests follow test_expect()...
-#    pre_ok($truth);   # a pre-check test
-#    test_expect($input, \%tproc_config, \%vars)
-#    ok( $truth )      # for 1..$n extra tests
+#   Each test is defined like this:
 #
+#     -- test --
+#     input
+#     -- expect --
+#     expected output
+#     -- error --
+#     expected error message(s) (optional)
+#   
+#   The first test in the file does not require a '-- test --' line.
+#   
+#   test_expect() counts the number of tests, and then calls ntests() 
+#   to generate the familiar "1..$ntests\n" test harness line.  Each 
+#   test defined generates three test numbers.  The first indicates 
+#   that the input was processed without error.  The second that the 
+#   output matches that expected.  The third does the same for any 
+#   error text expected.  In addition to this, any test results cached
+#   by calling pre_ok() will be added to the total along with any 
+#   additional tests known to follow the test_expect() method, set 
+#   by calling extra_tests($n).  The known result of the pre_ok() 
+#   calls is printed first.  Then test_expect() resumes and calls ok()
+#   to generate its results.  Finally, control is returned to the caller
+#   who can manually call ok() to run and final tests.
+#   
+#   Lines in tests that start with a '#' are ignored.  Lines that 
+#   look '-- likethis --' may also confuse the test splitter.
 #
-# The test_expect() sub splits the input source into a number of tests:
+# AUTHOR
+#   Andy Wardley   <abw@cre.canon.co.uk>
 #
-# Each test is defined like this:
-#   -- test --
-#   input
-#   -- expect --
-#   expected output
-#   -- error --
-#   expected error message(s) (optional)
+# COPYRIGHT
+#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
 #
-# The first test in the file does not require a '-- test --' line.
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
 #
-# test_expect() counts the number of tests, and then calls ntests() 
-# to generate the familiar "1..$ntests\n" test harness line.  Each 
-# test defined generates three test numbers.  The first indicates 
-# that the input was processed without error.  The second that the 
-# output matches that expected.  The third does the same for any 
-# error text expected.  In addition to this, any test results cached
-# by calling pre_ok() will be added to the total along with any 
-# additional tests known to follow the test_expect() method, set 
-# by calling extra_tests($n).  The known result of the pre_ok() 
-# calls is printed first.  Then test_expect() resumes and calls ok()
-# to generate its results.  Finally, control is returned to the caller
-# who can manually call ok() to run and final tests.
+# BUGS
+#   This module is butt-ugly but it works.
 #
-# Lines in tests that start with a '#' are ignored.  Lines that 
-# look '-- likethis --' may also confuse the test splitter.
-#========================================================================
+#----------------------------------------------------------------------------
+#
+# $Id: Test.pm,v 1.1 1999/11/25 17:52:36 abw Exp $
+#
+#============================================================================
+
+package Template::Test;
+
+require 5.005;
 
 use strict;
+use vars qw( @ISA @EXPORT $VERSION $DEBUG $loaded %callsign);
 use Template qw( :template );
-use vars qw( $DEBUG $loaded %callsign);
+use Exporter;
 
-$DEBUG = 0;
-$^W = 1;
+$VERSION = sprintf("%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/);
+$DEBUG   = 0;
+@ISA     = qw( Exporter );
+@EXPORT  = qw( callsign extra_tests pre_ok ntests test_expect ok );
 $| = 1;
 
 # some random data
@@ -81,6 +97,7 @@ sub callsign {
 
 my @pre_tests = ();
 my $xtests = 0;
+
 sub extra_tests {
     $xtests = shift;
 }
@@ -240,3 +257,11 @@ sub test_expect {
 
 
 1;
+
+#========================================================================
+#
+#
+#========================================================================
+
+
+

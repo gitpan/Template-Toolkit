@@ -55,5 +55,24 @@ Output:
        <li>baz
     </ul>
 
+Apache/mod_perl handler:
+
+    sub handler {
+	my $r    = shift;
+	my $file = $r->path_info();  # or some other mapping
+
+        my $template = Template->new({ 
+	    INCLUDE_PATH => '/where/to/look/for/templates',
+            OUTPUT       => $r,
+        });
+
+	$template->process($file) || do {
+	    $r->log_reason($template->error());
+	    return SERVER_ERROR;
+	};
+
+	return OK;
+    }
+
 
 

@@ -16,17 +16,16 @@
 # TODO: this should test the binary comparison and boolean operators
 #    more thoroughly, including parenthesised sub-expressions, etc.
 #
-# $Id: binop.t,v 1.5 1999/11/03 01:20:38 abw Exp $
+# $Id: binop.t,v 1.7 1999/11/26 07:53:35 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
-require 'texpect.pl';
+use lib qw( ../lib );
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my $params = {
     'yes'    => 1,
@@ -298,3 +297,29 @@ omega
 alpha
 alpha and/or omega are true
 
+-- test --
+[% small = 5
+   mid   = 7
+   big   = 10
+   both  = small + big
+   less  = big - mid
+   half  = big div small
+   left  = big mod mid
+   mult  = big * small
+%]
+both: [% both +%]
+less: [% less +%]
+half: [% half +%]
+left: [% left +%]
+mult: [% mult +%]
+maxi: [% mult + 2 * 2 +%]
+mega: [% mult * 2 + 2 * 3 %] *NOT* 106
+
+-- expect --
+both: 15
+less: 3
+half: 2
+left: 3
+mult: 50
+maxi: 104
+mega: 306 *NOT* 106

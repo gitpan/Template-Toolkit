@@ -12,18 +12,17 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: datafile.t,v 1.1 1999/10/07 13:09:04 abw Exp $
+# $Id: datafile.t,v 1.2 1999/11/25 17:51:23 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template qw( :status );
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my $base   = -d 't' ? 't/test/lib' : 'test/lib';
 my $params = { 

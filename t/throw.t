@@ -13,18 +13,17 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: throw.t,v 1.3 1999/09/09 17:02:02 abw Exp $
+# $Id: throw.t,v 1.5 1999/11/26 07:53:36 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template::Constants qw( :status );
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my $tproc = Template->new({	
     CATCH => {
@@ -117,11 +116,11 @@ Treating with antibiotics
 Cured!
 Repeat until deceased.
 
+-- test --
+[% CATCH han %]
+[[% e.type %]] [% e.info %]
+[% END %]
+[% THROW han.solo "Chewbacca" %]
 
-
-
-
-
-
-
-
+-- expect --
+[han.solo] Chewbacca

@@ -61,6 +61,9 @@
                  content
 	      [% END %]
 
+  MACRO     - create a named macro for some other directive or block
+              [% MACRO directive %]
+
   FILTER    - post-process block through a filter
               [% FILTER name %]
               [% FILTER name( params ) %]

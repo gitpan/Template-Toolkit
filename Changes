@@ -9,8 +9,85 @@
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes,v 1.61 1999/11/05 10:29:22 abw Exp $
+# $Id: Changes,v 1.77 1999/12/02 16:15:21 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 1.00  1999/12/02 16:14:10
+#------------------------------------------------------------------------
+
+* Removed debugging code and bumped version number for release.
+
+#------------------------------------------------------------------------
+# Version 0.29  1999/11/26 09:11:57
+#------------------------------------------------------------------------
+
+* This is the final release candidate.  Barring any show-stoppers, this
+  will be released as version 1.00.
+
+* Added MACRO directive.  A MACRO defines some other directive which 
+  can be repeatedly executed each time the macro is evaluated.  Macros
+  can be passed parameters when called which may be named or mapped to 
+  a variable name declared with the macro.
+
+    [% MACRO foo INCLUDE bar %]
+    [% foo %]  [% foo(title='Hello World') %]
+
+    [% MACRO header(title) INCLUDE html/header %]
+    [% header('Hello World') %]  
+    [% header('Hello World', bgcol='#123456') %]
+
+* Modified grammar to allow an anonymous BLOCK to be declared.  This can
+  be used in conjunction with MACRO to create a template block for later
+  evaluation without requiring you to explicitly define a block and 
+  INCLUDE it.  e.g.
+
+    [% MACRO letter BLOCK %]
+       Dear [% name %]...
+    [% END %]
+
+    [% letter(name='Fred') %]
+
+* Rationalised the grammar slightly to allow general use of the shortcut 
+  operator (e.g. result = this or that, file = open or die, etc).  Also 
+  added the basic binary math operators, -, +, *, div, and mod.  Added tests
+  to t/binop.t.
+
+* Changed the Template::Context::throw() method to be a little more
+  intelligent about determining which exception handler to raise.  An
+  exception type can now be expressed in dotted form (e.g. foo.bar) and
+  a more general handler can be installed (e.g. foo) as a catch-all for
+  any sub-typed exceptions that don't define their own handlers.  Failing
+  all that, the 'default' handler is still used.  As SAM noted, (it was 
+  his idea), this makes it much easier to handle general classes of errors
+  for plugin modules (like DBI) without losing the granularity of what 
+  different errors might represent.
+
+* Fixed problem with PLUGIN_BASE when used via ttree.  The default
+  plugin base, 'Template::Plugin', now gets added automatically to
+  whatever value is supplied in the configuration.  This is done in
+  the Template::Context constructor.  Note that this changes beta
+  behaviour which didn't add 'Template::Plugin' if an array reference
+  (rather than a scalar) was passed.  This is now more consistent.
+
+* Fixed a bug in FOREACH identified by Simon Matthews where the incorrect
+  loop variable was being freed (loop vs iter).
+
+* Fixed a problem in loading files with ABSOLUTE_PATHS.  Thanks again to 
+  Simon Matthews for only finding and fixing.
+
+* Moved t/texpect.pl into Template::Test module to make it easier to 
+  load and use the test harness.  Modified test scripts accordingly.
+
+* Relaxed the behaviour of redirect (in Template::Utils, called via 
+  Template::Context) to accept any kind of object reference that 
+  supports a 'print' method.  This includes all IO::Handle objects
+  (as before) and also allows Apache::Request objects to be passed.
+
+* Added better error reporting to the plugin loading process implemented
+  in Template::Context::use_plugin().  
+
+* Updated documentation.
 
 #------------------------------------------------------------------------
 # Version 0.28  1999/11/05 10:29:05

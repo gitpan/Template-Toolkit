@@ -12,20 +12,19 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: hash.t,v 1.8 1999/09/29 10:17:29 abw Exp $
+# $Id: hash.t,v 1.9 1999/11/25 17:51:25 abw Exp $
 # 
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template;
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
 use Template::Context;
 #$Template::Context::DEBUG = 1;
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 my $data = {
     a => 'alpha',

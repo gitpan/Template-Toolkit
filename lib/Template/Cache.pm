@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Cache.pm,v 1.9 1999/11/03 01:20:30 abw Exp $
+# $Id: Cache.pm,v 1.11 1999/11/26 07:53:29 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use Template::Exception;
 use vars qw( $VERSION $PATHSEP $DEBUG );
 
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 $PATHSEP  = ':';      # default path separator
 $DEBUG    = 0;
 
@@ -229,8 +229,10 @@ sub _load {
 		return $self->_error(ERROR_FILE,
 				     "$template: ABSOLUTE_PATHS not enabled")
 		    unless $self->{ ABSPATH };
-		open(FH, $template)
-		    || return $self->_error(ERROR_FILE, "$template: $!");
+		$filepath = $template;
+		last OPEN
+		    if -f $template and open(FH, $template);
+		return $self->_error(ERROR_FILE, "$template: $!");
 	    }
 
 	    # anything starting "./" is always relative to CWD. 
@@ -544,7 +546,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.9 $
+$Revision: 1.11 $
 
 =head1 COPYRIGHT
 

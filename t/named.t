@@ -12,19 +12,18 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: named.t,v 1.2 1999/09/14 23:07:16 abw Exp $
+# $Id: named.t,v 1.3 1999/11/25 17:51:27 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template qw( :status );
 use Template::Exception;
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 #my $tproc = Template->new({ INTERPOLATE => 1, DEBUG => 1 });
 my $tproc = Template->new({ INTERPOLATE => 1 });

@@ -12,19 +12,18 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: while.t,v 1.1 1999/08/10 11:09:20 abw Exp $
+# $Id: while.t,v 1.2 1999/11/25 17:51:32 abw Exp $
 # 
 #========================================================================
 
 use strict;
-use lib qw( . ./t ../lib );
-use vars qw( $DEBUG );
+use lib qw( ../lib );
 use Template qw( :status );
 use Template::Directive;
-require 'texpect.pl';
+use Template::Test;
 $^W = 1;
 
-$DEBUG = 0;
+$Template::Test::DEBUG = 0;
 
 # set low limit on WHILE's maximum iteration count
 $Template::Directive::While::MAXITER = 100;
