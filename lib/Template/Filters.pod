@@ -72,17 +72,18 @@ to the Template::Plugins new() constructor.
 
 =item FILTERS
 
-The FILTERS option can be used to specify additional filters which can
-then be used with the FILTER directive.  These are added to the
-standard filters which are available by default.  Filters specified
-via this option will mask standard filters of the same name.
+The FILTERS option can be used to specify custom filters which can
+then be used with the FILTER directive like any other.  These are
+added to the standard filters which are available by default.  Filters
+specified via this option will mask any standard filters of the same
+name.
 
-The FILTERS should be specified as a reference to a hash array with
-each key representing the name of a filter.  The corresponding value
-should contain a reference to an array containing a subroutine
+The FILTERS option should be specified as a reference to a hash array
+in which each key represents the name of a filter.  The corresponding
+value should contain a reference to an array containing a subroutine
 reference and a flag which indicates if the filter is static (0) or
-dynamic (1).  A filter may also be specified as a subroutine reference
-by itself and is assumed to be static.
+dynamic (1).  A filter may also be specified as a solitary subroutine
+reference and is assumed to be static.
 
     $filters = Template::Filters->new({
   	FILTERS => {
@@ -92,6 +93,16 @@ by itself and is assumed to be static.
   	},
     });
 
+Additional filters can be specified at any time by calling the 
+define_filter() method on the current Template::Context object.
+The method accepts a filter name, a reference to a filter 
+subroutine and an optional flag to indicate if the filter is 
+dynamic.
+
+    my $context = $template->context();
+    $context->define_filter('new_html', \&new_html);
+    $context->define_filter('new_repeat', \&new_repeat, 1);
+					
 Static filters are those where a single subroutine reference is used
 for all invocations of a particular filter.  Filters that don't accept
 any configuration parameters (e.g. 'html') can be implemented
@@ -145,6 +156,8 @@ is approximately equivalent to:
 
     my $filter = &dynamic_filter_factory($context, 123, 456);
     &$filter("\nBlah blah blah.\n");
+
+See the FILTER directive for further examples.
 
 =item TOLERANT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filters.pm,v 2.1 2000/09/08 08:10:48 abw Exp $
+# $Id: Filters.pm,v 2.2 2000/09/14 12:47:23 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $FILTERS );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
 
 #------------------------------------------------------------------------
 # standard filters, defined in one of the following forms:
@@ -128,7 +128,21 @@ sub fetch {
     else {
 	return $filter;
     }
+}
 
+
+#------------------------------------------------------------------------
+# store($name, \&filter)
+#
+# Stores a new filter in the internal FILTERS hash.  The first parameter
+# is the filter name, the second a reference to a subroutine or 
+# array, as per the standard $FILTERS entries.
+#------------------------------------------------------------------------
+
+sub store {
+    my ($self, $name, $filter) = @_;
+    $self->{ FILTERS }->{ $name } = $filter;
+    return 1;
 }
 
 
@@ -178,7 +192,7 @@ sub _dump {
 
 sub html_filter {
     my $text = shift;
-    foreach ($text) {
+    for ($text) {
 	s/&/&amp;/g;
 	s/</&lt;/g;
 	s/>/&gt;/g;

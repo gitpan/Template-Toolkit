@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: DOM.pm,v 2.0 2000/08/10 14:56:10 abw Exp $
+# $Id: DOM.pm,v 2.1 2000/09/14 12:47:24 abw Exp $
 #
 #============================================================================
 
@@ -31,16 +31,17 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use XML::DOM;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.0 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
-    my ($class, $context, $filename) = @_;
+    my ($class, $context, $filename, $args) = @_;
+    $args ||= {};
     my $doc;
 
     return $class->fail('No filename specified')
 	unless $filename;
     
-    my $parser = XML::DOM::Parser->new
+    my $parser = XML::DOM::Parser->new(%$args)
 	or return $class->fail('failed to create XML::DOM::Parser');
 
     eval { $doc = $parser->parsefile($filename) } and not $@
@@ -95,6 +96,14 @@ a parser and parser the file passed by name as a parameter.  An
 XML::DOM::Node object is returned through which the XML document
 can be traverse.  See L<XML::DOM> for full details.
 
+    [% USE dom = XML.DOM('myxmlfile') %]
+
+The constructor will also accept configuration options destined for the
+XML::Parser.
+
+    [% USE dom = XML.DOM('myxmlfile', 
+			  ProtocolEncoding => 'ISO-8859-1') %]
+
 This plugin also provides an AUTOLOAD method for XML::DOM::Node which 
 calls getAttribute() for any undefined methods.  Thus, you can use the 
 short form of 
@@ -116,7 +125,7 @@ library.
 
 =head1 REVISION
 
-$Revision: 2.0 $
+$Revision: 2.1 $
 
 =head1 COPYRIGHT
 

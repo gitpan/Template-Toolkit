@@ -20,7 +20,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.1 2000/09/12 15:25:19 abw Exp $
+# $Id: Document.pm,v 2.2 2000/09/14 12:47:23 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use vars qw( $VERSION $ERROR $COMPERR $DEBUG $AUTOLOAD );
 use base qw( Template::Base );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -59,6 +59,11 @@ sub new {
     unless (ref $block) {
 	local $SIG{__WARN__} = \&catch_warnings;
 	$COMPERR = '';
+
+	# DON'T LOOK NOW! - blindly untainting can make you go blind!
+	$block =~ /(.*)/s;
+	$block = $1;
+
 	$block = eval $block;
 #	$COMPERR .= "[$@]" if $@;
 #	return $class->error($COMPERR)
@@ -68,8 +73,12 @@ sub new {
 
     # same for any additional BLOCK definitions
     @$defblocks{ keys %$defblocks } = 
-	map { ref($_) ? $_ : (eval($_) or return $class->error($@)) } 
-        values %$defblocks;
+	# MORE BLIND UNTAINTING - turn away if you're squeamish
+	map { 
+	    ref($_) 
+		? $_ 
+		: ( /(.*)/s && eval($1) or return $class->error($@) )
+	} values %$defblocks;
 
     bless {
 	%$metadata,

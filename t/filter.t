@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 2.2 2000/09/08 08:10:52 abw Exp $
+# $Id: filter.t,v 2.4 2000/09/14 12:47:24 abw Exp $
 #
 #========================================================================
 
@@ -65,6 +65,7 @@ my $params = {
     'text'   => 'The cat sat on the mat',
     outfile  => $file,
     stderr   => sub { $stderr },
+    despace  => bless \&despace, 'anything',
 };
 my $filters = {
     'nonfilt'    => 'nonsense',
@@ -91,13 +92,13 @@ unlink "$dir/$file" if -f "$dir/$file";
 
 my $tt1 = Template->new($config1);
 my $tt2 = Template->new($config2);
+$tt2->context->define_filter('another', \&another, 1);
 
 test_expect(\*DATA, [ default => $tt1, evalperl => $tt2 ], $params);
 
 ok( -f "$dir/$file" );
 unlink "$dir/$file" if -f "$dir/$file";
 
- 
 
 
 #------------------------------------------------------------------------
@@ -145,6 +146,19 @@ sub barf_up {
     }
 }
 
+sub despace {
+    my $text = shift;
+    $text =~ s/\s+/_/g;
+    return $text;
+}
+
+sub another {
+    my ($context, $n) = @_;
+    return sub {
+	my $text = shift;
+	return $text x $n;
+    }
+}
 
 __DATA__
 #------------------------------------------------------------------------
@@ -641,3 +655,111 @@ wiz: The cat sat on the mat
 wiz: The dog sat on the log
 
 
+-- test --
+-- use evalperl --
+[% PERL %]
+$stash->set('merlyn', bless \&merlyn1, 'ttfilter');
+sub merlyn1 {
+    my $text = shift || '<no text>';
+    $text =~ s/stone/henge/g;
+    return $text;
+}
+[% END -%]
+[% FILTER $merlyn -%]
+Let him who is without sin cast the first stone.
+[% END %]
+-- expect --
+Let him who is without sin cast the first henge.
+
+-- test --
+-- use evalperl --
+[% PERL %]
+$stash->set('merlyn', sub { \&merlyn2 });
+sub merlyn2 {
+    my $text = shift || '<no text>';
+    $text =~ s/stone/henge/g;
+    return $text;
+}
+[% END -%]
+[% FILTER $merlyn -%]
+Let him who is without sin cast the first stone.
+[% END %]
+-- expect --
+Let him who is without sin cast the first henge.
+
+-- test --
+[% myfilter = 'html' -%]
+[% FILTER $myfilter -%]
+<html>
+[% END %]
+-- expect --
+&lt;html&gt;
+
+-- test --
+[% FILTER $despace -%]
+blah blah blah
+[%- END %]
+-- expect --
+blah_blah_blah
+
+-- test --
+-- use evalperl --
+[% PERL %]
+$context->filter(\&newfilt, undef, 'myfilter');
+sub newfilt {
+    my $text = shift;
+    $text =~ s/\s+/=/g;
+    return $text;
+}
+[% END -%]
+[% FILTER myfilter -%]
+This is a test
+[%- END %]
+-- expect --
+This=is=a=test
+
+-- test --
+[% PERL %]
+$context->define_filter('xfilter', \&xfilter);
+sub xfilter {
+    my $text = shift;
+    $text =~ s/\s+/X/g;
+    return $text;
+}
+[% END -%]
+[% FILTER xfilter -%]
+blah blah blah
+[%- END %]
+-- expect --
+blahXblahXblah
+
+
+-- test --
+[% FILTER another(3) -%]
+foo bar baz
+[% END %]
+-- expect --
+foo bar baz
+foo bar baz
+foo bar baz
+
+-- test --
+[% PERL %]
+$context->define_filter('foo', \&foo_factory, 1);
+sub foo_factory {
+    my ($context, $count) = @_;
+    return sub {
+	my $text = shift;
+	return $text . '.' x $count;
+    }
+}
+[% END -%]
+[% FILTER a = foo(3) -%]
+blah blah blah
+[%- END %]
+[% FILTER a -%]
+more blah blah blah
+[%- END %]
+-- expect --
+blah blah blah...
+more blah blah blah...

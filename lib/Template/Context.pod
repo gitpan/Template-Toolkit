@@ -36,8 +36,9 @@ Template::Context - runtime context in which templates are processed
     $new_stash = $context->localise(\%vars);
     $old_stash = $context->delocalise();
 
-    # add new BLOCK definitions
+    # add new BLOCK or FILTER definitions
     $context->define_block($name, $block);
+    $context->define_filter($name, \&filtersub, $is_dynamic);
 
     # reset context, clearing any imported BLOCK definitions
     $context->reset();
@@ -456,7 +457,16 @@ a true value (the sub-routine or Template::Document reference) on
 success or undef on failure.  The relevant error message can be 
 retrieved by calling the error() method.
 
-argument
+=head2 define_filter($name, \&filter, $is_dynamic)
+
+Adds a new filter definition by calling the store() method on each of
+the LOAD_FILTERS providers until accepted (in the usual case, this is
+accepted straight away by the one and only Template::Filters
+provider).  The first argument should contain the name of the filter
+and the second a reference to a filter subroutine.  The optional 
+third argument can be set to any true value to indicate that the 
+subroutine is a dynamic filter factory.  Returns a true value or
+throws a 'filter' exception on error.
 
 =head2 localise(\%vars)
 
@@ -507,7 +517,7 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 1.2 $
+$Revision: 1.3 $
 
 =head1 COPYRIGHT
 

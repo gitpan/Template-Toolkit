@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: table.t,v 2.0 2000/08/10 14:56:33 abw Exp $
+# $Id: table.t,v 2.1 2000/09/14 12:47:24 abw Exp $
 #
 #========================================================================
 
@@ -130,3 +130,11 @@ a b c d e f g h
 h i j k l m n o 
 o p q r s t u v 
 v w x y z 
+
+-- test --
+[% USE table([1,3,5], cols=5) %]
+[% FOREACH t = table.rows %]
+[% t.join(', ') %]
+[% END %]
+-- expect --
+1, 3, 5

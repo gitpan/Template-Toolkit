@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 2.2 2000/09/12 15:25:19 abw Exp $
+# $Id: Context.pm,v 2.4 2000/09/14 12:47:23 abw Exp $
 #
 #============================================================================
 
@@ -36,7 +36,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/);
 
 
 
@@ -157,12 +157,16 @@ sub filter {
 
     # use any cached version of the filter if no params provided
     return $filter 
-	if ! $args && ($filter = $self->{ FILTER_CACHE }->{ $name });
+	if ! $args && ! ref $name
+	    && ($filter = $self->{ FILTER_CACHE }->{ $name });
 
     # request the named filter from each of the FILTERS providers in turn
     foreach my $provider (@{ $self->{ LOAD_FILTERS } }) {
 #	print STDERR "Asking filter provider $provider for $name...\n"
 #	    if $DEBUG;
+
+	$filter = $name, last 
+	    if ref $name;
 
 	($filter, $error) = $provider->fetch($name, $args, $self);
 	last unless $error;
@@ -175,7 +179,7 @@ sub filter {
 
     # alias defaults to name if undefined
     $alias = $name
-	unless defined $alias;
+	unless defined($alias) or ref($name);
 
 #    print STDERR "adding filter $filter to cache as $alias\n"
 #	if $DEBUG;
@@ -485,6 +489,28 @@ sub define_block {
 	|| return undef
 	    unless ref $block;
     $self->{ BLOCKS }->{ $name } = $block;
+}
+
+
+#------------------------------------------------------------------------
+# define_filter($name, $filter, $is_dynamic)
+#
+# Adds a new FILTER definition to the local FILTER_CACHE.
+#------------------------------------------------------------------------
+
+sub define_filter {
+    my ($self, $name, $filter, $is_dynamic) = @_;
+    my ($result, $error);
+    $filter = [ $filter, 1 ] if $is_dynamic;
+
+    foreach my $provider (@{ $self->{ LOAD_FILTERS } }) {
+	($result, $error) = $provider->store($name, $filter);
+	return 1 unless $error;
+	$self->throw(&Template::Constants::ERROR_FILTER, $result)
+	    if $error == &Template::Constants::STATUS_ERROR;
+    }
+    $self->throw(&Template::Constants::ERROR_FILTER, 
+		 "FILTER providers declined to store filter $name");
 }
 
 
