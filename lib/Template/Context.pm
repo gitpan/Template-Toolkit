@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.45 2000/03/20 08:02:19 abw Exp $
+# $Id: Context.pm,v 1.46 2000/05/19 10:56:30 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.45 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.46 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -562,6 +562,17 @@ sub error {
 }
 
 
+#------------------------------------------------------------------------
+# stash()
+# 
+# Return reference to internal STASH member.
+#------------------------------------------------------------------------
+
+sub stash {
+    $_[0]->{ STASH }
+}
+
+
 sub DESTROY {
     my $self = shift;
     undef $self->{ STASH };
@@ -1056,6 +1067,8 @@ Template::Context - object class representing a runtime context in which templat
     ($plugin, $error) = $context->use_plugin($name, \@params);
     ($filter, $error) = $context->use_filter($name, \@params, $alias);
 
+    $stash = $context->stash();
+
 =head1 DESCRIPTION
 
 The Template::Context module defines an object which represents a runtime
@@ -1094,7 +1107,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.45 $
+$Revision: 1.46 $
 
 =head1 COPYRIGHT
 

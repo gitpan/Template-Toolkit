@@ -6,7 +6,7 @@ Bunce's E<lt>Tim.Bunce@ig.co.ukE<gt> database interface module (DBI)
 to your templates.  The DBI plugin and the DBI modules themselves are
 available from CPAN at:
 
-  http://www.cpan.org/authors/id/S/SA/SAM/
+  http://www.cpan.org/modules/by-module/Template/
   http://www.cpan.org/modules/by-module/DBI/
 
 Leslie Michael Orchard E<lt>deus_x@ninjacode.comE<gt> is developing

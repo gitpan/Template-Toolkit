@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: table.t,v 1.1 2000/03/20 08:01:37 abw Exp $
+# $Id: table.t,v 1.2 2000/05/19 10:56:31 abw Exp $
 #
 #========================================================================
 
@@ -120,7 +120,6 @@ p-q-r-s-t
 u-v-w-x-y
 z
 
--- start --
 -- test --
 [% USE table(alphabet, rows=8, overlap=1 pad=0) %]
 [% FOREACH col = table.cols %]

@@ -2,7 +2,7 @@
 
 The Template Toolkit module bundle is available from CPAN as:
 
-    /authors/id/ABW/Template-Toolkit-[% tt.version %].tar.gz
+    /modules/by-module/Template/Template-Toolkit-[% tt.version %].tar.gz
 
 Unpack the archive to create an installation directory.  Something
 like this:

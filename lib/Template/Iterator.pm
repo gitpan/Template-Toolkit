@@ -39,7 +39,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Iterator.pm,v 1.10 2000/03/20 08:02:25 abw Exp $
+# $Id: Iterator.pm,v 1.11 2000/03/27 12:33:30 abw Exp $
 #
 #============================================================================
 
@@ -53,7 +53,7 @@ use Template::Constants qw( :status :error );
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 
 
@@ -75,9 +75,16 @@ sub new {
     my $class = shift;
     my $data  = shift || [ ];
 
-    # coerce any non-list data into an array reference
-    $data  = [ $data ] 
-	unless UNIVERSAL::isa($data, 'ARRAY');
+    if (ref $data eq 'HASH') {
+	# map a hash into a list of { key => ???, value => ??? } hashes,
+	# one for each key, sorted by keys
+	$data = [ map { { key => $_, value => $data->{ $_ } } }
+		  sort keys %$data ];
+    }
+    elsif (! UNIVERSAL::isa($data, 'ARRAY')) {
+	# coerce any non-list data into an array reference
+	$data  = [ $data ] ;
+    }
 
     my $self = bless {
 	_DATA  => $data,
@@ -408,7 +415,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.10 $
+$Revision: 1.11 $
 
 =head1 COPYRIGHT
 

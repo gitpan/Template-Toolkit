@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: skel.t,v 1.6 1999/11/25 17:51:29 abw Exp $
+# $Id: skel.t,v 1.8 2000/06/14 13:31:33 abw Exp $
 # 
 #========================================================================
 

@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Cache.pm,v 1.14 2000/02/15 14:53:42 abw Exp $
+# $Id: Cache.pm,v 1.17 2000/06/14 13:29:22 abw Exp $
 #
 #============================================================================
 
@@ -34,7 +34,7 @@ use Template::Parser;
 use vars qw( $VERSION $PATHSEP $DEBUG );
 
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/);
 $PATHSEP  = ':';      # default path separator
 $DEBUG    = 0;
 
@@ -64,7 +64,8 @@ sub _init {
     my $abspath = $params->{ ABSOLUTE_PATHS };
        $abspath = 1 unless defined $abspath;   # enabled by default
     my ($delim, $p, $o, @paths);
-
+    my $cache_dir = $params->{ CACHE_DIR } || 0;
+    
     # coerce path to an array
     $path = ref($path) eq 'ARRAY' ? $path : [ $path ];
     while (@$path) {
@@ -82,11 +83,11 @@ sub _init {
     $params->{ CACHE } = CACHE_ALL
 	unless defined $params->{ CACHE };
 
-    $self->{ CONFIG   } = $params,    # pass this onto Parser constructor
-    $self->{ PATH     } = \@paths,    # search path(s)
-    $self->{ ABSPATH  } = $abspath,   # absolute paths permitted
-    $self->{ COMPILED } = { },	       # compiled template cache
-    $self->{ ERROR    } = '',	       # error
+    $self->{ CONFIG    } = $params,   # pass this onto Parser constructor
+    $self->{ PATH      } = \@paths,   # search path(s)
+    $self->{ ABSPATH   } = $abspath,  # absolute paths permitted
+    $self->{ COMPILED  } = { },	      # compiled template cache
+    $self->{ ERROR     } = '',	      # error
 }
 
 
@@ -205,7 +206,6 @@ sub _load {
 
     $self->{ ERROR     } = '';
 
-
     # $file can be a SCALAR reference to the input text...
     if (($type = ref($template)) eq 'SCALAR') {
 	$text   = $$template;
@@ -236,6 +236,7 @@ sub _load {
 
 	    # anything starting "./" is always relative to CWD. 
 	    if ($template =~ /^\.\//) {
+		$filepath = $template;
 		last OPEN				## LAST ##
 		    if -f $template and open(FH, $template);
 		return $self->_error(ERROR_FILE, "$template: $!");
@@ -287,7 +288,7 @@ sub _load {
 sub _compile {
     my ($self, $text, $whence) = @_;
     my ($parser, $compiled);
-    
+
     # create a new Template::Parser object if not already defined or use
     # a reference supplied in the config PARSER option
     $parser = $self->{ PARSER } 
@@ -303,7 +304,7 @@ sub _compile {
 #	print STDERR "Cache compiled template\n";
 #	$compiled->_inspect();
 #    }
-
+    
     return $compiled;
 }
 
@@ -544,7 +545,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.14 $
+$Revision: 1.17 $
 
 =head1 COPYRIGHT
 

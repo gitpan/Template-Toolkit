@@ -23,6 +23,7 @@ doc/src/examples
 doc/src/features
 doc/src/files
 doc/src/installing
+doc/src/mailinfo
 doc/src/maillist
 doc/src/methods
 doc/src/name
@@ -81,10 +82,12 @@ t/catch.t
 t/cgi.t
 t/chomp.t
 t/code.t
+t/comment.t
 t/constants.t
 t/context.t
 t/datafile.t
 t/default.t
+t/define.t
 t/directive.t
 t/dom.t
 t/error.t

@@ -14,12 +14,12 @@ parameters.  These may include:
 
 =item INCLUDE_PATH
 
-The INCLUDE_PATH option specifies one or directories in which to look for
-template files.  Multiple directories can be specified as a reference to
-a list or as a single string, delimited by ':' ($Template::Cache::PATHSEP) 
-Each item in a list may have additional CACHE parameters associated
-with it.  If no INCLUDE_PATH is specified then the current working 
-directory (i.e. '.') is assumed by default.
+The INCLUDE_PATH option specifies one or more directories in which to
+look for template files.  Multiple directories can be specified as a
+reference to a list or as a single string, delimited by ':'
+($Template::Cache::PATHSEP) Each item in a list may have additional
+CACHE parameters associated with it.  If no INCLUDE_PATH is specified
+then the current working directory (i.e. '.') is assumed by default.
 
     my $cache = Template::Cache->new({
         INCLUDE_PATH => '/user/abw/templates:/user/abw/tmp',
@@ -193,12 +193,15 @@ example:
 The TAG_STYLE option can be used to set both according to pre-defined tag
 styles.  Available styles are:
 
-    regular   [% ... %]      (recommended)
-    percent   %% ... %%      (Text::MetaText compatibility)
     default   [% ... %] or %% ... %%
+    template  [% ... %]      (recommended)
+    metatext  %% ... %%      (Text::MetaText)
+    asp       <% ... %>      
+    php       <? ... ?>      
+    html      <!-- ... -->
 
-The default style (TAG_STYLE => 'default') allows either of the 'regular'
-or 'percent' tags to be used (START_TAG = '[\[%]%', END_TAG = '%[\]%]')
+The default style (TAG_STYLE => 'default') allows either of the 'template'
+or 'metatext' tags to be used (START_TAG = '[\[%]%', END_TAG = '%[\]%]')
 Any values specified for START_TAG and/or END_TAG will over-ride
 those defined by a TAG_STYLE.  
 

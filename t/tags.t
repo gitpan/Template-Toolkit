@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: tags.t,v 1.2 1999/11/25 17:51:30 abw Exp $
+# $Id: tags.t,v 1.3 2000/05/19 10:56:31 abw Exp $
 # 
 #========================================================================
 
@@ -92,4 +92,23 @@ charlie
 [% a %]
 [% b %]
 charlie
+
+-- test --
+[% TAGS html -%]
+<!-- a -->
+<!-- TAGS asp -->
+<% b %>
+<% TAGS php %>
+<? c ?>
+<? TAGS template ?>
+[% d %]
+-- expect --
+alpha
+
+bravo
+
+charlie
+
+delta
+
 

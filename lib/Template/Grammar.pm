@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Grammar.pm,v 1.39 2000/03/20 08:02:21 abw Exp $
+# $Id: Grammar.pm,v 1.41 2000/05/19 09:38:25 abw Exp $
 #
 #========================================================================
 
@@ -38,7 +38,7 @@ use vars qw( $VERSION );
 
 use Template::Constants qw( :ops :status );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.39 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.41 $ =~ /(\d+)\.(\d+)/);
 
 my (@RESERVED, $LEXTABLE, $RULES, $STATES);
 my $factory;
@@ -82,6 +82,7 @@ $LEXTABLE = {
     '&&'      => 'AND',
     '||'      => 'OR',
     '!'       => 'NOT',
+    '|'	      => 'FILTER',
     '.'       => 'DOT',
     '..'      => 'TO',
     '='       => 'ASSIGN',

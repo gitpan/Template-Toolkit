@@ -112,7 +112,8 @@
   COMMENT   - ignored and deleted
               [% # this is a comment  %]
 
-  TAGS      - define new tag characters (default: [% %])
+  TAGS      - define new tag style or characters (default: [% %])
+              [% TAGS html %]
               [% TAGS <!-- --> %]
 
 

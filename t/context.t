@@ -17,7 +17,7 @@
 #   these get so thoroughly tested by so many things that any problems 
 #   there would show up immediately and blow smoke.
 #
-# $Id: context.t,v 1.8 1999/11/25 17:51:23 abw Exp $
+# $Id: context.t,v 1.9 2000/05/19 10:56:31 abw Exp $
 #
 #========================================================================
 
@@ -31,7 +31,7 @@ $^W = 1;
 $Template::Test::DEBUG = 0;
 
 # number of tests
-ntests(11);
+ntests(13);
 
 my ($output, $error);
 my $context = Template::Context->new({
@@ -78,6 +78,9 @@ $context->redirect(TEMPLATE_OUTPUT, $old_handler);
 $context->output("World");
 ok( $output eq "World" );
 
+my $stash = $context->stash();
+ok( $stash );
+ok( UNIVERSAL::isa($stash, 'Template::Stash') );
 
 
 

@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: get.t,v 1.5 1999/11/25 17:51:24 abw Exp $
+# $Id: get.t,v 1.8 2000/05/02 12:59:23 abw Exp $
 # 
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
+use lib qw( ./lib ../lib );
 use Template::Constants qw( :status );
 use Template;
 use Template::Test;

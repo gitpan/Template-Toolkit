@@ -1,10 +1,6 @@
 =head1 MAILING LIST
 
-A mailing list exists for up-to-date information on the Template Toolkit
-and for following and contributing to the development process.  Send 
-email to B<majordomo@cre.canon.co.uk> with the following message in the
-body:
+[% INCLUDE mailinfo %]
 
-    subscribe templates
 
 

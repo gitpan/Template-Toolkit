@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foriter.t,v 1.11 2000/03/20 08:01:36 abw Exp $
+# $Id: foriter.t,v 1.13 2000/05/02 12:59:23 abw Exp $
 #
 #========================================================================
 
@@ -44,6 +44,12 @@ my $params = {
 	  { id => 'bcd', code => 'dec', name => 'Binary Coded Decimal' },
 	  { id => 'efg', code => 'zzz', name => 'Extra Fine Grass' },
     ],
+    'sections' => {
+	one   => 'Section One',
+	two   => 'Section Two',
+	three => 'Section Three',
+	four  => 'Section Four'
+    },
 };
 
 test_expect(\*DATA, { INTERPOLATE => 1, POST_CHOMP => 1, DEBUG => 1 }, 
@@ -186,7 +192,6 @@ List of 4 items:
  #3/4: charlie
  #4/4: delta
 
-
 -- test --
 [% FOREACH a = ['foo', 'bar', 'baz'] %]
 * [% loop.index %] [% a +%]
@@ -208,7 +213,6 @@ List of 4 items:
   - 0 wiz
   - 1 woz
   - 2 waz
-
 
 -- test --
 [% id    = 12345
@@ -274,8 +278,15 @@ aaz(zaz): Azbaz Azbaz Zazbazzer
 efg(zzz): Extra Fine Grass
 
 
+-- test --
+Section List:
+[% FOREACH item = sections %]
+  [% item.key %] - [% item.value +%]
+[% END %]
 
-
-
-
-
+-- expect --
+Section List:
+  four - Section Four
+  one - Section One
+  three - Section Three
+  two - Section Two

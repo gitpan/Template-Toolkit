@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 1.6 2000/03/06 20:10:33 abw Exp $
+# $Id: filter.t,v 1.7 2000/05/19 09:38:27 abw Exp $
 #
 #========================================================================
 
@@ -308,4 +308,25 @@ The_cat_sat_on_the_mat
 The cat shat on the mat
 The cplat splat on the mplat
 
+-- test --
+[% text = 'The <=> operator' %]
+[% text|html %]
+-- expect --
+The &lt;=&gt; operator
+
+-- test --
+[% text = 'The <=> operator, blah, blah' %]
+[% text | html | replace('blah', 'rhubarb') %]
+-- expect --
+The &lt;=&gt; operator, rhubarb, rhubarb
+
+-- test --
+[% | truncate(25) %]
+The cat sat on the mat, and wondered to itself,
+"How might I be able to climb up onto the shelf?",
+For up there I am sure I'll see,
+A tasty fishy snack for me.
+[% END %]
+-- expect --
+The cat sat on the mat...
 

@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.52 2000/03/28 15:52:49 abw Exp $
+#   $Id: Template.pm,v 1.54 2000/05/19 09:38:23 abw Exp $
 #
 #========================================================================
  
@@ -34,7 +34,7 @@ use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '1.06';
+$VERSION     = '1.07';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;
@@ -144,6 +144,35 @@ sub process {
 
     # return 1 on numerical or 0 status return, 0 on exception (ref)
     return ref($error) ? 0 : 1;
+}
+
+
+#------------------------------------------------------------------------
+# define($template, $name)
+# 
+# Method to compile a template and store it in the cache under a 
+# specific name.  The $template variable may contain the template text
+# or an IO or glob reference as per process().  The template is compiled
+# and stored in the cache as $name (using the cache fetch() method).
+# The $template variable may also reference a Template::Directive object
+# or subclass thereof which represents a "compiled" template.  This is
+# stored in the cache without any further compilation (using cache 
+# store() method).
+#------------------------------------------------------------------------
+
+sub define {
+    my ($self, $template, $name) = @_;
+    my $cache = $self->{ CONTEXT }->{ CACHE };
+    
+    if (UNIVERSAL::isa($template, 'Template::Directive')) {
+	return $cache->store($template, $name);
+    }
+    elsif (ref $template) {
+	return $cache->fetch($template, $name);
+    }
+    else {
+	return $cache->fetch(\$template, $name);
+    }
 }
 
 

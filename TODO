@@ -10,49 +10,52 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.70 2000/03/20 16:21:42 abw Exp $
+# $Id: TODO,v 1.72 2000/06/14 13:29:20 abw Exp $
 #
 #============================================================================
 
-Pending
--------
+NOTE: This list is now largely obsolete given the impending release of
+      a stable beta for version 2.  Thank you for playing.
 
 Bugs
 ----
   * object method call is failing when called against a non-object 
-    reference.
+    reference.  (fixed v2)
 
   * CATCH installs a block which overwrites any previous one.  This then 
     perists until the Context object is destroyed or the handler re-defined.
+   (fixed v2)
 
   * I don't think Tied Hashes get treated as regular hashes, but they 
     should.
 
 Possible Features
 ----------------
-  * TRY to scope CATCH?
+  * TRY to scope CATCH? (added v2)
 
   * General-purpose DEBUG option which can activate *limited* debug operations
     (e.g. for tracing undefined values at runtime) 
 
   * An option to bind subs in a Perl namespace into a template namespace
-    without requiring the specific binding to every function.
+    without requiring the specific binding to every function.  (possible in 
+    v2 via PERL/RAWPERL)
 
-  * add INSERT directive to insert a file without processing it.  
+  * add INSERT directive to insert a file without processing it.  (still 
+    tricky but working on it for v2)
 
   * add document information structures as runtime variables (e.g. file.name
     file.mod, template.name, system.time, etc).  As of 0.28, we do get the
-    'filename' variable set, which is a start.
+    'filename' variable set, which is a start. (added in v2)
 
 General Improvements
 --------------------
   * A more general way than macros to capture and handler a template block 
     definiton.  The current macro wraps it up in a function which makes it 
-    hard to get at.
+    hard to get at. (fixed in v2)
 
   * Should plugins be able to throw exceptions on creation failure
     rather than reporting errors via Template::Plugin::fail() and 
-    returning undef?
+    returning undef? (possibly)
 
   * It is currently impossible to create a list and then pass the members 
     of that list to a code ref/method.  The following would pass the list
@@ -61,32 +64,30 @@ General Improvements
       [% things = [ b c a ]; do_something(things) %]
 
     You can't create an empty list either, but I'm not sure how important 
-    these really are.
+    these really are. (it's not)
 
   * At some point the 'cache' (really a file loader) should be
     modified to work in a more generic resource brokering role.  This
     could then be re-used for loading and caching code components.
+    (rewritten for v2)
 
-  * The parser could issue warnings
+  * The parser could issue warnings (probably not necessary - better to
+    fail and get the error fixed ASAP)
 
   * The parser could return a Template::Document type encapsulating
     template information (and warnings, etc.) rather than a bare
-    block.
-
-  * FOREACH should create a hash iterator to return a structure representing 
-    each hash key/value pair.
+    block. (yep, added in v2)
 
   * improve runtime debugging if possible to do this without incurring 
     any significant overhead when not using it.  One strategy might be 
     to enable a debugging-aware parser which inserts debugging directives
     into the template context.  These would then be processed at runtime.
+    (should be easier in v2)
 
 Documentation
 -------------
 
-  * Document references, if they prove to be useful.
-
-  * There's very little documentation describing the available filters.
+  * Document references, if they prove to be useful. (nope, removed them)
 
   * note that object methods get called with the RHS as a parameter when 
     specified as an lvalue of an assignment.  e.g. [% foo.bar = 10 %]
@@ -95,8 +96,10 @@ Documentation
   * iterator options specified through list construct parameters are
     not documented.  This is probably a Good Thing.  :-)=
     [% FOREACH user = [ foo bar baz ]( order = 'sorted', action = coderef ) %]
+    (removed for v2 - now use iterator plugin)
 
   * write more detailed description on extending the Template Toolkit.
+    (that'll come with v2)
 
 Other plugins, modules, scripts
 -------------------------------
@@ -105,13 +108,16 @@ Other plugins, modules, scripts
     the conclusion that it's so easy to write your own Apache handler
     that there's no point in trying to create a generic one.  Still, it
     would be nice to have an example that people could work from)
+    (examples in docs)
 
   * extend 'format' to perform date formatting?  (probably better to 
-    do this via a 'date' plugin)
+    do this via a 'date' plugin) (NOTE: Thiery-Michel Barral posted 
+    such a plugin to the mailing list but at the time of writing I 
+    haven't had a chance to look at it)
 
   * 'filemap' plugin to map a namespace to an INCLUDE 'file' directive.
     e.g.   [% USE html=filemap('html') %]
            [% html.header(title='Test') %] 
     equivalent to:
 	   [% INCLUDE html/header title='Test' %]
-
+    (tried it, but need to clean it up)

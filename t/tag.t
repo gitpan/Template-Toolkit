@@ -16,6 +16,7 @@
 #========================================================================
 
 use strict;
+use lib qw( ./lib ../lib );
 use vars qw($loaded $ntests);
 $^W = 1;
 
@@ -67,7 +68,7 @@ my $tproc3 = Template->new({
     OUTPUT    => \$out3,
 });
 my $tproc4 = Template->new({ 
-    TAG_STYLE => 'regular',
+    TAG_STYLE => 'template',
     OUTPUT    => \$out4,
 });
 my $tproc5 = Template->new({ 

@@ -9,7 +9,7 @@ details of known bugs, planned enhancements, features, fixes, etc.
 The latest version of the Template Toolkit can be downloaded from any 
 CPAN site:
 
-    /authors/id/ABW/Template-Toolkit-<version>.tar.gz
+    /modules/by-module/Template/Template-Toolkit-<version>.tar.gz
 
 Information regarding interim and development versions is posted to the
 templates mailing list.

@@ -1,11 +1,11 @@
 =head1 SEE ALSO
 
-A mailing list exists for up-to-date information on the Template Toolkit
-and for following and contributing to the development process.  Send 
-email to B<majordomo@cre.canon.co.uk> with the following message in the
-body:
+The Template Toolkit web site contains the latest information, news and 
+other resources.
 
-    subscribe templates
+    http://www.template-toolkit.org/
+
+[% INCLUDE mailinfo %]
 
 The F<tpage> and F<ttree> scripts are distributed and installed along
 with the Template Toolkit.  The F<tpage> script simply processes named 

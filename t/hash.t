@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: hash.t,v 1.9 1999/11/25 17:51:25 abw Exp $
+# $Id: hash.t,v 1.10 2000/06/14 13:29:23 abw Exp $
 # 
 #========================================================================
 
@@ -90,22 +90,22 @@ items
 
 # test for hashes with extra commas
 -- test --
-%% user4 = {
+[% user4 = {
     id   => 'lukes',
     name => 'Luke Skywalker',
    }
-%%
+%]
 [%user4.name%] ([%user4.id%])
 -- expect --
 Luke Skywalker (lukes)
 
 -- test --
-%% users = {
+[% users = {
     abw  => 'Andy Wardley',
     mrp  => 'Martin Portman',
     sam  => 'Simon Matthews',
    }
-%%
+%]
 [% FOREACH id = users.keys.sort; "Users:\n" IF loop.first %]
   ID: [% id %]   Name: [% users.${id} +%]
 [% END %]
@@ -137,3 +137,19 @@ is a hash
 -- expect --
 is a hash
 
+
+-- test --
+[% users = {
+    abw  => 'Andy Wardley',
+    sam  => 'Simon Matthews',
+    mrp  => 'Martin Portman',
+   }
+%]
+[% FOREACH user = users %]
+  * [% user.key %] : [% user.value +%]
+[% END %]
+
+-- expect --
+  * abw : Andy Wardley
+  * mrp : Martin Portman
+  * sam : Simon Matthews

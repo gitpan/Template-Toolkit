@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: include.t,v 1.11 1999/11/25 17:51:25 abw Exp $
+# $Id: include.t,v 1.12 2000/03/27 12:33:32 abw Exp $
 #
 #========================================================================
 
@@ -50,6 +50,7 @@ my $params = {
 
 my $tproc = Template->new({ 
     INTERPOLATE => 1,
+    CACHE_DIR   => '/tmp/tt',
     INCLUDE_PATH => [ qw( t/test/src test/src ) ],
 });
 test_expect(\*DATA, $tproc, $params);

@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 1.16 2000/02/01 12:14:24 abw Exp $
+# $Id: ttree,v 1.20 2000/06/14 13:39:05 abw Exp $
 #
 #========================================================================
 
@@ -39,7 +39,7 @@ use File::Basename;
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
@@ -60,6 +60,7 @@ my $config   = read_config($RCFILE);
 my $dryrun   = $config->nothing;
 my $verbose  = $config->verbose || $dryrun;
 my $recurse  = $config->recurse;
+my $preserve = $config->preserve;
 my $debug    = $config->debug;
 my $all      = $config->all;
 my $libdir   = $config->lib;
@@ -189,12 +190,21 @@ sub process_tree {
 	
 	if (-d $path) {
 	    if ($recurse) {
+		my ($uid, $gid, $mode);
+
+		(undef, undef, $mode, undef, $uid, $gid, undef, undef,
+		 undef, undef, undef, undef, undef)  = stat($path);
+
 		# create target directory if required
 		$target = "$destdir/$path";
-		unless (-d $target) {
-		    mkpath($target) || do { warn("$!\n"); next; }
-			unless $dryrun;
-		    printf "  + %-32s (created target directory)\n", $path;
+		unless (-d $target || $dryrun) {
+		    mkdir $target, $mode || do { 
+			warn "mkdir($target): $!\n";
+			next;
+		    };
+		    chown($uid, $gid, $target) || warn "chown($target): $!\n";
+		    printf "  + %-32s (created target directory)\n", $path
+			if $verbose;
 		}
 		# recurse into directory
 		process_tree($path);
@@ -220,16 +230,20 @@ sub process_tree {
 
 sub process_file {
     my $file = shift;
-    my ($dest, $base, $check, $srctime, $desttime);
+    my ($dest, $base, $check, $srctime, $desttime, $mode, $uid, $gid);
 
     $dest = $destdir ? "$destdir/$file" : $file;
     $base = basename($file);
 
 #    print "proc $file => $dest\n";
 
+    # stat the source file unconditionally, so we can preserve
+    # mode and ownership
+    (undef, undef, $mode, undef, $uid, $gid, undef, undef, undef, $srctime,
+     undef, undef, undef)  = stat($file);
+    
     # test modification time of existing destination file
     if (-f $dest && ! $all) {
-	$srctime  = ( stat($file)  )[9];
 	$desttime = ( stat($dest) )[9];
 
 	if ($desttime > $srctime) {
@@ -244,8 +258,15 @@ sub process_file {
 	if ($base =~ /$check/) {
 	    printf "  > %-32s (copied, matches /$check/)\n", $file
 		if $verbose;
-	    copy($file, $dest)
-		unless $dryrun;
+
+	    unless ($dryrun) {
+		copy($file, $dest);
+
+		if ($preserve) {
+		    chown($uid, $gid, $dest) || warn "chown($dest): $!\n";
+		    chmod($mode, $dest) || warn "chmod($dest): $!\n";
+		}
+	    }
 	    return;
 	}
     }
@@ -262,9 +283,15 @@ sub process_file {
     print "  + $file\n" if $verbose;
 
     # process file
-    $template->process("./$file", $ttdata, $file)
-	|| print("  ! ", $template->error(), "\n")
-	    unless $dryrun;
+    unless ($dryrun) {
+        $template->process("./$file", $ttdata, $file)
+	    || print("  ! ", $template->error(), "\n");
+
+	if ($preserve) {
+	    chown($uid, $gid, $dest) || warn "chown($dest): $!\n";
+	    chmod($mode, $dest) || warn "chmod($dest): $!\n";
+	}
+    }
 }
 
 
@@ -287,6 +314,7 @@ sub read_config {
 	'verbose|v'   => { DEFAULT => 0 },
 	'recurse|r'   => { DEFAULT => 0 },
 	'nothing|n'   => { DEFAULT => 0 },
+	'preserve|p'  => { DEFAULT => 0 },
 	'all|a'       => { DEFAULT => 0 },
         'debug|dbg'   => { DEFAULT => 0 },
 	'ignore=s@',
@@ -303,7 +331,7 @@ sub read_config {
         'template_start_tag|start_tag|starttag=s',
         'template_end_tag|end_tag|endtag=s',
         'template_tag_style|tag_style|tagstyle=s',
-	'template_plugin_base|plugin_base|pluginbase|p=s@',
+	'template_plugin_base|plugin_base|pluginbase=s@',
 	'perl5lib|perllib=s@'
     );
 
@@ -436,6 +464,7 @@ usage: $NAME [options] [files]
 Options:
    -a      (--all)          Process all files, regardless of modification
    -r      (--recurse)      Recurse into sub-directories
+   -p      (--preserve)     Preserve file ownership and permission
    -n      (--nothing)      Do nothing, just print summary (enables -v)
    -v      (--verbose)      Verbose mode
    -d      (--debug)        Debug mode
@@ -563,7 +592,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.16 $
+$Revision: 1.20 $
 
 =head1 COPYRIGHT
 

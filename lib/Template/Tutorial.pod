@@ -24,7 +24,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Tutorial.pod,v 1.21 2000/03/28 15:53:21 abw Exp $
+#   $Id: Tutorial.pod,v 1.2 2000/02/29 14:46:21 abw Exp $
 #
 #========================================================================
 
@@ -743,13 +743,13 @@ about the underlying implementation.
 
 Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
+    http://www.template-toolkit.org/
     http://www.kfs.org/~abw/
-    http://www.cre.canon.co.uk/perl
 
 
 =head1 VERSION
 
-This is version 1.06 of the Template Toolkit.  
+This is version 1.07 of the Template Toolkit.  
 
 Please consult the F<Changes> file for information about visible changes
 in the Template Toolkit between releases.  The F<TODO> file contains 

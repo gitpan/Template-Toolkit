@@ -31,7 +31,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 1.21 2000/02/17 12:32:04 abw Exp $
+# $Id: Parser.pm,v 1.26 2000/05/19 10:56:31 abw Exp $
 #
 #============================================================================
 
@@ -52,7 +52,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 0;
 
 
@@ -62,8 +62,11 @@ $DEBUG = 0;
 
 my $TAG_STYLE   = {
     'default'   => [ '[\[%]%', '%[\]%]' ],
-    'regular'   => [ '\[%',    '%\]'    ],
+    'template'  => [ '\[%',    '%\]'    ],
     'percent'   => [ '%%',     '%%'     ],
+    'html'      => [ '<!--',   '-->'    ],
+    'asp'       => [ '<%',     '%>'     ],
+    'php'       => [ '<\?',    '\?>'    ],
 };
 
 # default config for parser base class
@@ -264,18 +267,24 @@ sub split_text {
 	$postlines = 0;                      # denotes lines chomped
 
 	$prelines  = ($pre =~ tr/\n//);      # NULL - count only
-	$dirlines  = ($dir =~ tr/\n/ /);     # space - convert
+	$dirlines  = ($dir =~ tr/\n//);      # ditto 
 
 	# the directive CHOMP options may modify the preceeding text
 	for ($dir) {
 	    # remove leading whitespace and check for a '-' chomp flag
-	    s/^\s*([-+])?\s*//s;
-	    $chomp = ($1 && $1 eq '+') ? 0 : ($1 || $prechomp);
+	    s/^([-+#])?\s*//s;
+	    if ($1 && $1 eq '#') {
+		# comment out entire directive
+		$dir = '';
+	    }
+	    else {
+		$chomp = ($1 && $1 eq '+') ? 0 : ($1 || $prechomp);
 
-	    # chomp off whitespace and newline preceeding directive
-	    $chomp and $pre =~ s/(\n|^)[ \t]*\Z//m
-		   and $1 eq "\n"
-		   and $prelines++;
+		# chomp off whitespace and newline preceeding directive
+		$chomp and $pre =~ s/(\n|^)[ \t]*\Z//m
+		       and $1 eq "\n"
+		       and $prelines++;
+	    }
 
 	    # remove trailing whitespace and check for a '-' chomp flag
 	    s/\s*([-+])?\s*$//s;
@@ -297,9 +306,18 @@ sub split_text {
 	# and now the directive, along with line number information
 	if (length $dir) {
 	    # the TAGS directive is a compile-time switch
-	    if ($dir =~ /TAGS\s+(\S+)\s+(\S+)/i) {
-		$start = quotemeta($1);
-		$end   = quotemeta($2);
+	    if ($dir =~ /TAGS\s+(.*)/i) {
+		my $tags;
+		my @tags = split(/\s+/, $1);
+		if (scalar @tags > 1) {
+		    ($start, $end) = map { quotemeta($_) } @tags;
+		}
+		elsif ($tags = $TAG_STYLE->{ $tags[0] }) {
+		    ($start, $end) = @$tags;
+		}
+		else {
+		    warn "invalid TAGS style: $tags[0]\n";
+		}
 	    }
 	    else {
 		push(@tokens, 'DIRECTIVE', $dir);
@@ -447,11 +465,11 @@ sub tokenise_directive {
     }
 
 #    $self->_debug("TOKENISE: $text\n");
-    
+
     while ($text =~ 
 	    / 
 		# a quoted phrase matches in $2
-		(["'])                   # opening quote, " or '
+		(["'])                   # $1 - opening quote, " or '
 		(                        # $2 - quoted text buffer
 		    (?:                  # repeat group (no backreference)
 			\\\\             # an escaped backslash \\
@@ -463,13 +481,16 @@ sub tokenise_directive {
 		)                        # end of $2
 		\1                       # match opening quote
 	    |
-		# an unquoted number matches in $3
+		# strip out any comments in $3
+	        (\#[^\n]*)
+	   |
+		# an unquoted number matches in $4
 		(-?\d+)                  # numbers
 	    |
-		# an identifier matches in $4
+		# an identifier matches in $5
 		(\w+)                    # variable identifier
 	    |   
-		# an unquoted word or symbol matches in $5
+		# an unquoted word or symbol matches in $6
 		(   [(){}\[\];,\/\\]     # misc parenthesis and symbols
 		|   \+\-\*               # math operations
 		|   \$\{?                # dollar with option left brace
@@ -480,6 +501,9 @@ sub tokenise_directive {
  		|   \S+                  # something unquoted
 		)                        # end of $5
 	    /gmxo) {
+
+	# ignore comments to EOL
+	next if $3;
 
 	# quoted string
 	if (defined ($token = $2)) {
@@ -496,10 +520,10 @@ sub tokenise_directive {
 	    }
 	}
 	# number
-	elsif (defined ($token = $3)) {
+	elsif (defined ($token = $4)) {
 	    $type = 'LITERAL';
 	}
-	elsif (defined($token = $4)) {
+	elsif (defined($token = $5)) {
 	    # reserved words may be in lower case unless case sensitive
 	    $uctoken = $case ? $token : uc $token;
 	    if (defined ($type = $lextable->{ $uctoken })) {
@@ -509,10 +533,7 @@ sub tokenise_directive {
 		$type = 'IDENT';
 	    }
 	}
-	elsif (defined ($token = $5)) {
-	    # comment token - end processing
-	    return \@tokens if $token =~ /^#/;		    ## RETURN ##
-
+	elsif (defined ($token = $6)) {
 	    # reserved words may be in lower case unless case sensitive
 	    $uctoken = $case ? $token : uc $token;
 	    unless (defined ($type = $lextable->{ $uctoken })) {
@@ -907,7 +928,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.21 $
+$Revision: 1.26 $
 
 =head1 COPYRIGHT
 

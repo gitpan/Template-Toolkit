@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Table.pm,v 1.1 2000/03/20 08:02:27 abw Exp $
+# $Id: Table.pm,v 1.2 2000/03/27 12:33:31 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use CGI;
 
 @ISA     = qw( Template::Plugin );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -384,9 +384,22 @@ the data across.
 
 In addition to a list reference, the Table plugin constructor may be 
 passed a reference to a Template::Iterator object or subclass thereof.
-The get_all() method is called on the iterator to return all items which
+The get_all() method is first called on the iterator to return all 
+remaining items.  These are then available via the usual Table interface.
 
-DBI example
+    [% USE DBI(dsn,user,pass) -%]
+
+    # query() returns an iterator
+    [% results = DBI.query('SELECT * FROM alphabet ORDER BY letter') %]
+    
+    # pass into Table plugin
+    [% USE table(results, rows=8 overlap=1 pad=0) -%]
+
+    [% FOREACH row = table.cols -%]
+       [% row.first.letter %] - [% row.last.letter %]:
+          [% row.join(', ') %]
+    [% END %]
+
 
 =head1 AUTHOR
 
@@ -394,7 +407,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.1 $
+$Revision: 1.2 $
 
 =head1 COPYRIGHT
 

@@ -76,8 +76,13 @@ You can change the tag characters using the START_TAG, END_TAG and
 TAG_STYLE options, described below.  You can also use the TAGS directive
 to change the tags on a per-file basis.  The new tag definitions last
 only for the current template file.  The TAGS directive should contain
-two whitespace delimited character sequences to represent the START and
-END tags.
+either a TAG_STYLE name or two whitespace delimited character sequences 
+to represent the START and END tags.
+
+    [% TAGS html %]
+    <!-- INCLUDE header title = 'Hello World!' -->
+
+or    
 
     [% TAGS <!-- --> %]
     <!-- INCLUDE header title = 'Hello World!' -->
@@ -386,18 +391,7 @@ Output:
     costs $666.00
 
 Note that commas are optional between key/value pairs and the '=>' token
-may be used in place of '=' to make things look more familiar to Perl
-hackers.  You can even prefix variables with '$' if you really want to 
-but it's not necessary.
-
-    [% product = {
-  	 id    => 'XYZ-2000',
-  	 desc  => 'Bogon Generator',
-  	 price => 666,
-  	 foo   => $bar,    # OK to use '$', but not necessary
-  	$baz   => $qux,    # this is also OK if you _really_ like $'s
-       }
-    %]
+may be used in place of '='.
 
 The 'keys' and 'values' methods may be applied to any hash to return 
 lists of the hash keys and values.
@@ -409,6 +403,27 @@ lists of the hash keys and values.
 This example also shows how a variable ('field' in this case) may be 
 evaluated as '${field}' to return a value which is then used to index
 into the 'product' hash array.
+
+The FOREACH directive can also be used to iterate through the items in 
+the hash.  Each entry in the hash is returned in sorted order (based on 
+the key) as a hash array containing 'key' and 'value' items.
+
+    [% users = {
+	 tom   => 'Thomas',
+	 dick  => 'Richard',
+         harry => 'Harold',
+       }
+    %]
+
+    [% FOREACH u = users %]
+       * [% u.key %] : [% u.value %]
+    [% END %]
+
+Output:
+
+       * dick : Richard
+       * harry : Harold
+       * tom : Thomas      
 
 You can copy all the members of a hash into the top level variable namespace
 with the IMPORT directive.
@@ -1544,7 +1559,19 @@ thrown as a 'perl' exception.
 =head2 POST-PROCESSING FILTERS
 
 The FILTER directive can be used to post-process the output of a
-block.  The following filters are avilable by default:
+block.  The '|' character can also be used as an alias for 'FILTER'.
+
+    [% FILTER html %]
+       HTML text may have < and > characters embedded which you
+       want converted to the correct HTML entities.  The 'html'
+       filter does this for you.
+    [% END %]
+
+    [% mytext FILTER html %]
+
+    [% mytext | html %]
+
+The following filters are avilable by default:
 
 =over 4
 
@@ -1742,6 +1769,14 @@ may be added after other (non-block) directives.
     [% END %]
 
     [% INCLUDE myfile FILTER myfilter FILTER format('<!-- %s -->') %]
+
+The '|' character can be used as an alias for 'FILTER' to allow a more 
+succint way of expressing the above.
+
+    [% INCLUDE myfile | myfilter | format('<!-- %s -->') %]
+
+    [% mytext | html %]
+
 
 =head2 ERROR HANDLING AND FLOW CONTROL
 

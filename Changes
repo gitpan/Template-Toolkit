@@ -9,15 +9,73 @@
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes,v 1.111 2000/03/28 15:53:21 abw Exp $
+# $Id: Changes,v 1.121 2000/06/14 13:38:06 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 1.07  2000/06/14 13:29:19
+#------------------------------------------------------------------------
+
+* Added the define($template, $name) method to Template.pm which allows
+  you to pre-declare a template block.  The template block text should
+  be passed as the first parameter followed by the block name.  The first
+  parameter may also reference a file or glob handle, as per the process()
+  method or a reference to a Template::Directive object or subclass 
+  representing a pre-compiled template object.
+
+* Modifed the Template::Iterator to accept a hash reference as a first
+  parameter.  It iterates through each key in the hash in sorted order.
+  On each iteration it returns a hash reference containing 'key'
+  'value' entries.  e.g. 
+
+    [% myhash = { b => 'bravo', a => 'alpha' } %]
+    [% FOREACH item = myhash %]
+       [% item.key %] - [% item.value %]
+    [% END %]
+
+* Added an alias of '|' to 'FILTER' allowing the succint expression of 
+  FILTER chains such as [% mytext | html %], based on a suggestion by 
+  Jonas Liljegren.  Updated docs and added tests to t/filter.t.
+
+* Changed the comment character '#' within directives to only comment to
+  the end of the line.  Placing the '#' directly inside the '[%' tag 
+  (e.g. where '-' or '+' goes) comments out the entire directive as 
+  before.  e.g.
+ 
+    [% # this is ignored           [%# the entire directive
+       a = 10                          is ignored
+       # so is this                %]
+       b = 20
+    %]
+
+* Added new TAG_STYLE options 'html', 'asp' and 'php' as provided by
+  Vladimir Pastukhov.  Changed TAGS directive to accept a TAG_STYLE 
+  name as well as the usual explicit start/end tags. 
+
+    [% TAGS html %]
+    <!-- INCLUDE header -->
+
+* Added a stash() method to Template::Context to return the internal 
+  stash reference, as suggested by Michael Fowler.
+
+* Applied a patch from Jim Vaughan which adds the --preserve option to 
+  ttree to preserve ownership and permissions of files.  Also fixed an
+  errant directory creation message appearing even in non-verbose mode,
+  as reported by Neil Bowers.
+
+* Fixed an undefined variable warning in Template::Cache that exhibited
+  itself when parser errors were reported from within ./relative files.
+
+* Removed section from docs describing optional leading '$' on variables,
+  in anticipation of deprecation in version 2.  Other minor documentation 
+  fixes, including patches from Paul Sharpe.
 
 #------------------------------------------------------------------------
 # Version 1.06  2000/03/28 15:52:48
 #------------------------------------------------------------------------
 
-* Interim release to fix a bug in Datafile plugin which became noticable
-  with Perl 5.6.  Thanks to Nathan Torkington for spotting it.
+* Interim release to fix a bug in the Datafile plugin which became 
+  noticable with Perl 5.6.  Thanks to Nathan Torkington for spotting it.
 
 #------------------------------------------------------------------------
 # Version 1.05  2000/03/20 16:31:05
@@ -100,7 +158,7 @@
 * Added the XML::DOM and XML::RSS plugin modules to the distribution.
 
 * Changed the handling of file errors generated when redirecting
-  output and/or error, as suggested by Jonas Lilligren.  Errors are
+  output and/or error, as suggested by Jonas Liljegren.  Errors are
   now raised as 'file' exceptions and are reported back to the caller
   as per usual.  That is, the process() method returns 0 and the error
   can be retrieved by the usual error() method.  e.g.
