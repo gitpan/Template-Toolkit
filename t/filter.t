@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 1.2 1999/08/12 02:30:38 abw Exp $
+# $Id: filter.t,v 1.3 1999/10/01 10:56:29 abw Exp $
 #
 #========================================================================
 
@@ -164,4 +164,21 @@ undef: invalid FILTER factory for 'badfact' (not a CODE ref)
 -- error --
 undef: invalid FILTER 'badfilt' (not a CODE ref)
 
+-- test --
+[% FILTER bold = format('<b>%s</b>') %]
+This is bold
+[% END +%]
+[% FILTER italic = format('<i>%s</i>') %]
+This is italic
+[% END +%]
+[% 'This is both' FILTER bold FILTER italic %]
+-- expect --
+<b>This is bold</b>
+<i>This is italic</i>
+<i><b>This is both</b></i>
+
+-- test --
+[% "foo" FILTER format("<< %s >>") FILTER format("=%s=") %]
+-- expect --
+=<< foo >>=
 

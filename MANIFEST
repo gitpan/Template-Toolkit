@@ -81,6 +81,7 @@ t/include.t
 t/interp.t
 t/iterator.t
 t/list.t
+t/listndx.t
 t/literal.t
 t/multi.t
 t/named.t

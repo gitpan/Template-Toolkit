@@ -1,4 +1,4 @@
-#============================================================================
+#========================================================================
 #
 # Changes 
 #
@@ -8,11 +8,40 @@
 # AUTHOR
 #   Andy Wardley   <abw@cre.canon.co.uk>
 #
-#----------------------------------------------------------------------------
-#
-# $Id: Changes,v 1.52 1999/09/15 12:23:23 abw Exp $
-#
-#============================================================================
+#------------------------------------------------------------------------
+# $Id: Changes,v 1.56 1999/10/01 16:52:17 abw Exp $
+#========================================================================
+
+#------------------------------------------------------------------------
+# Version 0.27  1999/10/01 16:51:46
+#------------------------------------------------------------------------
+
+* Fifth and most certainly, final, beta release.  The core toolkit is now 
+  stable and there are only a few low-level interface issues left to 
+  resolve (e.g. filters).  The 'ttree' utility is now fully functional
+  and reliable.  
+  
+* Added numerical list indexing of the form 'list.n', e.g 'list.0', 'list.3'.
+  Added t/listndx.t to test suite.  Examples of use:
+    [% list = ['one' 'two' 'three' 'four' ] %]
+    [% list.0 %] [% list.1 %] 
+    [% list.${n} FOREACH n = [0..3] %] 
+
+* Fixed a bug identified by Simon Matthews which was causing corruption 
+  of the context runtime stack when an empty hash was created.  Added a 
+  special case to detect empty hashes rather than blindly splicing n 
+  (possibly 0) elements off the stack to construct a hash.  Added tests
+  to t/hash.t.
+
+* Fixed several bugs in ttree identified by Martin Portman; files of the 
+  same name in different directories were treated as the same file and all
+  received the same (cached) contents, target directories weren't always 
+  being created, and a few other minor oddities were cleansed.  Also added
+  -n option to do nothing.
+
+* Modified grammar slightly to allow multiple FILTER directives to be 
+  chained one after another, as suggested by Eugene Miretskiy e.g.
+  [% INCLUDE foobar FILTER this FILTER that %]
 
 #------------------------------------------------------------------------
 # Version 0.26  1999/09/15 12:22:36
@@ -99,7 +128,6 @@
   which causes the loader to look only in the current directory and not
   in the INCLUDE_PATH.  Caching is as per default CACHE option, with 
   leading './' left intact in the name.
-
 
 #------------------------------------------------------------------------
 # Version 0.25  1999/08/16 14:44:45

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 1.7 1999/09/14 11:33:42 abw Exp $
+# $Id: foreach.t,v 1.8 1999/10/01 10:56:29 abw Exp $
 # 
 #========================================================================
 
@@ -145,4 +145,40 @@ romeo, romeo, wherefore art thou, romeo?
    Andy Wardley (abw)
    Simon Matthews (sam)
    Joe Random Hacker (jrh)
+
+-- test --
+[% FOREACH i = [1..4] %]
+[% i +%]
+[% END %]
+-- expect --
+1
+2
+3
+4
+
+-- test --
+[% first = 4 
+   last  = 8
+%]
+[% FOREACH i = [first..last] %]
+[% i +%]
+[% END %]
+-- expect --
+4
+5
+6
+7
+8
+
+-- test --
+[% list = [ 'one' 'two' 'three' 'four' ] %]
+[% list.0 %] [% list.3 %]
+
+[% FOREACH n = [0..3] %]
+[% list.${n} %], 
+[%- END %]
+
+-- expect --
+one four
+one, two, three, four, 
 

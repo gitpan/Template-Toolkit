@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.29 1999/09/14 23:07:01 abw Exp $
+# $Id: Context.pm,v 1.31 1999/09/29 10:17:01 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.29 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.31 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -551,6 +551,9 @@ sub _evaluate {
 
     while ($op = shift @pending) {
 	printf("#$ip:  %02d %-8s\n", $op, $OP_NAME[$op])  if $DEBUG;
+	print(scalar @pending, " items remain on pending, ", 
+	      scalar @stack, " item on stack\n") if $DEBUG;
+	print "stack: @stack\n" if $DEBUG;
 	$ip++;
 
 	next unless $op;		    # NULLOP
@@ -622,7 +625,8 @@ sub _evaluate {
 	elsif ($op == OP_HASHFOLD) {
 	    # pop top ($item * 2) items off the stack and push a new hash
 	    $x = shift @pending;
-	    push(@stack, { splice(@stack, -($x * 2)) }); 
+	    if ($x) { push(@stack, { splice(@stack, -($x * 2)) }); }
+	    else    { push(@stack, { }); } # empty hash
 	    print("  -> pop $x items\n",
 		  "  <- hash ($stack[-1])\n") if $DEBUG;
 	}
@@ -742,7 +746,7 @@ sub _evaluate {
 	    }
 	    elsif (UNIVERSAL::isa($x, 'Template::Stash')) {
 		($z, $err) = $x->get($y, $p, $self, $lflag);
-
+## IMPLICIT CODE
 		unless (defined $z || $err) {
 		    # create an intermediate namespace hash if the item 
 		    # doesn't exist and this is an OP_LDOT (lvalue)
@@ -760,6 +764,7 @@ sub _evaluate {
 		if (defined($z = $x->{ $y })) {
 		    ($z, $err) = &$z(@$p)   # execute any code binding
 			if $z && ref($z) eq 'CODE';
+## CODE
 		}
 		elsif ($lflag) {
 		    # create empty hash if OP_LDOT
@@ -771,8 +776,14 @@ sub _evaluate {
 		}
 	    }
 	    elsif (ref($x) eq 'ARRAY') {
-		($z, $err) = &$z($x)
-		    if $z = $list_ops->{ $y };
+		# if the target is a list we try to apply the operations
+		# in $list_ops or apply a numerical operation as an index
+		if ($z = $list_ops->{ $y }) {
+		    ($z, $err) = &$z($x);
+		}
+		elsif ($y =~ /^\d+$/) {
+		    $z = $x->[$y];
+		}
 	    }
 	    elsif (ref($x)) {
 		eval { ($z, $err) = $x->$y(@$p); };
@@ -1064,7 +1075,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.29 $
+$Revision: 1.31 $
 
 =head1 COPYRIGHT
 

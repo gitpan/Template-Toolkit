@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.31 1999/09/14 23:06:31 abw Exp $
+#   $Id: Template.pm,v 1.32 1999/10/01 16:51:51 abw Exp $
 #
 #========================================================================
  
@@ -34,7 +34,7 @@ use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '0.26';
+$VERSION     = '0.27';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;

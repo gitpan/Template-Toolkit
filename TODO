@@ -10,14 +10,12 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.44 1999/09/15 12:11:22 abw Exp $
+# $Id: TODO,v 1.47 1999/10/01 16:51:46 abw Exp $
 #
 #============================================================================
 
 Pending
 -------
-  * AppConfig pre-requisite.
-  * Copy option to ttree?
 
 Bugs
 ----
@@ -26,6 +24,8 @@ Bugs
 
   * I don't think Tied Hashes get treated as regular hashes, but they 
     should.
+
+  * Cannot create an empty list.
 
 Possible Features
 ----------------
@@ -106,9 +106,6 @@ Other plugins, modules, scripts
 
 ttree
 -----
-  * 'copy' option which works like 'ignore' but simply copies file instead
-    of processing them.
-
   * Better documentation describing the use of ttree in building document
     systems.  Examples of web sites, using config profiles, defining 
     template variables in 'config' templates that get pre-processed, etc.

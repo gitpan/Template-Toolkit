@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: format.t,v 1.4 1999/08/10 11:09:14 abw Exp $
+# $Id: format.t,v 1.5 1999/09/29 10:35:32 abw Exp $
 #
 #========================================================================
 
@@ -97,3 +97,6 @@ $user
 -- expect --
 <b>This is bold</b>
 <i>This is italic</i>
+
+
+

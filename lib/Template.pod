@@ -25,7 +25,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pod,v 1.13 1999/09/15 12:22:52 abw Exp $
+#   $Id: Template.pod,v 1.16 1999/10/01 16:51:51 abw Exp $
 #
 #========================================================================
 
@@ -74,6 +74,7 @@ Template Toolkit - a Perl toolkit for template processing.
                      variable = 'literal text @ $100'
                      variable = "interpolated text: $var"
                      list     = [ val, val, val, val, ... ]
+		     list     = [ val..val ]
                      hash     = { var = val, var = val, ... }
               %]
 
@@ -308,7 +309,7 @@ promote reusability and maintainability every bit as much as the
 Template Toolkit does.  The benefit of using the toolkit is that much
 of this is done for you.  You get to reap the benefits of template
 caching (resulting in fast runtime processing), automatic error
-detection and handing, variable localisation and namespacing, dynamic
+detection and handling, variable localisation and namespacing, dynamic
 loading of external modules, and so on, without having to code it
 yourself or even worry about the specifics of implementation.  The
 details are hidden away, the directive syntax is simplified and you
@@ -725,7 +726,7 @@ The 'keys' and 'values' methods may be applied to any hash to return
 lists of the hash keys and values.
 
     [% FOREACH field = product.keys %]
-       [% field %]
+       [% field %] [% product.${field} %]
     [% END %]
 
 You can copy all the members of a hash into the top level variable namespace
@@ -803,6 +804,11 @@ operator:
 
     [% n = [ 1 .. 4 ] %]    # 'n' is [ 1, 2, 3, 4 ] 
 
+    [% x = 4
+       y = 8
+       z = [x..y]           # 'x' is [ 4, 5, 6, 7, 8 ]
+    %]
+
 The FOREACH directive will iterate through a list created as above, or
 perhaps provided as a pre-defined variable passed to the process() method.
 
@@ -849,6 +855,20 @@ Output:
     Stuff:
       * Foo
       * Foo Bar
+
+Individual elements of the list can be referenced by a numerical suffix.
+The first element of the list is element 0.
+
+    [% list = [ 'one' 'two' 'three' 'four' ] %]
+    [% list.0 %] [% list.3 %]
+
+    [% FOREACH n = [0..4] %]
+    [% list.${n} %], 
+    [%- END %]
+
+Output:
+    one four
+    one, two, three, four, 
 
 When the FOREACH directive is used without specifying a target variable, 
 any iterated values which are hash references will be automatically 
@@ -1667,6 +1687,18 @@ specifying the alias.
        # re-uses cached non_atomic filter created above
        ...ditto contentus...
     [% END %]
+
+FILTERS may be nested within other filters.  Multiple FILTER definitions
+may be added after other (non-block) directives.
+
+    [% FILTER this_way %]
+       ...content...
+       [% FILTER that_way %]
+          ...blah...
+       [% END %]
+    [% END %]
+
+    [% INCLUDE myfile FILTER myfilter FILTER format('<!-- %s -->') %]
 
 The FILTER facility is relatively new and still slightly immature.
 While it is fully functional (for the definition of 'fully' in that it
@@ -2557,7 +2589,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 VERSION
 
-This is version 0.26 of the Template Toolkit.  
+This is version 0.27 of the Template Toolkit.  
 
 It is a stable beta release version preceding the imminent release 
 of version 1.0.

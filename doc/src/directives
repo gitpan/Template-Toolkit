@@ -13,6 +13,7 @@
                      variable = 'literal text @ $100'
                      variable = "interpolated text: $var"
                      list     = [ val, val, val, val, ... ]
+		     list     = [ val..val ]
                      hash     = { var = val, var = val, ... }
               %]
 

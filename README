@@ -4,16 +4,16 @@ NAME
 OBTAINING AND INSTALLING THE TEMPLATE TOOLKIT
     The Template Toolkit module bundle is available from CPAN as:
 
-        /authors/id/ABW/Template-Toolkit-0.26.tar.gz
+        /authors/id/ABW/Template-Toolkit-0.27.tar.gz
 
     Unpack the archive to create an installation directory.
     Something like this:
 
-        zcat Template-Toolkit-0.26.tar.gz | tar xvf -
+        zcat Template-Toolkit-0.27.tar.gz | tar xvf -
 
     'cd' into that directory, make, test and install the modules:
 
-        cd Template-Toolkit-0.26
+        cd Template-Toolkit-0.27
         perl Makefile.PL
         make
         make test
@@ -195,8 +195,8 @@ OVERVIEW
     Template Toolkit does. The benefit of using the toolkit is that
     much of this is done for you. You get to reap the benefits of
     template caching (resulting in fast runtime processing),
-    automatic error detection and handing, variable localisation and
-    namespacing, dynamic loading of external modules, and so on,
+    automatic error detection and handling, variable localisation
+    and namespacing, dynamic loading of external modules, and so on,
     without having to code it yourself or even worry about the
     specifics of implementation. The details are hidden away, the
     directive syntax is simplified and you can get a lot done very
@@ -355,7 +355,7 @@ AUTHOR
         http://www.cre.canon.co.uk/perl
 
 VERSION
-    This is version 0.26 of the Template Toolkit.
+    This is version 0.27 of the Template Toolkit.
 
     It is a stable beta release version preceding the imminent
     release of version 1.0.

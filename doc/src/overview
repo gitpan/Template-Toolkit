@@ -125,7 +125,7 @@ promote reusability and maintainability every bit as much as the
 Template Toolkit does.  The benefit of using the toolkit is that much
 of this is done for you.  You get to reap the benefits of template
 caching (resulting in fast runtime processing), automatic error
-detection and handing, variable localisation and namespacing, dynamic
+detection and handling, variable localisation and namespacing, dynamic
 loading of external modules, and so on, without having to code it
 yourself or even worry about the specifics of implementation.  The
 details are hidden away, the directive syntax is simplified and you

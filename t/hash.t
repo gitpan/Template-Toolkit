@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: hash.t,v 1.7 1999/09/14 23:07:15 abw Exp $
+# $Id: hash.t,v 1.8 1999/09/29 10:17:29 abw Exp $
 # 
 #========================================================================
 
@@ -23,10 +23,25 @@ use Template;
 require 'texpect.pl';
 $^W = 1;
 
+use Template::Context;
+#$Template::Context::DEBUG = 1;
 $DEBUG = 0;
 
-test_expect(\*DATA, { POST_CHOMP => 1});
+my $data = {
+    a => 'alpha',
+    b => 'bravo',
+    c => 'charlie',
+    is_hash => \&test_hash,
+};
+test_expect(\*DATA, { POST_CHOMP => 1 }, $data);
 
+sub test_hash {
+    my $hash = shift;
+    return ref($hash) eq 'HASH' 
+	? 'is a hash'
+	: 'is not a hash';
+}
+	    
 __DATA__
 Defining hash...
 %% user1 = {
@@ -104,5 +119,22 @@ Users:
   ID: sam   Name: Simon Matthews
 [ Andy Wardley ] [ Martin Portman ] [ Simon Matthews ] 
 
+-- test --
+[% empty = { } %]
+[% is_hash(empty) %]
+-- expect --
+is a hash
 
+-- test --
+[% list = [ { a => b }, { } ] %]
+[% is_hash(list.0) +%]
+[% is_hash(list.1) %]
+-- expect --
+is a hash
+is a hash
+
+-- test --
+[% is_hash({ }, 123) %]
+-- expect --
+is a hash
 

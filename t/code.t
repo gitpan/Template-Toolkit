@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: code.t,v 1.5 1999/09/09 17:02:00 abw Exp $
+# $Id: code.t,v 1.6 1999/09/29 10:17:28 abw Exp $
 #
 #========================================================================
 
@@ -47,6 +47,7 @@ my $params = {
 	'this' => \&today,
 	'next' => \&tomorrow,
     },
+    'joint' => \&joint,
 };
 
 test_expect(\*DATA, $tproc, $params);
@@ -55,6 +56,10 @@ test_expect(\*DATA, $tproc, $params);
 #------------------------------------------------------------------------
 # subs
 #------------------------------------------------------------------------
+
+sub joint {
+    return join(" + ", @_);
+}
 
 sub yesterday {
     return "All my troubles seemed so far away...";
@@ -201,9 +206,7 @@ Hello
 -- expect --
 aaa
 
-
-
-
-
-
-
+-- test --
+[% joint(a b c) %]
+-- expect --
+alpha + bravo + charlie

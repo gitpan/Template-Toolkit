@@ -394,7 +394,7 @@ The 'keys' and 'values' methods may be applied to any hash to return
 lists of the hash keys and values.
 
     [% FOREACH field = product.keys %]
-       [% field %]
+       [% field %] [% product.${field} %]
     [% END %]
 
 You can copy all the members of a hash into the top level variable namespace
@@ -472,6 +472,11 @@ operator:
 
     [% n = [ 1 .. 4 ] %]    # 'n' is [ 1, 2, 3, 4 ] 
 
+    [% x = 4
+       y = 8
+       z = [x..y]           # 'x' is [ 4, 5, 6, 7, 8 ]
+    %]
+
 The FOREACH directive will iterate through a list created as above, or
 perhaps provided as a pre-defined variable passed to the process() method.
 
@@ -518,6 +523,20 @@ Output:
     Stuff:
       * Foo
       * Foo Bar
+
+Individual elements of the list can be referenced by a numerical suffix.
+The first element of the list is element 0.
+
+    [% list = [ 'one' 'two' 'three' 'four' ] %]
+    [% list.0 %] [% list.3 %]
+
+    [% FOREACH n = [0..4] %]
+    [% list.${n} %], 
+    [%- END %]
+
+Output:
+    one four
+    one, two, three, four, 
 
 When the FOREACH directive is used without specifying a target variable, 
 any iterated values which are hash references will be automatically 
@@ -1336,6 +1355,18 @@ specifying the alias.
        # re-uses cached non_atomic filter created above
        ...ditto contentus...
     [% END %]
+
+FILTERS may be nested within other filters.  Multiple FILTER definitions
+may be added after other (non-block) directives.
+
+    [% FILTER this_way %]
+       ...content...
+       [% FILTER that_way %]
+          ...blah...
+       [% END %]
+    [% END %]
+
+    [% INCLUDE myfile FILTER myfilter FILTER format('<!-- %s -->') %]
 
 The FILTER facility is relatively new and still slightly immature.
 While it is fully functional (for the definition of 'fully' in that it

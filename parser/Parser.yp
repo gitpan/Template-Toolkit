@@ -29,7 +29,6 @@ directive:  atomdir
 	|   catch
 	|   condition
 	|   loop
-	|   filter
 	|   defblock
 	|   debug
 	|   /* NULL - empty directive */
@@ -52,6 +51,7 @@ atomdir:    GET term	    	{ $factory->create(Get     => $_[2])    }
 	|   return		{ $factory->create(Return  => $_[1])    }
 	|   setlist		{ $factory->create(Set     => $_[1])    }
 	|   term		{ $factory->create(Get     => $_[1])    }
+	|   filter	          /* permits filter chaining */
 ;
 
 return:	    RETURN		{ STATUS_RETURN }
@@ -121,6 +121,7 @@ term:	    LITERAL			{ [ OP_LITERAL, $_[1]    ] }
 ;
 
 ident:	    ident DOT item		{ push(@{$_[1]}, $_[3]); $_[1] }
+	|   ident DOT LITERAL		{ push(@{$_[1]}, [ $_[3], 0 ]); $_[1] }
 	|   item			{ [ $_[1] ] }
 	|   '$' item			{ [ $_[2] ] }
 ;

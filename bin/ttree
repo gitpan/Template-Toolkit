@@ -23,22 +23,23 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 1.8 1999/09/15 12:11:45 abw Exp $
+# $Id: ttree,v 1.11 1999/10/01 10:56:23 abw Exp $
 #
 #========================================================================
 
 use strict;
 use Template;
 use AppConfig qw( :expand );
-use File::Find;
 use File::Copy;
+use File::Path;
+use File::Basename;
 
 
 #------------------------------------------------------------------------
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
@@ -56,7 +57,8 @@ unless (-f $RCFILE) {
 # read configuration file and command line arguments - I need to remember 
 # to fix varlist() and varhash() in AppConfig to make this nicer...
 my $config   = read_config($RCFILE);
-my $verbose  = $config->verbose;
+my $dryrun   = $config->nothing;
+my $verbose  = $config->verbose || $dryrun;
 my $recurse  = $config->recurse;
 my $debug    = $config->debug;
 my $all      = $config->all;
@@ -112,6 +114,8 @@ if ($verbose) {
 	  "      Ignore: [ @$ignore ]\n",
 	  "        Copy: [ @$copy ]\n",
 	  "      Accept: [ ", @$accept ? "@$accept" : "*", " ]\n\n");
+    print(STDERR "NOTE: dry run, doing nothing...\n")
+	if $dryrun;
 }
 if ($debug) {
     local $" = ', ';
@@ -132,11 +136,13 @@ if ($debug) {
 #------------------------------------------------------------------------
 # main-amble
 #------------------------------------------------------------------------
+
+chdir($srcdir) || die "$srcdir: $!\n";
+
 my $template = Template->new($ttopts);
 
 if (@ARGV) {
     # explicitly process files specified on command lines 
-    chdir($srcdir) || die "$srcdir: $!\n";
     foreach my $file (@ARGV) {
 	print "  + $file\n" if $verbose;
 	$template->process("$file", $ttdata, $file)
@@ -145,55 +151,86 @@ if (@ARGV) {
 }
 else {
     # implicitly process all file in source directory
-    find(\&process_file, $srcdir);
+    process_tree();
 }
 
 
 #------------------------------------------------------------------------
+# process_tree($dir)
+#
+# Walks the directory tree starting at $dir or the current directory
+# if unspecified, processing files as found.
+#------------------------------------------------------------------------
+
+sub process_tree {
+    my $dir = shift;
+    my ($file, $path, $check);
+    my $target;
+    local *DIR;
+
+    opendir(DIR, $dir || '.') || return undef;
+
+    FILE: while (defined ($file = readdir(DIR))) {
+	next if $file eq '.' || $file eq '..';
+	$path = $dir ? "$dir/$file" : $file;
+	next unless -e $path;
+
+	# check against ignore list
+	foreach $check (@$ignore) {
+	    if ($path =~ /$check/) {
+		printf "  - %-32s (ignored, matches /$check/)\n", $file
+		    if $verbose;
+		next FILE;
+	    }
+	}
+	
+	if (-d $path) {
+	    if ($recurse) {
+		# create target directory if required
+		$target = "$destdir/$path";
+		unless (-d $target) {
+		    mkpath($target) || do { warn("$!\n"); next; }
+			unless $dryrun;
+		    printf "  + %-32s (created target directory)\n", $path;
+		}
+		# recurse into directory
+		process_tree($path);
+	    }
+	    else {
+		printf "  - %-32s (directory, not recursing)\n", $path
+		    if $verbose;
+	    }
+	}
+	else {
+	    process_file($path);
+	}
+    }
+    closedir(DIR);
+}
+	
+
+#------------------------------------------------------------------------
 # process_file()
 #
-# Main processing sub-routine called by find()
+# File filtering and processing sub-routine called by process_tree()
 #------------------------------------------------------------------------
 
 sub process_file {
-    my ($dir, $file) = @_ ? (@_) : ($File::Find::dir, $_);
-    my ($check, $srcfile, $destfile, $srctime, $desttime);
+    my $file = shift;
+    my ($dest, $base, $check, $srctime, $desttime);
 
-    # remove source directory stem
-    $dir =~ s|$srcdir/?||;
+    $dest = $destdir ? "$destdir/$file" : $file;
+    $base = basename($file);
 
-    return if $file eq '.';
-
-    $srcfile = $dir ? "$dir/$file" : $file;
-    $destfile = $destdir ? "$destdir/$srcfile" : $srcfile;
-
-    # check against ignore list
-    foreach $check (@$ignore) {
-	if ($file =~ /$check/) {
-	    printf "  - %-32s (ignored, matches /$check/)\n", $srcfile
-		if $verbose;
-	    $File::Find::prune = 1 if -d $file;
-	    return;
-	}
-    }
-
-    # recurse/don't recurse into directory
-    if (-d $file) {
-	unless ($recurse) {
-	    $File::Find::prune = 1;
-	    printf "  - %-32s (directory, not recursing)\n", $srcfile
-		if $verbose;
-	}
-	return;
-    }
+#    print "proc $file => $dest\n";
 
     # test modification time of existing destination file
-    if (-f $destfile && ! $all) {
+    if (-f $dest && ! $all) {
 	$srctime  = ( stat($file)  )[9];
-	$desttime = ( stat($destfile) )[9];
+	$desttime = ( stat($dest) )[9];
 
 	if ($desttime > $srctime) {
-	    printf "  - %-32s (not modified)\n", $srcfile
+	    printf "  - %-32s (not modified)\n", $file
 		if $verbose;
 	    return;
 	}
@@ -201,28 +238,30 @@ sub process_file {
 	
     # check against copy list
     foreach $check (@$copy) {
-	if ($file =~ /$check/) {
-	    printf "  > %-32s (copied, matches /$check/)\n", $srcfile
+	if ($base =~ /$check/) {
+	    printf "  > %-32s (copied, matches /$check/)\n", $file
 		if $verbose;
-	    copy($file, $destfile);
+	    copy($file, $dest)
+		unless $dryrun;
 	    return;
 	}
     }
 
     # check against acceptance list
     if (@$accept) {
-	unless (grep { $file =~ /$_/ } @$accept) {
-	    printf "  - %-32s (not accepted)\n", $srcfile
+	unless (grep { $base =~ /$_/ } @$accept) {
+	    printf "  - %-32s (not accepted)\n", $file
 		if $verbose;
 	    return;
 	}
     }
 
-    print "  + $srcfile\n" if $verbose;
+    print "  + $file\n" if $verbose;
 
     # process file
-    $template->process($file, $ttdata, $srcfile)
-	|| print "  ! ", $template->error(), "\n";
+    $template->process("./$file", $ttdata, $file)
+	|| print("  ! ", $template->error(), "\n")
+	    unless $dryrun;
 }
 
 
@@ -243,6 +282,7 @@ sub read_config {
 	'cfg|c=s'     => { EXPAND => EXPAND_ALL, DEFAULT => '.' },
 	'verbose|v'   => { DEFAULT => 0 },
 	'recurse|r'   => { DEFAULT => 0 },
+	'nothing|n'   => { DEFAULT => 0 },
 	'all|a'       => { DEFAULT => 0 },
         'debug|dbg'   => { DEFAULT => 0 },
 	'ignore=s@',
@@ -336,6 +376,7 @@ usage: $NAME [options] [files]
 Options:
    -a      (--all)          Process all files, regardless of modification
    -r      (--recurse)      Recurse into sub-directories
+   -n      (--nothing)      Do nothing, just print summary (enables -v)
    -v      (--verbose)      Verbose mode
    -d      (--debug)        Debug mode
    -h      (--help)         This help
@@ -362,7 +403,9 @@ Additional options to set Template Toolkit configuration items:
    --tag_style=STYLE        Use pre-defined tag STYLE    
    --plugin_base=PACKAGE    Base PACKAGE for plugins            
 
-See 'perldoc ttree' for further information.
+See 'perldoc ttree' for further information.  Note that earlier versions
+of AppConfig (<1.53) may require options of the form '--name=opt' to be 
+specified as '-name opt'.
 
 END_OF_HELP
 
@@ -405,7 +448,7 @@ A typical F<.ttreerc> file might look like this:
     dest   = /home/abw/public_html
     lib    = /home/abw/websrc/lib
     lib    = /usr/local/templates/lib
-    cfg    = /home/abw/etc/ttree
+    cfg    = /home/abw/.ttree
     ignore = \b(CVS|RCS)\b
     ignore = ^#
     copy   = \.(gif|png)$ 
@@ -456,7 +499,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.8 $
+$Revision: 1.11 $
 
 =head1 COPYRIGHT
 
