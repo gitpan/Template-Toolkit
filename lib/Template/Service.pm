@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Service.pm,v 2.46 2002/01/22 18:09:38 abw Exp $
+# $Id: Service.pm,v 2.52 2002/04/17 14:04:40 abw Exp $
 #
 #============================================================================
 
@@ -34,7 +34,7 @@ use Template::Base;
 use Template::Config;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.46 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.52 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 
 
@@ -710,13 +710,13 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.44, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.50, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: xpath.t,v 2.7 2001/06/25 10:55:07 abw Exp $
+# $Id: xpath.t,v 2.8 2002/03/12 15:58:23 abw Exp $
 # 
 #========================================================================
 
@@ -135,3 +135,37 @@ FOO {
 }
 
 }
+
+-- test --
+[% xmltext = BLOCK -%]
+<foo>
+<bar baz="10" fud="11">
+  <list>
+  <item>one</item>
+  <item>two</item>
+  </list>
+</bar>
+</foo>
+[% END -%]
+[% VIEW xview notfound='xmlstring' -%]
+[% BLOCK item -%]
+* [% item.content(view) -%]
+[% END -%]
+[% BLOCK xmlstring; item.starttag; item.content(view); item.endtag; END %]
+[% BLOCK text; item; END %]
+[% END -%]
+
+[%- USE xpath = XML.XPath(xmltext);
+    foo = xpath.findnodes('/foo');
+    xview.print(foo);
+-%]
+
+-- expect --
+<foo>
+<bar baz="10" fud="11">
+  <list>
+  * one
+  * two
+  </list>
+</bar>
+</foo>

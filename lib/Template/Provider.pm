@@ -27,7 +27,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Provider.pm,v 2.44 2002/01/22 18:09:38 abw Exp $
+# $Id: Provider.pm,v 2.50 2002/04/17 14:04:40 abw Exp $
 #
 #============================================================================
 
@@ -44,7 +44,7 @@ use Template::Document;
 use File::Basename;
 use File::Spec;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.44 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.50 $ =~ /(\d+)\.(\d+)/);
 
 # maximum time between performing stat() on file to check staleness
 $STAT_TTL = 1 unless defined $STAT_TTL;
@@ -307,7 +307,8 @@ sub _init {
 	foreach my $dir (@$path) {
 	    my $wdir = $dir;
             $wdir =~ s[:][]g if $^O eq 'MSWin32';
-	    &File::Path::mkpath("$cdir/$wdir");
+	    $wdir =~ /(.*)/;  # untaint
+	    &File::Path::mkpath($cdir . $1);
 	}
 	# ensure $cdir is terminated with '/' for subsequent path building
 	$cdir .= '/';
@@ -761,6 +762,8 @@ sub _compile {
 	# write the Perl code to the file $compfile, if defined
 	if ($compfile) {
 	    my $basedir = &File::Basename::dirname($compfile);
+	    $basedir =~ /(.*)/;
+	    $basedir = $1;
 	    &File::Path::mkpath($basedir) unless -d $basedir;
 
 	    $error = 'cache failed to write '
@@ -1238,13 +1241,13 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.44, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.50, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

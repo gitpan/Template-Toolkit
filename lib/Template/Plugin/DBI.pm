@@ -19,7 +19,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: DBI.pm,v 2.36 2002/01/22 18:09:41 abw Exp $
+#   $Id: DBI.pm,v 2.42 2002/04/17 14:04:44 abw Exp $
 # 
 #==============================================================================
 
@@ -35,7 +35,7 @@ use DBI;
 use vars qw( $VERSION $DEBUG $QUERY $ITERATOR );
 use base qw( Template::Plugin );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.36 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.42 $ =~ /(\d+)\.(\d+)/);
 $DEBUG    = 0 unless defined $DEBUG;
 $QUERY    = 'Template::Plugin::DBI::Query';
 $ITERATOR = 'Template::Plugin::DBI::Iterator';
@@ -930,8 +930,8 @@ Andy Wardley, Craig Barratt, Dave Hodgkinson and Rafael Kitover.
 
 =head1 VERSION
 
-2.36, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.42, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 
 

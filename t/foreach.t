@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 2.6 2001/06/25 10:55:07 abw Exp $
+# $Id: foreach.t,v 2.7 2002/03/13 15:34:05 abw Exp $
 # 
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
+use lib qw( ./lib ../lib );
 use Template qw( :status );
 use Template::Test;
 $^W = 1;

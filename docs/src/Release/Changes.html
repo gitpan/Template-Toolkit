@@ -7,7 +7,7 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for the Template Toolkit version 2.06d, detailing
+#   Revision history for the Template Toolkit version 2.07, detailing
 #   significant changes between versions, most recent first.  Some 
 #   way down the file you'll find a section detailing major changes from 
 #   version 1.* to 2.* and a list of &quot;Gotchas!&quot; that you might have to 
@@ -23,8 +23,109 @@
 #   Any changes you make here may be lost!
 #
 #------------------------------------------------------------------------
-# $Id: Changes.tt2,v 1.41 2002/01/22 18:09:32 abw Exp $
+# $Id: Changes.tt2,v 1.50 2002/04/17 14:01:24 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 2.07 - April 17th 2002 
+#------------------------------------------------------------------------
+
+* Changed example in synopsis of Template::Plugin::XML::Style to one 
+  based on that posted to the mailing list by Tony Bowden.
+
+* Fixed a single/double quoting bug in docsrc which prevented [% tt_start_tag %] and [% tt_end_tag %]
+  being correctly displayed in the tables of contents in HTML docs. 
+
+
+#------------------------------------------------------------------------
+# Version 2.06g - April 15th 2002                 ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed a bug in ttree which prevented it from passing the recurse option
+  onto the Template object due to a name mismatch: recurse/recursion
+
+* Changed Template::Test to accept messages to ok().  Also added is()
+  as an alias for match().
+
+* Fixed an oversight/bug in the XS stash where a missing aTHX_ around 
+  line 546 caused compilation to fail under Win32.
+
+* Applied a patch to Template::Provider from Alexander Schilling which 
+  untaints paths before calling mkpath() to prevent errors under -T.
+
+* Fixed Template::Parser so that the INTERPOLATE option now works with 
+  files &gt; 32K, thanks to the efforts of Stephen Adkins.
+
+
+#------------------------------------------------------------------------
+# Version 2.06f - March 13th 2002                 ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed a bug in both the Perl and XS Stash modules which resulted in 
+  virtual methods being called on the base stash, e.g. [% tt_start_tag %] size [% tt_end_tag %]
+  was treated as [% tt_start_tag %] stash.size [% tt_end_tag %].  The only exception that we allow
+  through is 'import' so that we can [% tt_start_tag %] import(another_hash) [% tt_end_tag %]
+
+* Fixed the compilation of the XS Stash on earlier versions of Perl
+  (e.g. 5.00503) and other platforms (e.g. Win32) by including the 
+  ppport.h file.
+
+* Fixed a warning about undefined values in Template::Plugin::Format 
+  raised by t/format.t
+
+* Fixed a warning in t/html.t raised when neither Apache::Util nor 
+  HTML::Entities is installed.
+
+
+#------------------------------------------------------------------------
+# Version 2.06e - March 12th 2002                 ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed a minor bug in t/tiedhash.t which was trying to use the XS stash
+  even if it wasn't enabled.  Thanks to Lyle Brooks for the patch.
+
+* Added the 'match' virtual method for matching a string against a 
+  regex and returning a reference to a list of (captured) (backrefs).
+
+* Changed html filter back into a fast and simple static filter.  Added
+  html_entity filter which uses Apache::Util or HTML::Entities to do 
+  a complete and thorough (but slower) job.  The undocumented 'entity'
+  option of the html filter is now removed (but may appear elsewhere).
+
+* Added the size virtual method for scalars to prove a consistent way
+  of testing something.size to see if it has some value(s).  For scalars
+  it returns 1.
+
+* Modified the 'sort' and 'nsort' list virtual methods to allow a sort
+  key passed to represent a method to be called on objects in the list
+  as well as the key of a value to be fetched from hash references in 
+  the list.  e.g. [% tt_start_tag %] books.sort('author') [% tt_end_tag %] allows 'books' to contain 
+  a list of hash refs with an 'author' key or objects with an 'author'
+  method.  Thanks to Tony Bowden for suggesting this improvement.
+
+* Applied a patch from Simon Wilcox to strip MS-DOS \r characters from 
+  end of lines read by the Datafile plugin.
+
+* Applied a patch from Ville Skyttä which fixes numerous minor bugs 
+  in various splash templates.
+
+* Added the 'defined' and 'exists' virtual hash methods for testing if
+  a value has a defined value, or exists in the hash, respectively.
+
+* Applied a patch from Stathy Touloumis to make the XS Stash thread safe.
+
+* Added the 'grep' virtual list method.
+
+* Applied a patch from Mark Fowler to improve the XML XPath plugin's
+  handling of nested elements.
+
+* Fixed handling of prefix support in template() and insert() methods
+  of Template::Content.  Any prefix is stripped from the name but passed 
+  as the second argument to the provider fetch() method.  e.g.
+  [% tt_start_tag %] INCLUDE foo:bar [% tt_end_tag %] calls the foo $provider-&gt;fetch('bar', 'foo') and
+  [% tt_start_tag %] INCLUDE http://tt2.org/t/templates/hello [% tt_end_tag %] results in a call to
+  $provider-&gt;fetch('//tt2.org/t/templates/hello', 'http')
+
 
 #------------------------------------------------------------------------
 # Version 2.06d - 22nd January 2002               ## DEVELOPER RELEASE ##
@@ -63,7 +164,7 @@
 
 * Fixed truncate method of String plugin to not append suffix if the 
   string is already shorter than the required length.  Thanks to 
-  Yann Kerherv&eacute; for the patch.
+  Yann Kerhervé for the patch.
 
 
 #------------------------------------------------------------------------

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: RSS.pm,v 2.39 2002/01/22 18:09:48 abw Exp $
+# $Id: RSS.pm,v 2.45 2002/04/17 14:04:50 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use XML::RSS;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.39 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.45 $ =~ /(\d+)\.(\d+)/);
 
 sub load {
     return $_[0];
@@ -168,13 +168,13 @@ E<lt>eisen@pobox.comE<gt>.
 
 =head1 VERSION
 
-2.39, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.45, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

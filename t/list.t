@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: list.t,v 2.3 2000/11/01 12:01:45 abw Exp $
+# $Id: list.t,v 2.4 2002/03/12 14:59:17 abw Exp $
 #
 #========================================================================
 
@@ -191,3 +191,12 @@ another, <a href="/blow.html">flute</a>
 <a href="dick.html">Richard</a>,
 <a href="tom.html">Tom</a>
 
+-- test --
+[% data.grep('r').join(', ') %]
+-- expect --
+romeo, sierra, foxtrot
+
+-- test --
+[% data.grep('^r').join(', ') %]
+-- expect --
+romeo

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.10 2001/12/13 17:49:32 abw Exp $
+# $Id: stash.t,v 2.11 2002/03/13 15:33:29 abw Exp $
 #
 #========================================================================
 
@@ -21,12 +21,15 @@ use lib qw( ./lib ../lib );
 use Template::Constants qw( :status );
 use Template;
 use Template::Stash;
+use Template::Config;
 use Template::Test;
 $^W = 1;
 
 my $DEBUG = grep(/-d/, @ARGV);
 #$Template::Parser::DEBUG     = $DEBUG;
 #$Template::Directive::PRETTY = $DEBUG;
+
+$Template::Config::STASH = 'Template::Stash';
 
 my $count = 20;
 my $data = {
@@ -201,3 +204,8 @@ an object
 [% obj.list.first.name %]
 -- expect --
 an object
+
+-- test --
+=[% size %]=
+-- expect --
+==

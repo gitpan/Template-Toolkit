@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: XPath.pm,v 2.40 2002/01/22 18:09:49 abw Exp $
+# $Id: XPath.pm,v 2.47 2002/04/17 14:04:51 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use XML::XPath;
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.40 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.47 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -89,7 +89,7 @@ sub new {
 
 sub _throw {
     my ($self, $error) = @_;
-    print STDERR "about to throw $error\n";
+#    print STDERR "about to throw $error\n";
     die Template::Exception->new('XML.XPath', $error);
 }
 
@@ -116,6 +116,28 @@ sub content {
 	$output .= $node->present($view);
     }
     return $output;
+}
+
+#----------------------------------------------------------------------
+# starttag(), endtag()
+#
+# Methods to output the start & end tag, e.g. <foo bar="baz"> & </foo>
+#----------------------------------------------------------------------
+
+sub starttag {
+    my ($self) = @_;
+    my $output =  "<". $self->getName();
+    foreach my $attr ($self->getAttributes())
+    {
+	$output .= $attr->toString();
+    }
+    $output .= ">";
+    return $output;
+}
+
+sub endtag {
+    my ($self) = @_;
+    return "</". $self->getName() . ">";
 }
 
 #========================================================================
@@ -179,15 +201,18 @@ Template::Plugin::XML::XPath - Plugin interface to XML::XPath
 
        # handler block for a <section title="...">...</section> element
        [% BLOCK section %]
-       <h1>[% item.getAttribute('title') %]</h1>
+       <h1>[% item.getAttribute('title') | html %]</h1>
        [% item.content(view) %]
        [% END %]
 
-       # default template block converts item to string representation
-       [% BLOCK xmlstring; item.toString; END %]
+       # default template block passes tags through and renders
+       # out the children recursivly
+       [% BLOCK xmlstring; 
+          item.starttag; item.content(view); item.endtag
+       END %]
        
        # block to generate simple text
-       [% BLOCK text; item; END %]
+       [% BLOCK text; item | html; END %]
     [% END %]
 
     # now present node (and children) via view
@@ -214,6 +239,15 @@ integration with Template Toolkit VIEWs.  The XML::XPath::Node::Text
 module is also adorned with a present($view) method which presents
 itself via the view using the 'text' template.
 
+To aid the reconstruction of XML, methods starttag and endtag are
+added to XML::XPath::Node::Element which return the start and
+end tag for that element.  This means that you can easily do:
+
+  [% item.starttag %][% item.content(view) %][% item.endtag %]
+
+To render out the start tag, followed by the content rendered in the
+view "view", followed by the end tag.
+
 =head1 AUTHORS
 
 This plugin module was written by Andy Wardley E<lt>abw@kfs.orgE<gt>.
@@ -222,13 +256,13 @@ The XML::XPath module is by Matt Sergeant E<lt>matt@sergeant.orgE<gt>.
 
 =head1 VERSION
 
-2.40, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.47, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

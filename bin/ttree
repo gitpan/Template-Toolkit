@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 2.40 2002/01/22 18:09:16 abw Exp $
+# $Id: ttree,v 2.46 2002/04/17 14:04:16 abw Exp $
 #
 #========================================================================
 
@@ -39,7 +39,7 @@ use File::Basename;
 # config
 #------------------------------------------------------------------------
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 2.40 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 2.46 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 
@@ -80,11 +80,19 @@ unshift(@INC, @{ $config->perl5lib });
 
 # get all template_* options from the config and fold keys to UPPER CASE
 my %ttopts   = $config->varlist('^template_', 1);
-my %ucttopts;
-@ucttopts{ map { uc } keys %ttopts } = values %ttopts;
+my $ucttopts = {
+    map { my $v = $ttopts{ $_ }; defined $v ? (uc $_, $v) : () }
+    keys %ttopts,
+};
 
-#print "TT config: ", join(', ', map { "$_ => $ucttopts{ $_ }"} 
-#			     keys %ucttopts), "\n";
+# special case
+$ucttopts->{ RECURSION } = $recurse if defined $recurse;
+
+#@ucttopts{ map { uc } keys %ttopts } = values %ttopts;
+
+#print STDERR("TT config: ", 
+#	     join(', ', map { "$_ => $ucttopts->{ $_ }"} keys %$ucttopts), 
+#	     "\n") if $debug;
 
 # get all template variable definitions
 my $replace = $config->get('define');
@@ -94,7 +102,7 @@ my $replace = $config->get('define');
 
 # now create complete parameter hash for creating template processor
 my $ttopts   = {
-    %ucttopts,
+    %$ucttopts,
     RELATIVE     => 1,
 #    INCLUDE_PATH => [ @$libdir, '.' ],
     INCLUDE_PATH => [ $srcdir, @$libdir ],
@@ -122,8 +130,8 @@ if ($verbose) {
 if ($debug) {
     local $" = ', ';
     print STDERR "Template Toolkit configuration:\n";
-    foreach (keys %ucttopts) {
-	my $val = $ucttopts{$_};
+    foreach (keys %$ucttopts) {
+	my $val = $ucttopts->{$_};
 	next unless $val;
 	if (ref($val) eq 'ARRAY') {
 	    next unless @$val;
@@ -627,13 +635,13 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.40, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.47, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

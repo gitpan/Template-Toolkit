@@ -13,35 +13,35 @@
 %]
 [%  WRAPPER toc;
 	PROCESS tocitem 
-	        title ='SYNOPSIS'
+	        title ="SYNOPSIS"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='DESCRIPTION'
+	        title ="DESCRIPTION"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='METHODS'
+	        title ="METHODS"
                 subs  = [
-                    'Construction Methods',
-		    'Inspection Methods',
-		    'Mutation Methods'
+                    "Construction Methods",
+		    "Inspection Methods",
+		    "Mutation Methods"
 		];
 	PROCESS tocitem 
-	        title ='AUTHOR'
+	        title ="AUTHOR"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='VERSION'
+	        title ="VERSION"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='COPYRIGHT'
+	        title ="COPYRIGHT"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='SEE ALSO'
+	        title ="SEE ALSO"
                 subs  = [];
     END
 %]
 <!-- Pod to HTML conversion by the Template Toolkit version 2 -->
 [% WRAPPER section
-    title='SYNOPSIS'
+    title="SYNOPSIS"
 -%]<pre>    # create String objects via USE directive
     [% tt_start_tag %] USE String [% tt_end_tag %]
     [% tt_start_tag %] USE String 'initial text' [% tt_end_tag %]
@@ -62,7 +62,7 @@
 <pre>    # and various other methods...</pre>
 [%- END %]
 [% WRAPPER section
-    title='DESCRIPTION'
+    title="DESCRIPTION"
 -%]<p>
 This module implements a String class for doing stringy things to
 text in an object-oriented way. 
@@ -139,9 +139,9 @@ use the CALL directive.
 <pre>    [% tt_start_tag %] CALL foo.append('bar') [% tt_end_tag %]    # nothing</pre>
 [%- END %]
 [% WRAPPER section
-    title='METHODS'
+    title="METHODS"
 -%][% WRAPPER subsection
-   title = 'Construction Methods'
+   title = "Construction Methods"
 -%]<p>
 The following methods are used to create new String objects.
 </p>
@@ -167,7 +167,7 @@ Creates a new String object which contains a copy of the original string.
 </ul>
 [%- END %]
 [% WRAPPER subsection
-   title = 'Inspection Methods'
+   title = "Inspection Methods"
 -%]<p>
 These methods are used to inspect the string content or other parameters
 relevant to the string.
@@ -217,7 +217,7 @@ Delegates to Perl's internal split() so the parameters are exactly the same.
 </ul>
 [%- END %]
 [% WRAPPER subsection
-   title = 'Mutation Methods'
+   title = "Mutation Methods"
 -%]<p>
 These methods modify the internal value of the string.  For example:
 </p>
@@ -427,7 +427,7 @@ Repeats the string $count times.
 [%- END %]
 [%- END %]
 [% WRAPPER section
-    title='AUTHOR'
+    title="AUTHOR"
 -%]<p>
 Andy Wardley &lt;abw@kfs.org&gt;
 </p>
@@ -436,23 +436,23 @@ Andy Wardley &lt;abw@kfs.org&gt;
 </p>
 [%- END %]
 [% WRAPPER section
-    title='VERSION'
+    title="VERSION"
 -%]<p>
-2.08, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.14, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 </p>
 [%- END %]
 [% WRAPPER section
-    title='COPYRIGHT'
--%]<pre>  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.</pre>
+    title="COPYRIGHT"
+-%]<pre>  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.</pre>
 <p>
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 </p>
 [%- END %]
 [% WRAPPER section
-    title='SEE ALSO'
+    title="SEE ALSO"
 -%]<p>
 [% ttlink('Template::Plugin', 'Template::Plugin') -%]
 </p>

@@ -13,32 +13,32 @@
 %]
 [%  WRAPPER toc;
 	PROCESS tocitem 
-	        title ='SYNOPSIS'
+	        title ="SYNOPSIS"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='DESCRIPTION'
+	        title ="DESCRIPTION"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='AUTHOR'
+	        title ="AUTHOR"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='VERSION'
+	        title ="VERSION"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='COPYRIGHT'
+	        title ="COPYRIGHT"
                 subs  = [];
 	PROCESS tocitem 
-	        title ='SEE ALSO'
+	        title ="SEE ALSO"
                 subs  = [];
     END
 %]
 <!-- Pod to HTML conversion by the Template Toolkit version 2 -->
 [% WRAPPER section
-    title='SYNOPSIS'
+    title="SYNOPSIS"
 -%]<pre>    ttree [options] [files]</pre>
 [%- END %]
 [% WRAPPER section
-    title='DESCRIPTION'
+    title="DESCRIPTION"
 -%]<p>
 The <file>ttree</file> script is used to process entire directory trees containing
 template files.  The resulting output from processing each file is then 
@@ -113,7 +113,7 @@ See <b>ttree --help</b> for a summary of options.
 </p>
 [%- END %]
 [% WRAPPER section
-    title='AUTHOR'
+    title="AUTHOR"
 -%]<p>
 Andy Wardley &lt;abw@kfs.org&gt;
 </p>
@@ -122,23 +122,23 @@ Andy Wardley &lt;abw@kfs.org&gt;
 </p>
 [%- END %]
 [% WRAPPER section
-    title='VERSION'
+    title="VERSION"
 -%]<p>
-2.40, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.47, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 </p>
 [%- END %]
 [% WRAPPER section
-    title='COPYRIGHT'
--%]<pre>  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.</pre>
+    title="COPYRIGHT"
+-%]<pre>  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.</pre>
 <p>
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 </p>
 [%- END %]
 [% WRAPPER section
-    title='SEE ALSO'
+    title="SEE ALSO"
 -%]<p>
 [% ttlink('Template::Tools::tpage', 'tpage') -%]
 </p>

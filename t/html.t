@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: html.t,v 2.5 2002/01/21 10:58:49 abw Exp $
+# $Id: html.t,v 2.7 2002/03/13 15:32:48 abw Exp $
 #
 #========================================================================
 
@@ -45,7 +45,7 @@ my $cfg = {
 };
 
 my $vars = {
-    entities => HAS_HTML_Entities || HAS_Apache_Util,
+    entities => HAS_HTML_Entities || HAS_Apache_Util || 0,
 };
 
 test_expect(\*DATA, $cfg, $vars); 
@@ -65,24 +65,19 @@ OK
 &lt; &amp;amp; &gt;
 
 -- test --
-[% FILTER html(entity = 1) -%]
-< &amp; >
-[%- END %]
--- expect --
-&lt; &amp; &gt;
-
--- test --
-[% FILTER html(entity = 1) -%]
-<foo> &lt;bar> <baz&gt; &lt;boz&gt;
-[%- END %]
--- expect --
-&lt;foo&gt; &lt;bar&gt; &lt;baz&gt; &lt;boz&gt;
-
--- test --
-[% "Léon Brocard" | html %]
+[% TRY; 
+      "Léon Brocard" | html_entity;
+   CATCH;
+     error;
+   END
+%]
 -- expect --
 -- process --
-[% entities ? 'L&eacute;on Brocard' : 'Léon Brocard' %]
+[%  IF entities -%]
+L&eacute;on Brocard
+[%- ELSE -%]
+html_all error - cannot locate Apache::Util or HTML::Entities
+[%- END %]
 
 -- test --
 [% USE html; html.url('my file.html') -%]
@@ -106,3 +101,24 @@ if (a &lt; b &amp;&amp; c &gt; d) ...
 [% HTML.attributes(border => 1, cellpadding => 2).split.sort.join %]
 -- expect --
 border="1" cellpadding="2"
+
+-- stop --
+# These are tests for the now defunct 'entity' option.
+# At some point this functionality should return elsewhere
+# so we'll keep the tests lying around in case we need them
+# again later.
+
+-- test --
+[% FILTER html(entity = 1) -%]
+< &amp; >
+[%- END %]
+-- expect --
+&lt; &amp; &gt;
+
+-- test --
+[% FILTER html(entity = 1) -%]
+<foo> &lt;bar> <baz&gt; &lt;boz&gt;
+[%- END %]
+-- expect --
+&lt;foo&gt; &lt;bar&gt; &lt;baz&gt; &lt;boz&gt;
+

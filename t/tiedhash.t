@@ -12,13 +12,14 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: tiedhash.t,v 2.2 2001/08/21 17:46:39 abw Exp $
+# $Id: tiedhash.t,v 2.3 2002/01/24 09:24:53 abw Exp $
 #
 #========================================================================
 
 use strict;
 use lib qw( blib/lib blib/arch lib ../blib/lib ../blib/arch ../lib );
 use Template::Test;
+use Template::Stash;
 $^W = 1;
 
 eval {
@@ -95,8 +96,6 @@ my $hash = My::Tied::Hash->new({
 });
 
 #------------------------------------------------------------------------
-use Template::Stash;
-use Template::Stash::XS;
 
 my $stash_perl = Template::Stash->new({ hash => $hash });
 my $stash_xs   = Template::Stash::XS->new({ hash => $hash });

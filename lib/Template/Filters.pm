@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filters.pm,v 2.45 2002/01/22 18:09:36 abw Exp $
+# $Id: Filters.pm,v 2.52 2002/04/17 14:04:39 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $FILTERS $URI_ESCAPES $PLUGIN_FILTER );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.45 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.52 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -47,6 +47,7 @@ $VERSION = sprintf("%d.%02d", q$Revision: 2.45 $ =~ /(\d+)\.(\d+)/);
 $FILTERS = {
     # static filters 
     'uri'        => \&uri_filter,
+    'html'       => \&html_filter,
     'html_para'  => \&html_paragraph,
     'html_break' => \&html_break,
     'upper'      => sub { uc $_[0] },
@@ -60,7 +61,7 @@ $FILTERS = {
 			  $_[0] },
 
     # dynamic filters
-    'html'       => [ \&html_filter_factory,     1 ],
+    'html_entity' => [ \&html_entity_filter_factory, 1 ],
     'indent'     => [ \&indent_filter_factory,   1 ],
     'format'     => [ \&format_filter_factory,   1 ],
     'truncate'   => [ \&truncate_filter_factory, 1 ],
@@ -241,6 +242,25 @@ sub uri_filter {
 
 
 #------------------------------------------------------------------------
+# html_filter()                                         [% FILTER html %]
+#
+# Convert any '<', '>' or '&' characters to the HTML equivalents, '&lt;',
+# '&gt;' and '&amp;', respectively. 
+#------------------------------------------------------------------------
+
+sub html_filter {
+    my $text = shift;
+    for ($text) {
+	s/&/&amp;/g;
+	s/</&lt;/g;
+	s/>/&gt;/g;
+	s/"/&quot;/g;
+    }
+    return $text;
+}
+
+
+#------------------------------------------------------------------------
 # html_paragraph()                                 [% FILTER html_para %]
 #
 # Wrap each paragraph of text (delimited by two or more newlines) in the
@@ -275,17 +295,16 @@ sub html_break  {
 #========================================================================
 
 #------------------------------------------------------------------------
-# html_filter_factory(\%optins)                         [% FILTER html %]
+# html_entity_filter_factory(\%options)                 [% FILTER html %]
 #
-# Convert any '<', '>' or '&' characters to the HTML equivalents, '&lt;',
-# '&gt;' and '&amp;', respectively.  The 'entity' option can be set to
-# any true value to prevent entities of the form &word; being converted
-# to &amp;word;
+# Dynamic version of the static html filter which attempts to locate the
+# Apache::Util or HTML::Entities modules to perform full entity encoding
+# of the text passed.  Returns an exception if one or other of the 
+# modules can't be located.
 #------------------------------------------------------------------------
 
-sub html_filter_factory {
+sub html_entity_filter_factory {
     my $context = shift;
-    my $opts = @_ && ref $_[-1] eq 'HASH' ? pop @_ : { };
 
     # if Apache::Util is installed then we use it
     eval { 
@@ -293,31 +312,18 @@ sub html_filter_factory {
         Apache::Util::escape_html('');
     };
     return \&Apache::Util::escape_html
-	unless $@ || $opts->{ entity };
+	unless $@;
 
     # otherwise if HTML::Entities is installed then we use that
     eval {
 	require HTML::Entities;
     };
     return \&HTML::Entities::encode_entities
-	unless $@ || $opts->{ entity };
+	unless $@;
 
-    # failing that, we fall back on the existing usage
-    return sub {
-	my $text = shift;
-	for ($text) {
-	    if ($opts->{ entity }) {
-		s/&(?!\w+;)/&amp;/g;
-	    }
-	    else {
-		s/&/&amp;/g;
-	    }
-	    s/</&lt;/g;
-	    s/>/&gt;/g;
-	    s/"/&quot;/g;
-	}
-	return $text;
-    };
+    return (undef, Template::Exception->new( html_all => 
+      	            'cannot locate Apache::Util or HTML::Entities' ));
+
 }
 
 
@@ -981,12 +987,21 @@ output:
 
     Binary "&lt;=&gt;" returns -1, 0, or 1 depending on...
 
-If the Apache::Util or HTML::Entities modules are installed on your
-system then these will instead be used to encode the text via the
-escape_html() or encode_entities() subroutines respectively.  Both
-these modules correctly handle the full gamut of HTML entities and
-will additionally escape characters like 'é' to '&eacute;'.  For
-further information, see
+=head2 html_entity
+
+The html filter is fast and simple but it doesn't encode the full
+range of HTML entities that your text may contain.  The html_entity
+filter uses either the Apache::Util module (which is written in C and
+is therefore faster) or the HTML::Entities module (written in Perl but
+equally as comprehensive) to perform the encoding.  If one or other of
+these modules are installed on your system then the text will be
+encoded (via the escape_html() or encode_entities() subroutines
+respectively) to convert all extended characters into their
+appropriate HTML entities (e.g. converting 'é' to '&eacute;').  If
+neither module is available on your system then an 'html_all' exception
+will be thrown reporting an appropriate message.   
+
+For further information on HTML entity encoding, see
 http://www.w3.org/TR/REC-html40/sgml/entities.html.
 
 =head2 html_para
@@ -1296,13 +1311,13 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.45, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.52, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Text.pm,v 1.31 2002/01/22 18:09:45 abw Exp $
+# $Id: Text.pm,v 1.37 2002/04/17 14:04:47 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Text Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.31 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.37 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -112,8 +112,8 @@ The GD::Text module was written by Martien Verbruggen.
 
 =head1 VERSION
 
-1.31, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+1.37, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Date.pm,v 2.41 2002/01/22 18:09:42 abw Exp $
+# $Id: Date.pm,v 2.47 2002/04/17 14:04:44 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 
 use POSIX ();
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.41 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.47 $ =~ /(\d+)\.(\d+)/);
 $FORMAT  = '%H:%M:%S %d-%b-%Y';    # default strftime() format
 
 
@@ -282,8 +282,8 @@ fixups/enhancements, a test script and documentation.
 
 =head1 VERSION
 
-2.41, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.47, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 
 

@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Constants.pm,v 2.41 2002/01/22 18:09:36 abw Exp $
+# $Id: Constants.pm,v 2.47 2002/04/17 14:04:37 abw Exp $
 #
 #============================================================================
  
@@ -30,7 +30,7 @@ use strict;
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
 
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 2.41 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.47 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -162,13 +162,13 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.41, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.47, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.6 2001/11/06 15:00:23 abw Exp $
+# $Id: Makefile.PL,v 1.7 2002/04/15 13:38:47 abw Exp $
 
 use lib qw( ../lib ./lib );
 use ExtUtils::MakeMaker;
@@ -11,6 +11,5 @@ WriteMakefile(
     'OBJECT'   => 'Stash.o',
     'VERSION'  => $Template::VERSION,
     'NORECURS' => 1,
-    'MAN3PODS' => 'none'
 );
 

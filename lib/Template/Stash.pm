@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 2.49 2002/01/22 18:09:38 abw Exp $
+# $Id: Stash.pm,v 2.56 2002/04/17 14:04:40 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.49 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -46,6 +46,7 @@ $VERSION = sprintf("%d.%02d", q$Revision: 2.49 $ =~ /(\d+)\.(\d+)/);
 $ROOT_OPS = {
     'inc'  => sub { local $^W = 0; my $item = shift; ++$item }, 
     'dec'  => sub { local $^W = 0; my $item = shift; --$item }, 
+#    import => \&hash_import,
     defined $ROOT_OPS ? %$ROOT_OPS : (),
 };
 
@@ -54,6 +55,7 @@ $SCALAR_OPS = {
     'list'    => sub { [ $_[0] ] },
     'hash'    => sub { { value => $_[0] } },
     'length'  => sub { length $_[0] },
+    'size'    => sub { return 1 },
     'defined' => sub { return 1 },
     'repeat'  => sub { 
         my ($str, $count) = @_;
@@ -75,6 +77,12 @@ $SCALAR_OPS = {
 #       eval "\$str =~ s$search$replaceg";
         return $str;
     },
+    'match' => sub {
+        my ($str, $search) = @_;
+        return $str unless defined $str and defined $search;
+        my @matches = ($str =~ /$search/);
+        return @matches ? \@matches : '';
+    },
     'split'   => sub { 
         my ($str, $split, @args) = @_;
         $str = '' unless defined $str;
@@ -90,6 +98,7 @@ $HASH_OPS = {
                       $hash->{ $item };
                   },
     'hash'   => sub { $_[0] },
+    'size'   => sub { scalar keys %{$_[0]} },
     'keys'   => sub { [ keys   %{ $_[0] } ] },
     'values' => sub { [ values %{ $_[0] } ] },
     'each'   => sub { [        %{ $_[0] } ] },
@@ -100,11 +109,9 @@ $HASH_OPS = {
                            : [ map { { key => $_ , value => $hash->{ $_ } } }
                                keys %$hash ];
                 },
-    'import' => sub { my ($hash, $imp) = @_;
-                      $imp = {} unless ref $imp eq 'HASH';
-                      @$hash{ keys %$imp } = values %$imp;
-                      return '';
-                  },
+    'exists'  => sub { exists $_[0]->{ $_[1] } },
+    'defined' => sub { defined $_[0]->{ $_[1] } },
+    'import'  => \&hash_import,
     'sort'    => sub {
         my ($hash) = @_;
         [ sort { lc $hash->{$a} cmp lc $hash->{$b} } (keys %$hash) ];
@@ -130,10 +137,15 @@ $LIST_OPS = {
     'first'   => sub { my $list = shift; $list->[0] },
     'last'    => sub { my $list = shift; $list->[$#$list] },
     'reverse' => sub { my $list = shift; [ reverse @$list ] },
+    'grep'    => sub { 
+	my ($list, $pattern) = @_;
+	$pattern ||= '';
+	return [ grep /$pattern/, @$list ];
+    },
     'join'    => sub { 
-            my ($list, $joint) = @_; 
-            join(defined $joint ? $joint : ' ', 
-                 map { defined $_ ? $_ : '' } @$list) 
+	my ($list, $joint) = @_; 
+	join(defined $joint ? $joint : ' ', 
+	     map { defined $_ ? $_ : '' } @$list) 
     },
     'sort'    => sub {
         my ($list, $field) = @_;
@@ -141,7 +153,10 @@ $LIST_OPS = {
         return $field                       # Schwartzian Transform 
             ?  map  { $_->[0] }             # for case insensitivity
                sort { $a->[1] cmp $b->[1] }
-               map  { [ $_, lc $_->{ $field } ] } 
+               map  { [ $_, lc(ref($_) eq 'HASH' 
+			       ? $_->{ $field } : 
+			       UNIVERSAL::can($_, $field)
+			       ? $_->$field() : $_) ] } 
                @$list 
             :  map  { $_->[0] }
                sort { $a->[1] cmp $b->[1] }
@@ -154,7 +169,10 @@ $LIST_OPS = {
         return $field                       # Schwartzian Transform 
             ?  map  { $_->[0] }             # for case insensitivity
                sort { $a->[1] <=> $b->[1] }
-               map  { [ $_, lc $_->{ $field } ] } 
+               map  { [ $_, lc(ref($_) eq 'HASH' 
+			       ? $_->{ $field } : 
+			       UNIVERSAL::can($_, $field)
+			       ? $_->$field() : $_) ] } 
                @$list 
             :  map  { $_->[0] }
                sort { $a->[1] <=> $b->[1] }
@@ -163,6 +181,13 @@ $LIST_OPS = {
     },
     defined $LIST_OPS ? %$LIST_OPS : (),
 };
+
+sub hash_import { 
+    my ($hash, $imp) = @_;
+    $imp = {} unless ref $imp eq 'HASH';
+    @$hash{ keys %$imp } = values %$imp;
+    return '';
+}
 
 
 #========================================================================
@@ -445,6 +470,7 @@ sub update {
 sub _dotop {
     my ($self, $root, $item, $args, $lvalue) = @_;
     my $rootref = ref $root;
+    my $atroot  = ($rootref eq __PACKAGE__);
     my ($value, @result);
 
     $args ||= [ ];
@@ -458,7 +484,7 @@ sub _dotop {
     return undef
 	unless defined($root) and defined($item) and $item !~ /^[\._]/;
 
-    if ($rootref eq __PACKAGE__ || $rootref eq 'HASH') {
+    if ($atroot || $rootref eq 'HASH') {
 
 	# if $root is a regular HASH or a Template::Stash kinda HASH (the 
 	# *real* root of everything).  We first lookup the named key 
@@ -474,13 +500,15 @@ sub _dotop {
 	    # we create an intermediate hash if this is an lvalue
 	    return $root->{ $item } = { };		    ## RETURN
 	}
-	elsif ($value = $HASH_OPS->{ $item }) {
+	# ugly hack: only allow import vmeth to be called on root stash
+	elsif (($value = $HASH_OPS->{ $item })
+	       && ! $atroot || $item eq 'import') {
 	    @result = &$value($root, @$args);		    ## @result
 	}
-       elsif ( ref $item eq 'ARRAY' ) {
-             # hash slice
-             return [@$root{@$item}];                       ## RETURN
-       }
+	elsif ( ref $item eq 'ARRAY' ) {
+	    # hash slice
+	    return [@$root{@$item}];                       ## RETURN
+	}
     }
     elsif ($rootref eq 'ARRAY') {
 
@@ -615,7 +643,27 @@ sub _assign {
     }
     elsif (UNIVERSAL::isa($root, 'UNIVERSAL')) {
 	# try to call the item as a method of an object
-	return $root->$item(@$args, $value);			## RETURN
+
+	return $root->$item(@$args, $value)			## RETURN
+	    unless $default && $root->$item();
+
+# 2 issues:
+#   - method call should be wrapped in eval { }
+#   - fallback on hash methods if object method not found
+#
+# 	  eval { $result = $root->$item(@$args, $value); };	    
+# 
+# 	  if ($@) {
+# 	      die $@ if ref($@) || ($@ !~ /Can't locate object method/);
+# 
+# 	      # failed to call object method, so try some fallbacks
+# 	      if (UNIVERSAL::isa($root, 'HASH') && exists $root->{ $item }) {
+# 		  $result = ($root->{ $item } = $value)
+# 		      unless $default && $root->{ $item };
+# 	      }
+# 	  }
+# 	  return $result;						## RETURN
+
     }
     else {
 	die "don't know how to assign to [$root].[$item]\n";	## DIE
@@ -818,13 +866,13 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.49, distributed as part of the
-Template Toolkit version 2.06d, released on 22 January 2002.
+2.56, distributed as part of the
+Template Toolkit version 2.07, released on 17 April 2002.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2001 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vmeth.t,v 2.9 2001/06/23 08:42:00 abw Exp $
+# $Id: vmeth.t,v 2.12 2002/03/12 14:06:23 abw Exp $
 #
 #========================================================================
 
@@ -31,6 +31,24 @@ $^W = 1;
 $Template::Stash::LIST_OPS->{ sum } = \&sum;
 $Template::Stash::LIST_OPS->{ odd } = \&odd;
 $Template::Stash::LIST_OPS->{ jumble } = \&jumble;
+
+#------------------------------------------------------------------------
+# define a simple object to test sort vmethod calling object method
+#------------------------------------------------------------------------
+package My::Object;
+sub new { 
+    my ($class, $name) = @_;
+    bless {
+	_NAME => $name,
+    }, $class;
+}
+sub name { 
+    my $self = shift;
+    return $self->{ _NAME };
+}
+#------------------------------------------------------------------------
+
+package main;
 
 sub sum {
     my $list = shift;
@@ -61,6 +79,7 @@ my $params = {
     string   => 'The cat sat on the mat',
     spaced   => '  The dog sat on the log',
     hash     => { a => 'b', c => 'd' },
+    uhash    => { tobe => '2b', nottobe => undef },
     metavars => [ qw( foo bar baz qux wiz waz woz ) ],
     people   => [ { id => 'tom',   name => 'Tom' },
 		  { id => 'dick',  name => 'Richard' },
@@ -69,6 +88,10 @@ my $params = {
     primes   => [ 13, 11, 17, 19, 2, 3, 5, 7 ],
     phones   => { 3141 => 'Leon', 5131 => 'Andy', 4131 => 'Simon' },
     groceries => { 'Flour' => 3, 'Milk' => 1, 'Peanut Butter' => 21 },
+    names     => [ map { My::Object->new($_) }
+		   qw( Tom Dick Larry ) ],
+    numbers   => [ map { My::Object->new($_) }
+		   qw( 1 02 10 12 021 ) ],
 
 };
 
@@ -136,6 +159,37 @@ b, d
 -- expect --
 a, b, c, d
 
+-- test --
+[% hash.size %]
+-- expect --
+2
+
+-- test --
+[% hash.defined('a') ? 'good' : 'bad' %]
+[% hash.a.defined ? 'good' : 'bad' %]
+[% hash.defined('x') ? 'bad' : 'good' %]
+[% hash.x.defined ? 'bad' : 'good' %]
+-- expect --
+good
+good
+good
+good
+
+-- test --
+[% uhash.defined('tobe') ? 'good' : 'bad' %]
+[% uhash.tobe.defined ? 'good' : 'bad' %]
+[% uhash.exists('tobe') ? 'good' : 'bad' %]
+[% uhash.defined('nottobe') ? 'bad' : 'good' %]
+[% hash.nottobe.defined ? 'bad' : 'good' %]
+[% uhash.exists('nottobe') ? 'good' : 'bad' %]
+-- expect --
+good
+good
+good
+good
+good
+good
+
 
 # LIST_OPS
 
@@ -182,6 +236,37 @@ bar, baz, foo, qux, waz, wiz, woz
 Richard
 Larry
 Tom
+
+-- test --
+[% FOREACH obj = names.sort('name') -%]
+[% obj.name +%]
+[% END %]
+-- expect --
+Dick
+Larry
+Tom
+
+-- test --
+[% FOREACH obj = numbers.sort('name') -%]
+[% obj.name +%]
+[% END %]
+-- expect --
+02
+021
+1
+10
+12
+
+-- test --
+[% FOREACH obj = numbers.nsort('name') -%]
+[% obj.name +%]
+[% END %]
+-- expect --
+1
+02
+10
+12
+021
 
 -- test --
 [% FOREACH person = people.sort('name') -%]
@@ -273,6 +358,16 @@ foobazfoobazfoo
 fooquxfooquxfoo
 
 -- test --
+[% string1 = 'foobarfoobarfoo'
+   string2 = 'foobazfoobazfoo'
+-%]
+[% string1.match('bar') ? 'ok' : 'not ok' %]
+[% string2.match('bar') ? 'not ok' : 'ok' %]
+-- expect --
+ok
+ok
+
+-- test --
 [% string = 'foo     bar   ^%$ baz' -%]
 [% string.replace('\W+', '_') %]
 -- expect --
@@ -291,6 +386,30 @@ bob: [% bob.replace('0','') %].
 -- expect --
 bob: .
 
+-- test --
+[% string = 'The cat sat on the mat';
+   match  = string.match('The (\w+) (\w+) on the (\w+)');
+-%]
+[% match.0 %].[% match.1 %]([% match.2 %])
+-- expect --
+cat.sat(mat)
+
+-- test --
+[% string = 'The cat sat on the mat' -%]
+[% IF (match  = string.match('The (\w+) sat on the (\w+)')) -%]
+matched animal: [% match.0 %]  place: [% match.1 %]
+[% ELSE -%]
+no match
+[% END -%]
+[% IF (match  = string.match('The (\w+) shat on the (\w+)')) -%]
+matched animal: [% match.0 %]  place: [% match.1 %]
+[% ELSE -%]
+no match
+[% END -%]
+-- expect --
+matched animal: cat  place: mat
+no match
+
 -- stop --
 
 -- test --
@@ -302,3 +421,4 @@ boo
 [% var = 'foo|bar/baz'; var.replace('(fo+)|(bar)(.*)$', '[ $1 | $2 | $3 ]') %]
 -- expect --
 [ foo | bar | ]
+

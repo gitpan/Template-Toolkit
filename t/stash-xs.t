@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash-xs.t,v 2.3 2001/12/11 17:41:54 abw Exp $
+# $Id: stash-xs.t,v 2.4 2002/03/13 15:33:29 abw Exp $
 #
 #========================================================================
 
@@ -28,6 +28,7 @@ eval {
   require Template::Stash::XS;
 };
 if ($@) {
+  warn $@;
   exit(0);
 }
 
@@ -83,7 +84,6 @@ a:
 -- expect --
 ERROR: undef error - a is undefined
 
--- stop --
 -- test --
 -- use default --
 [% myitem = 'foo' -%]
@@ -230,3 +230,9 @@ an object
 [% obj.list.first.name %]
 -- expect --
 an object
+
+-- test --
+=[% size %]=
+-- expect --
+==
+
