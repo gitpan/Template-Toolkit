@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Format.pm,v 2.12 2001/06/15 14:30:56 abw Exp $
+# $Id: Format.pm,v 2.17 2001/06/29 13:09:00 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use vars qw( @ISA $VERSION );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.12 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.17 $ =~ /(\d+)\.(\d+)/);
 
 
 sub new {
@@ -94,8 +94,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.11, distributed as part of the
-Template Toolkit version 2.03, released on 15 June 2001.
+2.17, distributed as part of the
+Template Toolkit version 2.04, released on 29 June 2001.
 
 =head1 COPYRIGHT
 

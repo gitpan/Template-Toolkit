@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dbi.t,v 2.4 2000/11/14 15:54:58 abw Exp $
+# $Id: dbi.t,v 2.6 2001/06/25 10:55:07 abw Exp $
 #
 #========================================================================
 
@@ -27,7 +27,6 @@ $Template::Test::PRESERVE = 1;
 
 eval "use DBI";
 if ($@) {
-    print "1..0\n";
     exit(0);
 }
 
@@ -221,7 +220,7 @@ __END__
    END 
 %]
 -- expect --
-DBI error - no connection
+DBI error - data source not defined
 
 
 #------------------------------------------------------------------------
@@ -238,7 +237,7 @@ DBI error - no connection
    END 
 %]
 -- expect --
-DBI error - no connection
+DBI error - data source not defined
 
 -- test --
 [% USE DBI(dsn, user, pass, attr) -%]

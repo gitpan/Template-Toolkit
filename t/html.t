@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: html.t,v 2.1 2001/06/14 13:20:12 abw Exp $
+# $Id: html.t,v 2.2 2001/06/25 10:55:07 abw Exp $
 #
 #========================================================================
 
@@ -44,4 +44,16 @@ OK
 -- expect --
 OK
 
+-- test --
+[% FILTER html -%]
+< &amp; >
+[%- END %]
+-- expect --
+&lt; &amp;amp; &gt;
 
+-- test --
+[% FILTER html(entity = 1) -%]
+< &amp; >
+[%- END %]
+-- expect --
+&lt; &amp; &gt;

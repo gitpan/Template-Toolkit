@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugins.pm,v 2.15 2001/06/15 14:30:56 abw Exp $
+# $Id: Plugins.pm,v 2.20 2001/06/29 13:09:00 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $STD_PLUGINS );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.15 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.20 $ =~ /(\d+)\.(\d+)/);
 
 $STD_PLUGINS   = {
     'autoformat' => 'Template::Plugin::Autoformat',
@@ -883,8 +883,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.14, distributed as part of the
-Template Toolkit version 2.03, released on 15 June 2001.
+2.20, distributed as part of the
+Template Toolkit version 2.04, released on 29 June 2001.
 
 =head1 COPYRIGHT
 

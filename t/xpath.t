@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: xpath.t,v 2.5 2001/06/14 13:20:12 abw Exp $
+# $Id: xpath.t,v 2.7 2001/06/25 10:55:07 abw Exp $
 # 
 #========================================================================
 
 use strict;
-use lib qw( lib ../lib );
+use lib qw( ./lib ../lib );
 use Template;
 use Template::Test;
 use Cwd qw( abs_path );
@@ -29,7 +29,6 @@ my $shut_up_warnings = $XML::XPath::VERSION;
 eval "use XML::XPath";
 
 if ($@ || $XML::XPath::VERSION < 1.0) {
-    print "1..0\n";
     exit(0);
 }
 
@@ -43,7 +42,7 @@ __END__
 -- test --
 [% TRY;
      USE xpath = XML.XPath('no_such_file');
-     xpath.findvalue('/foo/bar');
+     xpath.find('/foo/bar');
    CATCH;
      "ok";
    END

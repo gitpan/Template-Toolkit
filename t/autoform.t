@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: autoform.t,v 2.3 2000/11/14 15:54:58 abw Exp $
+# $Id: autoform.t,v 2.4 2001/06/23 08:41:59 abw Exp $
 #
 #========================================================================
 
@@ -29,7 +29,6 @@ $Template::Test::PRESERVE = 1;
 eval "use Text::Autoformat";
 
 if ($@) {
-    print "1..0\n";
     exit(0);
 }
 

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vmeth.t,v 2.8 2001/03/29 23:00:54 abw Exp $
+# $Id: vmeth.t,v 2.9 2001/06/23 08:42:00 abw Exp $
 #
 #========================================================================
 
@@ -122,17 +122,17 @@ __The_dog_sat_on_the_log
 # HASH_OPS
 
 -- test --
-[% hash.keys.join(', ') %]
+[% hash.keys.sort.join(', ') %]
 -- expect --
 a, c
 
 -- test --
-[% hash.values.join(', ') %]
+[% hash.values.sort.join(', ') %]
 -- expect --
 b, d
 
 -- test --
-[% hash.each.join(', ') %]
+[% hash.each.sort.join(', ') %]
 -- expect --
 a, b, c, d
 
@@ -285,6 +285,11 @@ foo_bar_baz
 -- expect --
 99
 
+-- test --
+[% bob = "0" -%]
+bob: [% bob.replace('0','') %].
+-- expect --
+bob: .
 
 -- stop --
 

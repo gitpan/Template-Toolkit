@@ -11,12 +11,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: object.t,v 2.2 2001/03/22 12:23:15 abw Exp $
+# $Id: object.t,v 2.3 2001/06/25 10:55:07 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
+use lib qw( ./lib ../lib );
 use Template::Exception;
 use Template::Test;
 $^W = 1;
@@ -27,6 +27,16 @@ $Template::Test::DEBUG = 0;
 #------------------------------------------------------------------------
 # definition of test object class
 #------------------------------------------------------------------------
+
+package T1;
+sub new {
+    my $class = shift;
+    bless { @_ }, $class;
+}
+
+sub die {
+    die "barfed up\n";
+}
 
 package TestObject;
 
@@ -136,6 +146,7 @@ my $objconf = {
 my $replace = {
     thing  => TestObject->new($objconf),
     string => Stringy->new('Test String'),
+    t1 => T1->new(a => 10),
     %{ callsign() },
 };
 
@@ -272,3 +283,13 @@ foo $string bar
 -- expect --
 foo stringified 'Test String' bar
 
+-- test --
+.[% t1.dead %].
+-- expect --
+..
+
+-- test --
+.[% TRY; t1.die; CATCH; error; END %].
+-- expect --
+.undef error - barfed up
+.

@@ -9,7 +9,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: gd.t,v 2.1 2001/06/14 13:20:12 abw Exp $
+# $Id: gd.t,v 2.2 2001/06/23 08:41:59 abw Exp $
 # 
 #========================================================================
 
@@ -22,7 +22,6 @@ $^W = 1;
 eval "use GD;";
 
 if ( $@ ) {
-    print "1..0\n";
     exit(0);
 }
 

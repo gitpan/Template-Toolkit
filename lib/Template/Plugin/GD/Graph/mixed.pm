@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: mixed.pm,v 1.3 2001/06/15 14:30:56 abw Exp $
+# $Id: mixed.pm,v 1.8 2001/06/29 13:09:00 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Graph::mixed Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -140,8 +140,8 @@ The GD::Graph module was written by Martien Verbruggen.
 
 =head1 VERSION
 
-1.02, distributed as part of the
-Template Toolkit version 2.03, released on 15 June 2001.
+1.08, distributed as part of the
+Template Toolkit version 2.04, released on 29 June 2001.
 
 =head1 COPYRIGHT
 
@@ -155,4 +155,4 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template::Plugin|Template::Plugin>, L<Template::Plugin::GD|Template::Plugin::GD>, L<Template::Plugin::GD::Graphs::lines|Template::Plugin::GD::Graphs::lines>, L<Template::Plugin::GD::Graphs::lines3d|Template::Plugin::GD::Graphs::lines3d>, L<Template::Plugin::GD::Graphs::bars|Template::Plugin::GD::Graphs::bars>, L<Template::Plugin::GD::Graphs::bars3d|Template::Plugin::GD::Graphs::bars3d>, L<Template::Plugin::GD::Graphs::points|Template::Plugin::GD::Graphs::points>, L<Template::Plugin::GD::Graphs::linespoints|Template::Plugin::GD::Graphs::linespoints>, L<Template::Plugin::GD::Graphs::area|Template::Plugin::GD::Graphs::area>, L<Template::Plugin::GD::Graphs::pie|Template::Plugin::GD::Graphs::pie>, L<Template::Plugin::GD::Graphs::pie3d|Template::Plugin::GD::Graphs::pie3d>, L<GD::Graph|GD::Graph>
+L<Template::Plugin|Template::Plugin>, L<Template::Plugin::GD|Template::Plugin::GD>, L<Template::Plugin::GD::Graph::lines|Template::Plugin::GD::Graph::lines>, L<Template::Plugin::GD::Graph::lines3d|Template::Plugin::GD::Graph::lines3d>, L<Template::Plugin::GD::Graph::bars|Template::Plugin::GD::Graph::bars>, L<Template::Plugin::GD::Graph::bars3d|Template::Plugin::GD::Graph::bars3d>, L<Template::Plugin::GD::Graph::points|Template::Plugin::GD::Graph::points>, L<Template::Plugin::GD::Graph::linespoints|Template::Plugin::GD::Graph::linespoints>, L<Template::Plugin::GD::Graph::area|Template::Plugin::GD::Graph::area>, L<Template::Plugin::GD::Graph::pie|Template::Plugin::GD::Graph::pie>, L<Template::Plugin::GD::Graph::pie3d|Template::Plugin::GD::Graph::pie3d>, L<GD::Graph|GD::Graph>

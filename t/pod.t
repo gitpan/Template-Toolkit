@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: pod.t,v 2.4 2001/06/14 13:20:12 abw Exp $
+# $Id: pod.t,v 2.5 2001/06/23 08:42:00 abw Exp $
 #
 #========================================================================
 
@@ -27,7 +27,6 @@ $Template::Test::PRESERVE = 1;
 
 eval "use Pod::POM";
 if ($@) {
-    print "1..0\n";
     exit(0);
 }
 

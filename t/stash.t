@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.4 2001/06/14 13:20:12 abw Exp $
+# $Id: stash.t,v 2.5 2001/06/23 08:42:00 abw Exp $
 #
 #========================================================================
 
@@ -144,3 +144,38 @@ one
 * a => alpha
 * msg => Hello World
 * things => one
+
+-- test --
+[% items = [ 'foo', 'bar', 'baz' ];
+   take  = [ 0, 2 ];
+   slice = items.$take;
+   slice.join(', ');
+%]
+-- expect --
+foo, baz
+
+-- test --
+[% items = {
+    foo = 'one',
+    bar = 'two',
+    baz = 'three'
+   }
+   take  = [ 'foo', 'baz' ];
+   slice = items.$take;
+   slice.join(', ');
+%]
+-- expect --
+one, three
+
+-- test --
+[% items = {
+    foo = 'one',
+    bar = 'two',
+    baz = 'three'
+   }
+   keys = items.keys.sort;
+   items.${keys}.join(', ');
+%]
+-- expect --
+two, three, one
+

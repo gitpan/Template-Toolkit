@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filters.pm,v 2.15 2001/06/15 14:30:56 abw Exp $
+# $Id: Filters.pm,v 2.20 2001/06/29 13:09:00 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $FILTERS );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.15 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.20 $ =~ /(\d+)\.(\d+)/);
 
 #------------------------------------------------------------------------
 # standard filters, defined in one of the following forms:
@@ -45,7 +45,7 @@ $VERSION = sprintf("%d.%02d", q$Revision: 2.15 $ =~ /(\d+)\.(\d+)/);
 
 $FILTERS = {
     # static filters 
-    'html'       => \&html_filter,
+#    'html'       => \&html_filter,
     'html_para'  => \&html_paragraph,
     'html_break' => \&html_break,
     'upper'      => sub { uc $_[0] },
@@ -57,6 +57,7 @@ $FILTERS = {
 			  $_[0] },
 
     # dynamic filters
+    'html'       => [ \&html_filter_factory,     1 ],
     'indent'     => [ \&indent_filter_factory,   1 ],
     'format'     => [ \&format_filter_factory,   1 ],
     'truncate'   => [ \&truncate_filter_factory, 1 ],
@@ -196,11 +197,13 @@ sub _dump {
 #------------------------------------------------------------------------
 # html_filter()                                         [% FILTER html %]
 #
+# NOTE: html filter is now dynamic to allow 'entity' option.
+#
 # Convert any '<', '>' or '&' characters to the HTML equivalents, '&lt;',
 # '&gt;' and '&amp;', respectively.
 #------------------------------------------------------------------------
 
-sub html_filter {
+sub html_filter_not_used {
     my $text = shift;
     for ($text) {
 	s/&/&amp;/g;
@@ -246,6 +249,36 @@ sub html_break  {
 #========================================================================
 #                    -- DYNAMIC FILTER FACTORIES --
 #========================================================================
+
+#------------------------------------------------------------------------
+# html_filter_factory(\%optins)                         [% FILTER html %]
+#
+# Convert any '<', '>' or '&' characters to the HTML equivalents, '&lt;',
+# '&gt;' and '&amp;', respectively.  The 'entity' option can be set to
+# any true value to prevent entities of the form &word; being converted
+# to &amp;word;
+#------------------------------------------------------------------------
+
+sub html_filter_factory {
+    my $context = shift;
+    my $opts = @_ && ref $_[-1] eq 'HASH' ? pop @_ : { };
+    return sub {
+	my $text = shift;
+	for ($text) {
+	    if ($opts->{ entity }) {
+		s/&(?!\w+;)/&amp;/g;
+	    }
+	    else {
+		s/&/&amp;/g;
+	    }
+	    s/</&lt;/g;
+	    s/>/&gt;/g;
+	    s/"/&quot;/g;
+	}
+	return $text;
+    };
+}
+
 
 #------------------------------------------------------------------------
 # indent_filter_factory($pad)                    [% FILTER indent(pad) %]
@@ -312,6 +345,7 @@ sub repeat_filter_factory {
 
 sub replace_filter_factory {
     my ($context, $search, $replace) = @_;
+    $search = '' unless defined $search;
     $replace = '' unless defined $replace;
 
     return sub {
@@ -1174,8 +1208,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.14, distributed as part of the
-Template Toolkit version 2.03, released on 15 June 2001.
+2.20, distributed as part of the
+Template Toolkit version 2.04, released on 29 June 2001.
 
 =head1 COPYRIGHT
 

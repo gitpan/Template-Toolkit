@@ -25,7 +25,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 2.11 2001/06/15 13:51:55 abw Exp $
+# $Id: Directive.pm,v 2.12 2001/06/25 10:55:02 abw Exp $
 #
 #============================================================================
 
@@ -38,7 +38,7 @@ use vars qw( $VERSION $DEBUG $PRETTY $WHILE_MAX );
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.11 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.12 $ =~ /(\d+)\.(\d+)/);
 
 $WHILE_MAX = 1000 unless defined $WHILE_MAX;
 $PRETTY    = 0 unless defined $PRETTY;
@@ -417,7 +417,7 @@ do {
     $loop_save;
     \$stash->set('loop', \$list);
     eval {
-	while (! \$error) {
+LOOP:	while (! \$error) {
 	    $loop_set;
 $block;
 	    (\$value, \$error) = \$list->get_next();
@@ -440,7 +440,7 @@ EOF
 sub next {
     return <<EOF;
 (\$value, \$error) = \$list->get_next();
-next;
+next LOOP;
 EOF
 }
 
@@ -518,6 +518,7 @@ sub while {
 # WHILE
 do {
     my \$failsafe = $WHILE_MAX;
+LOOP:
     while (--\$failsafe && ($expr)) {
 $block
     }
@@ -699,7 +700,7 @@ sub clear {
 #------------------------------------------------------------------------
 
 sub break {
-    return 'last;';
+    return 'last LOOP;';
 }
 
 #------------------------------------------------------------------------

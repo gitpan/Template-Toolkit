@@ -17,7 +17,7 @@
 #
 #------------------------------------------------------------------------------
 #
-# $Id: DBI.pm,v 2.11 2001/06/15 14:30:56 abw Exp $
+# $Id: DBI.pm,v 2.14 2001/06/29 13:09:00 abw Exp $
 # 
 #==============================================================================
 
@@ -94,19 +94,18 @@ sub connect {
 	$dsn = shift 
 	     || $params->{ data_source } 
 	     || $params->{ connect } 
-	     || $params->{ dsn }
+             || $params->{ dsn }
+	     || $ENV{DBI_DSN}
 	     || return $self->_throw('data source not defined');
 	$user = shift
 	     || $params->{ username } 
-	     || $params->{ user } 
-	     || '';
+	     || $params->{ user };
 	$pass = shift 
 	     || $params->{ password } 
-	     || $params->{ pass } 
-	     || '';
+	     || $params->{ pass };
 
 	# reuse existing database handle if connection params match
-	my $connect = join(':', $dsn, $user, $pass);
+	my $connect = join(':', $dsn || '', $user || '', $pass || '');
 	return ''
 	    if $self->{ _DBH } && $self->{ _DBH_CONNECT } eq $connect;
 	
@@ -117,8 +116,9 @@ sub connect {
 	# open new connection
 	$params->{ PrintError } = 0 
 	    unless defined $params->{ PrintError };
-	$self->{ _DBH } = DBI->connect( $dsn, $user, $pass, $params )
-	    || return $self->_throw("DBI connect failed: $DBI::errstr");
+
+	$self->{ _DBH } = DBI->connect_cached( $dsn, $user, $pass, $params )
+ 	    || return $self->_throw("DBI connect failed: $DBI::errstr");
 
 	# store the connection parameters
 	$self->{ _DBH_CONNECT } = $connect;
@@ -135,10 +135,29 @@ sub connect {
 
 sub _connect {
     my $self = shift;
-    unless (@_) {
-	return $self->{ _DBH } || $self->_throw('no current dbh');
-    }
+#    unless (@_) {
+#	return $self->{ _DBH } || $self->_throw('no current dbh');
+#    }
     return $self->connect(@_);
+}
+
+#------------------------------------------------------------------------
+# _getDBH()
+#
+# Internal method to retrieve the database handle belonging to the
+# instance or attempt to create a new one using connect.
+#------------------------------------------------------------------------
+
+sub _getDBH() {
+    my $self = shift;
+    my $dbh = $self->{ _DBH };
+
+    unless ($dbh) {
+        $self->connect;
+	$dbh = $self->{ _DBH };
+    }
+
+    return $dbh;
 }
 
 
@@ -168,8 +187,9 @@ sub prepare {
     my $self = shift;
     my $sql  = shift || return undef;
 
-    my $dbh = $self->{ _DBH }
-	|| return $self->_throw('no connection');
+#    my $dbh = $self->{ _DBH }
+#	|| return $self->_throw('no connection');
+    my $dbh = $self->_getDBH();
 
     my $sth = $dbh->prepare($sql) 
 	|| return $self->_throw("DBI prepare failed: $DBI::errstr");
@@ -221,8 +241,9 @@ sub do {
     my $sql  = shift || return '';
 
     # get a database connection
-    my $dbh = $self->{ _DBH }
-	|| return $self->_throw('no connection');
+#    my $dbh = $self->{ _DBH }
+#	|| return $self->_throw('no connection');
+    my $dbh = $self->_getDBH();
 
     return $dbh->do($sql) 
 	|| $self->_throw("DBI do failed: $DBI::errstr");
@@ -239,8 +260,9 @@ sub do {
 sub quote {
     my $self = shift;
 
-    my $dbh = $self->{ _DBH }
-	|| return $self->_throw('no connection');
+#    my $dbh = $self->{ _DBH }
+#	|| return $self->_throw('no connection');
+    my $dbh = $self->_getDBH();
 
     $dbh->quote(@_);
 }
@@ -460,6 +482,9 @@ Template::Plugin::DBI - Interface to the DBI module
     [% USE DBI %]
     [% DBI.connect(dsn, user, pass) %]
 
+    # Or don't connect at all, and when necessary DBI will connect
+    # automatically using the environment variable DBI_DSN. See below.
+
     [% FOREACH item = DBI.query( 'SELECT rows FROM table' ) %]
        Here's some row data: [% item.field %]
     [% END %]
@@ -513,6 +538,16 @@ Any additional DBI attributes can be specified as named parameters.
 The 'PrintError' attribute defaults to 0 unless explicitly set true.
 
     [% USE DBI(dsn, user, pass, ChopBlanks=1) %]
+
+The DBI connect_cached() method is used instead of the connect()
+method.  This allows for connection caching in a server environment,
+such as when the Template Toolkit is used from an Apache mod_perl
+handler.   In such a case, simply enable the mod_env module and put in a
+line such as:
+
+SetEnv DBI_DSN "dbi:DBDriver:DBName;host=DBHost;user=User;password=Password"
+
+Then use the DBI plugin without any parameters and without calling connect.
 
 Methods can then be called on the plugin object using the familiar dotted
 notation:
@@ -625,7 +660,7 @@ E<lt>abw@kfs.orgE<gt>.
 =head1 VERSION
 
 1.04, distributed as part of the
-Template Toolkit version 2.03, released on 15 June 2001.
+Template Toolkit version 2.04, released on 29 June 2001.
 
 
 

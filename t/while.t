@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: while.t,v 2.1 2000/09/12 15:25:25 abw Exp $
+# $Id: while.t,v 2.2 2001/06/25 10:55:07 abw Exp $
 #
 #========================================================================
 
@@ -127,3 +127,84 @@ error: WHILE loop terminated (> 100 iterations)
 Reset list
 * x-ray
 * zulu
+-- test --
+[%  
+    i = 1;
+    WHILE i <= 10;
+        SWITCH i;
+        CASE 5;
+            i = i + 1;
+            NEXT;
+        CASE 8;
+            LAST;
+        END;
+        "$i\n";
+        i = i + 1;
+    END;
+-%]
+-- expect --
+1
+2
+3
+4
+6
+7
+-- test --
+[%
+    i = 1;
+    WHILE i <= 10;
+        IF 1;
+            IF i == 5; i = i + 1; NEXT; END;
+            IF i == 8; LAST; END;
+        END;
+        "$i\n";
+        i = i + 1;
+    END;
+-%]
+-- expect --
+1
+2
+3
+4
+6
+7
+-- test --
+[%
+    i = 1;
+    WHILE i <= 4;
+        j = 1;
+        WHILE j <= 4;
+            k = 1;
+            SWITCH j;
+            CASE 2;
+                LAST WHILE k == 1;
+            CASE 3;
+                IF j == 3; j = j + 1; NEXT; END;
+            END;
+            "$i,$j,$k\n";
+            j = j + 1;
+        END;
+        i = i + 1;
+    END;
+-%]
+-- expect --
+1,1,1
+1,2,1
+1,4,1
+2,1,1
+2,2,1
+2,4,1
+3,1,1
+3,2,1
+3,4,1
+4,1,1
+4,2,1
+4,4,1
+-- test --
+[%
+    k = 1;
+    LAST WHILE k == 1;
+    "$k\n";
+-%]
+-- expect --
+1

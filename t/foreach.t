@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 2.5 2001/06/15 14:30:56 abw Exp $
+# $Id: foreach.t,v 2.6 2001/06/25 10:55:07 abw Exp $
 # 
 #========================================================================
 
@@ -535,7 +535,77 @@ last outer
 * 1
 * 2
 * 3
-
-
-
-
+-- test --
+[%
+    FOREACH i = [1 .. 10];
+        SWITCH i;
+        CASE 5;
+            NEXT;
+        CASE 8;
+            LAST;
+        END;
+        "$i\n";
+    END;
+-%]
+-- expect --
+1
+2
+3
+4
+6
+7
+-- test --
+[%
+    FOREACH i = [1 .. 10];
+        IF 1;
+            IF i == 5; NEXT; END;
+            IF i == 8; LAST; END;
+        END;
+        "$i\n";
+    END;
+-%]
+-- expect --
+1
+2
+3
+4
+6
+7
+-- test --
+[%
+    FOREACH i = [1 .. 4];
+        FOREACH j = [1 .. 4];
+            k = 1;
+            SWITCH j;
+            CASE 2;
+                LAST FOREACH k = [ 1 .. 2 ];
+            CASE 3;
+                NEXT IF j == 3;
+            END;
+            "$i,$j,$k\n";
+        END;
+    END;
+-%]
+-- expect --
+1,1,1
+1,2,1
+1,4,1
+2,1,1
+2,2,1
+2,4,1
+3,1,1
+3,2,1
+3,4,1
+4,1,1
+4,2,1
+4,4,1
+-- test --
+[%
+    LAST FOREACH k = [ 1 .. 4];
+    "$k\n";
+    # Should finish loop with k = 4.  Instead this is an infinite loop!!
+    #NEXT FOREACH k = [ 1 .. 4];
+    #"$k\n";
+-%]
+-- expect --
+1

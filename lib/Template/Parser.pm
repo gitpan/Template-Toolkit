@@ -31,7 +31,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 2.17 2001/06/15 14:30:56 abw Exp $
+# $Id: Parser.pm,v 2.22 2001/06/29 13:09:00 abw Exp $
 #
 #============================================================================
 
@@ -54,7 +54,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.17 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.22 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 $ERROR   = '';
 
@@ -389,7 +389,7 @@ sub interpolate_text {
 	($pre, $var, $dir) = ($1, $3 || $4, $2);
 
 	# preceding text
-	if ($pre) {
+	if (defined($pre) && length($pre)) {
 	    $line += $pre =~ tr/\n//;
 	    $pre =~ s/\\\$/\$/g;
 	    push(@tokens, 'TEXT', $pre);
@@ -1268,8 +1268,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.16, distributed as part of the
-Template Toolkit version 2.03, released on 15 June 2001.
+2.22, distributed as part of the
+Template Toolkit version 2.04, released on 29 June 2001.
 
  
 

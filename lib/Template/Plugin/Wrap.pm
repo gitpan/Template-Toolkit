@@ -16,7 +16,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Wrap.pm,v 2.11 2001/06/15 14:30:56 abw Exp $
+# $Id: Wrap.pm,v 2.16 2001/06/29 13:09:00 abw Exp $
 #
 #============================================================================
 
@@ -30,7 +30,7 @@ use base qw( Template::Plugin );
 use Template::Plugin;
 use Text::Wrap;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.11 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.16 $ =~ /(\d+)\.(\d+)/);
 
 sub new {
     my ($class, $context, $format) = @_;;
@@ -145,8 +145,8 @@ others.
 
 =head1 VERSION
 
-2.10, distributed as part of the
-Template Toolkit version 2.03, released on 15 June 2001.
+2.16, distributed as part of the
+Template Toolkit version 2.04, released on 29 June 2001.
 
 =head1 COPYRIGHT
 

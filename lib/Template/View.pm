@@ -22,7 +22,7 @@
 #    view.print(hash3) %] or [% view.print(hash1, hash2, hash3, { }) %]
 #
 # REVISION
-#   $Id: View.pm,v 2.5 2001/06/14 11:40:32 abw Exp $
+#   $Id: View.pm,v 2.7 2001/06/27 14:24:06 abw Exp $
 #
 #============================================================================
 
@@ -34,7 +34,7 @@ use strict;
 use vars qw( $VERSION $DEBUG $AUTOLOAD @BASEARGS $MAP );
 use base qw( Template::Base );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.7 $ =~ /(\d+)\.(\d+)/);
 $DEBUG    = 0 unless defined $DEBUG;
 @BASEARGS = qw( context );
 $MAP = {
@@ -215,6 +215,8 @@ sub print {
     
     # print each argument
     foreach $item (@_) {
+	my $newtype;
+
 	if (! ($type = ref $item)) {
 	    # non-references are TEXT
 	    $type = 'TEXT';
@@ -224,7 +226,7 @@ sub print {
 	    # no specific map entry for object, maybe it implements a 
 	    # 'present' (or other) method?
 #	    $self->DEBUG("determining if $item can $method\n") if $DEBUG;
-	    if ($method && UNIVERSAL::can($item, $method)) {
+	    if ( $method && UNIVERSAL::can($item, $method) ) {
 		$self->DEBUG("Calling \$item->$method\n") if $DEBUG;
 		$present = $item->$method($self);	## call item method
 		# undef returned indicates error, note that we expect 
@@ -232,8 +234,16 @@ sub print {
 		return unless defined $present;
 		$output .= $present;
 		next;					## NEXT
+	    }   
+	    elsif ( UNIVERSAL::isa($item, 'HASH' ) 
+		   && defined($newtype = $item->{$method})
+		   && defined($template = $map->{"$method=>$newtype"})) {
 	    }
-	    elsif (! ($template = $map->{ default })) {
+	    elsif ( defined($newtype)
+		 && defined($template = $map->{"$method=>*"}) ) {
+		$template =~ s/\*/$newtype/;
+            }    
+	    elsif (! ($template = $map->{ default }) ) {
 		# default not defined, so construct template name from type
 		($template = $type) =~ s/\W+/_/g;
 	    }
@@ -717,7 +727,7 @@ Andy Wardley E<lt>abw@kfs.orgE<gt>
 
 =head1 REVISION
 
-$Revision: 2.5 $
+$Revision: 2.7 $
 
 =head1 COPYRIGHT
 

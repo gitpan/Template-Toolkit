@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dom.t,v 2.6 2000/12/01 15:29:35 abw Exp $
+# $Id: dom.t,v 2.7 2001/06/23 08:41:59 abw Exp $
 # 
 #========================================================================
 
@@ -32,7 +32,6 @@ my $shut_up_warnings = $XML::DOM::VERSION;
 
 eval "use XML::DOM";
 if ($@ ||  $XML::DOM::VERSION < 1.27) {
-    print "1..0\n";
     exit(0);
 }
 

@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 2.19 2001/06/15 14:30:56 abw Exp $
+# $Id: Context.pm,v 2.24 2001/06/29 13:09:00 abw Exp $
 #
 #============================================================================
 
@@ -36,7 +36,7 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.19 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.24 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -206,7 +206,7 @@ sub filter {
 
     # alias defaults to name if undefined
     $alias = $name
-	unless defined($alias) or ref($name);
+	unless defined($alias) or ref($name) or $args;
 
     # cache FILTER if alias is valid
     $self->{ FILTER_CACHE }->{ $alias } = $filter
@@ -1419,8 +1419,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.18, distributed as part of the
-Template Toolkit version 2.03, released on 15 June 2001.
+2.24, distributed as part of the
+Template Toolkit version 2.04, released on 29 June 2001.
 
 =head1 COPYRIGHT
 
