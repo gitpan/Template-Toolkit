@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Plugins.pm,v 2.51 2002/04/17 14:04:40 abw Exp $
+# $Id: Plugins.pm,v 2.58 2002/07/30 12:44:58 abw Exp $
 #
 #============================================================================
 
@@ -31,13 +31,14 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $STD_PLUGINS );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.51 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.58 $ =~ /(\d+)\.(\d+)/);
 
 $STD_PLUGINS   = {
     'autoformat' => 'Template::Plugin::Autoformat',
     'cgi'        => 'Template::Plugin::CGI',
     'datafile'   => 'Template::Plugin::Datafile',
     'date'       => 'Template::Plugin::Date',
+    'debug'      => 'Template::Plugin::Debug',
     'directory'  => 'Template::Plugin::Directory',
     'dbi'        => 'Template::Plugin::DBI',
     'dumper'     => 'Template::Plugin::Dumper',
@@ -253,19 +254,27 @@ sub _load {
 
 sub _dump {
     my $self = shift;
+    my $output = "[Template::Plugins] {\n";
+    my $format = "    %-16s => %s\n";
+    my $key;
+
+    foreach $key (qw( TOLERANT LOAD_PERL )) {
+	$output .= sprintf($format, $key, $self->{ $key });
+    }
+
     local $" = ', ';
     my $fkeys = join(", ", keys %{$self->{ FACTORY }});
     my $plugins = $self->{ PLUGINS };
-    $plugins = join(", ", map { "$_ => $plugins->{ $_ }" } keys %$plugins);
-
-    return <<EOF;
-$self
-PLUGIN_BASE => [ @{ $self->{ PLUGIN_BASE } } ]
-PLUGINS     => { $plugins }
-FACTORY     => [ $fkeys ]
-TOLERANT    => $self->{ TOLERANT }
-LOAD_PERL   => $self->{ LOAD_PERL }
-EOF
+    $plugins = join('', map { 
+	sprintf("    $format", $_, $plugins->{ $_ });
+    } keys %$plugins);
+    $plugins = "{\n$plugins    }";
+    
+    $output .= sprintf($format, 'PLUGIN_BASE', "[ @{ $self->{ PLUGIN_BASE } } ]");
+    $output .= sprintf($format, 'PLUGINS', $plugins);
+    $output .= sprintf($format, 'FACTORY', $fkeys);
+    $output .= '}';
+    return $output;
 }
 
 
@@ -976,7 +985,7 @@ denote relative to PLUGIN_BASE.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -985,8 +994,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.51, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.57, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

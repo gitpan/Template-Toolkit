@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: File.pm,v 2.45 2002/04/17 14:04:45 abw Exp $
+#   $Id: File.pm,v 2.52 2002/07/30 12:45:32 abw Exp $
 #
 #============================================================================
 
@@ -34,7 +34,7 @@ use vars qw( $VERSION );
 use base qw( Template::Plugin );
 use vars qw( @STAT_KEYS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.45 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.52 $ =~ /(\d+)\.(\d+)/);
 
 @STAT_KEYS = qw( dev ino mode nlink uid gid rdev size 
 		 atime mtime ctime blksize blocks );
@@ -400,8 +400,8 @@ for VIEW support, and made a few other minor tweaks.
 
 =head1 VERSION
 
-2.45, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.51, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 
 

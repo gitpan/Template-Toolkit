@@ -145,9 +145,7 @@ use the CALL directive.
 -%]<p>
 The following methods are used to create new String objects.
 </p>
-
 <ul>
-
 <li><b>new()</b><br>
 <p>
 Creates a new string using an initial value passed as a positional
@@ -156,7 +154,6 @@ argument or the named parameter 'text'.
 <pre>    [% tt_start_tag %] USE String [% tt_end_tag %]
     [% tt_start_tag %] msg = String.new('Hello World') [% tt_end_tag %]
     [% tt_start_tag %] msg = String.new( text =&gt; 'Hello World' ) [% tt_end_tag %]</pre>
-
 
 <li><b>copy()</b><br>
 <p>
@@ -172,9 +169,7 @@ Creates a new String object which contains a copy of the original string.
 These methods are used to inspect the string content or other parameters
 relevant to the string.
 </p>
-
 <ul>
-
 <li><b>text()</b><br>
 <p>
 Returns the internal text value of the string.  The stringification
@@ -184,14 +179,12 @@ equivalent:
 <pre>    [% tt_start_tag %] msg.text [% tt_end_tag %]
     [% tt_start_tag %] msg [% tt_end_tag %]</pre>
 
-
 <li><b>length()</b><br>
 <p>
 Returns the length of the string.
 </p>
 <pre>    [% tt_start_tag %] USE String(&quot;foo&quot;) [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] String.length [% tt_end_tag %]   # =&gt; 3</pre>
-
 
 <li><b>search($pattern)</b><br>
 <p>
@@ -200,7 +193,6 @@ returning true if found or false otherwise.
 </p>
 <pre>    [% tt_start_tag %] item = String.new('foo bar baz wiz waz woz') [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] item.search('wiz') ? 'WIZZY! :-)' : 'not wizzy :-(' [% tt_end_tag %]</pre>
-
 
 <li><b>split($pattern, $limit)</b><br>
 <p>
@@ -250,9 +242,7 @@ like.  For example:
 <p>
 Here are the methods:
 </p>
-
 <ul>
-
 <li><b>push($suffix, ...) / append($suffix, ...)</b><br>
 <p>
 Appends all arguments to the end of the string.  The 
@@ -261,14 +251,12 @@ append() method is provided as an alias for push().
 <pre>    [% tt_start_tag %] msg.push('foo', 'bar') [% tt_end_tag %]
     [% tt_start_tag %] msg.append('foo', 'bar') [% tt_end_tag %]</pre>
 
-
 <li><b>pop($suffix)</b><br>
 <p>
 Removes the suffix passed as an argument from the end of the String.
 </p>
 <pre>    [% tt_start_tag %] USE String 'foo bar' [% tt_end_tag %]
     [% tt_start_tag %] String.pop(' bar')   [% tt_end_tag %]   # =&gt; 'foo'</pre>
-
 
 <li><b>unshift($prefix, ...) / prepend($prefix, ...)</b><br>
 <p>
@@ -278,14 +266,12 @@ prepend() method is provided as an alias for unshift().
 <pre>    [% tt_start_tag %] msg.unshift('foo ', 'bar ') [% tt_end_tag %]
     [% tt_start_tag %] msg.prepend('foo ', 'bar ') [% tt_end_tag %]</pre>
 
-
 <li><b>shift($prefix)</b><br>
 <p>
 Removes the prefix passed as an argument from the start of the String.
 </p>
 <pre>    [% tt_start_tag %] USE String 'foo bar' [% tt_end_tag %]
     [% tt_start_tag %] String.shift('foo ') [% tt_end_tag %]   # =&gt; 'bar'</pre>
-
 
 <li><b>left($pad)</b><br>
 <p>
@@ -294,13 +280,11 @@ formatted and padded with spaces to $pad length.
 </p>
 <pre>    [% tt_start_tag %] msg.left(20) [% tt_end_tag %]</pre>
 
-
 <li><b>right($pad)</b><br>
 <p>
 As per left() but right padding the String to a length of $pad.
 </p>
 <pre>    [% tt_start_tag %] msg.right(20) [% tt_end_tag %]</pre>
-
 
 <li><b>center($pad) / centre($pad)</b><br>
 <p>
@@ -311,14 +295,12 @@ an alias for center() to keep Yanks and Limeys happy.
 <pre>    [% tt_start_tag %] msg.center(20) [% tt_end_tag %]    # American spelling
     [% tt_start_tag %] msg.centre(20) [% tt_end_tag %]    # European spelling</pre>
 
-
 <li><b>format($format)</b><br>
 <p>
 Apply a format in the style of sprintf() to the string.
 </p>
 <pre>    [% tt_start_tag %] USE String(&quot;world&quot;) [% tt_end_tag %]
     [% tt_start_tag %] String.format(&quot;Hello %s\n&quot;) [% tt_end_tag %]  # =&gt; &quot;Hello World\n&quot;</pre>
-
 
 <li><b>upper()</b><br>
 <p>
@@ -327,14 +309,12 @@ Converts the string to upper case.
 <pre>    [% tt_start_tag %] USE String(&quot;foo&quot;) [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] String.upper [% tt_end_tag %]  # =&gt; 'FOO'</pre>
 
-
 <li><b>lower()</b><br>
 <p>
 Converts the string to lower case
 </p>
 <pre>    [% tt_start_tag %] USE String(&quot;FOO&quot;) [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] String.lower [% tt_end_tag %]  # =&gt; 'foo'</pre>
-
 
 <li><b>capital()</b><br>
 <p>
@@ -350,14 +330,12 @@ something like this:
 <pre>    [% tt_start_tag %] USE String(&quot;FOO&quot;) [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] String.lower.capital [% tt_end_tag %]  # =&gt; 'Foo'</pre>
 
-
 <li><b>chop()</b><br>
 <p>
 Removes the last character from the string.
 </p>
 <pre>    [% tt_start_tag %] USE String(&quot;foop&quot;) [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] String.chop [% tt_end_tag %]	# =&gt; 'foo'</pre>
-
 
 <li><b>chomp()</b><br>
 <p>
@@ -366,14 +344,12 @@ Removes the trailing newline from the string.
 <pre>    [% tt_start_tag %] USE String(&quot;foo\n&quot;) [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] String.chomp [% tt_end_tag %]	# =&gt; 'foo'</pre>
 
-
 <li><b>trim()</b><br>
 <p>
 Removes all leading and trailing whitespace from the string
 </p>
 <pre>    [% tt_start_tag %] USE String(&quot;   foo   \n\n &quot;) [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] String.trim [% tt_end_tag %]	# =&gt; 'foo'</pre>
-
 
 <li><b>collapse()</b><br>
 <p>
@@ -382,7 +358,6 @@ of multiple whitespace to a single space.
 </p>
 <pre>    [% tt_start_tag %] USE String(&quot; \n\r  \t  foo   \n \n bar  \n&quot;) [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] String.collapse [% tt_end_tag %]   # =&gt; &quot;foo bar&quot;</pre>
-
 
 <li><b>truncate($length, $suffix)</b><br>
 <p>
@@ -399,7 +374,6 @@ complete with suffix is exactly $length characters long.
 <pre>    [% tt_start_tag %] USE msg = String('Hello World') [% tt_end_tag %]
     [% tt_start_tag %] msg.truncate(8, '...') [% tt_end_tag %]   # =&gt; 'Hello...'</pre>
 
-
 <li><b>replace($search, $replace)</b><br>
 <p>
 Replaces all occurences of $search in the string with $replace.
@@ -407,14 +381,12 @@ Replaces all occurences of $search in the string with $replace.
 <pre>    [% tt_start_tag %] USE String('foo bar foo baz') [% tt_end_tag %]
     [% tt_start_tag %] String.replace('foo', 'wiz')  [% tt_end_tag %]  # =&gt; 'wiz bar wiz baz'</pre>
 
-
 <li><b>remove($search)</b><br>
 <p>
 Remove all occurences of $search in the string.
 </p>
 <pre>    [% tt_start_tag %] USE String('foo bar foo baz') [% tt_end_tag %]
     [% tt_start_tag %] String.remove('foo ')  [% tt_end_tag %]  # =&gt; 'bar baz'</pre>
-
 
 <li><b>repeat($count)</b><br>
 <p>
@@ -429,7 +401,7 @@ Repeats the string $count times.
 [% WRAPPER section
     title="AUTHOR"
 -%]<p>
-Andy Wardley &lt;abw@kfs.org&gt;
+Andy Wardley &lt;abw@andywardley.com&gt;
 </p>
 <p>
 [% ttlink('http://www.andywardley.com/', 'http://www.andywardley.com/') -%]
@@ -438,8 +410,8 @@ Andy Wardley &lt;abw@kfs.org&gt;
 [% WRAPPER section
     title="VERSION"
 -%]<p>
-2.14, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.20, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 </p>
 [%- END %]
 [% WRAPPER section

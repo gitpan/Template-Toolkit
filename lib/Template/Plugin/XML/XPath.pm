@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: XPath.pm,v 2.47 2002/04/17 14:04:51 abw Exp $
+# $Id: XPath.pm,v 2.55 2002/07/30 12:46:09 abw Exp $
 #
 #============================================================================
 
@@ -26,13 +26,14 @@ package Template::Plugin::XML::XPath;
 require 5.004;
 
 use strict;
+use Template::Exception;
 use Template::Plugin;
 use XML::XPath;
 
 use base qw( Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.47 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.55 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -208,7 +209,7 @@ Template::Plugin::XML::XPath - Plugin interface to XML::XPath
        # default template block passes tags through and renders
        # out the children recursivly
        [% BLOCK xmlstring; 
-          item.starttag; item.content(view); item.endtag
+          item.starttag; item.content(view); item.endtag;
        END %]
        
        # block to generate simple text
@@ -256,8 +257,8 @@ The XML::XPath module is by Matt Sergeant E<lt>matt@sergeant.orgE<gt>.
 
 =head1 VERSION
 
-2.47, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.54, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

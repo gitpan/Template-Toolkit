@@ -39,6 +39,7 @@ docs/src/Manual/Intro.html
 docs/src/Manual/Plugins.html
 docs/src/Manual/Refs.html
 docs/src/Manual/Syntax.html
+docs/src/Manual/VMethods.html
 docs/src/Manual/Variables.html
 docs/src/Manual/Views.html
 docs/src/Manual/index.html
@@ -51,6 +52,7 @@ docs/src/Modules/Template/Document.html
 docs/src/Modules/Template/Exception.html
 docs/src/Modules/Template/Filters.html
 docs/src/Modules/Template/Iterator.html
+docs/src/Modules/Template/Namespace/Constants.html
 docs/src/Modules/Template/Parser.html
 docs/src/Modules/Template/Plugin.html
 docs/src/Modules/Template/Plugin/Autoformat.html
@@ -385,9 +387,11 @@ lib/Template/Manual/Intro.pod
 lib/Template/Manual/Plugins.pod
 lib/Template/Manual/Refs.pod
 lib/Template/Manual/Syntax.pod
+lib/Template/Manual/VMethods.pod
 lib/Template/Manual/Variables.pod
 lib/Template/Manual/Views.pod
 lib/Template/Modules.pod
+lib/Template/Namespace/Constants.pm
 lib/Template/Parser.pm
 lib/Template/Plugin.pm
 lib/Template/Plugin/Autoformat.pm
@@ -452,6 +456,7 @@ t/autoform.t
 t/base.t
 t/binop.t
 t/block.t
+t/blocks.t
 t/capture.t
 t/case.t
 t/cgi.t
@@ -462,10 +467,12 @@ t/compile3.t
 t/compile4.t
 t/compile5.t
 t/config.t
+t/constants.t
 t/context.t
 t/datafile.t
 t/date.t
 t/dbi.t
+t/debug.t
 t/directive.t
 t/directry.t
 t/document.t
@@ -538,7 +545,10 @@ t/test/lib/header
 t/test/lib/header.tt2
 t/test/lib/incblock
 t/test/lib/menu
+t/test/lib/one/foo
 t/test/lib/trimme
+t/test/lib/two/bar
+t/test/lib/two/foo
 t/test/lib/udata1
 t/test/lib/udata2
 t/test/plugin/MyPlugs/Bar.pm

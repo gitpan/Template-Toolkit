@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Style.pm,v 2.16 2002/04/17 14:04:51 abw Exp $
+#   $Id: Style.pm,v 2.23 2002/07/30 12:46:09 abw Exp $
 #
 #============================================================================
 
@@ -30,7 +30,7 @@ use Template::Plugin::Filter;
 use base qw( Template::Plugin::Filter );
 use vars qw( $VERSION $DYNAMIC $FILTER_NAME );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.16 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.23 $ =~ /(\d+)\.(\d+)/);
 $DYNAMIC = 1;
 $FILTER_NAME = 'xmlstyle';
 
@@ -322,7 +322,7 @@ The output produced is:
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -331,8 +331,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.16, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.22, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: date.t,v 2.5 2001/09/06 19:20:08 abw Exp $
+# $Id: date.t,v 2.7 2002/07/08 11:06:17 abw Exp $
 #
 #========================================================================
 
@@ -60,6 +60,13 @@ my $params = {
     },
     date_calc => $got_date_calc,
 };
+
+# force second to rollover so that we reliably see any tests failing.
+# lesson learnt from 2.07b where I broke the Date plugin's handling of a
+# 'time' parameter, but which didn't immediately come to light because the
+# script could run before the second rolled over and not expose the bug
+
+sleep 1;
 
 test_expect(\*DATA, { POST_CHOMP => 1 }, $params);
  
@@ -213,4 +220,5 @@ not testing
 -%]
 -- expect --
 12:59
+
 

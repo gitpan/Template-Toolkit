@@ -44,9 +44,7 @@ Template Toolkit.
 </p>
 [% WRAPPER subsection
    title = "Template Style and Parsing Options"
--%]
-<ul>
-
+-%]<ul>
 <li><b>START_TAG, END_TAG</b><br>
 <p>
 The START_TAG and END_TAG options are used to specify character
@@ -73,7 +71,6 @@ The TAGS directive can also be used to set the START_TAG and END_TAG values
 on a per-template file basis.
 </p>
 <pre>    [% tt_start_tag %] TAGS &lt;+ +&gt; [% tt_end_tag %]</pre>
-
 
 <li><b>TAG_STYLE</b><br>
 <p>
@@ -103,7 +100,6 @@ The TAGS directive may also be used to set a TAG_STYLE
 </p>
 <pre>    [% tt_start_tag %] TAGS html [% tt_end_tag %]
     &lt;!-- INCLUDE header --&gt;</pre>
-
 
 <li><b>PRE_CHOMP, POST_CHOMP</b><br>
 <p>
@@ -197,7 +193,6 @@ With POST_CHOMP enabled, the above example would be parsed as if written:
 <pre>    [% tt_start_tag %] FOREACH user = userlist [% tt_end_tag %]User: [% tt_start_tag %] user [% tt_end_tag %]
     [% tt_start_tag %] END [% tt_end_tag %]</pre>
 
-
 <li><b>TRIM</b><br>
 <p>
 The TRIM option can be set to have any leading and trailing whitespace 
@@ -233,7 +228,6 @@ of the BLOCK.
 <p>
 The TRIM option is disabled (0) by default.
 </p>
-
 
 <li><b>INTERPOLATE</b><br>
 <p>
@@ -271,7 +265,6 @@ smaller files or blocks which can then be joined backed together via
 PROCESS or INCLUDE.
 </p>
 
-
 <li><b>ANYCASE</b><br>
 <p>
 By default, directive keywords should be expressed in UPPER CASE.  The 
@@ -306,9 +299,7 @@ regardless of the ANYCASE option, are the operators:
 [%- END %]
 [% WRAPPER subsection
    title = "Template Files and Blocks"
--%]
-<ul>
-
+-%]<ul>
 <li><b>INCLUDE_PATH</b><br>
 <p>
 The INCLUDE_PATH is used to specify one or more directories in which
@@ -335,7 +326,55 @@ On Win32 systems, a little extra magic is invoked, ignoring delimiters
 that have ':' followed by a '/' or '\'.  This avoids confusion when using
 directory names like 'C:\Blah Blah'.
 </p>
-
+<p>
+When specified as a list, the INCLUDE_PATH path can contain elements 
+which dynamically generate a list of INCLUDE_PATH directories.  These 
+generator elements can be specified as a reference to a subroutine or 
+an object which implements a paths() method.
+</p>
+<pre>    my $template = Template-&gt;new({
+        INCLUDE_PATH =&gt; [ '/usr/local/templates', 
+                          \&amp;incpath_generator, 
+			  My::IncPath::Generator-&gt;new( ... ) ],
+    });</pre>
+<p>
+Each time a template is requested and the INCLUDE_PATH examined, the
+subroutine or object method will be called.  A reference to a list of
+directories should be returned.  Generator subroutines should report
+errors using die().  Generator objects should return undef and make an
+error available via its error() method.
+</p>
+<p>
+For example:
+</p>
+<pre>    sub incpath_generator {</pre>
+<pre>	# ...some code...
+	
+	if ($all_is_well) {
+	    return \@list_of_directories;
+	}
+	else {
+	    die &quot;cannot generate INCLUDE_PATH...\n&quot;;
+	}
+    }</pre>
+<p>
+or:
+</p>
+<pre>    package My::IncPath::Generator;</pre>
+<pre>    # Template::Base (or Class::Base) provides error() method
+    use Template::Base;
+    use base qw( Template::Base );</pre>
+<pre>    sub paths {
+	my $self = shift;</pre>
+<pre>	# ...some code...</pre>
+<pre>        if ($all_is_well) {
+	    return \@list_of_directories;
+	}
+	else {
+	    return $self-&gt;error(&quot;cannot generate INCLUDE_PATH...\n&quot;);
+	}
+    }</pre>
+<pre>    1;</pre>
 
 <li><b>DELIMITER</b><br>
 <p>
@@ -365,7 +404,6 @@ explicitly set the DELIMITER character to something else (e.g. ';')
 rather than rely on this subtle magic.
 </p>
 
-
 <li><b>ABSOLUTE</b><br>
 <p>
 The ABSOLUTE flag is used to indicate if templates specified with
@@ -385,7 +423,6 @@ with a driver letter and colon, such as:
 </p>
 <pre>    C:/Foo/Bar</pre>
 
-
 <li><b>RELATIVE</b><br>
 <p>
 The RELATIVE flag is used to indicate if templates specified with
@@ -398,7 +435,6 @@ encountered.
 	RELATIVE =&gt; 1,
     });</pre>
 <pre>    [% tt_start_tag %] INCLUDE ../logs/error.log [% tt_end_tag %]</pre>
-
 
 <li><b>DEFAULT</b><br>
 <p>
@@ -417,7 +453,6 @@ absolute or relative filenames, or as a reference to a input file
 handle or text string.
 </p>
 
-
 <li><b>BLOCKS</b><br>
 <p>
 The BLOCKS option can be used to pre-define a default set of template 
@@ -432,7 +467,6 @@ objects.
 	    another =&gt; Template::Document-&gt;new({ ... }),
 	},
     }); </pre>
-
 
 <li><b>AUTO_RESET</b><br>
 <p>
@@ -451,7 +485,6 @@ will over-ride these but they will be reinstated on each reset if AUTO_RESET
 is enabled (default), or if the Template::Context reset() method is called.
 </p>
 
-
 <li><b>RECURSION</b><br>
 <p>
 The template processor will raise a file exception if it detects
@@ -463,9 +496,7 @@ any true value will allow templates to include each other recursively.
 [%- END %]
 [% WRAPPER subsection
    title = "Template Variables"
--%]
-<ul>
-
+-%]<ul>
 <li><b>VARIABLES, PRE_DEFINE</b><br>
 <p>
 The VARIABLES option (or PRE_DEFINE - they're equivalent) can be used
@@ -491,13 +522,110 @@ or
 	},
     };</pre>
 
+<li><b>CONSTANTS</b><br>
+<p>
+The CONSTANTS option can be used to specify a hash array of template
+variables that are compile-time constants.  These variables are
+resolved once when the template is compiled, and thus don't require
+further resolution at runtime.  This results in significantly faster
+processing of the compiled templates and can be used for variables that
+don't change from one request to the next.
+</p>
+<pre>    my $template = Template-&gt;new({
+	CONSTANTS =&gt; {
+	    title   =&gt; 'A Demo Page',
+	    author  =&gt; 'Joe Random Hacker',
+	    version =&gt; 3.14,
+	},
+    };</pre>
+
+<li><b>CONSTANT_NAMESPACE</b><br>
+<p>
+Constant variables are accessed via the 'constants' namespace by
+default.
+</p>
+<pre>    [% tt_start_tag %] constants.title [% tt_end_tag %]</pre>
+<p>
+The CONSTANTS_NAMESPACE option can be set to specify an alternate
+namespace.
+</p>
+<pre>    my $template = Template-&gt;new({
+	CONSTANTS =&gt; {
+	    title   =&gt; 'A Demo Page',
+	    # ...etc...
+	},
+	CONSTANTS_NAMESPACE =&gt; 'const',
+    };</pre>
+<p>
+In this case the constants would then be accessed as:
+</p>
+<pre>    [% tt_start_tag %] const.title [% tt_end_tag %]</pre>
+
+<li><b>NAMESPACE</b><br>
+<p>
+The constant folding mechanism described above is an example of a
+namespace handler.  Namespace handlers can be defined to provide
+alternate parsing mechanisms for variables in different namespaces.
+</p>
+<p>
+Under the hood, the Template module converts a constructor configuration
+such as:
+</p>
+<pre>    my $template = Template-&gt;new({
+	CONSTANTS =&gt; {
+	    title   =&gt; 'A Demo Page',
+	    # ...etc...
+	},
+	CONSTANTS_NAMESPACE =&gt; 'const',
+    };</pre>
+<p>
+into one like:
+</p>
+<pre>    my $template = Template-&gt;new({
+	NAMESPACE =&gt; {
+	    const =&gt; Template:::Namespace::Constants-&gt;new({
+		title   =&gt; 'A Demo Page',
+		# ...etc...
+	    }),
+	},
+    };</pre>
+<p>
+You can use this mechanism to define multiple constant namespaces, or
+to install custom handlers of your own.  
+</p>
+<pre>    my $template = Template-&gt;new({
+	NAMESPACE =&gt; {
+	    site =&gt; Template:::Namespace::Constants-&gt;new({
+		title   =&gt; &quot;Wardley's Widgets&quot;,
+		version =&gt; 2.718,
+	    }),
+	    author =&gt; Template:::Namespace::Constants-&gt;new({
+		name  =&gt; 'Andy Wardley',
+		email =&gt; 'abw@andywardley.com',
+	    }),
+	    voodoo =&gt; My::Namespace::Handler-&gt;new( ... ),
+	},
+    };</pre>
+<p>
+Now you have 2 constant namespaces, for example:
+</p>
+<pre>    [% tt_start_tag %] site.title [% tt_end_tag %]
+    [% tt_start_tag %] author.name [% tt_end_tag %]</pre>
+<p>
+as well as your own custom namespace handler installed for the 'voodoo'
+namespace.
+</p>
+<pre>    [% tt_start_tag %] voodoo.magic [% tt_end_tag %]</pre>
+<p>
+See [% ttlink('Template::Namespace::Constants', 'Template::Namespace::Constants') -%]
+for an example of what a namespace handler looks like on the inside.
+</p>
+
 </ul>
 [%- END %]
 [% WRAPPER subsection
    title = "Runtime Processing Options"
--%]
-<ul>
-
+-%]<ul>
 <li><b>EVAL_PERL</b><br>
 <p>
 This flag is used to indicate if PERL and/or RAWPERL blocks should be
@@ -555,7 +683,6 @@ runtime environment, making a real nuisance of itself if it really
 wants to.  If you don't like the idea of such uninvited guests causing
 a bother, then you can accept the default and keep EVAL_PERL disabled.
 </p>
-
 
 <li><b>PRE_PROCESS, POST_PROCESS</b><br>
 <p>
@@ -635,7 +762,6 @@ header:
     &lt;title&gt;[% tt_start_tag %] template.title [% tt_end_tag %]&lt;/title&gt;&lt;/head&gt;
     &lt;body bgcolor=&quot;[% tt_start_tag %] bgcolor [% tt_end_tag %]&quot;&gt;</pre>
 
-
 <li><b>PROCESS</b><br>
 <p>
 The PROCESS option may be set to contain the name(s) of template files
@@ -693,7 +819,6 @@ output:
     &amp;copy; Copyright 2000 Fred Foo
     &lt;/body&gt;
     &lt;/html&gt;</pre>
-
 
 <li><b>ERROR</b><br>
 <p>
@@ -775,7 +900,6 @@ type which can then be handled in the usual way.
 </p>
 <pre>    die &quot;I'm sorry Dave, I can't do that&quot;;</pre>
 
-
 <li><b>OUTPUT</b><br>
 <p>
 Default output location or handler.  This may be specified as one of:
@@ -784,7 +908,8 @@ working directory if not specified absolutely); a file handle
 (e.g. GLOB or IO::Handle) opened for writing; a reference to a text
 string to which the output is appended (the string isn't cleared); a
 reference to a subroutine which is called, passing the output text as
-an argument; or as a reference to any object that supports the print()
+an argument; as a reference to an array, onto which the content will be
+push()ed; or as a reference to any object that supports the print()
 method.  This latter option includes the Apache::Request object which
 is passed as the argument to Apache/mod_perl handlers.
 </p>
@@ -816,7 +941,13 @@ example 4 (subroutine):
 	OUTPUT =&gt; \&amp;output,
     });</pre>
 <p>
-example 5 (Apache/mod_perl handler):
+example 5 (array reference):
+</p>
+<pre>    my $template = Template-&gt;new({
+	OUTPUT =&gt; \@output,
+    })</pre>
+<p>
+example 6 (Apache/mod_perl handler):
 </p>
 <pre>    sub handler {
 	my $r = shift;</pre>
@@ -833,9 +964,9 @@ above argument types.
 <pre>    $t-&gt;process($file, $vars, &quot;/tmp/foo&quot;);
     $t-&gt;process($file, $vars, &quot;bar&quot;);
     $t-&gt;process($file, $vars, \*MYGLOB);
+    $t-&gt;process($file, $vars, \@output); 
     $t-&gt;process($file, $vars, $r);  # Apache::Request
     ...</pre>
-
 
 <li><b>OUTPUT_PATH</b><br>
 <p>
@@ -845,8 +976,8 @@ OUTPUT option, or passed by name as the third parameter to the
 Template process() method.
 </p>
 <pre>    my $template = Template-&gt;new({
-	INPUT_PATH  =&gt; &quot;/tmp/src&quot;,
-	OUTPUT_PATH =&gt; &quot;/tmp/dest&quot;,
+	INCLUDE_PATH =&gt; &quot;/tmp/src&quot;,
+	OUTPUT_PATH  =&gt; &quot;/tmp/dest&quot;,
     });</pre>
 <pre>    my $vars = {
 	...
@@ -861,20 +992,91 @@ This example will read the input files '/tmp/src/foo.html' and
 and '/tmp/dest/bar.html', respectively.
 </p>
 
-
 <li><b>DEBUG</b><br>
 <p>
-The DEBUG option causing any access to an undefined variable to be 
-raised as an 'undef' error.
+The DEBUG option enables debugging within the Template Toolkit.  
 </p>
+<pre>    my $template = Template-&gt;new({
+	DEBUG =&gt; 1,
+    });</pre>
+<p>
+Setting this to a true value has two effects.  The first is that
+accessing any variable that returns an undefined variable will cause
+an 'undef' error to be raised.
+</p>
+<p>
+The second is that the output generated by the Template Toolkit will
+have comments added indicating the source file, line and original text
+of each directive in the template.
+</p>
+<p>
+For example, the following template fragment:
+</p>
+<pre>    [% tt_start_tag %] foo = 'World' [% tt_end_tag %]
+    Hello [% tt_start_tag %] foo [% tt_end_tag %]</pre>
+<p>
+would generate this output:
+</p>
+<pre>    ## input text line 1 : [% tt_start_tag %] foo = 'World' [% tt_end_tag %] ##
+    Hello 
+    ## input text line 2 : [% tt_start_tag %] foo [% tt_end_tag %] ##
+    World</pre>
+<p>
+The DEBUG directive can be used to enable and disable directive
+debugging at different parts of a template.  The DEBUG constructor
+option must be set for the DEBUG directive to have any effect.
+</p>
+<pre>    [% tt_start_tag %] DEBUG on [% tt_end_tag %]
+    [% tt_start_tag %] foo = 'World' [% tt_end_tag %]
+    [% tt_start_tag %] DEBUG off [% tt_end_tag %]
+    Hello [% tt_start_tag %] foo [% tt_end_tag %]</pre>
+<p>
+This template fragment would generate the following output:
+</p>
+<pre>    ## input text line 1 : [% tt_start_tag %] foo = 'World' [% tt_end_tag %] ##
+    Hello World</pre>
+<p>
+It is anticipated that a future version of the Template Toolkit will
+support allow the different debugging options to be enabled or
+disabled individually.
+</p>
+
+<li><b>DEBUG_FORMAT</b><br>
+<p>
+The DEBUG_FORMAT option can be used to specify a format string for the
+debugging messages described in the DEBUG option above.  Any
+occurances of <code>'$file'</code>, <code>'$line'</code> or <code>'$text'</code> will be replaced with the
+current file name, line or directive text, respectively.  Notice how
+the format is single quoted to prevent Perl from interpolating those
+tokens as variables.
+</p>
+<pre>    my $template = Template-&gt;new({
+	DEBUG =&gt; 1,
+	DEBUG_FORMAT =&gt; '&lt;!-- $file line $line : [% tt_start_tag %] $text [% tt_end_tag %] --&gt;',
+    });</pre>
+<p>
+The following template fragment:
+</p>
+<pre>    [% tt_start_tag %] DEBUG on [% tt_end_tag %]
+    [% tt_start_tag %] foo = 'World' [% tt_end_tag %]
+    Hello [% tt_start_tag %] foo [% tt_end_tag %]</pre>
+<p>
+would then generate this output:
+</p>
+<pre>    &lt;!-- input text line 2 : [% tt_start_tag %] foo = 'World' [% tt_end_tag %] --&gt;
+    Hello &lt;!-- input text line 3 : [% tt_start_tag %] foo [% tt_end_tag %] --&gt;World</pre>
+<p>
+The DEBUG directive can also be used to set a debug format within
+a template.
+</p>
+<pre>    [% tt_start_tag %] DEBUG format '&lt;!-- $file line $line : [% tt_start_tag %] $text [% tt_end_tag %] --&gt;' [% tt_end_tag %]</pre>
+<pre>    </pre>
 
 </ul>
 [%- END %]
 [% WRAPPER subsection
    title = "Caching and Compiling Options"
--%]
-<ul>
-
+-%]<ul>
 <li><b>CACHE_SIZE</b><br>
 <p>
 The Template::Provider module caches compiled templates to avoid the need
@@ -899,7 +1101,6 @@ The CACHE_SIZE can be set to 0 to disable caching altogether.
 <pre>    my $template = Template-&gt;new({
 	CACHE_SIZE =&gt; 0,   # don't cache any compiled templates
     });</pre>
-
 
 <li><b>COMPILE_EXT</b><br>
 <p>
@@ -932,7 +1133,6 @@ time and resources required to reload templates.  Compiled templates can
 be reloaded by a simple call to Perl's require(), leaving Perl to handle
 all the parsing and compilation.  This is a Good Thing.
 </p>
-
 
 <li><b>COMPILE_DIR</b><br>
 <p>
@@ -1002,9 +1202,7 @@ This would create the following cache directories:
 [%- END %]
 [% WRAPPER subsection
    title = "Plugins and Filters"
--%]
-<ul>
-
+-%]<ul>
 <li><b>PLUGINS</b><br>
 <p>
 The PLUGINS options can be used to provide a reference to a hash array
@@ -1033,7 +1231,6 @@ new() method can be called to instantiate individual plugin objects.
 If the plugin name is not defined in the PLUGINS hash then the PLUGIN_BASE
 and/or LOAD_PERL options come into effect.
 </p>
-
 
 <li><b>PLUGIN_BASE</b><br>
 <p>
@@ -1068,7 +1265,6 @@ example 2:
                        or YourOrg::Template::Plugin::Foo 
                        or          Template::Plugin::Foo </pre>
 
-
 <li><b>LOAD_PERL</b><br>
 <p>
 If a plugin cannot be loaded using the PLUGINS or PLUGIN_BASE
@@ -1101,7 +1297,6 @@ If a particular Perl module does not conform to the common, but not
 unilateral, new() constructor convention then a simple plugin wrapper
 can be written to interface to it.
 </p>
-
 
 <li><b>FILTERS</b><br>
 <p>
@@ -1197,9 +1392,7 @@ See the FILTER directive for further examples.
 [%- END %]
 [% WRAPPER subsection
    title = "Compatibility, Customisation and Extension"
--%]
-<ul>
-
+-%]<ul>
 <li><b>V1DOLLAR</b><br>
 <p>
 In version 1 of the Template Toolkit, an optional leading '$' could be placed
@@ -1311,7 +1504,6 @@ ignored.
 	V1DOLLAR =&gt; 1,
     });</pre>
 
-
 <li><b>LOAD_TEMPLATES</b><br>
 <p>
 The LOAD_TEMPLATE option can be used to provide a reference to a list
@@ -1357,7 +1549,6 @@ constructor method.
 	INCLUDE_PATH =&gt; '/here:/there',
     });</pre>
 
-
 <li><b>LOAD_PLUGINS</b><br>
 <p>
 The LOAD_PLUGINS options can be used to specify a list of provider
@@ -1383,7 +1574,6 @@ constructor.
 	LOAD_PERL   =&gt; 1,
     });</pre>
 
-
 <li><b>LOAD_FILTERS</b><br>
 <p>
 The LOAD_FILTERS option can be used to specify a list of provider
@@ -1403,7 +1593,6 @@ By default, a single Template::Filters object is created for the
 LOAD_FILTERS list.
 </p>
 
-
 <li><b>TOLERANT</b><br>
 <p>
 The TOLERANT flag is used by the various Template Toolkit provider
@@ -1420,7 +1609,6 @@ either through tolerated failure or a genuine disinclination to
 comply, then a '&lt;resource&gt; not found' exception is raised.
 </p>
 
-
 <li><b>SERVICE</b><br>
 <p>
 A reference to a Template::Service object, or sub-class thereof, to which
@@ -1430,7 +1618,6 @@ object is automatically created using the current configuration hash.
 <pre>    my $template = Template-&gt;new({
 	SERVICE =&gt; MyOrg::Template::Service-&gt;new({ ... }),
     });</pre>
-
 
 <li><b>CONTEXT</b><br>
 <p>
@@ -1447,7 +1634,6 @@ manages variable definitions via the get() and set() methods.
 <pre>    my $template = Template-&gt;new({
 	CONTEXT =&gt; MyOrg::Template::Context-&gt;new({ ... }),
     });</pre>
-
 
 <li><b>STASH</b><br>
 <p>
@@ -1471,7 +1657,6 @@ version 1.
 	},
     };</pre>
 
-
 <li><b>PARSER</b><br>
 <p>
 The Template::Parser module implements a parser object for compiling
@@ -1484,7 +1669,6 @@ an alternate parser object.
 <pre>    my $template = Template-&gt;new({
 	PARSER =&gt; MyOrg::Template::Parser-&gt;new({ ... }),
     });</pre>
-
 
 <li><b>GRAMMAR</b><br>
 <p>
@@ -1527,7 +1711,7 @@ created and used automatically if a GRAMMAR item isn't specified.
 [% WRAPPER section
     title="AUTHOR"
 -%]<p>
-Andy Wardley &lt;abw@kfs.org&gt;
+Andy Wardley &lt;abw@andywardley.com&gt;
 </p>
 <p>
 [% ttlink('http://www.andywardley.com/', 'http://www.andywardley.com/') -%]
@@ -1536,7 +1720,7 @@ Andy Wardley &lt;abw@kfs.org&gt;
 [% WRAPPER section
     title="VERSION"
 -%]<p>
-Template Toolkit version 2.07, released on 17 April 2002.
+Template Toolkit version 2.08, released on 30 July 2002.
 </p>
 [%- END %]
 [% WRAPPER section

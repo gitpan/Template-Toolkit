@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Wrap.pm,v 1.37 2002/04/17 14:04:50 abw Exp $
+# $Id: Wrap.pm,v 1.44 2002/07/30 12:46:05 abw Exp $
 #
 #============================================================================
 
@@ -32,7 +32,7 @@ use Template::Plugin;
 use base qw( GD::Text::Wrap Template::Plugin );
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.37 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.44 $ =~ /(\d+)\.(\d+)/);
 
 sub new
 {
@@ -155,8 +155,8 @@ The GD::Text module was written by Martien Verbruggen.
 
 =head1 VERSION
 
-1.37, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+1.43, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

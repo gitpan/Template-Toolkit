@@ -13,13 +13,14 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vmeth.t,v 2.12 2002/03/12 14:06:23 abw Exp $
+# $Id: vmeth.t,v 2.18 2002/07/19 14:45:31 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ./lib ../lib );
+use lib qw( ./lib ../lib ./blib/lib ../blib/lib ./blib/arch ../blib/arch );
 use Template::Test;
+use Template::Stash;
 use Template::Constants qw( :status );
 $^W = 1;
 
@@ -31,6 +32,16 @@ $^W = 1;
 $Template::Stash::LIST_OPS->{ sum } = \&sum;
 $Template::Stash::LIST_OPS->{ odd } = \&odd;
 $Template::Stash::LIST_OPS->{ jumble } = \&jumble;
+
+$Template::Stash::SCALAR_OPS->{ commify } = sub {
+    local $_  = shift;
+    my $c = shift || ",";
+    my $n = int(shift || 3);
+    return $_ if $n<1;
+    1 while s/^([-+]?\d+)(\d{$n})/$1$c$2/;
+    return $_;
+};
+
 
 #------------------------------------------------------------------------
 # define a simple object to test sort vmethod calling object method
@@ -92,6 +103,7 @@ my $params = {
 		   qw( Tom Dick Larry ) ],
     numbers   => [ map { My::Object->new($_) }
 		   qw( 1 02 10 12 021 ) ],
+    duplicates => [ 1, 1, 2, 2, 3, 3, 4, 4, 5, 5],
 
 };
 
@@ -125,6 +137,11 @@ def
 [% string.length %]
 -- expect --
 22
+
+-- test --
+[% string.sort.join %]
+-- expect --
+The cat sat on the mat
 
 -- test --
 [% string.split.join('_') %]
@@ -207,6 +224,13 @@ woz
 [% metavars.size %]
 -- expect --
 7
+
+-- test --
+[% empty = [ ];
+   empty.size 
+%]
+-- expect --
+0
 
 -- test --
 [% metavars.max %]
@@ -297,8 +321,176 @@ Tom
 -- expect --
 2, 3, 5, 7, 11, 13, 17, 19
 
+-- test --
+[% duplicates.unique.join(', ') %]
+--expect --
+1, 2, 3, 4, 5
 
+-- test --
+[% duplicates.unique.join(', ') %]
+-- expect --
+1, 2, 3, 4, 5
+
+-- test --
+[% big_num = "1234567890"; big_num.commify %]
+-- expect --
+1,234,567,890
+
+-- test --
+[% big_num = "1234567890"; big_num.commify(":", 2) %]
+-- expect --
+12:34:56:78:90
+
+-- test --
+[% big_num = "1234567812345678"; big_num.commify(" ", 4) %]
+-- expect --
+1234 5678 1234 5678
+
+-- test --
+[% big_num = "hello world"; big_num.commify %]
+-- expect --
+hello world
+
+
+-- test --
+[% list_one = [ 1 2 3 ];
+   list_two = [ 4 5 6 ];
+   "'$l' " FOREACH l = list_one.merge(list_two) %]
+-- expect --
+'1' '2' '3' '4' '5' '6' 
+
+-- test --
+[% list_one = [ 1 2 3 ];
+   list_two = [ 4 5 6 ];
+   list_three = [ 7 8 9 0 ];
+   "'$l' " FOREACH l = list_one.merge(list_two, list_three) %]
+-- expect --
+'1' '2' '3' '4' '5' '6' '7' '8' '9' '0' 
+
+-- test --
+[% list_one = [ 1 2 3 4 5 ] -%]
+a: [% list_one.splice.join(', ') %]
+b: [% list_one.size ? list_one.join(', ') : 'empty list' %]
+-- expect --
+a: 1, 2, 3, 4, 5
+b: empty list
+
+-- test --
+[% list_one = [ 'a' 'b' 'c' 'd' 'e' ] -%]
+a: [% list_one.splice(3).join(', ') %]
+b: [% list_one.join(', ') %]
+-- expect --
+a: d, e
+b: a, b, c
+
+-- test --
+[% list_one = [ 'a' 'b' 'c' 'd' 'e' ] -%]
+c: [% list_one.splice(3, 1).join(', ') %]
+d: [% list_one.join(', ') %]
+-- expect --
+c: d
+d: a, b, c, e
+
+-- test --
+[% list_one = [ 'a' 'b' 'c' 'd' 'e' ] -%]
+c: [% list_one.splice(3, 1, 'foo').join(', ') %]
+d: [% list_one.join(', ') %]
+e: [% list_one.splice(0, 1, 'ping', 'pong').join(', ') %]
+f: [% list_one.join(', ') %]
+g: [% list_one.splice(-1, 1, ['wibble', 'wobble']).join(', ') %]
+h: [% list_one.join(', ') %]
+-- expect --
+c: d
+d: a, b, c, foo, e
+e: a
+f: ping, pong, b, c, foo, e
+g: e
+h: ping, pong, b, c, foo, wibble, wobble
+
+-- test --
+-- name scrabble --
+[% play_game = [ 'play', 'scrabble' ];
+   ping_pong = [ 'ping', 'pong' ] -%]
+a: [% play_game.splice(1, 1, ping_pong).join %]
+b: [% play_game.join %]
+-- expect --
+a: scrabble
+b: play ping pong
+
+
+-- test --
+-- name first --
+[% primes = [ 2, 3, 5, 7, 11, 13 ] -%]
+[% primes.first +%]
+[% primes.first(3).join(', ') %]
+-- expect --
+2
+2, 3, 5
+
+-- test --
+-- name first --
+[% primes = [ 2, 3, 5, 7, 11, 13 ] -%]
+[% primes.last +%]
+[% primes.last(3).join(', ') %]
+-- expect --
+13
+7, 11, 13
+
+
+-- test --
+-- name slice --
+[% primes = [ 2, 3, 5, 7, 11, 13 ] -%]
+[% primes.slice(0, 2).join(', ') +%]
+[% primes.slice(-2, -1).join(', ') +%]
+[% primes.slice(3).join(', ') +%]
+[% primes.slice.join(', ') +%]
+--expect --
+2, 3, 5
+11, 13
+7, 11, 13
+2, 3, 5, 7, 11, 13
+
+-- test --
+-- name chunk left --
+[% string = 'TheCatSatTheMat' -%]
+[% string.chunk(3).join(', ') %]
+-- expect --
+The, Cat, Sat, The, Mat
+
+-- test --
+-- name chunk leftover --
+[% string = 'TheCatSatonTheMat' -%]
+[% string.chunk(3).join(', ') %]
+-- expect --
+The, Cat, Sat, onT, heM, at
+
+-- test --
+-- name chunk right --
+[% string = 'TheCatSatTheMat' -%]
+[% string.chunk(-3).join(', ') %]
+-- expect --
+The, Cat, Sat, The, Mat
+
+-- test --
+-- name chunk rightover --
+[% string = 'TheCatSatonTheMat' -%]
+[% string.chunk(-3).join(', ') %]
+-- expect --
+Th, eCa, tSa, ton, The, Mat
+
+-- test --
+-- name chunk ccard  --
+[% ccard_no = "1234567824683579";
+   ccard_no.chunk(4).join
+%]
+-- expect --
+1234 5678 2468 3579
+
+
+
+#------------------------------------------------------------------------
 # USER DEFINED LIST OPS
+#------------------------------------------------------------------------
 
 -- test --
 [% items = [0..6] -%]
@@ -409,6 +601,8 @@ no match
 -- expect --
 matched animal: cat  place: mat
 no match
+
+
 
 -- stop --
 

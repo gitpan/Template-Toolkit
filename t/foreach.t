@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 2.7 2002/03/13 15:34:05 abw Exp $
+# $Id: foreach.t,v 2.8 2002/05/03 13:56:34 abw Exp $
 # 
 #========================================================================
 
@@ -91,6 +91,7 @@ my $template = Template->new({
 
 my $ttdebug = Template->new({
     DEBUG => 1,
+    DEBUG_FORMAT => '',
 });
 
 test_expect(\*DATA, [ default => $template, debug => $ttdebug ], $params);
@@ -599,6 +600,7 @@ last outer
 4,1,1
 4,2,1
 4,4,1
+
 -- test --
 [%
     LAST FOREACH k = [ 1 .. 4];

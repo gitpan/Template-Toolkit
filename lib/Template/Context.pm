@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 # 
 # REVISION
-#   $Id: Context.pm,v 2.56 2002/04/17 14:04:38 abw Exp $
+#   $Id: Context.pm,v 2.69 2002/07/30 12:40:09 abw Exp $
 #
 #============================================================================
 
@@ -27,7 +27,7 @@ package Template::Context;
 require 5.004;
 
 use strict;
-use vars qw( $VERSION $DEBUG $AUTOLOAD );
+use vars qw( $VERSION $DEBUG $AUTOLOAD $DEBUG_FORMAT );
 use base qw( Template::Base );
 
 use Template::Base;
@@ -35,7 +35,8 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.69 $ =~ /(\d+)\.(\d+)/);
+$DEBUG_FORMAT = "\n## \$file line \$line : [% \$text %] ##\n";
 
 
 #========================================================================
@@ -75,7 +76,7 @@ $VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 sub template {
     my ($self, $name) = @_;
     my ($prefix, $blocks, $defblocks, $provider, $template, $error);
-    my ($shortname, $providers);
+    my ($shortname, $blockname, $providers);
 
     # references to Template::Document (or sub-class) objects objects, or
     # CODE references are assumed to be pre-compiled templates and are
@@ -119,16 +120,36 @@ sub template {
 	      || $self->{ LOAD_TEMPLATES }
         unless $providers;
 
-    # finally we try the regular template providers which will 
+
+    # Finally we try the regular template providers which will 
     # handle references to files, text, etc., as well as templates
-    # reference by name
-    foreach my $provider (@$providers) {
-	($template, $error) = $provider->fetch($shortname, $prefix);
-	return $template unless $error;
-	if ($error == Template::Constants::STATUS_ERROR) {
-	    $self->throw($template) if ref $template;
-	    $self->throw(Template::Constants::ERROR_FILE, $template);
+    # reference by name.  If
+
+    $blockname = '';
+    while ($shortname) {
+	$self->DEBUG("looking for [$shortname] [$blockname]\n") if $DEBUG;
+
+	foreach my $provider (@$providers) {
+	    ($template, $error) = $provider->fetch($shortname, $prefix);
+	    if ($error) {
+		if ($error == Template::Constants::STATUS_ERROR) {
+		    $self->throw($template) if ref $template;
+		    $self->throw(Template::Constants::ERROR_FILE, $template);
+		}
+		# DECLINE is ok, carry on
+	    }
+	    elsif (length $blockname) {
+		return $template 
+		    if $template = $template->blocks->{ $blockname };
+	    }
+	    else {
+		return $template;
+	    }
 	}
+
+	last if ref $shortname || ! $self->{ EXPOSE_BLOCKS };
+	$shortname =~ s{/([^/]+)$}{} || last;
+	$blockname = length $blockname ? "$1/$blockname" : $1;
     }
 
     $self->throw(Template::Constants::ERROR_FILE, "$name: not found");
@@ -217,7 +238,7 @@ sub filter {
 
 
 #------------------------------------------------------------------------
-# view(\%coonfig)
+# view(\%config)
 # 
 # Create a new Template::View bound to this context.
 #------------------------------------------------------------------------
@@ -232,21 +253,24 @@ sub view {
 
 
 #------------------------------------------------------------------------
-# process($template, \%params)    [% PROCESS template   var = val, ... %]
+# process($template, \%params)            [% PROCESS template   var = val, ... %]
+# process($template, \%params, $localize) [% INCLUDE template   var = val, ... %]
 #
 # Processes the template named or referenced by the first parameter.
 # The optional second parameter may reference a hash array of variable
-# definitions.  These are set before the template is processed by calling
-# update() on the stash.  Note that the context is not localised and 
-# these, and any other variables set in the template will retain their
-# new values after this method returns.
+# definitions.  These are set before the template is processed by
+# calling update() on the stash.  Note that, unless the third parameter
+# is true, the context is not localised and these, and any other
+# variables set in the template will retain their new values after this
+# method returns.  The third parameter is in place so that this method
+# can handle INCLUDE calls: the stash will be localized.
 #
 # Returns the output of processing the template.  Errors are thrown
 # as Template::Exception objects via die().  
 #------------------------------------------------------------------------
 
 sub process {
-    my ($self, $template, $params) = @_;
+    my ($self, $template, $params, $localize) = @_;
     my ($trim, $blocks) = @$self{ qw( TRIM BLOCKS ) };
     my (@compiled, $name, $compiled);
     my ($stash, $tblocks, $error, $tmpout);
@@ -259,42 +283,61 @@ sub process {
 	push(@compiled, $self->template($name));
     }
 
-    # update stash with any new parameters passed
-    $self->{ STASH }->update($params);
-    $stash = $self->{ STASH };
-
-    foreach $name (@$template) {
-	$compiled = shift @compiled;
-	my $element = ref $compiled eq 'CODE' 
-	    ? { (name => (ref $name ? '' : $name), modtime => time()) }
-	: $compiled;
-	$stash->set('component', $element);
-	
-	# merge any local blocks defined in the Template::Document into our
-	# local BLOCKS cache
-	@$blocks{ keys %$tblocks } = values %$tblocks
-	    if UNIVERSAL::isa($compiled, 'Template::Document')
-		&& ($tblocks = $compiled->blocks());
-	
-	if (ref $compiled eq 'CODE') {
-	    $tmpout = &$compiled($self);
-	}
-	elsif (ref $compiled) {
-	    $tmpout = $compiled->process($self);
-	}
-	else {
-	    $self->throw('file', 
-			 "invalid template reference: $compiled");
-	}
-	
-	if ($trim) {
-	    for ($tmpout) {
-		s/^\s+//;
-		s/\s+$//;
-	    }
-	}
-	$output .= $tmpout;
+    if ($localize) {
+	# localise the variable stash with any parameters passed
+	$stash = $self->{ STASH } = $self->{ STASH }->clone($params);
+    } else {
+	# update stash with any new parameters passed
+	$self->{ STASH }->update($params);
+	$stash = $self->{ STASH };
     }
+
+    eval {
+	foreach $name (@$template) {
+	    $compiled = shift @compiled;
+	    my $element = ref $compiled eq 'CODE' 
+		? { (name => (ref $name ? '' : $name), modtime => time()) }
+	        : $compiled;
+	    $stash->set('component', $element);
+	    
+	    unless ($localize) {
+		# merge any local blocks defined in the Template::Document
+		# into our local BLOCKS cache
+		@$blocks{ keys %$tblocks } = values %$tblocks
+		    if UNIVERSAL::isa($compiled, 'Template::Document')
+			&& ($tblocks = $compiled->blocks());
+	    }
+	    
+	    if (ref $compiled eq 'CODE') {
+		$tmpout = &$compiled($self);
+	    }
+	    elsif (ref $compiled) {
+		$tmpout = $compiled->process($self);
+	    }
+	    else {
+		$self->throw('file', 
+			    "invalid template reference: $compiled");
+	    }
+	    
+	    if ($trim) {
+		for ($tmpout) {
+		    s/^\s+//;
+		    s/\s+$//;
+		}
+	    }
+	    $output .= $tmpout;
+	}
+    };
+    $error = $@;
+    
+    if ($localize) {
+	# ensure stash is delocalised before dying
+	$self->{ STASH } = $self->{ STASH }->declone();
+    }
+
+    $self->throw(ref $error 
+		 ? $error : (Template::Constants::ERROR_FILE, $error))
+	if $error;
     
     return $output;
 }
@@ -316,59 +359,8 @@ sub process {
 
 sub include {
     my ($self, $template, $params) = @_;
-    my $trim = $self->{ TRIM };
-    my (@compiled, $name, $compiled);
-    my ($stash, $error, $tmpout);
-    my $output = '';
-
-    $template = [ $template ] unless ref $template eq 'ARRAY';
-
-    # fetch compiled template for each name specified
-    foreach $name (@$template) {
-	push(@compiled, $self->template($name));
-    }
-
-    # localise the variable stash with any parameters passed
-    $stash = $self->{ STASH } = $self->{ STASH }->clone($params);
-
-    eval {
-	foreach $name (@$template) {
-	    $compiled = shift @compiled;
-	    my $element = ref $compiled eq 'CODE' 
-		? { (name => (ref $name ? '' : $name), modtime => time()) }
-		: $compiled;
-	    $stash->set('component', $element);
-
-	    if (ref $compiled eq 'CODE') {
-		$tmpout = &$compiled($self);
-	    }
-	    elsif (ref $compiled) {
-		$tmpout = $compiled->process($self);
-	    }
-	    else {
-		$self->throw('file', 
-			     "invalid template reference: $compiled");
-	    }
-
-	    if ($trim) {
-		for ($tmpout) {
-		    s/^\s+//;
-		    s/\s+$//;
-		}
-	    }
-	    $output .= $tmpout;
-	}
-    };
-    $error = $@;
-    # ensure stash is delocalised before dying
-    $self->{ STASH } = $self->{ STASH }->declone();
-    $self->throw(ref $error 
-		 ? $error : (Template::Constants::ERROR_FILE, $error))
-	if $error;
-					
-    return $output;
+    return $self->process($template, $params, 'localize me!');
 }
-
 
 #------------------------------------------------------------------------
 # insert($file)
@@ -628,6 +620,50 @@ sub stash {
 
 
 #------------------------------------------------------------------------
+# debug($command, @args, \%params)
+#
+# Method for controlling the debugging status of the context.  The first
+# argument can be 'on' or 'off' to enable/disable debugging, 'format'
+# to define the format of the debug message, or 'msg' to generate a 
+# debugging message reporting the file, line, message text, etc., 
+# according to the current debug format.
+#------------------------------------------------------------------------
+
+sub debug {
+    my $self = shift;
+    my $hash = ref $_[-1] eq 'HASH' ? pop : { };
+    my @args = @_;
+
+#    print "*** debug(@args)\n";
+    if (@args) {
+	if ($args[0] =~ /^on|1$/i) {
+	    $self->{ DEBUG } = 1;
+	    shift(@args);
+	}
+	elsif ($args[0] =~ /^off|0$/i) {
+	    $self->{ DEBUG } = 0;
+	    shift(@args);
+	}
+    }
+
+    if (@args) {
+	if ($args[0] =~ /^msg$/i) {
+	    my $format = $self->{ DEBUG_FORMAT };
+	    $format = $DEBUG_FORMAT unless defined $format;
+	    $format =~ s/\$(\w+)/$hash->{ $1 }/ge;
+	    return $format;
+	}
+	elsif ($args[0] =~ /^format$/i) {
+	    $self->{ DEBUG_FORMAT } = $args[1];
+	}
+	# else ignore
+    }
+
+    return '';
+}
+
+
+#------------------------------------------------------------------------
 # AUTOLOAD
 #
 # Provides pseudo-methods for read-only access to various internal 
@@ -738,11 +774,13 @@ sub _init {
 
     $self->{ RECURSION } = $config->{ RECURSION } || 0;
     $self->{ EVAL_PERL } = $config->{ EVAL_PERL } || 0;
-#    $self->{ DELIMITER } = $config->{ DELIMITER } || ':';
     $self->{ TRIM      } = $config->{ TRIM } || 0;
     $self->{ BLKSTACK  } = [ ];
     $self->{ CONFIG    } = $config;
-
+    $self->{ DEBUG_FORMAT  } = $config->{ DEBUG_FORMAT };
+    $self->{ EXPOSE_BLOCKS } = defined $config->{ EXPOSE_BLOCKS }
+                                     ? $config->{ EXPOSE_BLOCKS } 
+                                     : 0;
     return $self;
 }
 
@@ -756,12 +794,26 @@ sub _init {
 
 sub _dump {
     my $self = shift;
-    my $output = "$self\n";
-    foreach my $pname (qw( LOAD_TEMPLATES LOAD_PLUGINS LOAD_FILTERS )) {
-	foreach my $prov (@{ $self->{ $pname } }) {
-	    $output .= $prov->_dump();
-	}
+    my $output = "[Template::Context] {\n";
+    my $format = "    %-16s => %s\n";
+    my $key;
+
+    foreach $key (qw( RECURSION EVAL_PERL TRIM )) {
+	$output .= sprintf($format, $key, $self->{ $key });
     }
+    foreach my $pname (qw( LOAD_TEMPLATES LOAD_PLUGINS LOAD_FILTERS )) {
+	my $provtext = "[\n";
+	foreach my $prov (@{ $self->{ $pname } }) {
+	    $provtext .= $prov->_dump();
+#	    $provtext .= ",\n";
+	}
+	$provtext =~ s/\n/\n        /g;
+	$provtext =~ s/\s+$//;
+	$provtext .= ",\n    ]";
+	$output .= sprintf($format, $pname, $provtext);
+    }
+    $output .= sprintf($format, STASH => $self->{ STASH }->_dump());
+    $output .= '}';
     return $output;
 }
 
@@ -1372,7 +1424,7 @@ An AUTOLOAD method provides access to context configuration items.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -1381,8 +1433,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.56, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.67, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

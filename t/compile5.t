@@ -14,7 +14,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile5.t,v 2.4 2001/11/09 14:03:14 abw Exp $
+# $Id: compile5.t,v 2.5 2002/04/19 09:19:53 abw Exp $
 #
 #========================================================================
 
@@ -31,7 +31,7 @@ my $cdir  = abs_path("$dir/tmp") . "/cache";
 my $ttcfg = {
     POST_CHOMP   => 1,
     INCLUDE_PATH => "$dir/src",
-    COMPILE_DIR  => $cdir,
+    COMPILE_DIR  => "$cdir/",    # note trailing slash - should be handled OK
     COMPILE_EXT  => '.ttc',
     ABSOLUTE     => 1,
 };

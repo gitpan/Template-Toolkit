@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: macro.t,v 2.2 2000/12/15 16:01:11 abw Exp $
+# $Id: macro.t,v 2.4 2002/07/29 17:23:47 abw Exp $
 #
 #========================================================================
 
@@ -23,6 +23,7 @@ $^W = 1;
 
 my $config = {
     INCLUDE_PATH => -d 't' ? 't/test/src' : 'test/src',
+    EVAL_PERL => 1,
     TRIM => 1,
 };
 
@@ -146,3 +147,19 @@ two: [% title %] -> [% saveone %]
 -- expect --
 two: 2[The Title] -> one: 2[The Title]
 
+-- test --
+-- name number macro --
+[% MACRO number(n) GET n.chunk(-3).join(',') -%]
+[% number(1234567) %]
+-- expect --
+1,234,567
+
+-- test --
+-- name perl macro --
+[% MACRO triple(n) PERL %]
+    my $n = $stash->get('n');
+    print $n * 3;
+[% END -%]
+[% triple(10) %]
+-- expect --
+30

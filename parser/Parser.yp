@@ -37,7 +37,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Parser.yp,v 2.11 2001/11/29 16:44:36 abw Exp $
+# $Id: Parser.yp,v 2.14 2002/07/19 13:22:57 abw Exp $
 #
 #========================================================================
 
@@ -128,6 +128,16 @@ atomdir:    GET expr		    { $factory->get($_[2])                }
 				        : ($_[0]->{ INWHILE }
                                            ? 'next LOOP;'
                                            : 'next;')                     }
+	|   DEBUG nameargs          { if ($_[2]->[0]->[0] =~ /^'(on|off)'$/) {
+				          $_[0]->{ DEBUG } = ($1 eq 'on');
+#					  print STDERR "turned DEBUG ", $_[0]->{ DEBUG } ? 'on' : 'off', "\n";
+					  $factory->debug($_[2]);
+				      }
+				      else {
+# print STDERR "debug ($_[0]->{ DEBUG }) @{$_[2]->[0]}\n";
+					  $_[0]->{ DEBUG } ? $factory->debug($_[2]) : '';
+				      }
+				    }
         |   wrapper
 	|   filter
 ;
@@ -227,16 +237,18 @@ filter:	    FILTER lnameargs ';'
 	      lnameargs		    { $factory->filter(@_[3,1])           }
 ;
 
-#defblock:   BLOCK blockname ';' 
-#	      template END	    { $_[0]->define_block(@_[2, 4]); 
-#				      undef                               }
-#;
-defblock:   BLOCK blockname blockargs ';' 
-	      template END	    { local $" = ', ';
-				      print STDERR "experimental block args: [@{ $_[3] }]\n"
-					  if $_[3];
-				      $_[0]->define_block(@_[2, 5]); 
-				      undef                               }
+defblock: defblockname 
+          blockargs ';' 
+          template END		    { my $name = join('/', @{ $_[0]->{ DEFBLOCKS } });
+				      pop(@{ $_[0]->{ DEFBLOCKS } });
+				      $_[0]->define_block($name, $_[4]); 
+				      undef
+				    }
+;
+
+defblockname: BLOCK blockname       { push(@{ $_[0]->{ DEFBLOCKS } }, $_[2]);
+				      $_[2];
+				    }
 ;
 
 blockname:  filename 

@@ -3,7 +3,7 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for the Template Toolkit version 2.07, detailing
+#   Revision history for the Template Toolkit version 2.08, detailing
 #   significant changes between versions, most recent first.  Some 
 #   way down the file you'll find a section detailing major changes from 
 #   version 1.* to 2.* and a list of "Gotchas!" that you might have to 
@@ -19,8 +19,109 @@
 #   Any changes you make here may be lost!
 #
 #------------------------------------------------------------------------
-# $Id: Changes.tt2,v 1.50 2002/04/17 14:01:24 abw Exp $
+# $Id: Changes,v 2.67 2002/07/30 12:44:03 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 2.08 - July 30th 2002
+#------------------------------------------------------------------------
+
+* Applied two minor patches from Leon to remove 'use warnings' from 2
+  test scripts to maintain compatability with 5.005
+
+
+#------------------------------------------------------------------------
+# Version 2.07c - July 22nd 2002                  ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed a bug in Date plugin introduced in last version which caused
+  it to ignore the 'time' parameter.
+
+* Modified INCLUDE_PATH handling in Template::Provider to accept a 
+  reference to a subroutine or object implementing a paths() method
+  as an element in the list.  This is then called to return a 
+  dynamically generated path.  Documented and tested.
+
+* Changed the implementation of the NAMESPACE calling code to leave
+  the namespace prefix intact on the ident list which then gets 
+  passed to the handler's ident() method.  Modified the ident()
+  method of Template::Namespace::Constants to expect and remove it.
+  Constant folding now *doesn't* happen for constants that return
+  a reference or undefined value.  These get compiled as regular
+  runtime variable lookups.
+
+* Added new list virtual methods: 'unique' to cull multiple identical
+  items, 'merge' to merge lists together, 'splice' which acts 
+  just like Perl's splice, and 'slice' which returns a slice of the 
+  list.  Also modified first and last virtual methods to take an
+  argument indicating the number of items to return from the start or
+  end of the list.  Added the 'chunk' scalar virtual method to split a
+  string into chunks of a particular flushed either left or right.
+  (darren, mark, abw)
+
+* Moved documentation for virtual methods into a separate manpage,
+  Template::Manual::VMethods
+
+* Modifed Template::Test to allow -- name testname -- comments to 
+  be added to tests to give them names, reported by test harness
+  (darren)
+
+* Merged functionality of process() and include() methods into 
+  process() with optional third $localize flag.  (darren)
+
+* Modified the OUTPUT option to accept a reference to a list (darren)
+
+
+#------------------------------------------------------------------------
+# Version 2.07b - July 7th 2002                   ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Added the CONSTANTS, CONSTANTS_NAMESPACE and NAMESPACE options, the
+  Template::Namespace::Constants module, documentation and t/constants.t
+  test suite.  This adds support for compile-time constant folding and
+  other custom namespace handlers.
+
+
+#------------------------------------------------------------------------
+# Version 2.07a - July 5th 2002                   ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Changed the Perl and XS stashes to automatically promote a scalar
+  to a list and apply a list virtual method (if defined) as a last
+  ditch attempt.  
+
+* Changed Template::Stash::Context virtual methods to import those
+  of Template::Stash.
+
+* Fixed a potential race condition when using compiled templates
+  by changing Template::Document::write_perl_file() to write
+  to a temporary file and then rename it into place, thus preventing
+  two separate processes attempting to write the same file at the
+  same time.
+
+* Added the DEBUG and DEBUG_FORMAT options and the corresponding
+  DEBUG directive.
+ 
+* Fixed bug introduced to Template::Provider in 2.06g which changed 
+  handling of trailing slashes on COMPILE_DIR.
+
+* Fixed a bug in Template::Parser to preserve any post-chomp flags 
+  that were otherwise ignored when an entire directive is commented
+  out, e.g.
+
+    [%# blah
+      # blah 
+    -%]
+
+* Applied a patch from Harald Joerg so that ttree considers files 
+  with equal mtime to be "not modified".
+
+* Applied a patch from Keith Murphy adding the gmt flag to the Date
+  plugin.
+
+* Applied Makefile.PL portability patch from Chris Nandor.
+
+* Minor documentation fixes.
 
 #------------------------------------------------------------------------
 # Version 2.07 - April 17th 2002 

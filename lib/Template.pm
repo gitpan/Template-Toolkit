@@ -7,18 +7,17 @@
 #   Toolkit.
 #
 # AUTHOR
-#   Andy Wardley   <abw@kfs.org>
+#   Andy Wardley   <abw@andywardley.com>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#------------------------------------------------------------------------
-#
-#   $Id: Template.pm,v 2.40 2002/04/17 14:04:37 abw Exp $
+# REVISION
+#   $Id: Template.pm,v 2.52 2002/07/30 12:44:54 abw Exp $
 #
 #========================================================================
  
@@ -28,7 +27,7 @@ use base qw( Template::Base );
 require 5.005;
 
 use strict;
-use vars qw( $VERSION $AUTOLOAD $ERROR $DEBUG );
+use vars qw( $VERSION $AUTOLOAD $ERROR $DEBUG $BINMODE );
 use Template::Base;
 use Template::Config;
 use Template::Provider;  
@@ -39,9 +38,10 @@ use File::Path;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '2.07';
+$VERSION     = '2.08';
 $ERROR       = '';
 $DEBUG       = 0;
+$BINMODE     = ($^O eq 'MSWin32') ? 1 : 0;
 
 
 #------------------------------------------------------------------------
@@ -67,7 +67,7 @@ sub process {
 
 	# send processed template to output stream, checking for error
 	return ($self->error($error))
-	    if ($error = &_output($outstream, $output));
+	    if ($error = &_output($outstream, $output, $BINMODE));
 
 	return 1;
     }
@@ -113,6 +113,15 @@ sub context {
 sub _init {
     my ($self, $config) = @_;
 
+    # prepare a namespace handler for any CONSTANTS definition
+    if (my $constants = $config->{ CONSTANTS }) {
+	my $ns  = $config->{ NAMESPACE } ||= { };
+	my $cns = $config->{ CONSTANTS_NAMESPACE } || 'constants';
+	$constants = Template::Config->constants($constants)
+	    || return $self->error(Template::Config->error);
+	$ns->{ $cns } = $constants;
+    }
+
     $self->{ SERVICE } = $config->{ SERVICE }
 	|| Template::Config->service($config)
 	|| return $self->error(Template::Config->error);
@@ -133,7 +142,7 @@ sub _output {
     my $reftype;
     my $error = 0;
     
-    # call a CODE referenc
+    # call a CODE reference
     if (($reftype = ref($where)) eq 'CODE') {
 	&$where($text);
     }
@@ -144,6 +153,10 @@ sub _output {
     # append output to a SCALAR ref
     elsif ($reftype eq 'SCALAR') {
 	$$where .= $text;
+    }
+    # push onto ARRAY ref
+    elsif ($reftype eq 'ARRAY') {
+	push @$where, $text;
     }
     # call the print() method on an object that implements the method
     # (e.g. IO::Handle, Apache::Request, etc)
@@ -880,7 +893,7 @@ Ignored and deleted.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -889,7 +902,7 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.07, released on 17 April 2002.
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Filters.pm,v 2.52 2002/04/17 14:04:39 abw Exp $
+# $Id: Filters.pm,v 2.59 2002/07/30 12:44:57 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $FILTERS $URI_ESCAPES $PLUGIN_FILTER );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.52 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.59 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -203,12 +203,41 @@ sub _init {
 #------------------------------------------------------------------------
 # _dump()
 # 
-# Debug method - does nothing much atm.
+# Debug method
 #------------------------------------------------------------------------
 
 sub _dump {
     my $self = shift;
-    return "$self\n";
+    my $output = "[Template::Filters] {\n";
+    my $format = "    %-16s => %s\n";
+    my $key;
+
+    foreach $key (qw( TOLERANT )) {
+	my $val = $self->{ $key };
+	$val = '<undef>' unless defined $val;
+	$output .= sprintf($format, $key, $val);
+    }
+
+    my $filters = $self->{ FILTERS };
+    $filters = join('', map { 
+	sprintf("    $format", $_, $filters->{ $_ });
+    } keys %$filters);
+    $filters = "{\n$filters    }";
+    
+    $output .= sprintf($format, 'FILTERS (local)' => $filters);
+
+    $filters = $FILTERS;
+    $filters = join('', map { 
+	my $f = $filters->{ $_ };
+	my ($ref, $dynamic) = ref $f eq 'ARRAY' ? @$f : ($f, 0);
+	sprintf("    $format", $_, $dynamic ? 'dynamic' : 'static');
+    } sort keys %$filters);
+    $filters = "{\n$filters    }";
+    
+    $output .= sprintf($format, 'FILTERS (global)' => $filters);
+
+    $output .= '}';
+    return $output;
 }
 
 
@@ -909,7 +938,7 @@ output:
 
 Folds the input to UPPER CASE.
 
-    [% "hello world" | FILTER upper %]
+    [% "hello world" FILTER upper %]
 
 output:
 
@@ -919,7 +948,7 @@ output:
 
 Folds the input to lower case.
 
-    [% "Hello World" | FILTER lower %]
+    [% "Hello World" FILTER lower %]
 
 output:
 
@@ -929,7 +958,7 @@ output:
 
 Folds the first character of the input to UPPER CASE.
 
-    [% "hello" | FILTER ucfirst %]
+    [% "hello" FILTER ucfirst %]
 
 output:
 
@@ -939,7 +968,7 @@ output:
 
 Folds the first character of the input to lower case.
 
-    [% "HELLO" | FILTER lcfirst %]
+    [% "HELLO" FILTER lcfirst %]
 
 output:
 
@@ -997,7 +1026,7 @@ equally as comprehensive) to perform the encoding.  If one or other of
 these modules are installed on your system then the text will be
 encoded (via the escape_html() or encode_entities() subroutines
 respectively) to convert all extended characters into their
-appropriate HTML entities (e.g. converting 'é' to '&eacute;').  If
+appropriate HTML entities (e.g. converting 'Ã©' to '&eacute;').  If
 neither module is available on your system then an 'html_all' exception
 will be thrown reporting an appropriate message.   
 
@@ -1302,7 +1331,7 @@ by latex, pdflatex or dvips.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -1311,8 +1340,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.52, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.58, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

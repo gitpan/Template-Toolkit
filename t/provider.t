@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: provider.t,v 2.4 2001/06/14 13:20:12 abw Exp $
+# $Id: provider.t,v 2.7 2002/07/08 16:50:23 abw Exp $
 #
 #========================================================================
 
@@ -39,6 +39,7 @@ my $factory = 'Template::Config';
 
 # script may be being run in distribution root or 't' directory
 my $dir     = -d 't' ? 't/test/src' : 'test/src';
+my $lib     = -d 't' ? 't/test/lib' : 'test/lib';
 my $file    = 'foo';
 my $relfile = "./$dir/$file";
 my $absfile = abs_path($dir) . '/' . $file;
@@ -156,7 +157,58 @@ my $ttrel = Template->new( LOAD_TEMPLATES => [ $provrel ] )
 ok( $ttrel );
 
 
-my $uselist = [ ttinc => $ttinc, ttabs => $ttabs, ttrel => $ttrel ];
+#------------------------------------------------------------------------
+# here's a test of the dynamic path capability.  we'll define a handler
+# sub and an object to return a dynamic list of paths
+#------------------------------------------------------------------------
+
+package My::DPaths;
+
+sub new {
+    my ($class, @paths) = @_;
+    bless \@paths, $class;
+}
+sub paths {
+    my $self = shift;
+    return [ @$self ];
+}
+
+package main;
+
+sub dpaths {
+    return [ "$lib/one", "$lib/two" ],
+}
+
+# this one is designed to test the $MAX_DIRS runaway limit
+$Template::Provider::MAX_DIRS = 42;
+
+sub badpaths {
+    return [ \&badpaths ],
+}
+
+my $dpaths = My::DPaths->new("$lib/two", "$lib/one");
+
+my $ttd1 = Template->new({
+    INCLUDE_PATH => [ \&dpaths, $dir ],
+    PARSER => $parser,
+}) || die "$Template::ERROR\n";
+ok( $ttd1, 'dynamic path (sub) template object created' );
+
+my $ttd2 = Template->new({
+    INCLUDE_PATH => [ $dpaths, $dir ],
+    PARSER => $parser,
+}) || die "$Template::ERROR\n";
+ok( $ttd1, 'dynamic path (obj) template object created' );
+
+my $ttd3 = Template->new({
+    INCLUDE_PATH => [ \&badpaths ],
+    PARSER => $parser,
+}) || die "$Template::ERROR\n";
+ok( $ttd3, 'dynamic path (bad) template object created' );
+
+
+my $uselist = [ ttinc => $ttinc, ttabs => $ttabs, ttrel => $ttrel,
+		ttd1 => $ttd1, ttd2 => $ttd2, ttdbad => $ttd3 ];
 
 test_expect(\*DATA, $uselist, $vars);
 
@@ -286,4 +338,46 @@ This is the old content
 -- expect --
 This is the new content
 
+#------------------------------------------------------------------------
+# dynamic path tests 
+#------------------------------------------------------------------------
 
+-- test --
+-- use ttd1 --
+foo: [% PROCESS foo | trim +%]
+bar: [% PROCESS bar | trim +%]
+baz: [% PROCESS baz a='alpha' | trim %]
+-- expect --
+foo: This is one/foo
+bar: This is two/bar
+baz: This is the baz file, a: alpha
+
+-- test --
+foo: [% INSERT foo | trim +%]
+bar: [% INSERT bar | trim +%]
+-- expect --
+foo: This is one/foo
+bar: This is two/bar
+
+-- test --
+-- use ttd2 --
+foo: [% PROCESS foo | trim +%]
+bar: [% PROCESS bar | trim +%]
+baz: [% PROCESS baz a='alpha' | trim %]
+-- expect --
+foo: This is two/foo
+bar: This is two/bar
+baz: This is the baz file, a: alpha
+
+-- test --
+foo: [% INSERT foo | trim +%]
+bar: [% INSERT bar | trim +%]
+-- expect --
+foo: This is two/foo
+bar: This is two/bar
+
+-- test --
+-- use ttdbad --
+[% TRY; INCLUDE foo; CATCH; e; END %]
+-- expect --
+file error - INCLUDE_PATH exceeds 42 directories

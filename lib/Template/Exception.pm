@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Exception.pm,v 2.44 2002/04/17 14:04:38 abw Exp $
+# $Id: Exception.pm,v 2.51 2002/07/30 12:44:57 abw Exp $
 #
 #========================================================================
 
@@ -36,7 +36,7 @@ use constant TEXT  => 2;
 use overload q|""| => "as_string";
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.44 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.51 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -219,7 +219,7 @@ would be a specific type of the more general 'foo' type.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -228,8 +228,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.44, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.50, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

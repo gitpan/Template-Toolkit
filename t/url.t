@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: url.t,v 2.3 2002/01/10 16:50:18 abw Exp $
+# $Id: url.t,v 2.4 2002/06/13 07:41:23 abw Exp $
 #
 #========================================================================
 
@@ -19,11 +19,43 @@ use strict;
 use lib qw( ../lib );
 use Template qw( :status );
 use Template::Test;
+use Template::Plugin::URL;
 $^W = 1;
 
 $Template::Test::DEBUG = 0;
 
-test_expect(\*DATA, { INTERPOLATE => 1 }, { sorted => \&sort_params });
+my $urls = {
+    product => {
+	map {
+	    $_->{ name }, Template::Plugin::URL->new(undef, # no context 
+						     $_->{ url  },
+						     $_->{ args });
+	} 
+	(
+	 {
+	     name => 'view',
+	     url  => '/product',
+	 },
+	 {
+	     name => 'add',
+	     url  => '/product',
+	     args => { action => 'add' },
+	 },
+	 {
+	     name => 'edit',
+	     url  => '/product',
+	     args => { action => 'edit', style => 'editor' },
+	 },
+	 ),
+    },
+};
+
+my $vars = {
+    url => $urls,
+    sorted => \&sort_params,
+};
+
+test_expect(\*DATA, { INTERPOLATE => 1 }, $vars);
 
 # url params are constructed in a non-deterministic order.  we obviously
 # can't test against this so we use this devious hack to reorder a
@@ -117,3 +149,23 @@ there?age=42&amp;name=frank
 -- expect --
 /script?one=1&amp;three=3&amp;three=6&amp;three=9&amp;two=2&amp;two=4
 
+-- test --
+[% url.product.view %]
+[% url.product.view(style='compact') %]
+-- expect --
+/product
+/product?style=compact
+
+-- test --
+[% url.product.add %]
+[% url.product.add(style='compact') %]
+-- expect --
+/product?action=add
+/product?action=add&amp;style=compact
+
+-- test --
+[% url.product.edit %]
+[% url.product.edit(style='compact') %]
+-- expect --
+/product?action=edit&amp;style=editor
+/product?action=edit&amp;style=compact

@@ -26,7 +26,7 @@
 *
 *---------------------------------------------------------------------
 *
-* $Id: Stash.xs,v 1.11 2002/04/15 14:32:07 abw Exp $
+* $Id: Stash.xs,v 1.13 2002/07/19 14:45:34 abw Exp $
 *
 *=====================================================================*/
 
@@ -68,7 +68,7 @@ typedef enum tt_ret { TT_RET_UNDEF, TT_RET_OK, TT_RET_CODEREF } TT_RET;
 
 static TT_RET   hash_op(pTHX_ SV*, char*, AV*, SV**);
 static TT_RET   list_op(pTHX_ SV*, char*, AV*, SV**);
-static TT_RET   scalar_op(pTHX_ SV*, char*, AV*, SV**);
+static TT_RET   scalar_op(pTHX_ SV*, char*, AV*, SV**, int);
 static TT_RET   tt_fetch_item(pTHX_ SV*, SV*, AV*, SV**);
 static SV*      dotop(pTHX_ SV*, SV*, AV*, int);
 static SV*      call_coderef(pTHX_ SV*, AV*);
@@ -94,7 +94,7 @@ static SV*      scalar_dot_defined(pTHX_ SV*, AV*);
 static SV*      scalar_dot_length(pTHX_ SV*, AV*);
 
 static char rcsid[] = 
-	"$Id: Stash.xs,v 1.11 2002/04/15 14:32:07 abw Exp $";
+	"$Id: Stash.xs,v 1.13 2002/07/19 14:45:34 abw Exp $";
 
 /* dispatch table for XS versions of special "virtual methods",
  * names must be in alphabetical order 		
@@ -109,10 +109,10 @@ static const struct xs_arg {
        --------	 ----------------  ---------------  ------------------  */
     { "defined", NULL,		   NULL,	    scalar_dot_defined	},
     { "each",	 NULL,		   hash_dot_each,   NULL		},
-    { "first",	 list_dot_first,   NULL,	    NULL		},
+/*  { "first",	 list_dot_first,   NULL,	    NULL		}, */
     { "join",	 list_dot_join,    NULL,	    NULL		}, 
     { "keys",	 NULL,		   hash_dot_keys,   NULL		},
-    { "last",	 list_dot_last,	   NULL,	    NULL		},
+/*  { "last",	 list_dot_last,	   NULL,	    NULL		}, */
     { "length",	 NULL,		   NULL,	    scalar_dot_length	},
     { "max",	 list_dot_max,	   NULL,	    NULL		},
     { "reverse", list_dot_reverse, NULL,	    NULL		},
@@ -543,7 +543,7 @@ static SV *dotop(pTHX_ SV *root, SV *key_sv, AV *args, int flags) {
 			result = (SV *) mk_mortal_av(aTHX_ &PL_sv_undef, NULL, ERRSV);
 		}
 		else 
-		    scalar_op(aTHX_ root, item, args, &result);
+		    scalar_op(aTHX_ root, item, args, &result, flags);
 	    }
 	}
     }
@@ -552,7 +552,8 @@ static SV *dotop(pTHX_ SV *root, SV *key_sv, AV *args, int flags) {
      */
     
     else if (!(flags & TT_LVALUE_FLAG) 
-	     && (scalar_op(aTHX_ root, item, args, &result) == TT_RET_UNDEF)) {
+	     && (scalar_op(aTHX_ root, item, args, &result, flags)
+		 == TT_RET_UNDEF)) {
 	if (flags & TT_DEBUG_FLAG)
 	    croak("don't know how to access [ %s ].%s\n", 
 		SvPV(root, PL_na), item);
@@ -956,9 +957,10 @@ static TT_RET list_op(pTHX_ SV *root, char *key, AV *args, SV **result) {
  * on 'sv'.  Additional arguments may be passed in 'args'. 
  * returns TT_RET_CODEREF if successful, TT_RET_UNDEF otherwise.
  */
-static TT_RET scalar_op(pTHX_ SV *sv, char *key, AV *args, SV **result) {
+static TT_RET scalar_op(pTHX_ SV *sv, char *key, AV *args, SV **result, int flags) {
     struct xs_arg *a;
     SV *code;
+    TT_RET retval;
     TT_PERF_INIT;
 
     /* look for a XS version first */
@@ -975,6 +977,20 @@ static TT_RET scalar_op(pTHX_ SV *sv, char *key, AV *args, SV **result) {
 	*result = call_coderef(aTHX_ code, mk_mortal_av(aTHX_ sv, args, NULL));
 	TT_PERF_END;
 	return TT_RET_CODEREF;
+    }
+
+    /* try upgrading item to a list and look for a list op */
+    if (!(flags & TT_LVALUE_FLAG)) {
+        AV *newlist;
+	SV *listref;
+	newlist = newAV();
+	av_push(newlist, sv);
+	SvREFCNT_inc(sv);
+	listref = (SV *) newRV_noinc((SV *) newlist);
+	if ((retval = list_op(aTHX_ listref, key, args, result)) == TT_RET_UNDEF) {
+	    av_undef(newlist);
+	}
+	return retval;
     }
 
     /* not found */

@@ -27,7 +27,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Provider.pm,v 2.50 2002/04/17 14:04:40 abw Exp $
+# $Id: Provider.pm,v 2.62 2002/07/30 12:44:58 abw Exp $
 #
 #============================================================================
 
@@ -36,7 +36,7 @@ package Template::Provider;
 require 5.004;
 
 use strict;
-use vars qw( $VERSION $DEBUG $ERROR $STAT_TTL );
+use vars qw( $VERSION $DEBUG $ERROR $DOCUMENT $STAT_TTL $MAX_DIRS );
 use base qw( Template::Base );
 use Template::Config;
 use Template::Constants;
@@ -44,10 +44,16 @@ use Template::Document;
 use File::Basename;
 use File::Spec;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.50 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.62 $ =~ /(\d+)\.(\d+)/);
+
+# name of document class
+$DOCUMENT = 'Template::Document' unless defined $DOCUMENT;
 
 # maximum time between performing stat() on file to check staleness
 $STAT_TTL = 1 unless defined $STAT_TTL;
+
+# maximum number of directories in an INCLUDE_PATH, to prevent runaways
+$MAX_DIRS = 64 unless defined $MAX_DIRS;
 
 use constant PREV   => 0;
 use constant NAME   => 1;
@@ -169,13 +175,16 @@ sub load {
     }
     else {
       INCPATH: {
-	# otherwise, it's a file name relative to INCLUDE_PATH
-	foreach my $dir (@{ $self->{ INCLUDE_PATH } }) {
-	    $path = "$dir/$name";
-	    last INCPATH
-		if -f $path;
-	}
-	undef $path;	    # not found
+	  # otherwise, it's a file name relative to INCLUDE_PATH
+	  my $paths = $self->paths()
+	      || return ($self->error(), Template::Constants::STATUS_ERROR);
+
+	  foreach my $dir (@$paths) {
+	      $path = "$dir/$name";
+	      last INCPATH
+		  if -f $path;
+	  }
+	  undef $path;	    # not found
       }
     }
 
@@ -218,6 +227,53 @@ sub include_path {
      my ($self, $path) = @_;
      $self->{ INCLUDE_PATH } = $path if $path;
      return $self->{ INCLUDE_PATH };
+}
+
+
+#------------------------------------------------------------------------
+# paths()
+#
+# Evaluates the INCLUDE_PATH list, ignoring any blank entries, and 
+# calling and subroutine or object references to return dynamically
+# generated path lists.  Returns a reference to a new list of paths 
+# or undef on error.
+#------------------------------------------------------------------------
+
+sub paths {
+    my $self   = shift;
+    my @ipaths = @{ $self->{ INCLUDE_PATH } };
+    my (@opaths, $dpaths, $dir);
+    my $count = $MAX_DIRS;
+    
+    while (@ipaths && --$count) {
+	$dir = shift @ipaths || next;
+
+	# $dir can be a sub or object ref which returns a reference
+	# to a dynamically generated list of search paths.
+	
+	if (ref $dir eq 'CODE') {
+	    eval { $dpaths = &$dir() };
+	    if ($@) {
+		chomp $@;
+		return $self->error($@);
+	    }
+	    unshift(@ipaths, @$dpaths);
+	    next;
+	}
+	elsif (UNIVERSAL::can($dir, 'paths')) {
+	    $dpaths = $dir->paths() 
+		|| return $self->error($dir->error());
+	    unshift(@ipaths, @$dpaths);
+	    next;
+	}
+	else {
+	    push(@opaths, $dir);
+	}
+    }
+    return $self->error("INCLUDE_PATH exceeds $MAX_DIRS directories")
+	if @ipaths;
+
+    return \@opaths;
 }
 
 
@@ -305,29 +361,29 @@ sub _init {
 
 	require File::Path;
 	foreach my $dir (@$path) {
+	    next if ref $dir;
 	    my $wdir = $dir;
             $wdir =~ s[:][]g if $^O eq 'MSWin32';
 	    $wdir =~ /(.*)/;  # untaint
-	    &File::Path::mkpath($cdir . $1);
+	    &File::Path::mkpath(File::Spec->catfile($cdir, $1));
 	}
-	# ensure $cdir is terminated with '/' for subsequent path building
-	$cdir .= '/';
     }
 
-    $self->{ LOOKUP }       = { };
-    $self->{ SLOTS  }       = 0;
-    $self->{ SIZE }         = $size;
+    $self->{ LOOKUP       } = { };
+    $self->{ SLOTS        } = 0;
+    $self->{ SIZE         } = $size;
     $self->{ INCLUDE_PATH } = $path;
-    $self->{ DELIMITER }    = $dlim;
-    $self->{ COMPILE_DIR }  = $cdir;
-    $self->{ COMPILE_EXT }  = $params->{ COMPILE_EXT } || '';
-    $self->{ ABSOLUTE }     = $params->{ ABSOLUTE } || 0;
-    $self->{ RELATIVE }     = $params->{ RELATIVE } || 0;
-    $self->{ TOLERANT }     = $params->{ TOLERANT } || 0;
-    $self->{ PARSER }       = $params->{ PARSER };
-    $self->{ DEFAULT }      = $params->{ DEFAULT };
-#   $self->{ PREFIX }       = $params->{ PREFIX };
-    $self->{ PARAMS }       = $params;
+    $self->{ DELIMITER    } = $dlim;
+    $self->{ COMPILE_DIR  } = $cdir;
+    $self->{ COMPILE_EXT  } = $params->{ COMPILE_EXT } || '';
+    $self->{ ABSOLUTE     } = $params->{ ABSOLUTE } || 0;
+    $self->{ RELATIVE     } = $params->{ RELATIVE } || 0;
+    $self->{ TOLERANT     } = $params->{ TOLERANT } || 0;
+    $self->{ DOCUMENT     } = $params->{ DOCUMENT } || $DOCUMENT;
+    $self->{ PARSER       } = $params->{ PARSER };
+    $self->{ DEFAULT      } = $params->{ DEFAULT };
+#   $self->{ PREFIX       } = $params->{ PREFIX };
+    $self->{ PARAMS       } = $params;
 
     return $self;
 }
@@ -376,6 +432,7 @@ sub _fetch {
 	if ($compiled && -f $compiled && (stat($name))[9] <= (stat($compiled))[9]) {
 	    $data = $self->_load_compiled($compiled);
 	    $error = $self->error() unless $data;
+	    $self->store($name, $data) unless $error;
 	}
 	else {
 	    ($data, $error) = $self->_load($name);
@@ -404,7 +461,7 @@ sub _fetch_path {
     my ($self, $name) = @_;
     my ($size, $compext, $compdir) = 
 	@$self{ qw( SIZE COMPILE_EXT COMPILE_DIR ) };
-    my ($dir, $path, $compiled, $slot, $data, $error);
+    my ($dir, $paths, $path, $compiled, $slot, $data, $error);
     local *FH;
 
     print STDERR "_fetch_path($name)\n"
@@ -424,11 +481,16 @@ sub _fetch_path {
 	    last INCLUDE;
 	}
 
+	$paths = $self->paths() || do {
+	    $error = Template::Constants::STATUS_ERROR;
+	    $data  = $self->error();
+	    last INCLUDE;
+	};
+
 	# search the INCLUDE_PATH for the file, in cache or on disk
-	foreach $dir (@{ $self->{ INCLUDE_PATH } }) {
-	    next unless $dir;
+	foreach $dir (@$paths) {
 	    $path = "$dir/$name";
-	    
+
 	    print STDERR "looking for $path\n" if $DEBUG;
 
 	    if ($caching && ($slot = $self->{ LOOKUP }->{ $path })) {
@@ -476,8 +538,6 @@ sub _fetch_path {
 	($data, $error) = (undef, Template::Constants::STATUS_DECLINED);
     } # INCLUDE
 
-#    printf "returning ($data, %s)\n", defined $error ? $error : '<no error>';
-
     return ($data, $error);
 }
 
@@ -494,8 +554,9 @@ sub _compiled_filename {
     $path = $file;
     $path =~ /^(.+)$/s or die "invalid filename: $path";
     $path =~ s[:][]g if $^O eq 'MSWin32';
-    $compiled = "$compdir$path$compext";
-    $compiled =~ s[//][/]g;
+
+    $compiled = "$path$compext";
+    $compiled = File::Spec->catfile($compdir, $compiled) if length $compdir;
 
     return $compiled;
 }
@@ -565,21 +626,26 @@ sub _load {
 		load => 0,
 	    };
 	}
-	elsif (open(FH, $name)) {
-	    my $text = <FH>;
-	    $data = {
-		name => $alias,
-		text => $text,
-		time => (stat $name)[9],
-		load => $now,
-	    };
-	}
-	elsif ($tolerant) {
-	    ($data, $error) = (undef, Template::Constants::STATUS_DECLINED);
+	elsif (-f $name) {
+	    if (open(FH, $name)) {
+		my $text = <FH>;
+		$data = {
+		    name => $alias,
+		    text => $text,
+		    time => (stat $name)[9],
+		    load => $now,
+		};
+	    }
+	    elsif ($tolerant) {
+		($data, $error) = (undef, Template::Constants::STATUS_DECLINED);
+	    }
+	    else {
+		$data  = "$alias: $!";
+		$error = Template::Constants::STATUS_ERROR;
+	    }
 	}
 	else {
-	    $data  = "$alias: $!";
-	    $error = Template::Constants::STATUS_ERROR;
+	    ($data, $error) = (undef, Template::Constants::STATUS_DECLINED);
 	}
     }
 
@@ -607,44 +673,48 @@ sub _refresh {
     # if it's more than $STAT_TTL seconds since we last performed a 
     # stat() on the file then we need to do it again and see if the file
     # time has changed
-    if ( (time - $slot->[ STAT ]) > $STAT_TTL &&
-	 stat $slot->[ NAME ] && (stat(_))[9] != $slot->[ LOAD ]) {
-
-	print STDERR "refreshing cache file ", $slot->[ NAME ], "\n"
-	    if $DEBUG;
-
+    if ( (time - $slot->[ STAT ]) > $STAT_TTL && stat $slot->[ NAME ] ) {
 	$slot->[ STAT ] = time;
-	($data, $error) = $self->_load($slot->[ NAME ], 
-				       $slot->[ DATA ]->{ name });
-	($data, $error) = $self->_compile($data)
-	    unless $error;
 
-	unless ($error) {
-	    $slot->[ DATA ] = $data->{ data };
-	    $slot->[ LOAD ] = $data->{ time };
+	if ( (stat(_))[9] != $slot->[ LOAD ]) {
+
+	    print STDERR "refreshing cache file ", $slot->[ NAME ], "\n"
+		if $DEBUG;
+	    
+	    ($data, $error) = $self->_load($slot->[ NAME ],
+					   $slot->[ DATA ]->{ name });
+	    ($data, $error) = $self->_compile($data)
+		unless $error;
+
+	    unless ($error) {
+		$slot->[ DATA ] = $data->{ data };
+		$slot->[ LOAD ] = $data->{ time };
+	    }
 	}
     }
 
-    # remove existing slot from usage chain...
-    if ($slot->[ PREV ]) {
-	$slot->[ PREV ]->[ NEXT ] = $slot->[ NEXT ];
+    unless( $self->{ HEAD } == $slot ) {
+	# remove existing slot from usage chain...
+	if ($slot->[ PREV ]) {
+	    $slot->[ PREV ]->[ NEXT ] = $slot->[ NEXT ];
+	}
+	else {
+	    $self->{ HEAD } = $slot->[ NEXT ];
+	}
+	if ($slot->[ NEXT ]) {
+	    $slot->[ NEXT ]->[ PREV ] = $slot->[ PREV ];
+	}
+	else {
+	    $self->{ TAIL } = $slot->[ PREV ];
+	}
+	
+	# ..and add to start of list
+	$head = $self->{ HEAD };
+	$head->[ PREV ] = $slot if $head;
+	$slot->[ PREV ] = undef;
+	$slot->[ NEXT ] = $head;
+	$self->{ HEAD } = $slot;
     }
-    else {
-	$self->{ HEAD } = $slot->[ NEXT ];
-    }
-    if ($slot->[ NEXT ]) {
-	$slot->[ NEXT ]->[ PREV ] = $slot->[ PREV ];
-    }
-    else {
-	$self->{ TAIL } = $slot->[ PREV ];
-    }
-    
-    # ..and add to start of list
-    $head = $self->{ HEAD };
-    $head->[ PREV ] = $slot if $head;
-    $slot->[ PREV ] = undef;
-    $slot->[ NEXT ] = $head;
-    $self->{ HEAD } = $slot;
 
     return ($data, $error);
 }
@@ -766,10 +836,11 @@ sub _compile {
 	    $basedir = $1;
 	    &File::Path::mkpath($basedir) unless -d $basedir;
 
+	    my $docclass = $self->{ DOCUMENT };
 	    $error = 'cache failed to write '
 		    . &File::Basename::basename($compfile)
-		    . ": $Template::Document::ERROR"
-		unless Template::Document::write_perl_file($compfile, $parsedoc);
+		    . ': ' . $docclass->error()
+		unless $docclass->write_perl_file($compfile, $parsedoc);
  
 	    # set atime and mtime of newly compiled file, don't bother
 	    # if time is undef
@@ -815,26 +886,39 @@ sub _compile {
 sub _dump {
     my $self = shift;
     my $size = $self->{ SIZE };
-    my $parser = $self->{ PARSER }->_dump();
+    my $parser = $self->{ PARSER };
+    $parser = $parser ? $parser->_dump() : '<no parser>';
     $parser =~ s/\n/\n    /gm;
     $size = 'unlimited' unless defined $size;
 
+    my $output = "[Template::Provider] {\n";
+    my $format = "    %-16s => %s\n";
+    my $key;
+
+    $output .= sprintf($format, 'INCLUDE_PATH', 
+		       '[ ' . join(', ', @{ $self->{ INCLUDE_PATH } }) . ' ]');
+    $output .= sprintf($format, 'CACHE_SIZE', $size);
+
+    foreach $key (qw( ABSOLUTE RELATIVE TOLERANT DELIMITER
+		      COMPILE_EXT COMPILE_DIR )) {
+	$output .= sprintf($format, $key, $self->{ $key });
+    }
+    $output .= sprintf($format, 'PARSER', $parser);
+
+
     local $" = ', ';
-    return <<EOF;
-$self
-INCLUDE_PATH => [ @{ $self->{ INCLUDE_PATH } } ]
-ABSOLUTE     => $self->{ ABSOLUTE }
-RELATIVE     => $self->{ RELATIVE }
-TOLERANT     => $self->{ TOLERANT }
-DELIMITER    => $self->{ DELIMITER }
-COMPILE_EXT  => $self->{ COMPILE_EXT }
-COMPILE_DIR  => $self->{ COMPILE_DIR }
-CACHE_SIZE   => $size
-SLOTS        => $self->{ SLOTS }
-LOOKUP       => $self->{ LOOKUP }
-PARSER       => $parser
-EOF
-#    join("\n", $self, map { "$_ => $self->{ $_ }" } keys %$self) . "\n";
+    my $lookup = $self->{ LOOKUP };
+    $lookup = join('', map { 
+	sprintf("    $format", $_, defined $lookup->{ $_ }
+		? ('[ ' . join(', ', map { defined $_ ? $_ : '<undef>' }
+			       @{ $lookup->{ $_ } }) . ' ]') : '<undef>');
+    } sort keys %$lookup);
+    $lookup = "{\n$lookup    }";
+    
+    $output .= sprintf($format, LOOKUP => $lookup);
+
+    $output .= '}';
+    return $output;
 }
 
 
@@ -950,6 +1034,62 @@ each directory is delimited by ':'.
 On Win32 systems, a little extra magic is invoked, ignoring delimiters
 that have ':' followed by a '/' or '\'.  This avoids confusion when using
 directory names like 'C:\Blah Blah'.
+
+When specified as a list, the INCLUDE_PATH path can contain elements 
+which dynamically generate a list of INCLUDE_PATH directories.  These 
+generator elements can be specified as a reference to a subroutine or 
+an object which implements a paths() method.
+
+    my $provider = Template::Provider->new({
+        INCLUDE_PATH => [ '/usr/local/templates', 
+                          \&incpath_generator, 
+			  My::IncPath::Generator->new( ... ) ],
+    });
+
+Each time a template is requested and the INCLUDE_PATH examined, the
+subroutine or object method will be called.  A reference to a list of
+directories should be returned.  Generator subroutines should report
+errors using die().  Generator objects should return undef and make an
+error available via its error() method.
+
+For example:
+
+    sub incpath_generator {
+
+	# ...some code...
+	
+	if ($all_is_well) {
+	    return \@list_of_directories;
+	}
+	else {
+	    die "cannot generate INCLUDE_PATH...\n";
+	}
+    }
+
+or:
+
+    package My::IncPath::Generator;
+
+    # Template::Base (or Class::Base) provides error() method
+    use Template::Base;
+    use base qw( Template::Base );
+
+    sub paths {
+	my $self = shift;
+
+	# ...some code...
+
+        if ($all_is_well) {
+	    return \@list_of_directories;
+	}
+	else {
+	    return $self->error("cannot generate INCLUDE_PATH...\n");
+	}
+    }
+
+    1;
+
+
 
 
 
@@ -1230,9 +1370,23 @@ Accessor method for the INCLUDE_PATH setting.  If called with an
 argument, this method will replace the existing INCLUDE_PATH with
 the new value.
 
+=head2 paths()
+
+This method generates a copy of the INCLUDE_PATH list.  Any elements in the
+list which are dynamic generators (e.g. references to subroutines or objects
+implementing a paths() method) will be called and the list of directories 
+returned merged into the output list.
+
+It is possible to provide a generator which returns itself, thus sending
+this method into an infinite loop.  To detect and prevent this from happening,
+the C<$MAX_DIRS> package variable, set to 64 by default, limits the maximum
+number of paths that can be added to, or generated for the output list.  If
+this number is exceeded then the method will immediately return an error 
+reporting as much.
+
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -1241,8 +1395,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.50, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.61, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

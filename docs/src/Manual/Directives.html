@@ -43,9 +43,7 @@ complete with examples of use.
 </p>
 [% WRAPPER subsection
    title = "Accessing and Updating Template Variables"
--%]
-<ul>
-
+-%]<ul>
 <li><b>GET</b><br>
 <p>
 The GET directive retrieves and outputs the value of the named variable.
@@ -57,12 +55,18 @@ tag by itself.
 </p>
 <pre>    [% tt_start_tag %] foo [% tt_end_tag %]</pre>
 <p>
-The variable may take any of the forms described above:
+The variable can have an unlimited number of elements, each separated
+by a dot '.'.  Each element can have arguments specified within
+parentheses.
 </p>
 <pre>    [% tt_start_tag %] foo [% tt_end_tag %]
     [% tt_start_tag %] bar.baz [% tt_end_tag %]
     [% tt_start_tag %] biz.baz(10) [% tt_end_tag %]
     ...etc...</pre>
+<p>
+See [% ttlink('Template::Manual::Variables') -%] for a full discussion on template
+variables.
+</p>
 <p>
 You can also specify expressions using the logical (and, or, not, ?:) and
 mathematic operators (+ - * / % mod div).
@@ -79,7 +83,6 @@ as an alias for '%' for backwards compatibility with version 1.
     [% tt_start_tag %] 15 div 6 [% tt_end_tag %]	    # 2
     [% tt_start_tag %] 15 mod 6 [% tt_end_tag %]	    # 3</pre>
 
-
 <li><b>CALL</b><br>
 <p>
 The CALL directive is similar to GET in evaluating the variable named,
@@ -89,7 +92,6 @@ call but aren't interested in the value returned.
 </p>
 <pre>    [% tt_start_tag %] CALL dbi.disconnect [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] CALL inc_page_counter(page_count) [% tt_end_tag %]</pre>
-
 
 <li><b>SET</b><br>
 <p>
@@ -149,7 +151,6 @@ interpolation.
 </p>
 <pre>    [% tt_start_tag %] copyright = &quot;(C) Copyright $year $author&quot; [% tt_end_tag %]</pre>
 
-
 <li><b>DEFAULT</b><br>
 <p>
 The DEFAULT directive is similar to SET but only updates variables 
@@ -179,9 +180,7 @@ undefined variables.
 [%- END %]
 [% WRAPPER subsection
    title = "Processing Other Template Files and Blocks"
--%]
-<ul>
-
+-%]<ul>
 <li><b>INSERT</b><br>
 <p>
 The INSERT directive is used to insert the contents of an external file
@@ -233,7 +232,6 @@ interpolated into double-quoted strings.
 </p>
 <pre>    [% tt_start_tag %] INSERT legalese.txt + warning.txt [% tt_end_tag %]
     [% tt_start_tag %] INSERT  &quot;$legalese&quot; + warning.txt [% tt_end_tag %]  # requires quoting</pre>
-
 
 <li><b>INCLUDE</b><br>
 <p>
@@ -379,7 +377,6 @@ first file will be visible in the second, third and so on.  This
 might be what you want, of course, but then again, it might not.
 </p>
 
-
 <li><b>PROCESS</b><br>
 <p>
 The PROCESS directive is similar to INCLUDE but does not perform any 
@@ -437,7 +434,6 @@ As with INCLUDE, multiple templates can be specified, delimited by
 '+', and are processed in order.
 </p>
 <pre>    [% tt_start_tag %] PROCESS html/header + my/header [% tt_end_tag %]</pre>
-
 
 <li><b>WRAPPER</b><br>
 <p>
@@ -516,7 +512,6 @@ would generate the following output:
 <pre>    &lt;b&gt;&lt;i&gt;Hello World&lt;/i&gt;&lt;/b&gt;</pre>
 <pre> </pre>
 
-
 <li><b>BLOCK</b><br>
 <p>
 The BLOCK ... END construct can be used to define template component
@@ -568,9 +563,7 @@ enclosing block is processed each time the macro is called.
 [%- END %]
 [% WRAPPER subsection
    title = "Conditional Processing"
--%]
-<ul>
-
+-%]<ul>
 <li><b>IF / UNLESS / ELSIF / ELSE</b><br>
 <p>
 The IF and UNLESS directives can be used to process or ignore a
@@ -614,7 +607,6 @@ determine evaluation order.
        That's more or less correct.
     [% tt_start_tag %] END [% tt_end_tag %]</pre>
 
-
 <li><b>SWITCH / CASE</b><br>
 <p>
 The SWITCH / CASE construct can be used to perform a multi-way
@@ -641,9 +633,7 @@ is no drop-through between CASE statements.
 [%- END %]
 [% WRAPPER subsection
    title = "Loop Processing"
--%]
-<ul>
-
+-%]<ul>
 <li><b>FOREACH</b><br>
 <p>
 The FOREACH directive will iterate through the items in a list, processing
@@ -825,7 +815,6 @@ details.
        [% tt_start_tag %] END [% tt_end_tag %]
     [% tt_start_tag %] END [% tt_end_tag %]</pre>
 
-
 <li><b>WHILE</b><br>
 <p>
 The WHILE directive can be used to repeatedly process a template block
@@ -863,9 +852,7 @@ and can be set to a higher value if necessary.
 [%- END %]
 [% WRAPPER subsection
    title = "Filters, Plugins, Macros and Perl"
--%]
-<ul>
-
+-%]<ul>
 <li><b>FILTER</b><br>
 <p>
 The FILTER directive can be used to post-process the output of a
@@ -1043,7 +1030,6 @@ See [% ttlink('Template::Manual::Filters') -%] for a complete list of available 
 their descriptions and examples of use.
 </p>
 
-
 <li><b>USE</b><br>
 <p>
 The USE directive can be used to load and initialise &quot;plugin&quot;
@@ -1181,7 +1167,6 @@ following trivial example shows how the IO::File module might be used.
        &lt;!-- [% tt_start_tag %] line [% tt_end_tag %] --&gt;
     [% tt_start_tag %] END [% tt_end_tag %]</pre>
 
-
 <li><b>MACRO</b><br>
 <p>
 The MACRO directive allows you to define a directive or directive block
@@ -1219,6 +1204,13 @@ equivalent to:
 <pre>    [% tt_start_tag %] INCLUDE header title='Hello World' [% tt_end_tag %]
     [% tt_start_tag %] INCLUDE header title='Hello World' bgcol='#123456# [% tt_end_tag %]</pre>
 <p>
+Here's anothe example, defining a macro for display numbers
+in comma-delimited groups of 3, using the chunk and join virtual
+method.
+</p>
+<pre>    [% tt_start_tag %] MACRO number(n) GET n.chunk(-3).join(',') [% tt_end_tag %]</pre>
+<pre>    [% tt_start_tag %] number(1234567) [% tt_end_tag %]    # 1,234,567</pre>
+<p>
 A MACRO may precede any directive and must conform to the structure 
 of the directive.
 </p>
@@ -1236,9 +1228,19 @@ evaluated each time the macro is called.
        ...content...
     [% tt_start_tag %] END [% tt_end_tag %]</pre>
 <pre>    [% tt_start_tag %] header [% tt_end_tag %]</pre>
-
+<p>
+If you've got the EVAL_PERL option set, then you can even define a
+MACRO as a PERL block (see below):
+</p>
+<pre>    [% tt_start_tag %] MACRO triple(n) PERL [% tt_end_tag %]
+         my $n = $stash-&gt;get('n');
+         print $n * 3;
+    [% tt_start_tag %] END -[% tt_end_tag %]</pre>
 
 <li><b>PERL</b><br>
+<p>
+(for the advanced reader)
+</p>
 <p>
 The PERL directive is used to mark the start of a block which contains
 Perl code for evaluation.  The EVAL_PERL option must be enabled for Perl
@@ -1307,8 +1309,10 @@ output:
        error: nothing to live for
 </p>
 
-
 <li><b>RAWPERL</b><br>
+<p>
+(for the very advanced reader)
+</p>
 <p>
 The Template Toolkit parser reads a source template and generates the
 text of a Perl subroutine as output.  It then uses eval() to evaluate
@@ -1414,10 +1418,11 @@ and available for use within RAWPERL code.
 [%- END %]
 [% WRAPPER subsection
    title = "Exception Handling and Flow Control"
--%]
-<ul>
-
+-%]<ul>
 <li><b>TRY / THROW / CATCH / FINAL</b><br>
+<p>
+(more advanced material)
+</p>
 <p>
 The Template Toolkit supports fully functional, nested exception
 handling.  The TRY directive introduces an exception handling scope 
@@ -1770,7 +1775,6 @@ or just an $info string to create an exception of 'undef' type.
     $context-&gt;throw('Denied');	    # 'undef' type
     $context-&gt;throw('user.passwd', 'Bad Password');</pre>
 
-
 <li><b>NEXT</b><br>
 <p>
 The NEXT directive can be used to start the next iteration of a FOREACH 
@@ -1780,7 +1784,6 @@ or WHILE loop.
        [% tt_start_tag %] NEXT IF user.isguest [% tt_end_tag %]
        Name: [% tt_start_tag %] user.name [% tt_end_tag %]    Email: [% tt_start_tag %] user.email [% tt_end_tag %]
     [% tt_start_tag %] END [% tt_end_tag %]</pre>
-
 
 <li><b>LAST</b><br>
 <p>
@@ -1794,7 +1797,6 @@ loop.
 <p>
 BREAK can also be used as an alias for LAST.
 </p>
-
 
 <li><b>RETURN</b><br>
 <p>
@@ -1820,7 +1822,6 @@ output:
 <pre>    Before
     This is just half...
     After</pre>
-
 
 <li><b>STOP</b><br>
 <p>
@@ -1848,7 +1849,6 @@ processed successfully according to the directives within it.
        [% tt_start_tag %] STOP [% tt_end_tag %]
     [% tt_start_tag %] END [% tt_end_tag %]</pre>
 
-
 <li><b>CLEAR</b><br>
 <p>
 The CLEAR directive can be used to clear the output buffer for the current
@@ -1868,9 +1868,7 @@ from a TRY block up to the point where the error occurred.
 [%- END %]
 [% WRAPPER subsection
    title = "Miscellaneous"
--%]
-<ul>
-
+-%]<ul>
 <li><b>META</b><br>
 <p>
 The META directive allows simple metadata items to be defined within a 
@@ -1949,7 +1947,6 @@ The output generated from the above example is:
     &lt;/body&gt;
     &lt;/html&gt;</pre>
 
-
 <li><b>TAGS</b><br>
 <p>
 The TAGS directive can be used to set the START_TAG and END_TAG values
@@ -1966,13 +1963,37 @@ The TAGS directive may also be used to set a named TAG_STYLE
 See the TAGS and TAG_STYLE configuration options for further details.
 </p>
 
+<li><b>DEBUG</b><br>
+<p>
+The DEBUG directive can be used to control debugging options within a template.
+The DEBUG configuration option must be set to a true value for the DEBUG 
+directives to have any effect.  If DEBUG is set false then the parser will
+automatically ignore and remove any DEBUG directives.
+</p>
+<p>
+The DEBUG directive can be used with an 'on' or 'off' parameter to enable
+or disable directive debugging messages from that point forward.  When enabled,
+the output of each directive in the generated output will be prefixed by a comment
+indicate the file, line and original directive text.
+</p>
+<pre>    [% tt_start_tag %] DEBUG on [% tt_end_tag %]
+    directive debugging is on (assuming DEBUG option is set true)
+    [% tt_start_tag %] DEBUG off [% tt_end_tag %]
+    directive debugging is off</pre>
+<p>
+The 'format' parameter can be used to change the format of the debugging
+message.
+</p>
+<pre>    [% tt_start_tag %] DEBUG format '&lt;!-- $file line $line : [% tt_start_tag %] $text [% tt_end_tag %] --&gt;' [% tt_end_tag %]</pre>
+<pre>    </pre>
+
 </ul>
 [%- END %]
 [%- END %]
 [% WRAPPER section
     title="AUTHOR"
 -%]<p>
-Andy Wardley &lt;abw@kfs.org&gt;
+Andy Wardley &lt;abw@andywardley.com&gt;
 </p>
 <p>
 [% ttlink('http://www.andywardley.com/', 'http://www.andywardley.com/') -%]
@@ -1981,7 +2002,7 @@ Andy Wardley &lt;abw@kfs.org&gt;
 [% WRAPPER section
     title="VERSION"
 -%]<p>
-Template Toolkit version 2.07, released on 17 April 2002.
+Template Toolkit version 2.08, released on 30 July 2002.
 </p>
 [%- END %]
 [% WRAPPER section

@@ -20,7 +20,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Test.pm,v 2.48 2002/04/17 14:04:40 abw Exp $
+# $Id: Test.pm,v 2.56 2002/07/30 12:44:59 abw Exp $
 #
 #============================================================================
 
@@ -35,7 +35,7 @@ use vars qw( @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.48 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0;
 @ISA     = qw( Exporter );
 @EXPORT  = qw( ntests ok is match flush test_expect callsign banner );
@@ -254,6 +254,14 @@ sub test_expect {
     # the remaining tests are defined in @tests...
     foreach $input (@tests) {
 	$count++;
+	my $name = '';
+
+	if ($input =~ s/^\s*-- name:? (.*?) --\s*\n//im) {
+	    $name = $1; 
+	}
+	else {
+	    $name = "template text $count";
+	}
 
 	# split input by a line like "-- expect --"
 	($input, $expect) = 
@@ -280,13 +288,13 @@ sub test_expect {
 	$tproc->process(\$input, $params, \$output) || do {
 	    warn "Template process failed: ", $tproc->error(), "\n";
 	    # report failure and automatically fail the expect match
-	    ok(0, "template test $count process FAILED: " . subtext($input));
+	    ok(0, "$name process FAILED: " . subtext($input));
 	    ok(0, '(obviously did not match expected)');
 	    next;
 	};
 
 	# processed OK
-	ok(1, "template test $count processed OK: " . subtext($input));
+	ok(1, "$name processed OK: " . subtext($input));
 
 	# another hack: if the '-- expect --' section starts with 
 	# '-- process --' then we process the expected output 
@@ -328,7 +336,7 @@ sub test_expect {
 		   $copyi, $copye, $copyo);
 	}
 
-	ok($match, $match ? "matched expected" : "did not match expected");
+	ok($match, $match ? "$name matched expected" : "$name did not match expected");
     };
 }
 
@@ -648,7 +656,7 @@ The line splitter may be a bit dumb, especially if it sees lines like
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -657,8 +665,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.48, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.55, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

@@ -8,7 +8,7 @@
 #   directives.
 #
 # AUTHOR
-#   Andy Wardley  <abw@kfs.org>
+#   Andy Wardley  <abw@andywardley.com>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
@@ -483,335 +483,28 @@ version.
 	},
     };
 
+=head2 Virtual Methods
 
-=head2 Virtual Variable Methods
+The Template Toolkit implements a number of "virtual methods" which 
+can be applied to scalars, hashes or lists.  For example:
 
-The Template Toolkit provides virtual methods for manipulating
-variable values.  Most of them are analogous to regular Perl functions
-of the same names.  
+    [% mylist = [ 'foo', 'bar', 'baz' ] %]
+    [% newlist = mylist.sort %]
 
-The following methods can be called against any scalar value:
+Here 'mylist' is a regular reference to a list, and 'sort' is 
+a virtual method that returns a new list of the items in sorted 
+order.  You can chain multiple virtual methods together.  For
+example:
 
-=over 4 
+    [% mylist.sort.join(', ') %]
 
-=item defined
+Here the 'join' virtual method is called to join the sorted list into
+a single string, generating the following output:
 
-Returns true if the value is defined.
+    bar, baz, foo
 
-    [% user = get_user(uid) IF uid.defined %]
-
-=item length
-
-Returns the length of the string representation of the item:
-
-    [% IF password.length < 8 %]
-       Password too short, dumbass!
-    [% END %]
-
-=item repeat(n)
-
-Repeat the string a specified number of times.
-
-    [% name = 'foo' %]
-    [% name.repeat(3) %]		# foofoofoo
-
-=item replace(search, replace)
-
-Outputs the string with all instances of the first argument (specified
-as a Perl regular expression) with the second.
-
-    [% name = 'foo, bar & baz' %]
-    [% name.replace('\W+', '_') %]    # foo_bar_baz
-
-=item match(pattern)
-
-Performs a regular expression match on the string using the pattern
-passed as an argument.  If the pattern matches the string then the
-method returns a reference to a list of any strings captured within
-parenthesis in the pattern.
-
-    [% name = 'Larry Wall' %]
-    [% matches = name.match('(\w+) (\w+)') %]
-    [% matches.1 %], [% matches.0 %]		# Wall, Larry
-
-If the pattern does not match then the method returns false, rather
-than returning an empty list which Perl and the Template Toolkit both
-consider to be a true value.  This allows you to write expression like
-this.
-
-    [% "We're not worthy!" IF name.match('Larry Wall') %]
-
-    [% IF (matches = name.match('(\w+) (\w+)')) %]
-       pattern matches: [% matches.join(', ') %]
-    [% ELSE %]
-       pattern does not match
-    [% END %]
-
-=item search(pattern)
-
-Performs a similar function to 'match' but simply returns true if the 
-string matches the regular expression pattern passed as an argument.
-
-    [% name = 'foo bar baz' %]
-    [% name.search('bar') ? 'bar' : 'no bar' %]	    # bar
-
-This virtual method is now deprecated in favour of 'match'.  Move along
-now, there's nothing more to see here.
-
-=item split(pattern)
-
-Calls Perl's split() function to split a string into a list of
-strings.
-
-    [% FOREACH dir = mypath.split(':') %]
-       [% dir %]
-    [% END %]
-
-=item list
-
-Return the value as a single element list.  This can be useful if you
-have a variable which may contain a single item or a list and you want
-to treat them equally.  The 'list' method can be called against a list
-reference and will simply return the original reference, effectively
-a no-op.
-
-    [% thing.list.size %]  # thing can be a scalar or a list
-
-=item hash 
-
-Return the value as a hash reference containing a single entry with
-the key 'value' indicating the original scalar value.  As with the 
-'hash' virtual method, this is generally used to help massage data
-into different formats.
-
-=item size
-
-Always returns 1 for scalar values.  This method is provided for 
-consistency with the hash and list size methods.
-
-=back
-
-The following can be called against hash references.
-
-=over 4
-
-=item keys, values, each
-
-The regular hash operators returning lists of keys, values or both.
-Note how we use a '$' prefix on the 'key' variable in this example to
-have it interpolated (i.e. replaced with its value) before use.
-
-    [% FOREACH key = product.keys %]
-       [% key %] => [% product.$key %]
-    [% END %]
-
-=item sort, nsort
-
-Return a list of the keys, sorted alphabetically (sort) or numerically
-(nsort) according to the corresponding values in the hash.
-
-    [% FOREACH n = phones.sort %]
-       [% phones.$n %] is [% n %],
-    [% END %]
-
-=item import
-
-The import method can be called on a hash array to import the contents
-of another hash array.
-
-    [% hash1 = {
-	   foo => 'Foo',
-           bar => 'Bar',
-       }
-       hash2 = {
-           wiz => 'Wiz',
-           woz => 'Woz',
-       }
-    %]
-
-    [% hash1.import(hash2) %]
-    [% hash1.wiz %]			# Wiz
-
-You can also call the import() method by itself to import a hash array
-into the current namespace hash.
-
-    [% user = { id => 'lwall', name => 'Larry Wall' } %]
-    [% import(user) %]
-    [% id %]: [% name %]		# lwall: Larry Wall
-
-=item defined, exists
-
-Returns a true or false value if an item in the hash denoted by the key
-passed as an argument is defined or exists, respectively.
-
-    [% hash.defined('somekey') ? 'yes' : 'no' %]
-    [% hash.exists('somekey') ? 'yes' : 'no' %]
-
-=item size
-
-Returns the number of key =E<gt> value pairs in the hash.
-
-=item item
-
-Returns an item from the hash using a key passed as an argument.
-
-    [% hash.item('foo') %]  # same as hash.foo
-
-=item list
-
-Returns the contents of the hash in list form.  An argument can be
-passed to indicate the desired items required in the list: 'keys' to
-return a list of the keys (same as hash.keys), 'values' to return a
-list of the values (same as hash.values), or 'each' to return as list
-of (key, value) pairs (same as hash.each).  When called without an
-argument it returns a list of hash references each containing a 'key'
-and 'value' item representing 
-
-=back
-
-The following virtual methods are provided for lists:
-
-=over 4
-
-=item first, last
-
-Returns the first/last item in the list.  The item is not removed from the 
-list.
-
-    [% results.first %] to [% results.last %]
-
-=item size, max
-
-Returns the size of a list (number of elements) and the maximum 
-index number (size - 1), respectively.
-
-    [% results.size %] search results matched your query
-
-=item reverse
-
-Returns the items of the list in reverse order.
-
-    [% FOREACH s = scores.reverse %]
-       ...
-    [% END %]
-
-=item join
-
-Joins the items in the list into a single string, using Perl's join 
-function.
-
-    [% items.join(', ') %]
-
-=item grep
-
-Returns a list of the items in the list that match a regular expression
-pattern.
-
-    [% FOREACH directory.files.grep('\.txt$') %]
-       ...
-    [% END %]
-
-=item sort, nsort
-
-Returns the items in alpha (sort) or numerical (nsort) order.
-
-    [% library = books.sort %]
-
-An argument can be provided to specify a search key.  Where an item in 
-the list is a hash reference, the search key will be used to retrieve a 
-value from the hash which will then be used as the comparison value.
-Where an item is an object which implements a method of that name, the
-method will be called to return a comparison value.
-
-    [% library = books.sort('author') %]
-
-In the example, the 'books' list can contains hash references with 
-an 'author' key or objects with an 'author' method.
-
-=item unshift(item), push(item)
-
-Adds an item to the start/end of a list.
-
-    [% mylist.unshift('prev item') %]
-    [% mylist.push('next item')    %]
-
-=item shift, pop
-
-Removes the first/last item from the list and returns it.
-
-    [% first = mylist.shift %]
-    [% last  = mylist.pop   %]
-
-=back
-
-The following example demonstrates how an empty list ('folk') can be 
-populated with formatted strings by using the push() method in conjunction
-with a FOREACH loop.  The resultant list can then be printed using join.
-
-    [% # define some initial data
-       people   => [ 
-           { id => 'tom',   name => 'Tom'     },
-	   { id => 'dick',  name => 'Richard' },
-           { id => 'larry', name => 'Larry'   },
-       ]
-
-       # define an empty list that list methods can be called against
-       folk = [] 
-    -%]
-
-    [% folk.push("<a href=\"${person.id}.html\">$person.name</a>")
-         FOREACH person = people.sort('name') -%]
-    [% folk.join(",\n") %]
-
-Output:
-
-    <a href="larry.html">Larry</a>,
-    <a href="dick.html">Richard</a>,
-    <a href="tom.html">Tom</a>
-
-You can define your own virtual methods for scalars, lists and hash
-arrays.  The Template::Stash package variables $SCALAR_OPS, $LIST_OPS
-and $HASH_OPS are references to hash arrays that define these virtual
-methods.  HASH_OPS and LIST_OPS methods are subroutines that accept a
-hash/list reference as the first item.  SCALAR_OPS are subroutines
-that accept a scalar value as the first item.  Any other arguments
-specified when the method is called will be passed to the subroutine.
-
-    # load Template::Stash to make method tables visible
-    use Template::Stash;
-
-    # define list method to return new list of odd numbers only
-    $Template::Stash::LIST_OPS->{ odd } = sub {
-	my $list = shift;
-	return [ grep { $_ % 2 } @$list ];
-    };
-
-template:
-
-    [% primes = [ 2, 3, 5, 7, 9 ] %]
-    [% primes.odd.join(', ') %]		# 3, 5, 7, 9
-
-See also the examples in the t/vmeth.t test script.
-
-=head2 Compound Variables
-
-Compound 'dotted' variables may contain any number of separate
-elements.  Each element may evaluate to any of the permitted variable
-types and the processor will then correctly use this value to evaluate
-the rest of the variable.  Arguments may be passed to any of the
-intermediate elements.
-
-    [% myorg.people.sort('surname').first.fullname %]
-
-Intermediate variables may be used and will behave entirely as expected.
-
-    [% sorted = myorg.people.sort('surname') %]
-    [% sorted.first.fullname %]
-
-This simplified dotted notation has the benefit of hiding the
-implementation details of your data.  For example, you could implement
-a data structure as a hash array one day and then change it to an
-object the next without requiring any change to the templates.
+See L<Template::Manual::VMethods> for details of all the virtual 
+methods available.
 
 =head2 Variable Interpolation
 
@@ -950,6 +643,83 @@ hash are visible across all templates.
 
     [% global.version = 123 %]
 
+=head2 Compile Time Constant Folding
+
+In addition to variables that get resolved each time a template is
+processed, you can also define variables that get resolved just once
+when the template is compiled.  This generally results in templates
+processing faster because there is less work to be done.
+
+To define compile-time constants, specify a CONSTANTS hash as a
+constructor item as per VARIABLES.  The CONSTANTS hash can contain any
+kind of complex, nested, or dynamic data structures, just like regular
+variables.
+
+    my $tt = Template->new({
+	CONSTANTS => {
+	    version => 3.14,
+	    release => 'skyrocket',
+	    col     => {
+		back => '#ffffff',
+		fore => '#000000',
+	    },
+	    myobj => My::Object->new(),
+	    mysub => sub { ... },
+	    joint => ', ',
+	},
+    });
+
+Within a template, you access these variables using the 'constants'
+namespace prefix.
+
+    Version [% constants.version %] ([% constants.release %])
+
+    Background: [% constants.col.back %]
+
+When the template is compiled, these variable references are replaced
+with the corresponding value.  No further variable lookup is then 
+required when the template is processed.
+
+You can call subroutines, object methods, and even virtual methods on
+constant variables.
+
+    [% constants.mysub(10, 20) %]
+    [% constants.myobj(30, 40) %]
+    [% constants.col.keys.sort.join(', ') %]
+
+One important proviso is that any arguments you pass to subroutines
+or methods must also be literal values or compile time constants.
+
+For example, these are both fine:
+
+    # literal argument
+    [% constants.col.keys.sort.join(', ') %]
+
+    # constant argument
+    [% constants.col.keys.sort.join(constants.joint) %]
+
+But this next example will raise an error at parse time because
+'joint' is a runtime variable and cannot be determined at compile
+time.
+
+    # ERROR: runtime variable argument!
+    [% constants.col.keys.sort.join(joint) %]
+
+The CONSTANTS_NAMESPACE option can be used to provide a different 
+namespace prefix for constant variables.  For example:
+
+    my $tt = Template->new({
+	CONSTANTS => {
+	    version => 3.14,
+	    # ...etc...
+	},
+	CONSTANTS_NAMESPACE => 'const',
+    });
+
+Constants would then be referenced in templates as:
+
+    [% const.version %]
+
 =head2 Special Variables
 
 A number of special variables are automatically defined by the Template 
@@ -1044,9 +814,29 @@ variable.
 
 =back
 
+=head2 Compound Variables
+
+Compound 'dotted' variables may contain any number of separate
+elements.  Each element may evaluate to any of the permitted variable
+types and the processor will then correctly use this value to evaluate
+the rest of the variable.  Arguments may be passed to any of the
+intermediate elements.
+
+    [% myorg.people.sort('surname').first.fullname %]
+
+Intermediate variables may be used and will behave entirely as expected.
+
+    [% sorted = myorg.people.sort('surname') %]
+    [% sorted.first.fullname %]
+
+This simplified dotted notation has the benefit of hiding the
+implementation details of your data.  For example, you could implement
+a data structure as a hash array one day and then change it to an
+object the next without requiring any change to the templates.
+
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -1055,7 +845,7 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.07, released on 17 April 2002.
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 2.56 2002/04/17 14:04:40 abw Exp $
+# $Id: Stash.pm,v 2.68 2002/07/30 12:44:59 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.56 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.68 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -89,6 +89,26 @@ $SCALAR_OPS = {
         return [ defined $split ? split($split, $str, @args)
                                 : split(' ', $str, @args) ];
     },
+    'chunk' => sub {
+	my ($string, $size) = @_;
+	my @list;
+	$size ||= 1;
+	if ($size < 0) {
+	    # sexeger!  It's faster to reverse the string, search
+	    # it from the front and then reverse the output than to 
+	    # search it from the end, believe it nor not!
+	    $string = reverse $string;
+	    $size = -$size;
+	    unshift(@list, scalar reverse $1) 
+		while ($string =~ /((.{$size})|(.+))/g);
+	}
+	else {
+	    push(@list, $1) while ($string =~ /((.{$size})|(.+))/g);
+	}
+	return \@list;
+    },
+	
+
     defined $SCALAR_OPS ? %$SCALAR_OPS : (),
 };
 
@@ -134,8 +154,16 @@ $LIST_OPS = {
     'shift'   => sub { my $list = shift; shift(@$list) },
     'max'     => sub { local $^W = 0; my $list = shift; $#$list; },
     'size'    => sub { local $^W = 0; my $list = shift; $#$list + 1; },
-    'first'   => sub { my $list = shift; $list->[0] },
-    'last'    => sub { my $list = shift; $list->[$#$list] },
+    'first'   => sub {
+	my $list = shift;
+	return $list->[0] unless @_;
+	return [ @$list[0..$_[0]-1] ];
+    },
+    'last'    => sub {
+	my $list = shift;
+	return $list->[-1] unless @_;
+	return [ @$list[-$_[0]..-1] ];
+    },
     'reverse' => sub { my $list = shift; [ reverse @$list ] },
     'grep'    => sub { 
 	my ($list, $pattern) = @_;
@@ -179,6 +207,38 @@ $LIST_OPS = {
                map  { [ $_, lc $_ ] } 
                @$list
     },
+    'unique'  => sub { my %u; [ grep { ++$u{$_} == 1 } @{$_[0]} ] },
+    'merge'   => sub {
+	my $list = shift;
+	return [ @$list, grep defined, map ref eq 'ARRAY' ? @$_ : undef, @_ ];
+    },
+    'slice' => sub {
+	my ($list, $from, $to) = @_;
+	$from ||= 0;
+	$to = $#$list unless defined $to;
+	return [ @$list[$from..$to] ];
+    },
+    'splice'  => sub {
+	my ($list, $offset, $length, @replace) = @_;
+ 
+	if (@replace) {
+	    # @replace can contain a list of multiple replace items, or 
+	    # be a single reference to a list
+	    @replace = @{ $replace[0] }
+	        if @replace == 1 && ref $replace[0] eq 'ARRAY';
+	    return [ splice @$list, $offset, $length, @replace ];
+	}
+	elsif (defined $length) {
+	    return [ splice @$list, $offset, $length ];
+	}
+	elsif (defined $offset) {
+	    return [ splice @$list, $offset ];
+	}
+	else {
+	    return [ splice(@$list) ];
+	}
+    },
+
     defined $LIST_OPS ? %$LIST_OPS : (),
 };
 
@@ -188,6 +248,7 @@ sub hash_import {
     @$hash{ keys %$imp } = values %$imp;
     return '';
 }
+
 
 
 #========================================================================
@@ -563,18 +624,24 @@ sub _dotop {
 	    elsif ($value = $SCALAR_OPS->{ $item }) {
 		@result = &$value($root, @$args);
 	    }
+	    elsif ($value = $LIST_OPS->{ $item }) {
+		@result = &$value([$root], @$args);
+	    }
 	    elsif ($self->{ _DEBUG }) {
 		@result = (undef, $@);
 	    }
 	}
     }
     elsif (($value = $SCALAR_OPS->{ $item }) && ! $lvalue) {
-
 	# at this point, it doesn't look like we've got a reference to
 	# anything we know about, so we try the SCALAR_OPS pseudo-methods
 	# table (but not for l-values)
-
 	@result = &$value($root, @$args);		    ## @result
+    }
+    elsif (($value = $LIST_OPS->{ $item }) && ! $lvalue) {
+	# last-ditch: can we promote a scalar to a one-element
+	# list and apply a LIST_OPS virtual method?
+	@result = &$value([$root], @$args);
     }
     elsif ($self->{ _DEBUG }) {
 	die "don't know how to access [ $root ].$item\n";   ## DIE
@@ -682,33 +749,38 @@ sub _assign {
 
 sub _dump {
     my $self   = shift;
-    my $indent = shift || 1;
+    return "[Template::Stash] " . $self->_dump_frame(2);
+}
+
+sub _dump_frame {
+    my ($self, $indent) = @_;
+    $indent ||= 1;
     my $buffer = '    ';
     my $pad    = $buffer x $indent;
-    my $text   = '';
+    my $text   = "{\n";
     local $" = ', ';
 
     my ($key, $value);
-
 
     return $text . "...excessive recursion, terminating\n"
 	if $indent > 32;
 
     foreach $key (keys %$self) {
-
 	$value = $self->{ $key };
 	$value = '<undef>' unless defined $value;
-
-	if (ref($value) eq 'ARRAY') {
-	    $value = "$value [@$value]";
-	}
-	$text .= sprintf("$pad%-8s => $value\n", $key);
 	next if $key =~ /^\./;
-	if (UNIVERSAL::isa($value, 'HASH')) {
-	    $text .= _dump($value, $indent + 1);
+	if (ref($value) eq 'ARRAY') {
+	    $value = '[ ' . join(', ', map { defined $_ ? $_ : '<undef>' }
+				 @$value) . ' ]';
 	}
+	elsif (ref $value eq 'HASH') {
+	    $value = _dump_frame($value, $indent + 1);
+	}
+
+	$text .= sprintf("$pad%-16s => $value\n", $key);
     }
-    $text;
+    $text .= $buffer x ($indent - 1) . '}';
+    return $text;
 }
 
 
@@ -857,7 +929,7 @@ restore the state of a stash as described above.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -866,8 +938,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.56, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.67, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

@@ -31,7 +31,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Parser.pm,v 2.53 2002/04/17 14:04:39 abw Exp $
+# $Id: Parser.pm,v 2.66 2002/07/30 12:44:58 abw Exp $
 #
 #============================================================================
 
@@ -54,7 +54,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.53 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.66 $ =~ /(\d+)\.(\d+)/);
 $DEBUG   = 0 unless defined $DEBUG;
 $ERROR   = '';
 
@@ -108,7 +108,6 @@ $QUOTED_ESCAPES = {
 sub new {
     my $class  = shift;
     my $config = $_[0] && UNIVERSAL::isa($_[0], 'HASH') ? shift(@_) : { @_ };
-
     my ($tagstyle, $start, $end, $defaults, $grammar, $hash, $key, $udef);
 
     my $self = bless { 
@@ -124,17 +123,28 @@ sub new {
 	GRAMMAR     => undef,
 	_ERROR      => '',
 	FACTORY     => 'Template::Directive',
+	DEBUG       => $DEBUG,
     }, $class;
 
     # update self with any relevant keys in config
     foreach $key (keys %$self) {
 	$self->{ $key } = $config->{ $key } if defined $config->{ $key };
     }
+    $self->{ FILEINFO } = [ ];
 
     $grammar = $self->{ GRAMMAR } ||= do {
 	require Template::Grammar;
 	Template::Grammar->new();
     };
+
+    # build a FACTORY object to include any NAMESPACE definitions,
+    # but only if FACTORY isn't already an object
+    if ($config->{ NAMESPACE } && ! ref $self->{ FACTORY }) {
+	my $fclass = $self->{ FACTORY };
+	$self->{ FACTORY } = $fclass->new( NAMESPACE => $config->{ NAMESPACE } )
+	    || return $class->error($fclass->error());
+    }
+
 
 #    # determine START_TAG and END_TAG for specified (or default) TAG_STYLE
 #    $tagstyle = $self->{ TAG_STYLE } || 'default';
@@ -207,7 +217,7 @@ sub old_style {
 
 
 #------------------------------------------------------------------------
-# parse($text)
+# parse($text, $data)
 #
 # Parses the text string, $text and returns a hash array representing
 # the compiled template block(s) as Perl code, in the format expected
@@ -215,23 +225,32 @@ sub old_style {
 #------------------------------------------------------------------------
 
 sub parse {
-    my $self = shift;
-    my $text = shift;
+    my ($self, $text, $info) = @_;
     my ($tokens, $block);
+
+    $info->{ DEBUG } = $self->{ DEBUG } 
+	unless defined $info->{ DEBUG };
+
+#    print "info: { ", join(', ', map { "$_ => $info->{ $_ }" } keys %$info), " }\n";
 
     # store for blocks defined in the template (see define_block())
     my $defblock = $self->{ DEFBLOCK } = { };
     my $metadata = $self->{ METADATA } = [ ];
 
-    $self->{ _ERROR }  = '';
+    $self->{ _ERROR } = '';
 
     # split file into TEXT/DIRECTIVE chunks
     $tokens = $self->split_text($text)
 	|| return undef;				    ## RETURN ##
 
+    push(@{ $self->{ FILEINFO } }, $info);
+
     # parse chunks
-    $block = $self->_parse($tokens)
-	|| return undef;				    ## RETURN ##
+    $block = $self->_parse($tokens, $info);
+
+    pop(@{ $self->{ FILEINFO } });
+
+    return undef unless $block;				    ## RETURN ##
 
     print STDERR "compiled main template document block:\n$block\n"
 	if $DEBUG;
@@ -287,8 +306,8 @@ sub split_text {
 	    # remove leading whitespace and check for a '-' chomp flag
 	    s/^([-+\#])?\s*//s;
 	    if ($1 && $1 eq '#') {
-		# comment out entire directive
-		$dir = '';
+		# comment out entire directive except for any chomp flag
+		$dir = ($dir =~ /([-+])$/) ? $1 : '';
 	    }
 	    else {
 		$chomp = ($1 && $1 eq '+') ? 0 : ($1 || $prechomp);
@@ -624,7 +643,7 @@ sub add_metadata {
 #========================================================================
 
 #------------------------------------------------------------------------
-# _parse(\@tokens)
+# _parse(\@tokens, \@info)
 #
 # Parses the list of input tokens passed by reference and returns a 
 # Template::Directive::Block object which contains the compiled 
@@ -639,7 +658,7 @@ sub add_metadata {
 #------------------------------------------------------------------------
 
 sub _parse {
-    my ($self, $tokens) = @_;
+    my ($self, $tokens, $info) = @_;
     my ($token, $value, $text, $line, $inperl);
     my ($state, $stateno, $status, $action, $lookup, $coderet, @codevars);
     my ($lhs, $len, $code);	    # rule contents
@@ -659,6 +678,7 @@ sub _parse {
     $self->{ INPERL } = \$inperl;
 
     $status = CONTINUE;
+    my $in_string = 0;
 
     while(1) {
 	# get state number and state
@@ -675,7 +695,34 @@ sub _parse {
 		if (ref $token) {
 		    ($text, $line, $token) = @$token;
 		    if (ref $token) {
-			unshift(@$tokens, @$token, (';') x 2);
+			if ($info->{ DEBUG } && ! $in_string) {
+                            # - - - - - - - - - - - - - - - - - - - - - - - - -
+			    # This is gnarly.  Look away now if you're easily
+                            # frightened.  We're pushing parse tokens onto the
+                            # pending list to simulate a DEBUG directive like so:
+			    # [% DEBUG msg line='20' text='INCLUDE foo' %]
+                            # - - - - - - - - - - - - - - - - - - - - - - - - -
+			    my $dtext = $text;
+			    $dtext =~ s[(['\\])][\\$1]g;
+			    unshift(@$tokens, 
+				    DEBUG   => 'DEBUG',
+				    IDENT   => 'msg',
+				    IDENT   => 'line',
+				    ASSIGN  => '=',
+				    LITERAL => "'$line'",
+				    IDENT   => 'text',
+				    ASSIGN  => '=',
+				    LITERAL => "'$dtext'",
+				    IDENT   => 'file',
+				    ASSIGN  => '=',
+				    LITERAL => "'$info->{ name }'",
+				    (';') x 2,
+				    @$token, 
+				    (';') x 2);
+			}
+			else {
+			    unshift(@$tokens, @$token, (';') x 2);
+			}
 			$token = undef;  # force redo
 		    }
 		    elsif ($token eq 'ITEXT') {
@@ -692,6 +739,9 @@ sub _parse {
 		    }
 		}
 		else {
+		    # toggle string flag to indicate if we're crossing
+		    # a string boundary
+		    $in_string = ! $in_string if $token eq '"';
 		    $value = shift(@$tokens);
 		}
 	    };
@@ -740,7 +790,14 @@ sub _parse {
 		?   map { $_->[1] } @$stack[ -$len .. -1 ]
 		:   ();
 
-	$coderet = &$code( $self, @codevars );
+	eval {
+	    $coderet = &$code( $self, @codevars );
+	};
+	if ($@) {
+	    my $err = $@;
+	    chomp $err;
+	    return $self->_parse_error($err);
+	}
 
 	# reduce stack by $len
 	splice(@$stack, -$len, $len);
@@ -806,15 +863,20 @@ sub _parse_error {
 
 sub _dump {
     my $self = shift;
-    my $output = "$self:\n";
-    foreach my $key (qw( START_TAG END_TAG TAG_STYLE ANYCASE INTERPOLATE 
-			 PRE_CHOMP POST_CHOMP V1DOLLAR ) ) {
-	
-	$output .= sprintf("%-12s => %s\n", $key, $self->{ $key });
+    my $output = "[Template::Parser] {\n";
+    my $format = "    %-16s => %s\n";
+    my $key;
+
+    foreach $key (qw( START_TAG END_TAG TAG_STYLE ANYCASE INTERPOLATE 
+		      PRE_CHOMP POST_CHOMP V1DOLLAR )) {
+	my $val = $self->{ $key };
+	$val = '<undef>' unless defined $val;
+	$output .= sprintf($format, $key, $val);
     }
+
+    $output .= '}';
     return $output;
 }
-    
 
 
 1;
@@ -1265,7 +1327,7 @@ Example:
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -1276,8 +1338,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.53, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.65, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
  
 

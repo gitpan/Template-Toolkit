@@ -85,7 +85,7 @@ output:
 -%]<p>
 Folds the input to UPPER CASE.
 </p>
-<pre>    [% tt_start_tag %] &quot;hello world&quot; | FILTER upper [% tt_end_tag %]</pre>
+<pre>    [% tt_start_tag %] &quot;hello world&quot; FILTER upper [% tt_end_tag %]</pre>
 <p>
 output:
 </p>
@@ -96,7 +96,7 @@ output:
 -%]<p>
 Folds the input to lower case.
 </p>
-<pre>    [% tt_start_tag %] &quot;Hello World&quot; | FILTER lower [% tt_end_tag %]</pre>
+<pre>    [% tt_start_tag %] &quot;Hello World&quot; FILTER lower [% tt_end_tag %]</pre>
 <p>
 output:
 </p>
@@ -107,7 +107,7 @@ output:
 -%]<p>
 Folds the first character of the input to UPPER CASE.
 </p>
-<pre>    [% tt_start_tag %] &quot;hello&quot; | FILTER ucfirst [% tt_end_tag %]</pre>
+<pre>    [% tt_start_tag %] &quot;hello&quot; FILTER ucfirst [% tt_end_tag %]</pre>
 <p>
 output:
 </p>
@@ -118,7 +118,7 @@ output:
 -%]<p>
 Folds the first character of the input to lower case.
 </p>
-<pre>    [% tt_start_tag %] &quot;HELLO&quot; | FILTER lcfirst [% tt_end_tag %]</pre>
+<pre>    [% tt_start_tag %] &quot;HELLO&quot; FILTER lcfirst [% tt_end_tag %]</pre>
 <p>
 output:
 </p>
@@ -176,7 +176,7 @@ equally as comprehensive) to perform the encoding.  If one or other of
 these modules are installed on your system then the text will be
 encoded (via the escape_html() or encode_entities() subroutines
 respectively) to convert all extended characters into their
-appropriate HTML entities (e.g. converting '�' to '&amp;eacute;').  If
+appropriate HTML entities (e.g. converting 'Ã©' to '&amp;eacute;').  If
 neither module is available on your system then an 'html_all' exception
 will be thrown reporting an appropriate message.   
 </p>
@@ -504,7 +504,7 @@ by latex, pdflatex or dvips.
 [% WRAPPER section
     title="AUTHOR"
 -%]<p>
-Andy Wardley &lt;abw@kfs.org&gt;
+Andy Wardley &lt;abw@andywardley.com&gt;
 </p>
 <p>
 [% ttlink('http://www.andywardley.com/', 'http://www.andywardley.com/') -%]
@@ -513,7 +513,7 @@ Andy Wardley &lt;abw@kfs.org&gt;
 [% WRAPPER section
     title="VERSION"
 -%]<p>
-Template Toolkit version 2.07, released on 17 April 2002.
+Template Toolkit version 2.08, released on 30 July 2002.
 </p>
 [%- END %]
 [% WRAPPER section

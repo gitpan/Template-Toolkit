@@ -17,7 +17,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Config.pm,v 2.47 2002/04/17 14:04:37 abw Exp $
+#   $Id: Config.pm,v 2.55 2002/07/30 12:44:56 abw Exp $
 #
 #========================================================================
  
@@ -30,19 +30,20 @@ use base qw( Template::Base );
 use vars qw( $VERSION $DEBUG $ERROR $INSTDIR
 	     $PARSER $PROVIDER $PLUGINS $FILTERS $ITERATOR 
              $LATEX_PATH $PDFLATEX_PATH $DVIPS_PATH
-	     $STASH $SERVICE $CONTEXT );
+	     $STASH $SERVICE $CONTEXT $CONSTANTS );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.47 $ =~ /(\d+)\.(\d+)/);
-$DEBUG    = 0 unless defined $DEBUG;
-$ERROR    = '';
-$CONTEXT  = 'Template::Context';
-$FILTERS  = 'Template::Filters';
-$ITERATOR = 'Template::Iterator';
-$PARSER   = 'Template::Parser';
-$PLUGINS  = 'Template::Plugins';
-$PROVIDER = 'Template::Provider';
-$SERVICE  = 'Template::Service';
-$STASH    = 'Template::Stash';
+$VERSION   = sprintf("%d.%02d", q$Revision: 2.55 $ =~ /(\d+)\.(\d+)/);
+$DEBUG     = 0 unless defined $DEBUG;
+$ERROR     = '';
+$CONTEXT   = 'Template::Context';
+$FILTERS   = 'Template::Filters';
+$ITERATOR  = 'Template::Iterator';
+$PARSER    = 'Template::Parser';
+$PLUGINS   = 'Template::Plugins';
+$PROVIDER  = 'Template::Provider';
+$SERVICE   = 'Template::Service';
+$STASH     = 'Template::Stash';
+$CONSTANTS = 'Template::Namespace::Constants';
 
 # the following is set at installation time by the Makefile.PL 
 $INSTDIR  = '';
@@ -208,6 +209,7 @@ sub context {
 	|| $class->error("failed to create context: ", $CONTEXT->error);
 }
 
+
 #------------------------------------------------------------------------
 # service(\%params)
 #
@@ -223,6 +225,26 @@ sub service {
     return undef unless $class->load($SERVICE);
     return $SERVICE->new($params) 
 	|| $class->error("failed to create context: ", $SERVICE->error);
+}
+
+
+#------------------------------------------------------------------------
+# constants(\%params)
+#
+# Instantiate a new namespace handler for compile time constant folding
+# (default: Template::Namespace::Constants). 
+# Returns object or undef, as above.
+#------------------------------------------------------------------------
+
+sub constants {
+    my $class  = shift;
+    my $params = defined($_[0]) && UNIVERSAL::isa($_[0], 'HASH') 
+	       ? shift : { @_ };
+
+    return undef unless $class->load($CONSTANTS);
+    return $CONSTANTS->new($params) 
+	|| $class->error("failed to create constants namespace: ", 
+			 $CONSTANTS->error);
 }
 
 
@@ -383,7 +405,7 @@ optional components of the Template Toolkit have not been installed.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -392,8 +414,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.47, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.54, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

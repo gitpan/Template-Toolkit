@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.11 2002/03/13 15:33:29 abw Exp $
+# $Id: stash.t,v 2.12 2002/05/03 13:56:34 abw Exp $
 #
 #========================================================================
 
@@ -64,7 +64,7 @@ match( $stash->get('bar.buz'), 100 );
 
 my $ttlist = [
     'default' => Template->new(),
-    'warn'    => Template->new(DEBUG => 1),
+    'warn'    => Template->new(DEBUG => 1, DEBUG_FORMAT => ''),
 ];
 
 test_expect(\*DATA, $ttlist, $data);

@@ -7,7 +7,7 @@
 #   Template Toolkit.
 #
 # AUTHOR
-#   Andy Wardley  <abw@kfs.org>
+#   Andy Wardley  <abw@andywardley.com>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-2001 Andy Wardley.  All Rights Reserved.
@@ -61,6 +61,13 @@ Directive syntax, structure and semantics
 This section describes the syntax, structure and semantics of the
 Template Toolkit directives and general presentation language.
 
+=item L<Template::Manual::Directives|Template::Manual::Directives>
+
+Template directives
+
+This section provides a reference of all Template Toolkit directives,
+complete with examples of use.
+
 =item L<Template::Manual::Variables|Template::Manual::Variables>
 
 Template variables and code bindings
@@ -69,12 +76,14 @@ This section describes the different ways in which Perl data can be
 bound to template variables and accessed via Template Toolkit
 directives.
 
-=item L<Template::Manual::Directives|Template::Manual::Directives>
+=item L<Template::Manual::VMethods|Template::Manual::VMethods>
 
-Template directives
+Virtual Methods
 
-This section provides a reference of all Template Toolkit directives,
-complete with examples of use.
+The Template Toolkit provides virtual methods for manipulating variable
+values. Most of them are analogous to regular Perl functions of the
+same names. This section describes the different virtual methods that
+can be applied to scalar, list and hash values.
 
 =item L<Template::Manual::Config|Template::Manual::Config>
 
@@ -139,7 +148,7 @@ contributed to it.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -148,7 +157,7 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-Template Toolkit version 2.07, released on 17 April 2002.
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 

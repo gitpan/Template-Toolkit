@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Base.pm,v 2.48 2002/04/17 14:04:37 abw Exp $
+#   $Id: Base.pm,v 2.55 2002/07/30 12:44:55 abw Exp $
 #
 #========================================================================
  
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.48 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.55 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -206,7 +206,7 @@ often used within object methods to report errors to the caller.
 
 =head1 AUTHOR
 
-Andy Wardley E<lt>abw@kfs.orgE<gt>
+Andy Wardley E<lt>abw@andywardley.comE<gt>
 
 L<http://www.andywardley.com/|http://www.andywardley.com/>
 
@@ -215,8 +215,8 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.48, distributed as part of the
-Template Toolkit version 2.07, released on 17 April 2002.
+2.54, distributed as part of the
+Template Toolkit version 2.08, released on 30 July 2002.
 
 =head1 COPYRIGHT
 
