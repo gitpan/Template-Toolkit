@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: Exception.pm,v 2.59 2003/04/24 09:14:38 abw Exp $
+# $Id: Exception.pm,v 2.60 2003/07/24 16:16:27 abw Exp $
 #
 #========================================================================
 
@@ -36,7 +36,7 @@ use constant TEXT  => 2;
 use overload q|""| => "as_string", fallback => 1;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.59 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.60 $ =~ /(\d+)\.(\d+)/);
 
 
 #------------------------------------------------------------------------
@@ -228,12 +228,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.59, distributed as part of the
-Template Toolkit version 2.10, released on 24 July 2003.
+2.60, distributed as part of the
+Template Toolkit version 2.11, released on 06 January 2004.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2004 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

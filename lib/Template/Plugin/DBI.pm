@@ -19,7 +19,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: DBI.pm,v 2.57 2003/05/26 16:24:44 darren Exp $
+#   $Id: DBI.pm,v 2.58 2003/07/24 16:16:35 abw Exp $
 # 
 #==============================================================================
 
@@ -35,7 +35,7 @@ use DBI;
 use vars qw( $VERSION $DEBUG $QUERY $ITERATOR );
 use base qw( Template::Plugin );
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.57 $ =~ /(\d+)\.(\d+)/);
+$VERSION  = sprintf("%d.%02d", q$Revision: 2.58 $ =~ /(\d+)\.(\d+)/);
 $DEBUG    = 0 unless defined $DEBUG;
 $QUERY    = 'Template::Plugin::DBI::Query';
 $ITERATOR = 'Template::Plugin::DBI::Iterator';
@@ -203,17 +203,17 @@ sub tie {
     $debug = $self->{ _DEBUG } unless defined $debug;
 
     tie %hash, 'Tie::DBI', {
-	%$params,   # any other Tie::DBI options like DEBUG, WARN, etc
-	db       => $self->{ _DBH  } || $self->{ _DSN },
-	user     => $self->{ _USER },
-	password => $self->{ _PASS },
-	table    => $table,
-	key      => $key,
-	CLOBBER  => $klobs || 0,
-	DEBUG    => $debug || 0,
+        %$params,   # any other Tie::DBI options like DEBUG, WARN, etc
+        db       => $self->{ _DBH  } || $self->{ _DSN },
+        user     => $self->{ _USER },
+        password => $self->{ _PASS },
+        table    => $table,
+        key      => $key,
+        CLOBBER  => $klobs || 0,
+        DEBUG    => $debug || 0,
     };
 
-    return \%hash ;
+    return \%hash;
 }
 
 
@@ -929,8 +929,8 @@ Andy Wardley, Craig Barratt, Dave Hodgkinson and Rafael Kitover.
 
 =head1 VERSION
 
-2.57, distributed as part of the
-Template Toolkit version 2.10, released on 24 July 2003.
+2.58, distributed as part of the
+Template Toolkit version 2.11, released on 06 January 2004.
 
 
 

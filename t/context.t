@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: context.t,v 2.4 2002/08/08 12:00:54 abw Exp $
+# $Id: context.t,v 2.5 2003/10/14 09:44:55 abw Exp $
 #
 #========================================================================
 
@@ -97,11 +97,11 @@ my $blocks2 = {
 
 eval { $context->template('some_block_1') };
 ok( $@ );
-$context->visit($blocks1);
+$context->visit('no doc', $blocks1);
 ok( $context->template('some_block_1') eq 'hello' );
 eval { $context->template('some_block_2') };
 ok( $@ );
-$context->visit($blocks2);
+$context->visit('no doc', $blocks2);
 ok(   $context->template('some_block_1') eq 'hello' );
 ok(   $context->template('some_block_2') eq 'world' );
 $context->leave();
@@ -116,11 +116,11 @@ ok( $@ );
 
 
 # test that reset() clears all blocks
-$context->visit($blocks1);
+$context->visit('no doc', $blocks1);
 ok(   $context->template('some_block_1') eq 'hello' );
 eval { $context->template('some_block_2') };
 ok( $@ );
-$context->visit($blocks2);
+$context->visit('no doc', $blocks2);
 ok(   $context->template('some_block_1') eq 'hello' );
 ok(   $context->template('some_block_2') eq 'world' );
 $context->reset();

@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Filter.pm,v 1.25 2003/04/24 09:14:43 abw Exp $
+#   $Id: Filter.pm,v 1.26 2003/07/24 16:16:35 abw Exp $
 #
 #============================================================================
 
@@ -31,7 +31,7 @@ use Template::Plugin;
 use base qw( Template::Plugin );
 use vars qw( $VERSION $DYNAMIC );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.25 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/);
 $DYNAMIC = 0 unless defined $DYNAMIC;
 
 
@@ -410,12 +410,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-1.25, distributed as part of the
-Template Toolkit version 2.10, released on 24 July 2003.
+1.26, distributed as part of the
+Template Toolkit version 2.11, released on 06 January 2004.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2004 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

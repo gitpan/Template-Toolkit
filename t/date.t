@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: date.t,v 2.11 2003/04/30 10:39:34 abw Exp $
+# $Id: date.t,v 2.12 2003/08/03 19:54:13 abw Exp $
 #
 #========================================================================
 
@@ -191,8 +191,8 @@ In French, today's day is: [% nowloc(time, '%A', 'fr_FR') +%]
 
 -- expect --
 -- process --
-[% USE date(time='4:20:00 9-13-2000', format='%s');
-   nowloc(date.format, '%A', 'en_GB') 
+[% # 4:20:00 9-13-2000 equals 979010400 seconds since the epoch
+   nowloc(979010400, '%A', 'en_GB')
 %]
 
 -- test --

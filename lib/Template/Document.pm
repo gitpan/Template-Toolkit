@@ -20,7 +20,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.65 2003/04/24 09:14:38 abw Exp $
+# $Id: Document.pm,v 2.67 2003/10/14 09:40:37 abw Exp $
 #
 #============================================================================
 
@@ -33,7 +33,7 @@ use vars qw( $VERSION $ERROR $COMPERR $DEBUG $AUTOLOAD );
 use base qw( Template::Base );
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.65 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.67 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -81,10 +81,10 @@ sub new {
 	} values %$defblocks;
 
     bless {
-	%$metadata,
-	_BLOCK     => $block,
-	_DEFBLOCKS => $defblocks,
-	_HOT       => 0,
+        %$metadata,
+        _BLOCK     => $block,
+        _DEFBLOCKS => $defblocks,
+        _HOT       => 0,
     }, $class;
 }
 
@@ -131,20 +131,22 @@ sub process {
 
     # check we're not already visiting this template
     return $context->throw(Template::Constants::ERROR_FILE, 
-			   "recursion into '$self->{ name }'")
-	if $self->{ _HOT } && ! $context->{ RECURSION };   ## RETURN ##
+                           "recursion into '$self->{ name }'")
+        if $self->{ _HOT } && ! $context->{ RECURSION };   ## RETURN ##
 
-    $context->visit($defblocks);
+    $context->visit($self, $defblocks);
+
     $self->{ _HOT } = 1;
     eval {
-	my $block = $self->{ _BLOCK };
-	$output = &$block($context);
+        my $block = $self->{ _BLOCK };
+        $output = &$block($context);
     };
     $self->{ _HOT } = 0;
+
     $context->leave();
 
     die $context->catch($@)
-	if $@;
+        if $@;
 	
     return $output;
 }
@@ -466,12 +468,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.65, distributed as part of the
-Template Toolkit version 2.10, released on 24 July 2003.
+2.67, distributed as part of the
+Template Toolkit version 2.11, released on 06 January 2004.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2004 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

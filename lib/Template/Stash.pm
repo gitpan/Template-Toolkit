@@ -18,7 +18,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Stash.pm,v 2.78 2003/07/24 12:13:32 abw Exp $
+# $Id: Stash.pm,v 2.80 2003/10/08 10:06:41 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ require 5.004;
 use strict;
 use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.78 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.80 $ =~ /(\d+)\.(\d+)/);
 
 
 #========================================================================
@@ -60,6 +60,7 @@ $SCALAR_OPS = {
     'repeat'  => sub { 
         my ($str, $count) = @_;
         $str = '' unless defined $str;  
+        return '' unless $count;
         $count ||= 1;
         return $str x $count;
     },
@@ -115,6 +116,7 @@ $SCALAR_OPS = {
 $HASH_OPS = {
     'item'   => sub { my ($hash, $item) = @_; 
                       $item = '' unless defined $item;
+                      return if $item =~ /^[_.]/;
                       $hash->{ $item };
                   },
     'hash'   => sub { $_[0] },
@@ -155,26 +157,26 @@ $LIST_OPS = {
     'max'     => sub { local $^W = 0; my $list = shift; $#$list; },
     'size'    => sub { local $^W = 0; my $list = shift; $#$list + 1; },
     'first'   => sub {
-	my $list = shift;
-	return $list->[0] unless @_;
-	return [ @$list[0..$_[0]-1] ];
+        my $list = shift;
+        return $list->[0] unless @_;
+        return [ @$list[0..$_[0]-1] ];
     },
     'last'    => sub {
-	my $list = shift;
-	return $list->[-1] unless @_;
-	return [ @$list[-$_[0]..-1] ];
+        my $list = shift;
+        return $list->[-1] unless @_;
+        return [ @$list[-$_[0]..-1] ];
     },
     'reverse' => sub { my $list = shift; [ reverse @$list ] },
     'grep'    => sub { 
-	my ($list, $pattern) = @_;
-	$pattern ||= '';
-	return [ grep /$pattern/, @$list ];
+        my ($list, $pattern) = @_;
+        $pattern ||= '';
+        return [ grep /$pattern/, @$list ];
     },
     'join'    => sub { 
-	my ($list, $joint) = @_; 
-	join(defined $joint ? $joint : ' ', 
-	     map { defined $_ ? $_ : '' } @$list) 
-    },
+        my ($list, $joint) = @_; 
+        join(defined $joint ? $joint : ' ', 
+             map { defined $_ ? $_ : '' } @$list) 
+        },
     'sort'    => sub {
         $^W = 0;
         my ($list, $field) = @_;
@@ -984,12 +986,12 @@ L<http://www.andywardley.com/|http://www.andywardley.com/>
 
 =head1 VERSION
 
-2.78, distributed as part of the
-Template Toolkit version 2.10, released on 24 July 2003.
+2.80, distributed as part of the
+Template Toolkit version 2.11, released on 06 January 2004.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2004 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

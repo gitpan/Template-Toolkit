@@ -25,7 +25,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 2.17 2002/08/08 11:59:15 abw Exp $
+# $Id: Directive.pm,v 2.18 2003/10/08 09:34:41 abw Exp $
 #
 #============================================================================
 
@@ -39,13 +39,13 @@ use Template::Constants;
 use Template::Exception;
 
 use base qw( Template::Base );
-use vars qw( $VERSION $DEBUG $PRETTY $WHILE_MAX );
+use vars qw( $VERSION $DEBUG $PRETTY $WHILE_MAX $OUTPUT );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.17 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 2.18 $ =~ /(\d+)\.(\d+)/);
 
 $WHILE_MAX = 1000 unless defined $WHILE_MAX;
 $PRETTY    = 0 unless defined $PRETTY;
-my $OUTPUT = '$output .= ';
+$OUTPUT    = '$output .= ';
 
 
 sub _init {

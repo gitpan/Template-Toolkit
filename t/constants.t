@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: constants.t,v 1.5 2002/09/03 11:20:30 mark Exp $
+# $Id: constants.t,v 1.6 2003/07/24 16:16:52 abw Exp $
 #
 #========================================================================
 
