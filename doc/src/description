@@ -47,14 +47,17 @@ simple values, references to hashes, lists, sub-routines or objects
     $tproc->process($myfile, $data) 
         || die $tproc->error(), "\n";
 
-
+The PRE_PROCESS and POST_PROCESS options may be used to specify the
+name(s) of template file(s) that should be processed immediately
+before and after each template, respectively.  This can be used to add
+page headers and footers, for example.
 
 =head1 TEMPLATE SYNTAX AND DIRECTIVES
 
 =head2 DIRECTIVE TAGS
 
 The default syntax for embedding directives in template documents is
-to enclosed them within the character sequences '[%' and '%]'.
+to enclose them within the character sequences '[%' and '%]'.
 
     [% INCLUDE header %]
   
@@ -605,11 +608,15 @@ generated.
   	return $some_debug_text;
     }
 
-The status code can also be STATUS_STOP (immediate stop) or STATUS_RETURN
-(stop the current template only and return to the caller or point of 
-INCLUDE).  The final option is for the status to be an exception object.
-This is an instance of the Template::Exception class.  The first parameter
-defines the 'type' of error and may be any string you care to define.  
+The status code can also be STATUS_STOP (immediate stop) or
+STATUS_RETURN (stop the current template only and return to the caller
+or point of INCLUDE).  The final option is for the status to be an
+exception object.  This is an instance of the Template::Exception
+class which can be created by calling the new() construcot.  The first
+parameter defines the 'type' of error which may have a corresponding
+CATCH handler defined.  The second parameter should be a string
+containing the details of the error.
+  
 The CATCH option and CATCH block directive allow you to define custom
 handling, or template blocks to be processed when different kinds of 
 exception occur, including any user-defined types such as in this 
@@ -710,10 +717,11 @@ For example, consider the following variable reference:
 This might equate to the following fundamental steps:
 
     'myorg'  is an object reference
-    'user'   is a method called on the above object returning a tied 
-             hash which acts as an interface to a database
-    'abw'    is fetched from the above hash, triggering the retrieval 
-             of a record from the database.  This is returned as a hash
+    'user'   is a method called on the above object returning another
+             object which acts as an interface to a database
+    'abw'    is a method called on the above object, caught by AUTOLOAD
+             triggering the retrieval of a record from the database.  
+             This is returned as a hash
     'name'   is fetched from this hash, representing the value of the 
              'name' field in the record.
 
@@ -764,20 +772,27 @@ A different implementation of the above example might look like this:
 
     [% myorg.user('abw').name %]
 
-Here, the fictional 'user' method of the 'myorg' object takes a parameter
-to indicate the required record.  Thus, it can directly return a hash 
-reference representing the record which can then be examined for the 
-'name' member.  The method could be written to check for the existence
-of a parameter and return a general access facility, such as the tied hash 
-in the previous example, if one is not provided.  Thus, the same underlying 
-Perl code can easily be used in either manner.
+Here, the fictional 'user' method of the 'myorg' object takes a
+parameter to indicate the required record.  Thus, it can directly
+return a hash reference representing the record which can then be
+examined for the 'name' member.  The method could be written to check
+for the existence of a parameter and return a general access facility,
+such as the object mentioned in the previous example, if one is not
+provided.
 
     package myorg;
   
     sub user {
   	my ($self, $uid) = @_;
-  	return $self->get_record($uid) if $uid;
-  	return $self->make_tied_hash_to_records();
+  	return $uid ? $self->get_record($uid) : $self
+    }
+
+    sub AUTOLOAD {
+	my ($self, @params) = @_;
+        my $name = $AUTOLOAD;
+        $name =~ s/.*:://;
+        return if $name eq 'DESTROY';
+        $self->get_record($name);
     }
 
 A sub-routine or method might also return a reference to a list containing
@@ -1375,3 +1390,5 @@ with other 'side-effect' directives.  e.g.
     [% THROW badpasswd "$user.id has a dumb password ($user.passwd)"
   	 FOREACH user = naughty_user_list
     %]
+
+

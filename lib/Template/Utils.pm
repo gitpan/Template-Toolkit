@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Utils.pm,v 1.4 1999/08/12 21:53:47 abw Exp $
+# $Id: Utils.pm,v 1.5 1999/08/12 23:12:25 abw Exp $
 #
 #============================================================================
 
@@ -30,7 +30,7 @@ use strict;
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
 
 @ISA     = qw( Exporter );
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
 
 
 
@@ -95,14 +95,18 @@ sub update_hash {
 # write output to that GLOB.  Ditto for an object that isa(IO::Handle).
 # A reference to a scalar indicates a target variable which should be
 # appended to.  In all these cases, a reference to a sub-routine is 
-# returned which will correctly write output to the target.
+# returned which will correctly write output to the target.  A second
+# value may also be returned indicating an error that occurred, while
+# opening a file, for example.  In the case of an error, output defaults
+# to STDOUT.
 #------------------------------------------------------------------------
 
 sub output_handler {
     my $where = shift;
-    my ($output, $reftype);
+    my ($output, $error, $reftype);
     
-
+    $error = 0;
+    
     # default is to output to STDOUT, existing value for $what overrides it
     $where = \*STDOUT 
 	unless defined $where;
@@ -123,17 +127,29 @@ sub output_handler {
     elsif (UNIVERSAL::isa($where, 'IO::Handle')) {
 	$output = sub { $where->print(@_) };
     }
+    # a simple string is taken as a filename
+    elsif (! $reftype) {
+	require Symbol;
+	my $handle = &Symbol::gensym;
+	if (open($handle, ">$where")) { 
+	    $output = sub { print $handle @_ };
+	}
+	else {
+	    $error  = "$where: $!";
+	}
+    }
     # give up, we've done our best
     else {
-	warn("output_handler() cannot determine target type\n");
+	$output = undef;
+	$error = "output_handler() cannot determine target type ($where)\n";
     }
 
     # default handler in case we failed
     $output = sub { print @_ }
-        unless defined $output;
+        unless $output;
 
     # return handler
-    $output;
+    wantarray ? ($output, $error) : $output;
 }
 
 
@@ -204,7 +220,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.4 $
+$Revision: 1.5 $
 
 =head1 COPYRIGHT
 

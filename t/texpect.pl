@@ -13,6 +13,48 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
+#------------------------------------------------------------------------
+# USAGE:
+#    use lib qw( . ./t ../lib );
+#    use vars qw( $DEBUG );
+#    use Template;
+#    require 'texpect.pl';
+#
+#    $DEBUG = 0;       # set this true to see each test running
+#
+#    extra_tests($n);  # some extra tests follow test_expect()...
+#    pre_ok($truth);   # a pre-check test
+#    test_expect($input, \%tproc_config, \%vars)
+#    ok( $truth )      # for 1..$n extra tests
+#
+#
+# The test_expect() sub splits the input source into a number of tests:
+#
+# Each test is defined like this:
+#   -- test --
+#   input
+#   -- expect --
+#   expected output
+#   -- error --
+#   expected error message(s) (optional)
+#
+# The first test in the file does not require a '-- test --' line.
+#
+# test_expect() counts the number of tests, and then calls ntests() 
+# to generate the familiar "1..$ntests\n" test harness line.  Each 
+# test defined generates three test numbers.  The first indicates 
+# that the input was processed without error.  The second that the 
+# output matches that expected.  The third does the same for any 
+# error text expected.  In addition to this, any test results cached
+# by calling pre_ok() will be added to the total along with any 
+# additional tests known to follow the test_expect() method, set 
+# by calling extra_tests($n).  The known result of the pre_ok() 
+# calls is printed first.  Then test_expect() resumes and calls ok()
+# to generate its results.  Finally, control is returned to the caller
+# who can manually call ok() to run and final tests.
+#
+# Lines in tests that start with a '#' are ignored.  Lines that 
+# look '-- likethis --' may also confuse the test splitter.
 #========================================================================
 
 use strict;
@@ -21,6 +63,7 @@ use vars qw( $DEBUG $loaded %callsign);
 
 $DEBUG = 0;
 $^W = 1;
+$| = 1;
 
 # some random data
 @callsign{ 'a'..'z' } = qw( 
@@ -36,6 +79,7 @@ sub callsign {
 # kludge to allow us to define some extra tests to add to the 
 # overall count
 
+my @pre_tests = ();
 my $xtests = 0;
 sub extra_tests {
     $xtests = shift;
@@ -45,11 +89,18 @@ my ($ntests, $ok_count);
 
 sub ntests {
     $ntests = shift;
-    $ntests += $xtests;		    # add any extra tests 
+    $ntests += $xtests + scalar @pre_tests;	# add any extra tests 
     $ok_count = 1;
     print "1..$ntests\n";
+    foreach my $pre_test (@pre_tests) {
+	ok($pre_test);
+    }
 }
 
+sub pre_ok {
+    my $ok = shift || 0;
+    push(@pre_tests, $ok);
+}
 
 sub ok {
     warn "ok() called before ntests()\n"

@@ -31,7 +31,8 @@
 	      [% FOREACH variable = [ val, val, val ] %]
               [% FOREACH variable = list %]
               [% FOREACH list %]
-                 content
+                 content...
+                 [% variable %]
               [% END %]
 
   WHILE     - iterate while condition is true
@@ -69,15 +70,19 @@
   USE       - load a "plugin" module
               [% USE name %]
               [% USE name( params ) %] 
-              [% USE alias = name( params ) %]
-
+              [% USE var = name( params ) %]
+              ...
+              [% name.method %]
+              [% var.method %]
+              
   CATCH     - define block to catch an exception
-              [% CATCH errtype %]
-                 content
+              [% CATCH etype %]
+                 content...
+                 [% e.type %]  [% e.info %]
               [% END %]
 
   THROW     - throw an exception
-              [% THROW errtype info %]
+              [% THROW etype info %]
 
   ERROR     - generate an error message (default: to STDERR)
               [% ERROR info %]

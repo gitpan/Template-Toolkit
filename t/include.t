@@ -17,7 +17,7 @@
 #   [% INCLUDE 'header' %].  This is a bit tricky, but it *must* be 
 #   fixed ASAP.  Apart from this inconvenience, INCLUDE seems to work OK.
 #
-# $Id: include.t,v 1.8 1999/08/12 02:30:38 abw Exp $
+# $Id: include.t,v 1.9 1999/08/15 20:40:29 abw Exp $
 #
 #========================================================================
 
@@ -56,7 +56,7 @@ my $params = {
 
 my $tproc = Template->new({ 
     INTERPOLATE => 1,
-    INCLUDE_PATH => [ qw( t/misc misc ) ],
+    INCLUDE_PATH => [ qw( t/test/src test/src ) ],
 });
 test_expect(\*DATA, $tproc, $params);
 
@@ -108,11 +108,11 @@ then set to 'sierra'  b is golf  m is 97
 alpha
 
 -- test --
-FOO: [% INCLUDE foo.txt -%]
-FOO: [% INCLUDE foo.txt a = b -%]
+FOO: [% INCLUDE foo -%]
+FOO: [% INCLUDE foo a = b -%]
 -- expect --
-FOO: This is foo.txt  a is alpha
-FOO: This is foo.txt  a is bravo
+FOO: This is foo  a is alpha
+FOO: This is foo  a is bravo
 
 -- test --
 GOLF: [% INCLUDE $c.f.g %]
@@ -125,24 +125,26 @@ GOLF: This is the golf file, g is hotel
 a new golf
 
 -- test --
-BAR: [% INCLUDE other/bar %]
-BAR: [% INCLUDE other/bar word='wizzle' %]
-BAR: [% INCLUDE "other/bar" %]
+BAZ: [% INCLUDE bar/baz %]
+BAZ: [% INCLUDE bar/baz word='wizzle' %]
+BAZ: [% INCLUDE "bar/baz" %]
 -- expect --
-BAR: This is file bar
+BAZ: This is file baz
 The word is 'qux'
-BAR: This is file bar
+BAZ: This is file baz
 The word is 'wizzle'
-BAR: This is file bar
+BAZ: This is file baz
 The word is 'qux'
 
 -- test --
-BAZ: [% INCLUDE other/baz.txt %]
-BAZ: [% INCLUDE other/baz.txt time = 'nigh' %]
+BAZ: [% INCLUDE bar/baz.txt %]
+BAZ: [% INCLUDE bar/baz.txt time = 'nigh' %]
 -- expect --
 BAZ: This is file baz
+The word is 'qux'
 The time is now
 BAZ: This is file baz
+The word is 'qux'
 The time is nigh
 
 -- test --

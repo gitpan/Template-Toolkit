@@ -18,7 +18,7 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pm,v 1.27 1999/08/12 20:15:26 abw Exp $
+#   $Id: Template.pm,v 1.30 1999/08/16 14:14:31 abw Exp $
 #
 #========================================================================
  
@@ -34,7 +34,7 @@ use Template::Context;
 
 ## This is the main version number for the Template Toolkit.
 ## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '0.24';
+$VERSION     = '0.25';
 
 @ISA         = qw( Exporter );
 *EXPORT_OK   = \@Template::Constants::EXPORT_OK;
@@ -63,23 +63,54 @@ sub new {
 }
 
 
-
 #------------------------------------------------------------------------
-# process($template, \%params, ...)
+# process($template, \%params, $output, $errout)
 #
-# Main processing method which delegates to the CONTEXT process() method.  
-# The method returns 1 if the template was successfully processed. 
-# On error, 0 is returned and error() can be called to return the 
-# error message.
+
+# Main template processing method which delegates to the Context
+# process() method.  The first parameter denotes the template
+# filename, handle, etc.  This is processed in a localised variable
+# namespace, implemented by calling the context localise() and
+# delocalise() methods, passing any additional variables defined in
+# the $params hash ref.  Any PRE_PROCESS and POST_PROCESS templates
+# will be processed immediately before and after the main template.
+# The $output and $errout parameters may be provided to indicate
+# destinations for this template file.  Temporary redirections are
+# made to these locations for the processing of this template.
+#
+# The method returns 1 if the template was successfully processed.  On
+# error, 0 is returned and error() can be called to return the error
+# message.
 #------------------------------------------------------------------------
 
 sub process {
-    my $self = shift;
+    my ($self, $template, $params, $output, $errout) = @_;
+    my ($context, $preproc, $postproc) = @$self{ 
+	qw( CONTEXT PRE_PROCESS POST_PROCESS ) };
+    my ($old_out, $old_err, $error);
 
-    my $error = $self->{ CONTEXT }->process(@_);
+    # set up redirections if necessary
+    $old_out = $context->redirect(TEMPLATE_OUTPUT, $output)
+	if $output;
+    $old_err = $context->redirect(TEMPLATE_ERROR, $errout)
+	if $errout;
+
+    
+    # localise variables, pre-process, process, post-process, delocalise
+    $context->localise($params);
+    $context->process($preproc) if $preproc;
+    $error = $context->process($template);
+    $context->process($postproc) if $postproc;
+    $context->delocalise();
 
     # store returned error value or exception as string in ERROR
     $self->{ ERROR } = ref($error) ? $error->as_string : $error;
+
+    # restore previous output/error handlers, closing files, etc.
+    $context->redirect(TEMPLATE_OUTPUT, $old_out)
+	if $old_out;
+    $context->redirect(TEMPLATE_ERROR, $old_err)
+	if $old_err;
 
     # return 1 on numerical or 0 status return, 0 on exception (ref)
     return ref($error) ? 0 : 1;

@@ -1,0 +1,238 @@
+#!/usr/bin/perl -w
+#========================================================================
+#
+# ttree
+#
+# DESCRIPTION
+#   Script for processing all directory trees containing templates.
+#   Template files are processed and the output directed to the 
+#   relvant file in an output tree.  The timestamps of the source and
+#   destination files can then be examined for future invocations 
+#   to process only those files that have changed.  In other words,
+#   it's a lot like 'make' for templates.
+#
+# AUTHOR
+#   Andy Wardley   <abw@cre.canon.co.uk>
+#
+# COPYRIGHT
+#   Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#------------------------------------------------------------------------
+#
+# $Id: ttree,v 1.5 1999/08/16 14:55:41 abw Exp $
+#
+#========================================================================
+
+use lib '..';
+use strict;
+use Template;
+use File::Find;
+use Getopt::Std;
+
+my $NAME     = "ttree";
+my $VERSION  = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+my $HOME     = $ENV{ HOME } || '';
+my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
+
+my $opts     = { };
+my $config   = read_config($RCFILE);
+getopts('avrys:d:l:', $opts);
+
+my $all      = $opts->{'a'} || 0;
+my $verbose  = $opts->{'v'} || 0;
+my $recurse  = $opts->{'r'} || $all;
+my $srcdir   = $opts->{'s'} || $config->{'src'}  || '.';
+my $libdir   = $opts->{'l'} || $config->{'lib'}  || '.';
+my $destdir  = $opts->{'d'} || $config->{'dest'} 
+	       || die "Destination directory not set (-d)\n";
+my $ignore   = $config->{'ignore'};
+my $ttopts   = {
+    INCLUDE_PATH => [ $libdir, '.' ],
+    OUTPUT_PATH  => $destdir,
+    INTERPOLATE  => 1,
+    POST_CHOMP   => 1,
+    ERROR        => \&error,
+};
+my $ttdata = {
+    'sys' => { 'time' => sub { time } },
+};
+
+sub error {
+    my $error = join('', @_);
+    chomp $error;
+    print STDERR "  ! $error\n";
+}
+
+$SIG{__WARN__} = \&error;
+
+
+print "$NAME $VERSION (Template Toolkit version $Template::VERSION)\n\n"
+    if $verbose;
+
+#------------------------------------------------------------------------
+
+my $template = Template->new($ttopts);
+
+find(\&process_file, $srcdir);
+
+sub process_file {
+    my ($dir, $file) = ($File::Find::dir, $_);
+    my $check;
+
+    # remove source directoy stem
+    $dir =~ s|$srcdir/?||;
+
+    return if $file eq '.';
+
+    foreach $check (@$ignore) {
+	if ($file =~ /$check/) {
+	    print "  - ignoring $dir/$file (matches /$check/)\n"
+		if $verbose;
+	    $File::Find::prune = 1 if -d $file;
+	    return;
+	}
+    }
+
+    if (-d $file) {
+	unless ($recurse) {
+	    $File::Find::prune = 1;
+	    print "  - ignoring $dir/$file (not recursing)\n"
+		if $verbose;
+	}
+	return;
+    }
+	
+    print "  + $dir/$file\n"
+	if $verbose;
+
+    $template->process($file, $ttdata, $file)
+	|| print "  ! ", $template->error(), "\n";
+}
+
+#------------------------------------------------------------------------
+
+sub read_config {
+    my $file   = shift;
+    my ($line, $var, $val, $existing);
+    my $config = { 
+	'lib'    => [ ],
+	'ignore' => [ ],
+    };
+
+    local *CFGFILE;
+    open(CFGFILE, $file) || do {
+	warn "$file: $!\n";
+	return $config;
+    };
+    while (<CFGFILE>) {
+	chomp;
+	# ignore comments and blank lines
+	next if (/^#/ || /^\s+$/);
+	if (($var, $val) = split(/\s+=\s+/)) {
+	    # any variable by itself is a switch, e.g. 'verbose'
+	    $val = 1 unless defined $val;
+	    # look for an existing list value and coerce to a list
+	    if (($existing = $config->{ $var }) && ref($existing) eq 'ARRAY') {
+		push(@$existing, $val);
+	    }
+	    else {
+		$config->{ $var } = $val;
+	    }
+	}
+    }
+    close(CFGFILE);
+    $config;
+}
+
+
+__END__
+
+=head1 NAME
+
+ttree - template tree processor
+
+=head1 USAGE
+
+    ttree filename      # process file(s)
+    ttree -a            # process all files (implicit -r)
+    ttree -r            # recurse into sub-directories
+    ttree -v            # verbose
+    ttree -s dir        # source directory
+    ttree -d dir        # destination directory
+    ttree -l lib        # template lib directory (INCLUDE_PATH)
+    
+e.g.
+
+    ttree index.html    # process one file from 'src' to 'dest'
+
+    ttree -va           # process all files (definitions for src, dest
+                        # etc., read from ~/.ttreerc)
+
+    ttree -va -s /tmp/templates -d /tmp/output -l /user/abw/templates  
+                        # explicit definition of directories
+
+=head1 DESCRIPTION
+
+The F<ttree> script is used to process entire directory trees containing
+template files.  This documentation is incomplete but will be updated
+for the next beta release.
+
+The script reads the F<.ttreerc> file in the directory represented by the
+HOME environment variable.  The TTREERC environment variable may define 
+an alternative configuration file.  Such a file might look like this:
+  
+    # this is my .ttreerc file for Template Toolkit
+    src    = /home/abw/websrc/doc
+    dest   = /home/abw/public_html/
+    lib    = /home/abw/websrc/lib
+    lib    = /usr/local/templates/lib
+    ignore = ^CVS$
+    ignore = \.gif$ 
+
+The 'src' directory represent a directory where the script will start 
+looking for files.  Any files named on the command line should be 
+relative to this location.  If no files are named and the C<-a> option
+is specified then all files in that and any sub-directories will be 
+processed.  The result of processing each template is output to the 
+corresponding file in the 'dest' directory.  The 'lib' option may 
+be specified any number of times to indicate directories in which the 
+Template Toolkit should look for other template files (INCLUDE_PATH).
+The ignore option can be used to specify one or more Perl regexen 
+to match against files that shouldn't be processed.
+
+=head1 AUTHOR
+
+Andy Wardley E<lt>cre.canon.co.ukE<gt>
+
+=head1 REVISION
+
+$Revision: 1.5 $
+
+=head1 BUGS
+
+Amongst other things...
+
+Lack of documentation.
+
+Doesn't check modification times of source and destination files to only
+process updated files.
+
+=head1 COPYRIGHT
+
+Copyright (C) 1996-1999 Andy Wardley.  All Rights Reserved.
+Copyright (C) 1998-1999 Canon Research Centre Europe Ltd.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+L<Template|Template>
+
+=cut
+
+

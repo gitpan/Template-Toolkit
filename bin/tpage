@@ -19,11 +19,10 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: tpage,v 1.1.1.1 1999/07/19 10:16:00 abw Exp $
+# $Id: tpage,v 1.3 1999/08/16 14:44:50 abw Exp $
 #
 #========================================================================
 
-use lib '..';
 use strict;
 use Template;
 
@@ -40,8 +39,9 @@ push(@ARGV, '-') unless @ARGV;
 my $template = Template->new();
 
 # process each input file 
-foreach (@ARGV) {
-    $template->process($_)
+foreach my $file (@ARGV) {
+    $file = \*STDIN if $file eq '-';
+    $template->process($file)
 	|| die $template->error();
 }
 
@@ -71,7 +71,7 @@ e.g.
 If no file names are specified on the command line then B<tpage> will read
 STDIN for input.
 
-See L<Template-Toolkit> for general information about the Perl Template 
+See L<Template> for general information about the Perl Template 
 Toolkit and the template language and features.
 
 =head1 AUTHOR
@@ -80,7 +80,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.1.1.1 $
+$Revision: 1.3 $
 
 =head1 COPYRIGHT
 
@@ -92,7 +92,7 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-<Template-Toolkit|Template-Toolkit>
+L<Template|Template>
 
 =cut
 

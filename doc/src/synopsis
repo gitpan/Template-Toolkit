@@ -6,7 +6,8 @@
   my %config = (
       INCLUDE_PATH => '/search/path',  # or list ref
       INTERPOLATE  => 1,               # expand "$var" in plain text
-      POST_COMP    => 1,               # cleanup whitespace 
+      POST_CHOMP   => 1,               # cleanup whitespace 
+      PRE_PROCESS  => 'header',        # prefix each template
   );
 
   my $template = Template->new(\%config);
@@ -21,3 +22,5 @@
 
   $template->process($input, \%params)
       || die $template->error();
+
+

@@ -25,29 +25,17 @@
 #
 #------------------------------------------------------------------------
 #
-#   $Id: Template.pod,v 1.3 1999/08/12 20:15:26 abw Exp $
+#   $Id: Template.pod,v 1.4 1999/08/16 14:14:24 abw Exp $
 #
 #========================================================================
 
-[% INCLUDE name        %]
-[% INCLUDE synopsis    %]
-[% INCLUDE directives  %]
-[% INCLUDE overview    %]
-[% INCLUDE description %]
-[% INCLUDE methods     %]
-[% INCLUDE examples    %]
-[% INCLUDE files       %]
-[% INCLUDE bugs        %]
-[% INCLUDE author      %]
-[% INCLUDE version     %]
-[% INCLUDE copyright   %]
-[% INCLUDE acks        %]
-[% INCLUDE seealso     %]
-
-
-
-
-
+[% INCLUDE $s FOREACH s = [
+     'name' 'synopsis' 'directives' 'contents' 
+     'overview' 'description' 'methods' 
+     'examples' 'files' 'bugs' 
+     'author' 'version' 'copyright' 'acks' 'seealso'
+   ]
+%]
 
 
 

@@ -10,9 +10,41 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Changes,v 1.37 1999/08/12 22:04:26 abw Exp $
+# $Id: Changes,v 1.43 1999/08/16 15:05:09 abw Exp $
 #
 #============================================================================
+
+#------------------------------------------------------------------------
+# Version 0.25  1999/08/16 14:44:45
+#------------------------------------------------------------------------
+
+* Third public beta release.
+
+* Added 'ttree' utility for process directory trees of template files,
+  akin to the 'metapage' script in Text::MetaText.  Not yet documented 
+  and missing a few features but very much working and useful.
+
+* Added PRE_PROCESS and POST_PROCESS options to denote template files
+  for processing before and after templates.  Changed organisation of
+  Context module a little, adding explicit localise() and delocalise()
+  methods. Added t/preproc.t.
+
+* Change Template::process() method to accept optional third and fourth
+  parameters, $output and $error, to denote output and/or error destinations
+  for processing that template only.  The process() method calls the 
+  context redirect() for output and/or error, processes the template file
+  and then restores them to their previous values, effectively closing
+  any files that may have been opened.  The destination may now also be
+  a filename relative to OUTPUT_PATH which is constructed and passed 
+  to output_handler() (see next item).  Added t/output.t.
+
+* Modified Template::Utils:output_handler() to accept a string as a
+  destination, treat it as a filename, open the file and return a glob,
+  created by Symbol::gensym containing the file handle.
+
+* Various minor documentation updates.
+
+* Added t/accessor.t and made minor changes to t/texpectl.pl.
 
 #------------------------------------------------------------------------
 # Version 0.24  1999/08/12 22:04:26
@@ -134,7 +166,7 @@
   'and', 'or' and 'not' which can *always* be expressed in any case.
   Added t/case.t to test.
 
-* Added interpolation of '\n' into double-quoted text strings.
+* Added interpolation of "\n" into double-quoted text strings.
 
 * Added THROW directive and t/throw.t to test it.  Usage is:
   %% THROW type info %%, mapping 'type' to a %% CATCH type %%.
@@ -174,7 +206,7 @@
   These can also be added as named parameters in parenthesis after a 
   list constructor, e.g.
 
-  %% FOREACH user = [ tom dick harry] ( order => 'sorted') %%
+  %% FOREACH user = [ tom dick harry ] ( order => 'sorted') %%
      ...
   %% END %%
 

@@ -5,7 +5,17 @@ and for following and contributing to the development process.  Send
 email to B<majordomo@cre.canon.co.uk> with the following message in the
 body:
 
-  subscribe templates
+    subscribe templates
+
+The F<tpage> and F<ttree> scripts are distributed and installed along
+with the Template Toolkit.  The F<tpage> script simply processes named 
+files or STDIN if unspecified, using a default Template object.  The 
+F<ttree> script can be used to process entire directory trees of templates,
+allowing large content systems such as web sites to be rebuilt from a 
+single command or configuration file.
+
+    perldoc tpage
+    perldoc ttree
 
 The following modules comprise the Template Toolkit.  Consult the 
 individual documentation for further details. 
@@ -103,3 +113,5 @@ Defines utility functions.
 Defines functions and methods for debugging (incomplete).
 
 =back
+
+

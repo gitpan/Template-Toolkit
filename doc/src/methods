@@ -61,38 +61,6 @@ original values are restored each time process() is called.
       }
   });
 
-=item START_TAG, END_TAG, TAG_STYLE
-
-The START_TAG and END_TAG options are used to specify character  
-sequences or regular expressions that mark the start and end of a template 
-directive.  Any Perl regex characters can be used and therefore should be 
-escaped (or use the Perl C<quotemeta> function) if they are intended to
-represent literal characters.
-
-    my $template->new({ 
-  	START_TAG => quotemeta('<+'),
-  	END_TAG   => quotemeta('+>'),
-    });
-
-example:
-
-    <+ INCLUDE foobar +>
-
-The TAG_STYLE option can be used to set both according to pre-defined tag
-styles.  Available styles are:
-
-    regular   [% ... %]      (recommended)
-    percent   %% ... %%      (Text::MetaText compatibility)
-    default   [% ... %] or %% ... %%
-
-The default style (TAG_STYLE => 'default') allows either of the 'regular'
-or 'percent' tags to be used (START_TAG = '[\[%]%', END_TAG = '%[\]%]')
-Any values specified for START_TAG and/or END_TAG will over-ride
-those defined by a TAG_STYLE.  
-
-See also the TAGS directive which allows directive tags to set from within
-a template and act on a per-file basis.
-
 =item INTERPOLATE
 
 The INTERPOLATE flag, when set to any true value will cause variable 
@@ -114,6 +82,16 @@ required.
   
     # explicit scoping with {  }
     <img src="$images/${icon.next}.gif">
+
+=item PRE_PROCESS, POST_PROCESS
+
+These values may be set to contain the names of template files
+(relative to INCLUDE_PATH) which should be processed immediately
+before and/or after each template.  These do not get added to 
+templates processed into a document via the INCLUDE or PROCESS tags.
+The PRE_PROCESS and POST_PROCESS are evaluated in the same variable
+context as the main document and so may define, update or delete 
+variables for subseqent use.
 
 =item PRE_CHOMP, POST_CHOMP
 
@@ -151,6 +129,38 @@ With POST_CHOMP set on, the above example would be parsed as if written:
 
     [% FOREACH user = userlist %]User: [% user %]
     [% END %]
+
+=item START_TAG, END_TAG, TAG_STYLE
+
+The START_TAG and END_TAG options are used to specify character  
+sequences or regular expressions that mark the start and end of a template 
+directive.  Any Perl regex characters can be used and therefore should be 
+escaped (or use the Perl C<quotemeta> function) if they are intended to
+represent literal characters.
+
+    my $template->new({ 
+  	START_TAG => quotemeta('<+'),
+  	END_TAG   => quotemeta('+>'),
+    });
+
+example:
+
+    <+ INCLUDE foobar +>
+
+The TAG_STYLE option can be used to set both according to pre-defined tag
+styles.  Available styles are:
+
+    regular   [% ... %]      (recommended)
+    percent   %% ... %%      (Text::MetaText compatibility)
+    default   [% ... %] or %% ... %%
+
+The default style (TAG_STYLE => 'default') allows either of the 'regular'
+or 'percent' tags to be used (START_TAG = '[\[%]%', END_TAG = '%[\]%]')
+Any values specified for START_TAG and/or END_TAG will over-ride
+those defined by a TAG_STYLE.  
+
+See also the TAGS directive which allows directive tags to set from within
+a template and act on a per-file basis.
 
 =item CASE
 
@@ -202,7 +212,7 @@ specify the PLUGIN_BASE as an array reference.  Only those locations
 listed in the array will be searched.
 
     my $tproc = Template->new({
-	PLUGIN_BASE => [ MyOrg::Template::Plugin ],
+	PLUGIN_BASE => [ 'MyOrg::Template::Plugin' ],
     });
 
 =item PLUGINS
@@ -222,7 +232,7 @@ plugin object.
   	PLUGINS => {
   	  'womble' => 'MyOrg::Template::Plugin::Womble',
   	  'dbi'    =>  $dbi_factory,
-  	END_TAG   => quotemeta('+>'),
+	}
     });
 
 The new() method is called against the PLUGINS value when a plugin is USE'd.
@@ -323,13 +333,23 @@ Output:
     Airkraft were forced to fly in **CENSORED** winds 
     but still managed an excellent performance.
 
+=item OUTPUT_PATH
+
+This option can be used to define a directory to which output files 
+should be written.  By default, output is sent to STDOUT, but may be
+directed to a file by specifying the OUTPUT option or by passing 
+a third parameter to the process() method.  The default value for 
+OUTPUT_PATH is '.', representing the current working directory.
+
 =item OUTPUT, ERROR
 
 The OUTPUT and ERROR options may be specified to redirect template output
 and/or error messages.  The value for these options should be a file GLOB
 or IO::Handle to which the output/error is directed, a CODE reference
-which is called to handle messages, or a reference to a text string (SCALAR)
-to which output or error messages are appended.
+which is called to handle messages, a reference to a text string (SCALAR)
+to which output or error messages are appended or a plain string which 
+represents a filename relative to OUTPUT_PATH which will be opened and
+written to.
 
     my $output = '';
 
@@ -348,7 +368,7 @@ which are used when a run time error condition occurs.  Each key in
 the hash represents an error type.  The Template Toolkit generates the 
 following error types which have corresponding ERROR_XXX constants.
 
-    undef    - an variable was undefined or evaluated undef
+    undef    - a variable was undefined or evaluated undef
     file     - file find/open/parse error
 
 User code may generate further errors of any types and custom handlers
@@ -409,7 +429,7 @@ further information.
 
 =back
 
-=head2 process($template, \%vars, ...)
+=head2 process($template, \%vars, $output, $error)
 
 The process() method is called to process a template.  The first 
 parameter, $template, indicates the template and may be a simple
@@ -442,7 +462,12 @@ the PRE_DEFINE variables.
 
 Any output generated by processing the template will be sent to the 
 current output stream which is STDOUT by default.  Errors are similarly 
-directed to the error stream or STDERR.
+directed to the error stream or STDERR.  The optional third and fourth
+parameters may be used to specify alternate output and error locations
+for the processing of this template file only, temporarily over-riding
+any existing OUTPUT and ERROR values (existing file handles remain open 
+and intact).  See redirect() below for information on what the 
+values may contain.
 
 The method returns 1 if the template was successfully processed.  This
 includes templates that were ended by a STOP or RETURN directive
@@ -480,3 +505,5 @@ If no error occurred, the method returns a numerical value representing
 the return code of the last directive processed.  This will generally 
 be STATUS_OK (0), STATUS_STOP or STATUS_RETURN.  Constants representing
 the values are defined in Template::Constants. 
+
+

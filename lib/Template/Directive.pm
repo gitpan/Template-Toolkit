@@ -19,7 +19,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Directive.pm,v 1.15 1999/08/12 21:53:47 abw Exp $
+# $Id: Directive.pm,v 1.16 1999/08/15 20:46:37 abw Exp $
 #
 #============================================================================
  
@@ -33,7 +33,7 @@ use Template::Constants;
 use Template::Exception;
 
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/);
 $DEBUG = 1;
 
 
@@ -232,7 +232,12 @@ sub process {
 			   'Undefined INCLUDE file/block name')
 	unless defined $ident && length $ident;
 
-    $context->process($ident, $self->{ PARAMS });
+    $context->localise();
+    $context->_runop($self->{ PARAMS });
+    $error = $context->process($ident);
+    $context->delocalise();
+
+    $error;
 }
 
 
@@ -270,9 +275,7 @@ sub process {
     # call _runop() to update any variables
     $context->_runop($self->{ PARAMS });
 
-    # call 'private' _process() method to bypass variable localisation
-    # inherent in 'public' process() method
-    $context->_process($ident);
+    $context->process($ident);
 }
 
 
@@ -394,7 +397,7 @@ sub process {
     # on any variables. We should probably localise the stash for each
     # iteration but that's too costly, IMHO, for a level of
     # "correctness" that most people won't ever need to worry about.
-    $context->{ STASH } = $stash = $stash->clone();
+    $context->localise();
 
     # loop
     while (! $error) {
@@ -422,7 +425,7 @@ sub process {
     }
 
     # declone the stash (revert to parent context)
-    $context->{ STASH } = $stash->declone();
+    $context->delocalise();
 
     # STATUS_DONE indicates the iterator completed succesfully
     return $error == Template::Constants::STATUS_DONE
@@ -771,7 +774,7 @@ Andy Wardley E<lt>abw@cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.15 $
+$Revision: 1.16 $
 
 =head1 COPYRIGHT
 

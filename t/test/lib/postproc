@@ -1,0 +1,3 @@
+[% INCLUDE footer IF author.name %]
+</body>
+</html>

@@ -1,0 +1,26 @@
+# This is a sample '.ttreerc' file.  You can copy this to your home 
+# directory (or wherever the HOME environment variable points) and 
+# modify accordingly.
+
+# Blank lines and those starting with a '#' are ignored
+
+# the 'src' option defines the location of the template files that
+# you want to process (for example, the "source templates" for you
+# web pages)
+
+src    = /home/abw/websrc/doc
+
+# the 'dest' option specifies where the output should end up
+
+dest   = /home/abw/public_html/
+
+# lib tells the processor (via INCLUDE_PATH) where to find any
+# template files that may be INCLUDE'd.  You can specify many.
+
+lib    = /home/abw/websrc/lib
+lib    = /usr/local/templates/lib
+
+
+# things that aren't templates and should be ignored
+ignore = \b(CVS|RCS)\b
+ignore = \.gif$ 

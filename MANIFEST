@@ -22,6 +22,8 @@ lib/Template/Plugin/Format.pm
 lib/Template/Plugin/Filter.pm
 bin/README
 bin/tpage
+bin/ttree
+bin/sample.ttreerc
 doc/README
 doc/bin/mkdoc
 doc/src/README.pod
@@ -29,6 +31,7 @@ doc/src/Template.pod
 doc/src/acks
 doc/src/author
 doc/src/bugs
+doc/src/contents
 doc/src/copyright
 doc/src/description
 doc/src/directives
@@ -51,6 +54,7 @@ parser/Parser.yp
 parser/parse_yapp_patch
 parser/yc
 t/README
+t/accessor.t
 t/binop.t
 t/block.t
 t/break.t
@@ -79,10 +83,12 @@ t/literal.t
 t/list.t
 t/multi.t
 t/object.t
+t/output.t
 t/parser.t
 t/postchomp.t
 t/prechomp.t
 t/predefs.t
+t/preproc.t
 t/private.t
 t/process.t
 t/return.t
@@ -98,9 +104,15 @@ t/unless.t
 t/vars.t
 t/while.t
 t/texpect.pl
-t/misc/foo.txt
-t/misc/golf
-t/misc/other/bar
-t/misc/other/baz.txt
+t/test/lib/footer
+t/test/lib/header
+t/test/lib/postproc
+t/test/lib/preproc
+t/test/src/bar/baz
+t/test/src/bar/baz.txt
+t/test/src/foo
+t/test/src/golf
+t/test/dest/IGNOREME
+
 
 

@@ -2,8 +2,13 @@
 # Template Toolkit - bin/
 #========================================================================
 
-This directory contains the 'tpage' template processing script.
-This will be installed automatically by a 'make install'
+This directory contains the 'tpage' and 'ttree' template processing 
+script.  This will be installed automatically by a 'make install'
+The 'sample.ttreerc' file is a sample configuration file for the 
+'ttree' script.  This can be copied to your home directory (or wherever
+the HOME environment variable points to) and modified accordingly.
+
+
 
 
 

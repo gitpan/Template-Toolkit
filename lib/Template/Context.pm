@@ -19,7 +19,7 @@
 # 
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.22 1999/08/12 21:53:47 abw Exp $
+# $Id: Context.pm,v 1.24 1999/08/15 20:46:36 abw Exp $
 #
 #============================================================================
 
@@ -29,13 +29,13 @@ require 5.004;
 
 use strict;
 use vars qw( $VERSION $DEBUG $CATCH_VAR );
-use Template::Constants qw( :status :error :ops );
+use Template::Constants qw( :status :error :ops :template );
 use Template::Utils qw( :subs );
 use Template::Cache;
 use Template::Stash;
 
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = sprintf("%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/);
 $DEBUG     = 0;
 $CATCH_VAR = 'error';
 
@@ -97,13 +97,14 @@ sub new {
 	CATCH        => $params->{ CATCH }   || { },
 	FILTERS      => $params->{ FILTERS } || { },
         FILTER_CACHE => { },
-	OUTPUT       => output_handler($params->{ OUTPUT }),
-	ERROR        => output_handler($params->{ ERROR } || \*STDERR),
+        OUTPUT_PATH  => $params->{ OUTPUT_PATH } || '.',
     }, $class;
+
+    $self->redirect(TEMPLATE_OUTPUT, $params->{ OUTPUT });
+    $self->redirect(TEMPLATE_ERROR,  $params->{ ERROR } || \*STDERR);
 
     $self;
 }
-
 
 
 #------------------------------------------------------------------------
@@ -119,58 +120,86 @@ sub old {
 }
 
 
-
 #------------------------------------------------------------------------
-# process($template, $params) 
+# process($template) 
 #
 # This is the main template processing method.
 #
-# The first parameter should indicate the template source and should
-# be a scalar (filename), scalar ref (text) or a GLOB or IO::Handle
-# from which the template should be read.  Reading the template source
-# is handled by calling the CACHE fetch() method.  Alternatively,
-# $input may reference a Template::Directive object or sublass thereof
-# which will be processed directly, bypassing the cache.
+# The parameter should indicate the template source and should be a
+# scalar (filename), scalar ref (text) or a GLOB or IO::Handle from
+# which the template should be read.  Reading the template source is
+# handled by calling the CACHE fetch() method.  Alternatively, $input
+# may reference a Template::Directive object or sublass thereof which
+# will be processed directly, bypassing the cache.
 #
-# The optional second parameter should contain a reference to a hash 
-# array defining variables for inclusion into the template.  The 
-# STASH clone() method is called to localise any variable changes,
-# passing this reference to set variables in the cloned stash.
-#
-# The method returns a status code represented by one of the 
-# STATUS_XXXX constants or a Template::Exception object to indicate 
-# an uncaught run-time error condition.
-#
-# Note that the Template::Directive::Include object, being a good
-# friend, is allowed to bypasses this public method and talk directly 
-# to the private method _parse().  This is to allow it fast update
-# access to the localised stash via an opcode list.
+# The template is processed in the current context.  The method marks
+# templates as "hot" while they are being processed to help identify
+# recursion.  The return value is a status code or exception which 
+# will be undefined or 0 (STATUS_OK) if the template processed without
+# any (uncaught) errors.
 #------------------------------------------------------------------------
 
-
 sub process {
-    my ($self, $template, $params) = @_;
-    my ($ops, $error);
+    my ($self, $template) = @_;
+    my $error;
 
-    # params may be an ARRAY reference to an opcode list which will
-    # update local parameters for us.  In this case, we copy it to $ops
-    # and nullify $params
-    $params = undef 
-	if ($ops = ref($params) eq 'ARRAY' ? $params : undef);
-	
+    # request compiled template from cache
+    $template = $self->{ CACHE }->fetch($template)
+	|| return $self->throw($self->{ CACHE }->error())   ## RETURN ##
+	    unless UNIVERSAL::isa($template, 'Template::Directive');
+
+    # check we're not already visiting this template
+    return $self->throw(ERROR_FILE, "recursion into '$template' identified")
+	if $self->{ VISITING }->{ $template };		    ## RETURN ##
+
+    # mark template as being visited
+    $self->{ VISITING }->{ $template } = 1;
+
+    # process template
+    $error = $template->process($self);
+
+    # a STATUS_RETURN is caught and cleared as this represents the 
+    # correct point for a %% RETURN %% to return to
+    $error = STATUS_OK 
+	if $error == STATUS_RETURN;
+
+    # clear visitation flag
+    undef $self->{ VISITING }->{ $template };
+
+    return $error;
+}
+
+
+#------------------------------------------------------------------------
+# localise(\%params)
+# delocalise()
+#
+#
+# The localise() method creates a local "copy" of the current context.
+# The delocalise() method restores the original context.  At present,
+# the localisation process consists of "cloning" the stash to create a
+# new copy of the main variable namespace.  A subsequent declone(),
+# performed by the delocalise(), restores the variables to their
+# values prior to cloning.  Used by Template module and INCLUDE
+# directive.
+#
+# A reference to a hash array may be passed containing local variable 
+# definitions which should be added to the cloned namespace.  These 
+# values persist until de-localisation.
+#------------------------------------------------------------------------
+
+sub localise {
+    my ($self, $params) = @_;
+
     # clone internal stash to localise new variables
     $self->{ STASH } = $self->{ STASH }->clone($params);
+}
 
-    # run any opcode list passed as $params
-    $self->_runop($ops)
-	if $ops;
-
-    $error = $self->_process($template);
+sub delocalise {
+    my $self = shift;
 
     # restore original stash
     $self->{ STASH } = $self->{ STASH }->declone();
-			       
-    return $error;
 }
 
 
@@ -230,8 +259,10 @@ sub throw {
     }
     # call process() to render a Template::Directive reference
     elsif ($catchref && UNIVERSAL::isa($catch, 'Template::Directive')) {
-	my $errvar = { 'e' => { 'type' => $type, 'info' => $info } };
-	$catch = $self->process($catch, $errvar);
+	# localise context and provide access to error info via 'e'
+	$self->localise({ 'e' => { 'type' => $type, 'info' => $info } });
+	$catch = $self->process($catch);
+	$self->delocalise();
     }
     
     undef $self->{ THROWING }->{ $type };
@@ -391,7 +422,7 @@ sub use_filter {
 
 sub redirect {
     my ($self, $what, $where) = @_;
-    my ($previous, $output, $reftype);
+    my ($previous, $output, $error, $reftype);
     
     # default output stream to 'OUTPUT'
     $what = Template::Constants::TEMPLATE_OUTPUT
@@ -410,8 +441,14 @@ sub redirect {
     # save previous handler
     $previous = $self->{ $what };
 
+    # if $where is a string representing a filename, we prepend OUTPUT_PATH
+    $where = $self->{ OUTPUT_PATH } . '/' . $where
+	unless ref($where);
+
     # set handler internally
-    $self->{ $what } = Template::Utils::output_handler($where);
+    ($self->{ $what }, $error) = (Template::Utils::output_handler($where));
+    $self->error($error)
+	if $error;
 
     # return previous handler
     $previous;
@@ -455,60 +492,6 @@ sub DESTROY {
 #========================================================================
 #                      -----  PRIVATE METHODS -----
 #========================================================================
-
-#------------------------------------------------------------------------
-# sub _process($template)
-#
-# This is the private template processing method, called by the public
-# process() method and directly by the INCLUDE directive process()
-# method.  
-#
-# The parameter, $template, should indicate the template source and
-# should be a scalar (filename), scalar ref (text) or a GLOB or
-# IO::Handle from which the template should be read.  Reading the
-# template source is handled by calling the CACHE fetch() method.
-# Alternatively, $input may reference a Template::Directive object or
-# sublass thereof which will be processed directly, bypassing the
-# cache.  
-#
-# The template is processed in the current context.  The method marks
-# templates as "hot" while they are being processed to help identify
-# recursion.  The return value is a status code or exception which 
-# will be undefined or 0 (STATUS_OK) if the template processed without
-# any (uncaught) errors.
-#------------------------------------------------------------------------
-
-sub _process {
-    my ($self, $template) = @_;
-    my $error;
-
-    # request compiled template from cache
-    $template = $self->{ CACHE }->fetch($template)
-	|| return $self->throw($self->{ CACHE }->error())   ## RETURN ##
-	    unless UNIVERSAL::isa($template, 'Template::Directive');
-
-    # check we're not already visiting this template
-    return $self->throw(ERROR_FILE, "recursion into '$template' identified")
-	if $self->{ VISITING }->{ $template };		    ## RETURN ##
-
-    # mark template as being visited
-    $self->{ VISITING }->{ $template } = 1;
-
-    # process template
-    $error = $template->process($self);
-
-    # a STATUS_RETURN is caught and cleared as this represents the 
-    # correct point for a %% RETURN %% to return to
-    $error = STATUS_OK 
-	if $error == STATUS_RETURN;
-
-    # clear visitation flag
-    undef $self->{ VISITING }->{ $template };
-
-    return $error;
-}
-
-
 
 #------------------------------------------------------------------------
 # _runop(\@oplist) 
@@ -916,7 +899,13 @@ Template::Context - object class representing a runtime context in which templat
 
     $context = Template::Context->new(\%cfg);
 
-    $error   = $context->process($template, \%values);
+    $error   = $context->process($template);
+
+    # cleanup
+    $context->old();
+
+    $context->localise(\%vars);
+    $context->delocalise();
 
     $context->output($text);
     $context->error($text);
@@ -928,9 +917,6 @@ Template::Context - object class representing a runtime context in which templat
     ($plugin, $error) = $context->use_plugin($name, \@params);
     ($filter, $error) = $context->use_filter($name, \@params, $alias);
 
-    # cleanup
-    $context->old();
-
 =head1 DESCRIPTION
 
 The Template::Context module defines an object which represents a runtime
@@ -939,9 +925,11 @@ down through the processing engine, allowing template directives and user
 code to generate output, retrieve and update variable values, render
 other template documents, and so on.
 
-The context defines the variables that exist for the template to access 
-and what values they have (a task delegated to a 
-L<Template::Stash|Template::Stash> object).
+The context defines the variables that exist for the template to
+access and what values they have (a task delegated to a
+L<Template::Stash|Template::Stash> object).  The localise() and
+delocalise() methods are provided to handle localisation of the 
+stash.
 
 The context also maintains a reference to a cache of previously
 compiled templates and has the facility to load, parse and compile new
@@ -955,7 +943,7 @@ among multiple context objects allowing common templates documents to
 be compile only once and rendered many times in different contexts.
 
 In addition, the context provides facilities for loading plugins and 
-filter.
+filters.
 
 The context object provides template output and error handling methods 
 which can output/delegate to a user-supplied file handle, text string or
@@ -989,6 +977,18 @@ defined.
 A reference to a hash which is passed to the Stash constructor to
 pre-defined variables.  This variable has no effect if STASH is
 defined to contain some existing Stash object.
+
+=item PRE_PROCESS/POST_PROCESS
+
+The PRE_PROCESS and POST_PROCESS options can be used to define 
+templates that should be processed immediately before and after 
+each template processed by the process() option, respectively.
+The templates are processed in the same variable context as the
+main template.  The PRE_PROCESS can be used to define variables
+that might then be used in the main template, for example.
+
+Any uncaught exceptions raised in the PRE/POST_PROCESS templates
+are ignored.
 
 =item CACHE
 
@@ -1081,7 +1081,7 @@ Andy Wardley E<lt>cre.canon.co.ukE<gt>
 
 =head1 REVISION
 
-$Revision: 1.22 $
+$Revision: 1.24 $
 
 =head1 COPYRIGHT
 

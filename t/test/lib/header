@@ -1,0 +1,7 @@
+[% DEFAULT 
+   title = 'The Hello World Web Site'
+   bgcol = '#ffffff'
+%]
+<html>
+<head><title>[% title %]</title></head>
+<body bgcolor="[% bgcol %]">

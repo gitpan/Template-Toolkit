@@ -10,25 +10,29 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: TODO,v 1.32 1999/08/12 22:04:26 abw Exp $
+# $Id: TODO,v 1.37 1999/08/16 14:44:45 abw Exp $
 #
 #============================================================================
+
+Pending
+-------
+  * documentation for ttree.
 
 Bugs
 ----
   * CATCH installs a block which overwrites any previous one.  This then 
     perists until the Context object is destroyed or the handler re-defined.
 
-  * The Tied Hash example briefly mentioned in the VARIABLE EVALUATION 
-    section in doc/src/description is unlikely to work properly.  I don't
-    think Tied Hashes get treated as regular hashes, but they should.
+  * I don't think Tied Hashes get treated as regular hashes, but they 
+    should.
 
-Planned Features
+Possible Features
 ----------------
   * TRY to scope CATCH?
 
   * PERL directive to encapsulate Perl code.  Stash variables could be 
-    made available.
+    made available.  This should be delegated to Text::Template, or to 
+    Template::Perl which is, or delegates to Text::Template.
 
   * An option to bind subs in a Perl namespace into a template namespace
     without requiring the specific binding to every function.
@@ -40,14 +44,14 @@ Planned Features
   * add document information structures as runtime variables (e.g. file.name
     file.mod, template.name, system.time, etc)
 
-Improvements
-------------
+General Improvements
+--------------------
+  * automatically create output directory and intermediate directories
+    within it.
+
   * user-defined filters can be provided in the FILTERS hash, but there
     is no way to dynamically load filters from the template unless they
     are "standard library" filters, defined in Template::Plugin::Filter.
-
-  * Template/Context redirect() should be able to handle a file name
-    and open output for it
 
   * should you be able to break out of an IF block?  At present, if you 
     BREAK outside of a FOREACH, then a STATUS_DONE value is returned to
@@ -99,10 +103,22 @@ Improvements
     the gain of greater flexibility.  I think it can be re-factored 
     slightly to give a Win-Win.
 
+Documentation
+-------------
+  * ttree is not documented.
+
+  * note that object methods get called with the RHS as a parameter when 
+    specified as an lvalue of an assignment.  e.g. %% foo.bar = 10 %%
+    => $foo_obj->bar(10)
+
+  * iterator options specified through list construct parameters are
+    not documented.  
+    [% FOREACH user = [ foo bar baz ]( order = 'sorted', action = coderef ) %]
+
+  * write more detailed description on extending the template toolkit.
+
 Other plugins, modules, scripts
 -------------------------------
-  * tpage - add options, etc, or implement ttree
-    also need to handle STDIN since we took it out of file opening code
 
   * finish Apache::Template
 
@@ -114,21 +130,13 @@ Other plugins, modules, scripts
     equivalent to:
 	   [% INCLUDE html/header title='Test' %]
 
-Documentation
--------------
-  * note that object methods get called with the RHS as a parameter when 
-    specified as an lvalue of an assignment.  e.g. %% foo.bar = 10 %%
-    => $foo_obj->bar(10)
-
-  * iterator options specified through list construct parameters are
-    not documented.  
-    [% FOREACH user = [ foo bar baz ]( order = 'sorted', action = coderef ) %]
-
-  * write more detailed description on extending the template toolkit.
-
-Tests
+ttree
 -----
-  * test tokeniser
-  * test parser, including line number reporting on errors
+  * allow specification of config options, pre-defs, etc, on command line
+    and/or config file.
+
+  * alternate config files ('profile' in metapage) should be allowed
+
+  * documentation
 
 

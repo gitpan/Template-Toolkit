@@ -1,5 +1,7 @@
-[% FOREACH section = ['name' 'prereq' 'installing' 'overview' 'features'
-                      'example' 'maillist' 'author' 'version' 'copyright' ]
- -%]
-[% INCLUDE $section %]
-[% END %]
+[% INCLUDE $s FOREACH s = [
+     'name' 'installing', 'prereq', 'contents', 
+     'overview' 'features' 'example' 'maillist' 
+     'author' 'version' 'copyright' 
+   ]
+%]
+

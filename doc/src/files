@@ -4,9 +4,8 @@ The following directories and files comprise the Template Toolkit
 distribution.  See the individual README files in each directory
 for further information on their contents.
 
-    bin/        Template processing scripts; tpage
+    bin/        Template processing scripts; tpage and ttree
     doc/        Documentation source
-    examples/   Example templates and scripts
     lib/        Template Toolkit modules
     parser/     Grammar and compiler scripts for parser
     t/          Test scripts (run via 'make test')
@@ -15,3 +14,5 @@ for further information on their contents.
     Changes     History of visible changes between versions.
     TODO        List of bugs, enhancements, planned features, ideas, etc.
     README      README file containing general info
+
+

@@ -5,7 +5,7 @@ WriteMakefile(
     'NAME'	   => 'Template',
     'DISTNAME'     => 'Template-Toolkit',
     'VERSION_FROM' => 'lib/Template.pm',
-    'EXE_FILES'    => [ 'bin/tpage' ],
+    'EXE_FILES'    => [ 'bin/tpage', 'bin/ttree' ],
     'PMLIBDIRS'    => [ 'lib' ], 
     'dist'         => {
 	'COMPRESS' => 'gzip',
@@ -16,9 +16,11 @@ WriteMakefile(
 
 sub build_docs {
     return <<EOF;
-echo "Building documentation for version \$(VERSION)";    \\
-\$(PERL) doc/bin/mkdoc README.pod | pod2text > README;    \\
-\$(PERL) doc/bin/mkdoc Template.pod > lib/Template.pod
+echo "Building documentation for version \$(VERSION)" ;  \\
+\$(RM_F) lib/Template.pod ;                              \\
+\$(PERL) doc/bin/mkdoc README.pod | pod2text > README ;  \\
+\$(PERL) doc/bin/mkdoc Template.pod > lib/Template.pod ; \\
+\$(CHMOD) 444 lib/Template.pod
 EOF
 }
 
