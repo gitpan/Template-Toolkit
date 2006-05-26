@@ -23,7 +23,7 @@
 #
 #------------------------------------------------------------------------
 #
-# $Id: ttree,v 2.78 2004/09/17 07:26:36 abw Exp $
+# $Id: ttree,v 2.83 2006/04/05 17:07:21 abw Exp $
 #
 #========================================================================
 
@@ -37,7 +37,7 @@ use File::Basename;
 use Text::ParseWords qw(quotewords);
 
 my $NAME     = "ttree";
-my $VERSION  = sprintf("%d.%02d", q$Revision: 2.78 $ =~ /(\d+)\.(\d+)/);
+my $VERSION  = sprintf("%d.%02d", q$Revision: 2.83 $ =~ /(\d+)\.(\d+)/);
 my $HOME     = $ENV{ HOME } || '';
 my $RCFILE   = $ENV{"\U${NAME}rc"} || "$HOME/.${NAME}rc";
 my $TTMODULE = 'Template';
@@ -48,7 +48,7 @@ my $TTMODULE = 'Template';
 
 # offer create a sample config file if it doesn't exist, unless a '-f'
 # has been specified on the command line
-unless (-f $RCFILE or grep(/^-f$/, @ARGV) ) {
+unless (-f $RCFILE or grep(/^(-f|-h|--help)$/, @ARGV) ) {
     print("Do you want me to create a sample '.ttreerc' file for you?\n",
       "(file: $RCFILE)   [y/n]: ");
     my $y = <STDIN>;
@@ -181,8 +181,10 @@ if ($verbose) {
     if ($depends && $DEP_DEBUG) {
         print "Dependencies:\n";
         foreach my $key ('*', grep { !/\*/ } keys %$depends) {
-            printf("    %-16s %s\n", $key, 
-                   join(', ', @{ $depends->{ $key } }));
+            printf( "    %-16s %s\n", $key, 
+                    join(', ', @{ $depends->{ $key } }) ) 
+                if defined $depends->{ $key };
+
         }
     }
     print "\n";
@@ -229,14 +231,14 @@ sub process_tree {
     my $target;
     local *DIR;
 
-    my $absdir = join('/', $srcdir ? $srcdir : (), $dir ? $dir : ());
+    my $absdir = join('/', $srcdir ? $srcdir : (), defined $dir ? $dir : ());
     $absdir ||= '.';
 
     opendir(DIR, $absdir) || do { warn "$absdir: $!\n"; return undef; };
 
     FILE: while (defined ($file = readdir(DIR))) {
         next if $file eq '.' || $file eq '..';
-        $path = $dir ? "$dir/$file" : $file;
+        $path = defined $dir ? "$dir/$file" : $file;
         $abspath = "$absdir/$file";
         
         next unless -e $abspath;
@@ -260,8 +262,8 @@ sub process_tree {
                 # create target directory if required
                 $target = "$destdir/$path";
                 unless (-d $target || $dryrun) {
-                    mkpath $target, $mode or 
-                             die "Could not mkpath ($target): $!\n";
+                    mkpath($target, $verbose, $mode) or 
+                        die "Could not mkpath ($target): $!\n";
 
                     # commented out by abw on 2000/12/04 - seems to raise a warning?
                     # chown($uid, $gid, $target) || warn "chown($target): $!\n";
@@ -523,8 +525,8 @@ sub read_config {
         'copy=s@',
         'accept=s@',
         'depend=s%',
-        'depend_file|depfile=s',
         'depend_debug|depdbg',
+        'depend_file|depfile=s' => { EXPAND => EXPAND_ALL },
         'template_module|module=s',
         'template_anycase|anycase',
         'template_eval_perl|eval_perl',
@@ -546,9 +548,9 @@ sub read_config {
         'template_end_tag|end_tag|endtag=s',
         'template_tag_style|tag_style|tagstyle=s',
         'template_compile_ext|compile_ext=s',
-        'template_compile_dir|compile_dir=s',
-        'template_plugin_base|plugin_base|pluginbase=s@',
-        'perl5lib|perllib=s@'
+        'template_compile_dir|compile_dir=s' => { EXPAND => EXPAND_ALL },
+        'template_plugin_base|plugin_base|pluginbase=s@' => { EXPAND => EXPAND_ALL },
+        'perl5lib|perllib=s@' => { EXPAND => EXPAND_ALL },
     );
 
     # add the 'file' option now that we have a $config object that we 
@@ -1053,12 +1055,12 @@ Brocard who gets everywhere, it seems.
 
 =head1 VERSION
 
-2.70, distributed as part of the
-Template Toolkit version 2.14, released on 04 October 2004.
+2.66, distributed as part of the
+Template Toolkit version 2.15, released on 26 May 2006.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2004 Andy Wardley.  All Rights Reserved.
+  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 
 This module is free software; you can redistribute it and/or

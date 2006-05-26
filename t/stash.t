@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.14 2004/01/30 19:33:56 abw Exp $
+# $Id: stash.t,v 2.16 2006/01/30 13:33:57 abw Exp $
 #
 #========================================================================
 
@@ -29,23 +29,50 @@ my $DEBUG = grep(/-d/, @ARGV);
 #$Template::Parser::DEBUG     = $DEBUG;
 #$Template::Directive::PRETTY = $DEBUG;
 
+#------------------------------------------------------------------------
+# define some simple objects for testing
+#------------------------------------------------------------------------
+
+package ListObject;
+package HashObject;
+
+sub hello {
+    my $self = shift;
+    return "Hello $self->{ planet }";
+}
+
+sub goodbye {
+    my $self = shift;
+    return $self->no_such_method();
+}
+
+package main;
+    
+
 $Template::Config::STASH = 'Template::Stash';
 
 my $count = 20;
 my $data = {
     foo => 10,
     bar => {
-	baz => 20,
+        baz => 20,
     },
     baz => sub {
-	return {
-	    boz => ($count += 10),
-	    biz => (shift || '<undef>'),
-	};
+        return {
+            boz => ($count += 10),
+            biz => (shift || '<undef>'),
+        };
     },
-    obj => bless {
+    obj => bless({
         name => 'an object',
-    }, 'AnObject',
+    }, 'AnObject'),
+    hashobj => bless({ planet => 'World' }, 'HashObject'),
+    listobj => bless([10, 20, 30], 'ListObject'),
+    clean   => sub {
+        my $error = shift;
+        $error =~ s/\s+at.*$//;
+        return $error;
+    },
 };
 
 my $stash = Template::Stash->new($data);
@@ -133,11 +160,11 @@ one
 + three
 
 -- test --
-[% "* $item.key => $item.value\n" FOREACH item = global.mylist.hash -%]
+[% global.mylist.push('bar');
+   "* $item.key => $item.value\n" FOREACH item = global.mylist.hash -%]
 -- expect --
-* 0 => one
-* 1 => foo
-* 2 => three
+* one => foo
+* three => bar
 
 -- test --
 [% myhash = { msg => 'Hello World', things => global.mylist, a => 'alpha' };
@@ -148,12 +175,19 @@ one
 * Hello World
 
 -- test --
-[% "* $item.key => $item.value.item\n" 
-    FOREACH item = global.myhash.list.sort('key') -%]
+[% global.myhash.delete('things') -%]
+keys: [% global.myhash.keys.sort.join(', ') %]
 -- expect --
-* a => alpha
-* msg => Hello World
-* things => one
+keys: a, msg
+
+-- test --
+[% "* $item\n" 
+    FOREACH item IN global.myhash.items.sort -%]
+-- expect --
+* a
+* alpha
+* Hello World
+* msg
 
 -- test --
 [% items = [ 'foo', 'bar', 'baz' ];
@@ -201,11 +235,44 @@ an object
 an object
 
 -- test --
-[% obj.list.first.name %]
+[% obj.items.first %]
+-- expect --
+name
+
+-- test --
+[% obj.items.1 %]
 -- expect --
 an object
+
+-- test --
+[% listobj.0 %] / [% listobj.first %]
+-- expect --
+10 / 10
+
+-- test --
+[% listobj.2 %] / [% listobj.last %]
+-- expect --
+30 / 30
+
+-- test --
+[% listobj.join(', ') %]
+-- expect --
+10, 20, 30
 
 -- test --
 =[% size %]=
 -- expect --
 ==
+
+# test Dave Howorth's patch (v2.15) which makes the stash more strict
+# about what it considers to be a missing method error
+
+-- test --
+[% hashobj.hello %]
+-- expect --
+Hello World
+
+-- test --
+[% TRY; hashobj.goodbye; CATCH; "ERROR: "; clean(error); END %]
+-- expect --
+ERROR: undef error - Can't locate object method "no_such_method" via package "HashObject"

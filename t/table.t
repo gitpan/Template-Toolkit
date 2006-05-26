@@ -6,19 +6,19 @@
 #
 # Written by Andy Wardley <abw@kfs.org>
 #
-# Copyright (C) 2000 Andy Wardley. All Rights Reserved.
+# Copyright (C) 2000-2006 Andy Wardley. All Rights Reserved.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: table.t,v 2.3 2000/11/01 12:01:45 abw Exp $
+# $Id: table.t,v 2.4 2006/05/25 11:23:38 abw Exp $
 #
 #========================================================================
 
 use strict;
+use warnings;
 use lib qw( ../lib );
 use Template::Test;
-$^W = 1;
 
 $Template::Test::DEBUG = 0;
 

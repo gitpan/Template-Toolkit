@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: binop.t,v 2.2 2000/09/12 15:25:22 abw Exp $
+# $Id: binop.t,v 2.3 2004/12/24 14:51:04 abw Exp $
 #
 #========================================================================
 
@@ -25,6 +25,7 @@ $^W = 1;
 
 $Template::Test::DEBUG = 0;
 $Template::Parser::DEBUG = 0;
+
 
 my $counter  = 0;
 my $params   = {
@@ -325,3 +326,14 @@ mega: 106
 2 2
 3 3
 
+
+-- stop -- 
+# this is for testing the lt operator which isn't enabled by default.
+-- test --
+[% IF 'one' lt 'two' -%]
+one is less than two
+[% ELSE -%]
+ERROR!
+[% END -%]
+-- expect --
+one is less than two

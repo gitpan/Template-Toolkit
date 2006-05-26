@@ -15,12 +15,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: leak.t,v 2.4 2001/06/23 08:42:00 abw Exp $
+# $Id: leak.t,v 2.5 2006/01/29 11:37:00 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ./lib ../lib );
+use lib qw( ./lib ../lib ../blib/arch );
 use Template::Test;
 $^W = 1;
 
@@ -82,7 +82,7 @@ my $ttcfg = {
     PLUGIN_FACTORY => { holler => 'Plugin::Holler' },
     EVAL_PERL      => 1,
     BLOCKS         => {
-	trace => "TRACE ==[% trace %]==",
+        trace => "TRACE ==[% trace %]==",
     },
 };
 
@@ -107,6 +107,20 @@ first created
 -- expect --
 first created
 first destroyed
+
+-- test --
+[% clear; b = [ ]; b.0 = holler('list'); trace %]
+-- expect --
+list created
+
+-- test --
+[% trace %]
+-- expect --
+list created
+list destroyed
+
+-- stop --
+
 
 -- test --
 [% BLOCK shout; a = holler('second'); END -%]

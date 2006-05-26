@@ -46,12 +46,12 @@ package main;
 my $doc = Template::Document->new({
     BLOCK     => sub { my $c = shift; return "some output" },
     DEFBLOCKS => {
-        foo => sub { return 'the foo block' },
-        bar => sub { return 'the bar block' },
+	foo => sub { return 'the foo block' },
+	bar => sub { return 'the bar block' },
     },
     METADATA  => {
-        author  => 'Andy Wardley',
-        version => 3.14,
+	author  => 'Andy Wardley',
+	version => 3.14,
     },
 });
 
@@ -145,21 +145,13 @@ title: My Template Title
 -- expect --
 some output
 
+-- stop --
 # test for component.caller and component.callers patch
 -- test --
 [% INCLUDE one;
    INCLUDE two;
-   INCLUDE two;
    INCLUDE three;
-   INCLUDE four;
 %]
 -- expect --
-three path: input text, one
-three path: input text, two, one
-three path: input text, two, one
-three path: input text
-once...
-three path: input text, four, two, one
-...and again...
-three path: input text, four, two, one
-...that's all
+one, three
+two, three

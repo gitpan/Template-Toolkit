@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 2.20 2003/04/29 12:49:43 abw Exp $
+# $Id: filter.t,v 2.21 2006/01/30 17:08:05 abw Exp $
 #
 #========================================================================
 
@@ -468,9 +468,11 @@ Mary ...
 [% 'Hello World' | truncate(8) +%]
 [% 'Hello World' | truncate(10) +%]
 [% 'Hello World' | truncate(20) +%]
+[% 'Hello World' | truncate(11) +%]
 -- expect --
 Hello...
 Hello W...
+Hello World
 Hello World
 
 -- test --

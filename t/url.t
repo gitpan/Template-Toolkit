@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: url.t,v 2.4 2002/06/13 07:41:23 abw Exp $
+# $Id: url.t,v 2.8 2006/01/30 17:46:41 abw Exp $
 #
 #========================================================================
 
@@ -53,6 +53,7 @@ my $urls = {
 my $vars = {
     url => $urls,
     sorted => \&sort_params,
+    no_escape => sub { $Template::Plugin::URL::JOINT = '&' },
 };
 
 test_expect(\*DATA, { INTERPOLATE => 1 }, $vars);
@@ -169,3 +170,11 @@ there?age=42&amp;name=frank
 -- expect --
 /product?action=edit&amp;style=editor
 /product?action=edit&amp;style=compact
+
+-- test --
+[% CALL no_escape -%]
+[% url.product.edit %]
+[% url.product.edit(style='compact') %]
+-- expect --
+/product?action=edit&style=editor
+/product?action=edit&style=compact

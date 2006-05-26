@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash-xs.t,v 2.5 2002/08/12 11:07:17 abw Exp $
+# $Id: stash-xs.t,v 2.10 2006/01/30 20:06:54 abw Exp $
 #
 #========================================================================
 
@@ -32,21 +32,61 @@ if ($@) {
     skip_all('cannot load Template::Stash::XS');
 }
 
+#------------------------------------------------------------------------
+# define some simple objects for testing
+#------------------------------------------------------------------------
+
+package Buggy;
+sub new { bless {}, shift }
+sub croak { my $self = shift; die @_ }
+
+package ListObject;
+
+package HashObject;
+
+sub hello {
+    my $self = shift;
+    return "Hello $self->{ planet }";
+}
+
+sub goodbye {
+    my $self = shift;
+    return $self->no_such_method();
+}
+
+sub now_is_the_time_to_test_a_very_long_method_to_see_what_happens {
+    my $self = shift;
+    return $self->this_method_does_not_exist();
+}
+
+
+package main;
+
+
 my $count = 20;
 my $data = {
     foo => 10,
     bar => {
-	baz => 20,
+        baz => 20,
     },
     baz => sub {
-	return {
-	    boz => ($count += 10),
-	    biz => (shift || '<undef>'),
-	};
+        return {
+            boz => ($count += 10),
+            biz => (shift || '<undef>'),
+        };
     },
-    obj => bless {
-	name => 'an object',
-    }, 'AnObject',
+    obj => bless({
+        name => 'an object',
+    }, 'AnObject'),
+    listobj => bless([10, 20, 30], 'ListObject'),
+    hashobj => bless({ planet => 'World' }, 'HashObject'),
+    clean   => sub {
+        my $error = shift;
+        $error =~ s/\s+at.*$//;
+        return $error;
+    },
+    correct => sub { die @_ },
+    buggy => Buggy->new(),
 };
 
 my $stash = Template::Stash::XS->new($data);
@@ -136,11 +176,11 @@ one
 + three
 
 -- test --
-[% "* $item.key => $item.value\n" FOREACH item = global.mylist.hash -%]
+[% global.mylist.push('bar');
+   "* $item.key => $item.value\n" FOREACH item = global.mylist.hash -%]
 -- expect --
-* 0 => one
-* 1 => foo
-* 2 => three
+* one => foo
+* three => bar
 
 -- test --
 [% myhash = { msg => 'Hello World', things => global.mylist, a => 'alpha' };
@@ -151,12 +191,19 @@ one
 * Hello World
 
 -- test --
-[% "* $item.key => $item.value.item\n" 
-    FOREACH item = global.myhash.list.sort('key') -%]
+[% global.myhash.delete('things') -%]
+keys: [% global.myhash.keys.sort.join(', ') %]
 -- expect --
-* a => alpha
-* msg => Hello World
-* things => one
+keys: a, msg
+
+-- test --
+[% "* $item\n" 
+    FOREACH item IN global.myhash.items.sort -%]
+-- expect --
+* a
+* alpha
+* Hello World
+* msg
 
 -- test --
 [% items = [ 'foo', 'bar', 'baz' ];
@@ -227,12 +274,73 @@ an object
 an object
 
 -- test --
-[% obj.list.first.name %]
+[% obj.items.first %]
+-- expect --
+name
+
+
+-- test --
+[% obj.items.1 %]
 -- expect --
 an object
+
 
 -- test --
 =[% size %]=
 -- expect --
 ==
+
+-- test --
+[% USE Dumper;
+   TRY;
+     correct(["hello", "there"]);
+   CATCH;
+     error.info.join(', ');
+   END;
+%]
+==
+[% TRY;
+     buggy.croak(["hello", "there"]);
+   CATCH;
+     error.info.join(', ');
+   END;
+%]
+-- expect --
+hello, there
+==
+hello, there
+
+
+-- test --
+[% hash = { }
+   list = [ hash ]
+   list.last.message = 'Hello World';
+   "message: $list.last.message\n"
+-%]
+
+-- expect --
+message: Hello World
+
+# test Dave Howorth's patch (v2.15) which makes the stash more strict
+# about what it considers to be a missing method error
+
+-- test --
+[% hashobj.hello %]
+-- expect --
+Hello World
+
+-- test --
+[% TRY; hashobj.goodbye; CATCH; "ERROR: "; clean(error); END %]
+-- expect --
+ERROR: undef error - Can't locate object method "no_such_method" via package "HashObject"
+
+-- test --
+[% TRY; 
+    hashobj.now_is_the_time_to_test_a_very_long_method_to_see_what_happens;
+   CATCH; 
+     "ERROR: "; clean(error); 
+   END 
+%]
+-- expect --
+ERROR: undef error - Can't locate object method "this_method_does_not_exist" via package "HashObject"
 

@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: image.t,v 1.3 2003/03/18 00:06:25 abw Exp $
+# $Id: image.t,v 1.5 2006/01/30 16:06:57 abw Exp $
 #
 #========================================================================
 
@@ -34,6 +34,7 @@ my $vars = {
     file => {
         logo  => File::Spec->catfile($dir, 'ttdotorg.gif'),
         power => File::Spec->catfile($dir, 'tt2power.gif'),
+        lname => 'ttdotorg.gif',
     },
 };
 
@@ -78,11 +79,24 @@ attr: width="110" height="60"
 -- test --
 [% USE image file.logo -%]
 tag: [% image.tag %]
-tag: [% image.tag(class="myimage") %]
+tag: [% image.tag(class="myimage", alt="image") %]
 -- expect --
 -- process --
-tag: <img src="[% file.logo %]" width="110" height="60" />
-tag: <img src="[% file.logo %]" width="110" height="60" class="myimage" />
+tag: <img src="[% file.logo %]" width="110" height="60" alt="" />
+tag: <img src="[% file.logo %]" width="110" height="60" alt="image" class="myimage" />
 
 
+# test "root"
+-- test --
+[% USE image( root=dir name=file.lname ) -%]
+[% image.tag %]
+-- expect --
+-- process --
+<img src="[% file.lname %]" width="110" height="60" alt="" />
 
+# test separate file and name
+-- test --
+[% USE image( file= file.logo  name = "other.jpg" alt="myfile") -%]
+[% image.tag %]
+-- expect --
+<img src="other.jpg" width="110" height="60" alt="myfile" />

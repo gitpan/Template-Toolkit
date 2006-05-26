@@ -206,6 +206,26 @@ Delegates to Perl's internal split() so the parameters are exactly the same.
          ...
     [% tt_start_tag %] END [% tt_end_tag %]</pre>
 
+<li><b>substr($offset, $length, $replacement)</b><br>
+<p>
+Returns a substring starting at $offset, for $length characters.
+</p>
+<pre>    [% tt_start_tag %] str = String.new('foo bar baz wiz waz woz') [% tt_end_tag %]
+    [% tt_start_tag %] str.substr(4, 3) [% tt_end_tag %]    # bar</pre>
+<p>
+If $length is not specified then it returns everything from the $offset
+to the end of the string.
+</p>
+<pre>    [% tt_start_tag %] str.substr(12) [% tt_end_tag %]      # wiz waz woz</pre>
+<p>
+If both $length and $replacement are specified, then the method
+replaces everything from $offset for $length characters with
+$replacement.  The substring removed from the string is then 
+returned.
+</p>
+<pre>    [% tt_start_tag %] str.substr(0, 11, 'FOO') [% tt_end_tag %]   # foo bar baz
+    [% tt_start_tag %] str [% tt_end_tag %]                        # FOO wiz waz woz</pre>
+
 </ul>
 [%- END %]
 [% WRAPPER subsection
@@ -401,22 +421,22 @@ Repeats the string $count times.
 [% WRAPPER section
     title="AUTHOR"
 -%]<p>
-Andy Wardley &lt;abw@andywardley.com&gt;
+Andy Wardley &lt;abw@wardley.org&gt;
 </p>
 <p>
-[% ttlink('http://www.andywardley.com/', 'http://www.andywardley.com/') -%]
+[% ttlink('http://wardley.org/', 'http://wardley.org/') -%]
 </p>
 [%- END %]
 [% WRAPPER section
     title="VERSION"
 -%]<p>
-2.34, distributed as part of the
-Template Toolkit version 2.14, released on 04 October 2004.
+2.37, distributed as part of the
+Template Toolkit version 2.15, released on 26 May 2006.
 </p>
 [%- END %]
 [% WRAPPER section
     title="COPYRIGHT"
--%]<pre>  Copyright (C) 1996-2004 Andy Wardley.  All Rights Reserved.
+-%]<pre>  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.</pre>
 <p>
 This module is free software; you can redistribute it and/or

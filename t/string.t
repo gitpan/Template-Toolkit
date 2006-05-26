@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: string.t,v 2.5 2002/01/17 11:03:33 abw Exp $
+# $Id: string.t,v 2.6 2006/01/30 16:42:35 abw Exp $
 #
 #========================================================================
 
@@ -380,4 +380,28 @@ ok 1
 ok 2
 ok 3
 ok 4
+
+-- test --
+[% USE String('Hello World') -%]
+a: [% String.substr(6) %]!
+b: [% String.substr(0, 5) %]!
+c: [% String.substr(0, 5, 'Goodbye') %]!
+d: [% String %]!
+-- expect --
+a: World!
+b: Hello!
+c: Hello!
+d: Goodbye World!
+
+-- test --
+[% USE str = String('foo bar baz wiz waz woz') -%]
+a: [% str.substr(4, 3) %]
+b: [% str.substr(12) %]
+c: [% str.substr(0, 11, 'FOO') %]
+d: [% str %]
+-- expect --
+a: bar
+b: wiz waz woz
+c: foo bar baz
+d: FOO wiz waz woz
 
