@@ -1,13 +1,16 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Template-Toolkit
-version:      2.15
-version_from: lib/Template.pm
-installdirs:  site
-requires:
+--- #YAML:1.0
+name:                Template-Toolkit
+version:             2.16
+abstract:            comprehensive template processing system
+license:             ~
+generated_by:        ExtUtils::MakeMaker version 6.31
+distribution_type:   module
+requires:     
     AppConfig:                     1.56
     File::Spec:                    0.8
     File::Temp:                    0.12
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.17
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
+author:
+    - Andy Wardley <abw@wardley.org>
