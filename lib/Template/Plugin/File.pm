@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: File.pm,v 2.68 2006/01/30 20:05:48 abw Exp $
+#   $Id: File.pm,v 2.71 2006/05/30 17:01:34 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +29,7 @@ use File::Spec;
 use File::Basename;
 use base 'Template::Plugin';
 
-our $VERSION = sprintf("%d.%02d", q$Revision: 2.68 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 2.71;
 
 our @STAT_KEYS = qw( dev ino mode nlink uid gid rdev size 
                      atime mtime ctime blksize blocks );
@@ -400,8 +400,8 @@ for VIEW support, and made a few other minor tweaks.
 
 =head1 VERSION
 
-2.68, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.71, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 
 

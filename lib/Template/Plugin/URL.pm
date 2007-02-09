@@ -8,7 +8,7 @@
 #   and adaptable parameters.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cpan.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
 #   Copyright (C) 2000-2006 Andy Wardley.  All Rights Reserved.
@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: URL.pm,v 2.71 2006/01/30 20:05:48 abw Exp $
+#   $Id: URL.pm,v 2.74 2006/05/30 17:01:36 abw Exp $
 #
 #============================================================================
 
@@ -27,7 +27,7 @@ use strict;
 use warnings;
 use base 'Template::Plugin';
 
-our $VERSION = sprintf("%d.%02d", q$Revision: 2.71 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 2.74;
 our $JOINT   = '&amp;';
 
 
@@ -207,13 +207,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.71, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.74, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

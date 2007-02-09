@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.16 2006/01/30 13:33:57 abw Exp $
+# $Id: stash.t,v 2.18 2006/05/30 08:21:58 abw Exp $
 #
 #========================================================================
 
@@ -70,7 +70,7 @@ my $data = {
     listobj => bless([10, 20, 30], 'ListObject'),
     clean   => sub {
         my $error = shift;
-        $error =~ s/\s+at.*$//;
+        $error =~ s/(\s*\(.*?\))?\s+at.*$//;
         return $error;
     },
 };

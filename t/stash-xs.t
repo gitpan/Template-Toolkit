@@ -13,12 +13,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash-xs.t,v 2.10 2006/01/30 20:06:54 abw Exp $
+# $Id: stash-xs.t,v 2.12 2006/05/30 08:23:30 abw Exp $
 #
 #========================================================================
 
 use strict;
-use lib qw( ./lib ../lib ../blib/lib ../blib/arch );
+use lib qw( ./lib ../lib ../blib/lib ../blib/arch ./blib/lib ./blib/arch );
 use Template::Constants qw( :status );
 use Template;
 use Template::Test;
@@ -82,7 +82,7 @@ my $data = {
     hashobj => bless({ planet => 'World' }, 'HashObject'),
     clean   => sub {
         my $error = shift;
-        $error =~ s/\s+at.*$//;
+        $error =~ s/(\s*\(.*?\))?\s+at.*$//;
         return $error;
     },
     correct => sub { die @_ },

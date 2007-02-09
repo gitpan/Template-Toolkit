@@ -9,33 +9,30 @@
 #   Robert McArthur <mcarthur@dstc.edu.au>
 #     - original plugin code
 #
-#   Andy Wardley    <abw@kfs.org>
+#   Andy Wardley    <abw@wardley.org>
 #     - added FILTER registration, support for forms and some additional
 #       documentation
 #
 # COPYRIGHT
-#   Copyright (C) 2000 Robert McArthur & Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 2000-2006 Robert McArthur, Andy Wardley.  
+#   All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#----------------------------------------------------------------------------
-#
-# $Id: Autoformat.pm,v 2.67 2006/01/30 20:05:46 abw Exp $
+# REVISION
+#   $Id: Autoformat.pm,v 2.70 2006/05/30 17:01:34 abw Exp $
 #
 #============================================================================
 
 package Template::Plugin::Autoformat;
 
-require 5.004;
-
 use strict;
-use vars qw( $VERSION );
-use base qw( Template::Plugin );
-use Template::Plugin;
+use warnings;
+use base 'Template::Plugin';
 use Text::Autoformat;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.67 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 2.70;
 
 sub new {
     my ($class, $context, $options) = @_;
@@ -224,7 +221,7 @@ module (in his copious spare time :-) which does all the clever stuff.
 
 =head1 VERSION
 
-Template Toolkit version 2.15, released on 26 May 2006.
+Template Toolkit version 2.18, released on 09 February 2007.
 
 
 

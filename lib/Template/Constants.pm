@@ -6,7 +6,7 @@
 #   Definition of constants for the Template Toolkit.
 #
 # AUTHOR
-#   Andy Wardley   <abw@kfs.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Constants.pm,v 2.71 2006/05/25 11:23:35 abw Exp $
+#   $Id: Constants.pm,v 2.74 2006/05/30 17:01:28 abw Exp $
 #
 #============================================================================
  
@@ -31,7 +31,7 @@ use base 'Exporter';
 use vars qw( @EXPORT_OK %EXPORT_TAGS );
 use vars qw( $DEBUG_OPTIONS @STATUS @ERROR @CHOMP @DEBUG);
 
-our $VERSION = sprintf("%d.%02d", q$Revision: 2.71 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 2.74;
 
 
 #========================================================================
@@ -265,13 +265,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.71, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.74, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

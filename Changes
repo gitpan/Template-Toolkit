@@ -3,7 +3,7 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for the Template Toolkit version 2.15, detailing
+#   Revision history for the Template Toolkit version 2.18, detailing
 #   significant changes between versions, most recent first.  Some 
 #   way down the file you'll find a section detailing major changes from 
 #   version 1.* to 2.* and a list of "Gotchas!" that you might have to 
@@ -19,50 +19,139 @@
 #   Any changes you make here may be lost!
 #
 #------------------------------------------------------------------------
-# $Id: Changes.tt2,v 1.137 2006/05/26 11:42:26 abw Exp $
+# $Id: Changes.tt2,v 1.145 2007/02/09 16:51:54 abw Exp $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 2.18 - 9th February 2007
+#------------------------------------------------------------------------
+
+* Merged in Adam's changes in 2.16 and 2.17 back into the developer CVS
+  repository and added his name to the credits.
+
+* Changed the parser grammar to accept expressions as arguments to a 
+  subroutine, method or virtual method call.  I'm embarrassed to admit
+  that it was a one line change that could (and should) have been made
+  long ago, if only I had realised just how trivial it was.  Anyway,
+  you can now write nested expressions like this:
+
+     [% add(a+5, b < 10 ? c : d + e*5) %]
+
+* Put the t/fileline.t test back in as this was fixed in 2.15a
+
+* Added the Template::Toolkit documentation-only module.
 
 #------------------------------------------------------------------------
 # Version 2.17 - 8th Feb 2007
 #------------------------------------------------------------------------
 
-This release contains a small installer change to force an upgrade to
-File::HomeDir 0.64 on darwin. This is due to problems caused by changes
-made to Perl on the new Intel versions of Mac OS X.
+Another interim release from Adam Kennedy.
 
-One test continueing to cause problems due to path assumptions has been
-skipped entirely on darwin now as well.
-
-If you already have 2.15 or higher no upgrade is needed.
-
-Build Changes
--------------
-
-* Add a dependency on File::HomeDir 0.64 if on platform 'darwin'
+* Change in Makefile.PL to force an upgrade to File::HomeDir 0.64 on darwin. 
+  This is due to problems caused by changes made to Perl on the new Intel 
+  versions of Mac OS X.
 
 * skip_all filelines.t on darwin
 
 #------------------------------------------------------------------------
-# Version 2.16 - 23rd Jan 2007
+# Version 2.16 - 23rd Jan 2007            
 #------------------------------------------------------------------------
 
-This release only contains some minor tweaks to Makefile.PL and
-tests to allow installation on Win32 in cases where installation was
-spuriously failing and thus blocking other modules.
-
-If you already have 2.15 no upgrade is needed under any circumstances.
-
-Build Changes
--------------
+Interim release from Adam Kennedy.
 
 * Skip fileline.t on Win32, as it has some hard-coded path seperator
-  assumptions. This will be fixed more comprehensily later.
+  assumptions. This will be fixed more comprehensively later.
 
 * Handle spurious errors in Makefile.PL when a dev version of
   ExtUtils::MakeMaker is installed.
 
 * Don't say "nmake" on Win32 when $Config{make} is 'dmake'.
   This corrects the message on Strawberry Perl.
+
+
+#------------------------------------------------------------------------
+# Version 2.15c - Not released                    ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Fixed a bug in Template::Parser which caused it to get confused about
+  block names if it encountered a syntax error inside a BLOCK.  Thanks
+  to Bill Moseley for reporting the problem.  
+  
+  http://tt2.org/pipermail/templates/2006-July/008815.html
+
+* Fixed a minor buglet in Template::Provider which came to light while
+  investigating the above problem. If a previously cached template is changed
+  on disk and then fails to compile, the provider now invalidates the cache
+  entry immediately. Without this fix, the provider would report the error
+  once, then reuse the cached good version of the template until $STAT_TTL
+  ticked over when it would try to load and compile the disk version again.
+  The problem was that error messages were only reported once every $STAT_TTL
+  second(s) and any requests for the same template in the interim time would
+  mysteriously work. This way errors get reported consistently and immediately
+  and no-one has to waste an afternoon trying to figure out where the errors
+  went!
+
+#------------------------------------------------------------------------
+# Version 2.15b - 30th May 2006                   ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Changed the uri filter to escape all reserved characters as per 
+  URI::Escape and RFC2396.  This now includes &, @, /, ;, :, =, +, ?
+  and $ which were previously not escaped.  Thanks to islue@cpan.org
+  for reporting the problem.
+
+  http://rt.cpan.org/Ticket/Display.html?id=19593
+
+* Also changed the uri filter to encode all wide characters as the 
+  equivalent UTF escapes.  Thanks to Jonathan Rockway for reporting 
+  the problem.
+
+  http://rt.cpan.org/Ticket/Display.html?id=19354
+
+* Fixed the redirect filter to not support relative paths.  Thanks to
+  Paul Seamons for spotting the problem and providing a solution.
+
+* Moved all the virtual methods out of Template::Stash and into 
+  a new Template::VMethods module.
+
+* Fixed the version number of Template::Stash which had rolled over
+  to 2.102 making it appear to predate the 2.86 stash in TT v2.14.
+  Thanks to Randal Schwartz for reporting the problem.  Changed all 
+  version numbers in other modules to be a hard-coded numbers instead
+  of grokking it automagically from the CVS revision.
+
+* Changed the _recover() method of Template::Service to check if the 
+  error thrown is a Template::Exception object rather than just a 
+  reference.  Thanks to David Wheeler for reporting the problem.
+
+  http://rt.cpan.org/Ticket/Display.html?id=17630
+
+* Fixed the some tests in stash.t and stash-xs.t which were failing 
+  under Perl 5.6.2 due to a slightly different error message being 
+  generated.  Thanks to Anton Berezin for reporting the problem.
+
+* Fixed a bug in the Template::Provider _load() method to check that 
+  $data is a hash ref before trying to mess with its innards.  Thanks
+  to barbie@cpan.org for reporting the problem.
+
+  http://rt.cpan.org/Ticket/Display.html?id=18653
+
+
+#------------------------------------------------------------------------
+# Version 2.15a - 29th May 2006                   ## DEVELOPER RELEASE ##
+#------------------------------------------------------------------------
+
+* Removed the latex filter from Template::Filters and related config
+  variables from Template::Config
+
+* Changed the t/fileline.t test to remove the line number from what Perl
+  reports as "(eval $line)".  It appears to get the $line wrong on 
+  FreeBSD, although the correct line number is reported following that
+  so the tests still do the right thing.  Thanks to Anton Berezin for 
+  reporting the problem.
+
+* Changed the t/compile3.t test to do something similar.
+
 
 #------------------------------------------------------------------------
 # Version 2.15 - 26th May 2006

@@ -65,19 +65,18 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm,v 1.60 2006/01/30 20:06:15 abw Exp $
+# $Id: Context.pm,v 1.63 2006/05/30 17:01:38 abw Exp $
 #
 #============================================================================
 
 package Template::Stash::Context;
 
-require 5.004;
-
 use strict;
+use warnings;
 use Template::Stash;
-use vars qw( $VERSION $DEBUG $ROOT_OPS $SCALAR_OPS $HASH_OPS $LIST_OPS );
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.60 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 1.63;
+our $DEBUG   = 0 unless defined $DEBUG;
 
 
 #========================================================================
@@ -88,24 +87,24 @@ $VERSION = sprintf("%d.%02d", q$Revision: 1.60 $ =~ /(\d+)\.(\d+)/);
 # copy virtual methods from those in the regular Template::Stash
 #------------------------------------------------------------------------
 
-$ROOT_OPS = { 
+our $ROOT_OPS = { 
     %$Template::Stash::ROOT_OPS,
     defined $ROOT_OPS ? %$ROOT_OPS : (),
 };
 
-$SCALAR_OPS = { 
+our $SCALAR_OPS = { 
     %$Template::Stash::SCALAR_OPS,
     'array' => sub { return [$_[0]] },
     defined $SCALAR_OPS ? %$SCALAR_OPS : (),
 };
 
-$LIST_OPS = { 
+our $LIST_OPS = { 
     %$Template::Stash::LIST_OPS,
     'array' => sub { return $_[0] },
     defined $LIST_OPS ? %$LIST_OPS : (),
 };
 		    
-$HASH_OPS = { 
+our $HASH_OPS = { 
     %$Template::Stash::HASH_OPS,
     defined $HASH_OPS ? %$HASH_OPS : (),
 };
@@ -765,13 +764,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-1.60, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+1.63, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -9,7 +9,7 @@
 #   originally the t/texpect.pl script.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cpan.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
@@ -18,36 +18,33 @@
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#----------------------------------------------------------------------------
-#
-# $Id: Test.pm,v 2.72 2006/01/30 20:04:55 abw Exp $
+# REVISION
+#   $Id: Test.pm,v 2.75 2006/05/30 17:01:29 abw Exp $
 #
 #============================================================================
 
 package Template::Test;
 
-require 5.004;
-
 use strict;
-use vars qw( @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS 
-         $VERSION $DEBUG $EXTRA $PRESERVE $REASON $NO_FLUSH
-         $loaded %callsign);
+use warnings;
 use Template qw( :template );
 use Exporter;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.72 $ =~ /(\d+)\.(\d+)/);
-$DEBUG   = 0;
-@ISA     = qw( Exporter );
-@EXPORT  = qw( ntests ok is match flush skip_all test_expect callsign banner );
-@EXPORT_OK = ( 'assert' );
-%EXPORT_TAGS = ( all => [ @EXPORT_OK, @EXPORT ] );
+our $VERSION = 2.75;
+our $DEBUG   = 0;
+our @ISA     = qw( Exporter );
+our @EXPORT  = qw( ntests ok is match flush skip_all test_expect callsign banner );
+our @EXPORT_OK = ( 'assert' );
+our %EXPORT_TAGS = ( all => [ @EXPORT_OK, @EXPORT ] );
 $| = 1;
 
-$REASON   = 'not applicable on this platform';
-$NO_FLUSH = 0;
-$EXTRA    = 0;   # any extra tests to come after test_expect()
-$PRESERVE = 0    # don't mangle newlines in output/expect
+our $REASON   = 'not applicable on this platform';
+our $NO_FLUSH = 0;
+our $EXTRA    = 0;   # any extra tests to come after test_expect()
+our $PRESERVE = 0    # don't mangle newlines in output/expect
     unless defined $PRESERVE;
+
+our ($loaded, %callsign);
 
 # always set binmode on Win32 machines so that any output generated
 # is true to what we expect 
@@ -685,13 +682,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.72, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.75, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

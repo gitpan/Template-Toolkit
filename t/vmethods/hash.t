@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: hash.t,v 1.1 2006/02/02 11:35:07 abw Exp $
+# $Id: hash.t,v 1.2 2006/05/30 15:53:52 abw Exp $
 #
 #========================================================================
 
@@ -28,14 +28,14 @@ my $params = {
     uhash     => { tobe => '2b', nottobe => undef },
 };
 
-my $tt = Template->new();
+my $tt = Template->new() || die Template->error();
 my $tc = $tt->context();
 
-$tc->define_vmethod(hash   => dump => sub {
-        my $hash = shift;
-        return '{ ' 
-            . join(', ', map { "$_ => '$hash->{$_}'" } sort keys %$hash)
-            . ' }';
+$tc->define_vmethod(hash  => dump => sub {
+    my $hash = shift;
+    return '{ ' 
+        . join(', ', map { "$_ => '$hash->{$_}'" } sort keys %$hash)
+        . ' }';
 });
 
 test_expect(\*DATA, undef, $params);

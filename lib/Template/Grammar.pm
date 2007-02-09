@@ -10,34 +10,30 @@
 #   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
 #   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#------------------------------------------------------------------------
+# REVISION
+#   $Id: Grammar.pm,v 2.26 2007/02/09 16:44:11 abw Exp $
 #
-# NOTE: this module is constructed from the parser/Grammar.pm.skel
-# file by running the parser/yc script.  You only need to do this if 
-# you have modified the grammar in the parser/Parser.yp file and need
-# to-recompile it.  See the README in the 'parser' directory for more
-# information (sub-directory of the Template distribution).
-#
-#------------------------------------------------------------------------
-#
-# $Id: Grammar.pm,v 2.24 2005/11/29 07:34:53 abw Exp $
+# IMPORTANT NOTE
+#   This module is constructed from the parser/Grammar.pm.skel file by
+#   running the parser/yc script.  You only need to do this if # you
+#   have modified the grammar in the parser/Parser.yp file and need #
+#   to-recompile it.  See the README in the 'parser' directory for
+#   more information (sub-directory of the Template distribution).
 #
 #========================================================================
 
 package Template::Grammar;
 
-require 5.004;
-
 use strict;
-use vars qw( $VERSION );
+use warnings;
 
-$VERSION  = sprintf("%d.%02d", q$Revision: 2.24 $ =~ /(\d+)\.(\d+)/);
+our $VERSION  = 2.25;
 
 my (@RESERVED, %CMPOP, $LEXTABLE, $RULES, $STATES);
 my ($factory, $rawstart);
@@ -61,6 +57,7 @@ my ($factory, $rawstart);
 # are not converted to their stringwise equivalents.  I added 'gt' et al, 
 # briefly for v2.04d and then took them out again in 2.04e.
 
+
 %CMPOP = qw( 
     != ne
     == eq
@@ -70,6 +67,9 @@ my ($factory, $rawstart);
     <= <=
 );
 
+#    eq eq  # add these lines to the above to 
+#    lt lt  # enable the eq, lt and gt operators      
+#    gt gt
 
 #========================================================================
 # Lexer Token Table
@@ -165,10 +165,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -186,37 +186,37 @@ $STATES = [
 		DEFAULT => -3,
 		GOTOS => {
 			'item' => 39,
-			'node' => 23,
-			'rawperl' => 59,
-			'term' => 58,
 			'loop' => 4,
-			'use' => 63,
-			'expr' => 62,
 			'capture' => 42,
 			'statement' => 5,
 			'view' => 7,
 			'wrapper' => 46,
 			'atomexpr' => 48,
 			'chunk' => 11,
-			'defblock' => 66,
 			'atomdir' => 12,
 			'anonblock' => 50,
 			'template' => 52,
-			'sterm' => 68,
 			'defblockname' => 14,
-			'filter' => 29,
 			'ident' => 16,
-			'perl' => 31,
-			'setlist' => 70,
-			'chunks' => 33,
-			'switch' => 34,
-			'try' => 35,
 			'assign' => 19,
-			'block' => 72,
-			'directive' => 71,
 			'macro' => 20,
-			'condition' => 73,
-			'lterm' => 56
+			'lterm' => 56,
+			'node' => 23,
+			'term' => 58,
+			'rawperl' => 59,
+			'expr' => 62,
+			'use' => 63,
+			'defblock' => 66,
+			'filter' => 29,
+			'sterm' => 68,
+			'perl' => 31,
+			'chunks' => 33,
+			'setlist' => 70,
+			'try' => 35,
+			'switch' => 34,
+			'directive' => 71,
+			'block' => 72,
+			'condition' => 73
 		}
 	},
 	{#State 1
@@ -312,8 +312,8 @@ $STATES = [
 			'node' => 23,
 			'ident' => 77,
 			'term' => 95,
-			'list' => 92,
-			'lterm' => 56
+			'lterm' => 56,
+			'list' => 92
 		}
 	},
 	{#State 10
@@ -433,14 +433,14 @@ $STATES = [
 			"\${" => 37
 		},
 		GOTOS => {
-			'filepart' => 87,
 			'names' => 91,
-			'nameargs' => 118,
-			'filename' => 85,
 			'lvalue' => 112,
-			'lnameargs' => 115,
 			'item' => 113,
-			'name' => 82
+			'name' => 82,
+			'filepart' => 87,
+			'filename' => 85,
+			'nameargs' => 118,
+			'lnameargs' => 115
 		}
 	},
 	{#State 26
@@ -507,14 +507,14 @@ $STATES = [
 			"\${" => 37
 		},
 		GOTOS => {
-			'filepart' => 87,
 			'names' => 91,
-			'nameargs' => 118,
-			'filename' => 85,
 			'lvalue' => 112,
-			'lnameargs' => 130,
 			'item' => 113,
-			'name' => 82
+			'name' => 82,
+			'filepart' => 87,
+			'filename' => 85,
+			'nameargs' => 118,
+			'lnameargs' => 130
 		}
 	},
 	{#State 33
@@ -544,10 +544,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -809,13 +809,13 @@ $STATES = [
 			"\${" => 37
 		},
 		GOTOS => {
+			'expr' => 151,
 			'sterm' => 68,
 			'item' => 39,
+			'assign' => 150,
 			'node' => 23,
 			'ident' => 149,
 			'term' => 58,
-			'expr' => 151,
-			'assign' => 150,
 			'lterm' => 56
 		}
 	},
@@ -1020,10 +1020,10 @@ $STATES = [
 	},
 	{#State 76
 		ACTIONS => {
-			"\$" => 43,
 			'COMMA' => 171,
 			'LITERAL' => 75,
 			'IDENT' => 2,
+			"\$" => 43,
 			"\${" => 37
 		},
 		DEFAULT => -30,
@@ -1183,10 +1183,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -1334,13 +1334,13 @@ $STATES = [
 			'atomexpr' => 48,
 			'atomdir' => 12,
 			'mdir' => 194,
-			'sterm' => 68,
 			'filter' => 29,
+			'sterm' => 68,
 			'ident' => 149,
 			'perl' => 31,
 			'setlist' => 70,
-			'switch' => 34,
 			'try' => 35,
+			'switch' => 34,
 			'assign' => 19,
 			'directive' => 196,
 			'condition' => 73,
@@ -1398,13 +1398,13 @@ $STATES = [
 			'atomexpr' => 48,
 			'atomdir' => 12,
 			'mdir' => 197,
-			'sterm' => 68,
 			'filter' => 29,
+			'sterm' => 68,
 			'ident' => 149,
 			'perl' => 31,
 			'setlist' => 70,
-			'switch' => 34,
 			'try' => 35,
+			'switch' => 34,
 			'assign' => 19,
 			'directive' => 196,
 			'condition' => 73,
@@ -1554,13 +1554,13 @@ $STATES = [
 	},
 	{#State 134
 		ACTIONS => {
+			'DIV' => 159,
+			'BINOP' => 161,
 			"+" => 157,
 			'CAT' => 163,
 			'CMPOP' => 164,
-			'DIV' => 159,
 			'MOD' => 165,
-			"/" => 166,
-			'BINOP' => 161
+			"/" => 166
 		},
 		DEFAULT => -142
 	},
@@ -1681,14 +1681,14 @@ $STATES = [
 			"\${" => 37
 		},
 		GOTOS => {
-			'filepart' => 87,
 			'names' => 91,
-			'nameargs' => 118,
-			'filename' => 85,
 			'lvalue' => 112,
-			'lnameargs' => 221,
 			'item' => 113,
-			'name' => 82
+			'name' => 82,
+			'filepart' => 87,
+			'filename' => 85,
+			'nameargs' => 118,
+			'lnameargs' => 221
 		}
 	},
 	{#State 144
@@ -2112,10 +2112,10 @@ $STATES = [
 	},
 	{#State 169
 		ACTIONS => {
-			"\$" => 43,
 			'COMMA' => 171,
 			'LITERAL' => 75,
 			'IDENT' => 2,
+			"\$" => 43,
 			"\${" => 37
 		},
 		DEFAULT => -31,
@@ -2183,10 +2183,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -2293,8 +2293,7 @@ $STATES = [
 	},
 	{#State 179
 		ACTIONS => {
-			"{" => 30,
-			'COMMA' => 258,
+			'NOT' => 38,
 			'LITERAL' => 256,
 			'IDENT' => 2,
 			"\"" => 60,
@@ -2302,16 +2301,20 @@ $STATES = [
 			"[" => 9,
 			'NUMBER' => 26,
 			'REF' => 27,
+			"{" => 30,
+			'COMMA' => 258,
+			"(" => 53,
 			"\${" => 37
 		},
 		DEFAULT => -163,
 		GOTOS => {
+			'expr' => 257,
 			'sterm' => 68,
 			'item' => 254,
 			'param' => 255,
 			'node' => 23,
 			'ident' => 253,
-			'term' => 257,
+			'term' => 58,
 			'lterm' => 56
 		}
 	},
@@ -2399,10 +2402,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -2420,37 +2423,37 @@ $STATES = [
 		DEFAULT => -3,
 		GOTOS => {
 			'item' => 39,
-			'node' => 23,
-			'rawperl' => 59,
-			'term' => 58,
 			'loop' => 4,
-			'use' => 63,
-			'expr' => 62,
 			'capture' => 42,
 			'statement' => 5,
 			'view' => 7,
 			'wrapper' => 46,
 			'atomexpr' => 48,
 			'chunk' => 11,
-			'defblock' => 66,
 			'atomdir' => 12,
 			'anonblock' => 50,
 			'template' => 267,
-			'sterm' => 68,
 			'defblockname' => 14,
-			'filter' => 29,
 			'ident' => 16,
-			'perl' => 31,
-			'setlist' => 70,
-			'chunks' => 33,
-			'try' => 35,
-			'switch' => 34,
 			'assign' => 19,
-			'block' => 72,
-			'directive' => 71,
 			'macro' => 20,
-			'condition' => 73,
-			'lterm' => 56
+			'lterm' => 56,
+			'node' => 23,
+			'term' => 58,
+			'rawperl' => 59,
+			'expr' => 62,
+			'use' => 63,
+			'defblock' => 66,
+			'filter' => 29,
+			'sterm' => 68,
+			'perl' => 31,
+			'chunks' => 33,
+			'setlist' => 70,
+			'switch' => 34,
+			'try' => 35,
+			'directive' => 71,
+			'block' => 72,
+			'condition' => 73
 		}
 	},
 	{#State 191
@@ -2509,14 +2512,14 @@ $STATES = [
 			"\${" => 37
 		},
 		GOTOS => {
+			'expr' => 151,
 			'sterm' => 68,
 			'item' => 39,
+			'assign' => 150,
 			'margs' => 270,
 			'node' => 23,
 			'ident' => 149,
 			'term' => 58,
-			'expr' => 151,
-			'assign' => 150,
 			'lterm' => 56
 		}
 	},
@@ -2579,11 +2582,13 @@ $STATES = [
 	},
 	{#State 202
 		ACTIONS => {
+			'NOT' => 38,
 			"{" => 30,
 			'COMMA' => 258,
 			'LITERAL' => 256,
 			'IDENT' => 2,
 			"\"" => 60,
+			"(" => 53,
 			"\$" => 43,
 			"[" => 9,
 			'NUMBER' => 26,
@@ -2592,12 +2597,13 @@ $STATES = [
 		},
 		DEFAULT => -64,
 		GOTOS => {
+			'expr' => 257,
 			'sterm' => 68,
 			'item' => 254,
 			'param' => 255,
 			'node' => 23,
 			'ident' => 253,
-			'term' => 257,
+			'term' => 58,
 			'lterm' => 56
 		}
 	},
@@ -2657,10 +2663,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -2753,10 +2759,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -2874,11 +2880,13 @@ $STATES = [
 	},
 	{#State 216
 		ACTIONS => {
+			'NOT' => 38,
 			"{" => 30,
 			'COMMA' => 258,
 			'LITERAL' => 256,
 			'IDENT' => 2,
 			"\"" => 60,
+			"(" => 53,
 			"\$" => 43,
 			"[" => 9,
 			'NUMBER' => 26,
@@ -2887,12 +2895,13 @@ $STATES = [
 			"\${" => 37
 		},
 		GOTOS => {
+			'expr' => 257,
 			'sterm' => 68,
 			'item' => 254,
 			'param' => 255,
 			'node' => 23,
 			'ident' => 253,
-			'term' => 257,
+			'term' => 58,
 			'lterm' => 56
 		}
 	},
@@ -2923,10 +2932,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -3003,10 +3012,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -3143,10 +3152,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -3223,10 +3232,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -3340,20 +3349,20 @@ $STATES = [
 	},
 	{#State 238
 		ACTIONS => {
+			'DIV' => 159,
+			'BINOP' => 161,
 			"+" => 157,
 			'CAT' => 163,
 			'CMPOP' => 164,
-			'DIV' => 159,
 			'MOD' => 165,
-			"/" => 166,
-			'BINOP' => 161
+			"/" => 166
 		},
 		DEFAULT => -140
 	},
 	{#State 239
 		ACTIONS => {
-			"+" => 157,
 			'DIV' => 159,
+			"+" => 157,
 			'MOD' => 165,
 			"/" => 166
 		},
@@ -3361,34 +3370,34 @@ $STATES = [
 	},
 	{#State 240
 		ACTIONS => {
+			'DIV' => 159,
+			'BINOP' => 161,
 			"+" => 157,
 			'CAT' => 163,
 			'CMPOP' => 164,
-			'DIV' => 159,
 			'MOD' => 165,
-			"/" => 166,
-			'BINOP' => 161
+			"/" => 166
 		},
 		DEFAULT => -141
 	},
 	{#State 241
 		ACTIONS => {
+			'DIV' => 159,
+			'BINOP' => 161,
 			"+" => 157,
 			'CMPOP' => 164,
-			'DIV' => 159,
 			'MOD' => 165,
-			"/" => 166,
-			'BINOP' => 161
+			"/" => 166
 		},
 		DEFAULT => -139
 	},
 	{#State 242
 		ACTIONS => {
-			"+" => 157,
 			'DIV' => 159,
+			'BINOP' => 161,
+			"+" => 157,
 			'MOD' => 165,
-			"/" => 166,
-			'BINOP' => 161
+			"/" => 166
 		},
 		DEFAULT => -138
 	},
@@ -3438,8 +3447,7 @@ $STATES = [
 	},
 	{#State 249
 		ACTIONS => {
-			"{" => 30,
-			'COMMA' => 258,
+			'NOT' => 38,
 			'LITERAL' => 256,
 			'IDENT' => 2,
 			"\"" => 60,
@@ -3447,16 +3455,20 @@ $STATES = [
 			"[" => 9,
 			'NUMBER' => 26,
 			'REF' => 27,
+			"{" => 30,
+			'COMMA' => 258,
+			"(" => 53,
 			"\${" => 37
 		},
 		DEFAULT => -162,
 		GOTOS => {
+			'expr' => 257,
 			'sterm' => 68,
 			'item' => 254,
 			'param' => 255,
 			'node' => 23,
 			'ident' => 253,
-			'term' => 257,
+			'term' => 58,
 			'lterm' => 56
 		}
 	},
@@ -3468,11 +3480,13 @@ $STATES = [
 	},
 	{#State 252
 		ACTIONS => {
+			'NOT' => 38,
 			"{" => 30,
 			'COMMA' => 258,
 			'LITERAL' => 256,
 			'IDENT' => 2,
 			"\"" => 60,
+			"(" => 53,
 			"\$" => 43,
 			"[" => 9,
 			'NUMBER' => 26,
@@ -3481,12 +3495,13 @@ $STATES = [
 			"\${" => 37
 		},
 		GOTOS => {
+			'expr' => 257,
 			'sterm' => 68,
 			'item' => 254,
 			'param' => 255,
 			'node' => 23,
 			'ident' => 253,
-			'term' => 257,
+			'term' => 58,
 			'lterm' => 56
 		}
 	},
@@ -3514,6 +3529,18 @@ $STATES = [
 		DEFAULT => -112
 	},
 	{#State 257
+		ACTIONS => {
+			"+" => 157,
+			'CAT' => 163,
+			'CMPOP' => 164,
+			"?" => 158,
+			'DIV' => 159,
+			'MOD' => 165,
+			"/" => 166,
+			'AND' => 160,
+			'BINOP' => 161,
+			'OR' => 162
+		},
 		DEFAULT => -152
 	},
 	{#State 258
@@ -3593,10 +3620,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -3648,9 +3675,9 @@ $STATES = [
 	},
 	{#State 269
 		ACTIONS => {
-			'COMMA' => -96,
 			'IDENT' => -96,
-			")" => -96
+			")" => -96,
+			'COMMA' => -96
 		},
 		DEFAULT => -130
 	},
@@ -3700,10 +3727,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -3774,31 +3801,31 @@ $STATES = [
 	},
 	{#State 278
 		ACTIONS => {
+			'DIV' => 159,
+			'AND' => 160,
+			'BINOP' => 161,
+			'OR' => 162,
 			"+" => 157,
 			'CAT' => 163,
 			'CMPOP' => 164,
 			"?" => 158,
-			'DIV' => 159,
 			'MOD' => 165,
-			"/" => 166,
-			'AND' => 160,
-			'BINOP' => 161,
-			'OR' => 162
+			"/" => 166
 		},
 		DEFAULT => -124
 	},
 	{#State 279
 		ACTIONS => {
+			'DIV' => 159,
+			'AND' => 160,
+			'BINOP' => 161,
+			'OR' => 162,
 			"+" => 157,
 			'CAT' => 163,
 			'CMPOP' => 164,
 			"?" => 158,
-			'DIV' => 159,
 			'MOD' => 165,
-			"/" => 166,
-			'AND' => 160,
-			'BINOP' => 161,
-			'OR' => 162
+			"/" => 166
 		},
 		DEFAULT => -123
 	},
@@ -3829,10 +3856,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -3965,10 +3992,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -4106,10 +4133,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -4195,10 +4222,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -4320,13 +4347,13 @@ $STATES = [
 			'atomexpr' => 48,
 			'atomdir' => 12,
 			'mdir' => 328,
-			'sterm' => 68,
 			'filter' => 29,
+			'sterm' => 68,
 			'ident' => 149,
 			'perl' => 31,
 			'setlist' => 70,
-			'switch' => 34,
 			'try' => 35,
+			'switch' => 34,
 			'assign' => 19,
 			'directive' => 196,
 			'condition' => 73,
@@ -4338,11 +4365,13 @@ $STATES = [
 	},
 	{#State 305
 		ACTIONS => {
+			'NOT' => 38,
 			"{" => 30,
 			'COMMA' => 258,
 			'LITERAL' => 256,
 			'IDENT' => 2,
 			"\"" => 60,
+			"(" => 53,
 			"\$" => 43,
 			"[" => 9,
 			'NUMBER' => 26,
@@ -4351,22 +4380,25 @@ $STATES = [
 		},
 		DEFAULT => -62,
 		GOTOS => {
+			'expr' => 257,
 			'sterm' => 68,
 			'item' => 254,
 			'param' => 255,
 			'node' => 23,
 			'ident' => 253,
-			'term' => 257,
+			'term' => 58,
 			'lterm' => 56
 		}
 	},
 	{#State 306
 		ACTIONS => {
+			'NOT' => 38,
 			"{" => 30,
 			'COMMA' => 258,
 			'LITERAL' => 256,
 			'IDENT' => 2,
 			"\"" => 60,
+			"(" => 53,
 			"\$" => 43,
 			"[" => 9,
 			'NUMBER' => 26,
@@ -4375,12 +4407,13 @@ $STATES = [
 		},
 		DEFAULT => -63,
 		GOTOS => {
+			'expr' => 257,
 			'sterm' => 68,
 			'item' => 254,
 			'param' => 255,
 			'node' => 23,
 			'ident' => 253,
-			'term' => 257,
+			'term' => 58,
 			'lterm' => 56
 		}
 	},
@@ -4441,16 +4474,16 @@ $STATES = [
 	},
 	{#State 316
 		ACTIONS => {
+			'DIV' => 159,
+			'AND' => 160,
+			'BINOP' => 161,
+			'OR' => 162,
 			"+" => 157,
 			'CAT' => 163,
 			'CMPOP' => 164,
 			"?" => 158,
-			'DIV' => 159,
 			'MOD' => 165,
-			"/" => 166,
-			'AND' => 160,
-			'BINOP' => 161,
-			'OR' => 162
+			"/" => 166
 		},
 		DEFAULT => -143
 	},
@@ -4486,10 +4519,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -4602,10 +4635,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -4692,10 +4725,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -4790,10 +4823,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -4889,10 +4922,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -4995,10 +5028,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,
@@ -5075,10 +5108,10 @@ $STATES = [
 			'WRAPPER' => 55,
 			";" => -18,
 			'FOR' => 21,
-			'NEXT' => 22,
 			'LITERAL' => 57,
-			'TEXT' => 24,
+			'NEXT' => 22,
 			"\"" => 60,
+			'TEXT' => 24,
 			'PROCESS' => 61,
 			'RETURN' => 64,
 			'FILTER' => 25,

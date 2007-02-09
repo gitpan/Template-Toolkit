@@ -8,36 +8,35 @@
 #   can access the functionality of the Template Toolkit.
 #
 # AUTHOR
-#   Andy Wardley   <abw@kfs.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
 #   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 # 
 # REVISION
-#   $Id: Context.pm,v 2.96 2006/02/01 09:11:59 abw Exp $
+#   $Id: Context.pm,v 2.99 2006/05/30 17:01:28 abw Exp $
 #
 #============================================================================
 
 package Template::Context;
 
-require 5.004;
-
 use strict;
-use vars qw( $VERSION $DEBUG $AUTOLOAD $DEBUG_FORMAT );
-use base qw( Template::Base );
+use warnings;
+use base 'Template::Base';
 
 use Template::Base;
 use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.96 $ =~ /(\d+)\.(\d+)/);
-$DEBUG_FORMAT = "\n## \$file line \$line : [% \$text %] ##\n";
-
+our $VERSION = 2.98;
+our $DEBUG   = 0 unless defined $DEBUG;
+our $DEBUG_FORMAT = "\n## \$file line \$line : [% \$text %] ##\n";
+our $AUTOLOAD;
 
 #========================================================================
 #                     -----  PUBLIC METHODS -----
@@ -1551,13 +1550,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.96, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.98, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -3,7 +3,7 @@
 # TODO
 #
 # DESCRIPTION
-#   TODO list for the Template Toolkit version 2.15, containing
+#   TODO list for the Template Toolkit version 2.18, containing
 #   known bugs, limitations, planned enhancements, long term visions 
 #   and a few whacky ideas.
 #
@@ -11,7 +11,7 @@
 #   Andy Wardley   <abw@cpan.org>
 #
 #------------------------------------------------------------------------
-# $Id: TODO.tt2,v 1.19 2006/05/25 08:22:37 abw Exp $
+# $Id: TODO.tt2,v 1.20 2006/05/26 13:45:23 abw Exp $
 #========================================================================
 
 #------------------------------------------------------------------------

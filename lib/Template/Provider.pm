@@ -25,9 +25,8 @@
 #   * optional provider prefix (e.g. 'http:')
 #   * fold ABSOLUTE and RELATIVE test cases into one regex?
 #
-#----------------------------------------------------------------------------
-#
-# $Id: Provider.pm,v 2.88 2006/02/02 13:12:52 abw Exp $
+# REVISION
+#   $Id: Provider.pm,v 2.92 2006/08/01 17:35:43 abw Exp $
 #
 #============================================================================
 
@@ -49,7 +48,7 @@ use constant LOAD   => 3;
 use constant NEXT   => 4;
 use constant STAT   => 5;
 
-our $VERSION = sprintf("%d.%02d", q$Revision: 2.88 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 2.91;
 our $DEBUG   = 0 unless defined $DEBUG;
 our $ERROR   = '';
 
@@ -679,7 +678,7 @@ sub _load {
     }
     
     $data->{ path } = $data->{ name }
-        if $data and ref $data and ! defined $data->{ path };
+        if $data && ref $data eq 'HASH' && ! defined $data->{ path };
 
     return ($data, $error);
 }
@@ -719,8 +718,15 @@ sub _refresh {
                                            $slot->[ DATA ]->{ name });
             ($data, $error) = $self->_compile($data)
                 unless $error;
-            
-            unless ($error) {
+                                           
+            if ($error) {
+                # if the template failed to load/compile then we wipe out the 
+                # STAT entry.  This forces the provider to try and reload it
+                # each time instead of using the previously cached version 
+                # until $STAT_TTL is next up
+                $slot->[ STAT ] = 0;
+            }
+            else {
                 $slot->[ DATA ] = $data->{ data };
                 $slot->[ LOAD ] = $data->{ time };
             }
@@ -1509,13 +1515,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.88, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.91, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

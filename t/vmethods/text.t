@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: text.t,v 1.1 2006/02/02 11:35:07 abw Exp $
+# $Id: text.t,v 1.2 2006/05/30 15:53:52 abw Exp $
 #
 #========================================================================
 
@@ -93,7 +93,6 @@ The cat sat on the mat
 [% string.split.join('_') %]
 -- expect --
 The_cat_sat_on_the_mat
--- test --
 
 -- test --
 [% string.split(' ', 3).join('_') %]

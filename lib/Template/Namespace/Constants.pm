@@ -7,33 +7,31 @@
 #   on variables in a particular namespace.
 #
 # AUTHOR
-#   Andy Wardley   <abw@andywardley.com>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
 #   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Constants.pm,v 1.24 2006/01/30 20:05:39 abw Exp $
+#   $Id: Constants.pm,v 1.27 2006/05/30 17:01:33 abw Exp $
 #
 #============================================================================
 
 package Template::Namespace::Constants;
 
 use strict;
-use Template::Base;
+use warnings;
+use base 'Template::Base';
 use Template::Config;
 use Template::Directive;
 use Template::Exception;
 
-use base qw( Template::Base );
-use vars qw( $VERSION $DEBUG );
-
-$VERSION = sprintf("%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/);
-$DEBUG   = 0 unless defined $DEBUG;
+our $VERSION = 1.27;
+our $DEBUG   = 0 unless defined $DEBUG;
 
 
 sub _init {
@@ -179,13 +177,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-1.24, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+1.27, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

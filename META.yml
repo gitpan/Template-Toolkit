@@ -1,12 +1,13 @@
 --- #YAML:1.0
 name:                Template-Toolkit
-version:             2.17
+version:             2.18
 abstract:            comprehensive template processing system
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.31
 distribution_type:   module
 requires:     
     AppConfig:                     1.56
+    File::HomeDir:                 0.64
     File::Spec:                    0.8
     File::Temp:                    0.12
 meta-spec:

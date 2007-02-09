@@ -8,35 +8,32 @@
 #   ERROR recovery.
 #
 # AUTHOR
-#   Andy Wardley   <abw@kfs.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2000 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
 #   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 # 
-#----------------------------------------------------------------------------
-#
-# $Id: Service.pm,v 2.78 2006/01/30 20:04:55 abw Exp $
+# REVISION
+#   $Id: Service.pm,v 2.82 2006/05/30 17:01:29 abw Exp $
 #
 #============================================================================
 
 package Template::Service;
 
-require 5.004;
-
 use strict;
-use vars qw( $VERSION $DEBUG $ERROR );
-use base qw( Template::Base );
-use Template::Base;
+use warnings;
+use base 'Template::Base';
 use Template::Config;
 use Template::Exception;
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.78 $ =~ /(\d+)\.(\d+)/);
-$DEBUG   = 0 unless defined $DEBUG;
+our $VERSION = 2.80;
+our $DEBUG   = 0 unless defined $DEBUG;
+our $ERROR   = '';
 
 
 #========================================================================
@@ -128,7 +125,7 @@ sub process {
     delete $params->{ template };
 
     if ($error) {
-    #	$error = $error->as_string if ref $error;
+    #   $error = $error->as_string if ref $error;
         return $self->error($error);
     }
 
@@ -204,7 +201,7 @@ sub _recover {
     # point... unless a module like CGI::Carp messes around with the 
     # DIE handler. 
     return undef
-	unless (ref $$error);
+        unless UNIVERSAL::isa($$error, 'Template::Exception');
 
     # a 'stop' exception is thrown by [% STOP %] - we return the output
     # buffer stored in the exception object
@@ -212,7 +209,7 @@ sub _recover {
         if $$error->type() eq 'stop';
 
     my $handlers = $self->{ ERROR }
-        || return undef;					## RETURN
+        || return undef;                    ## RETURN
 
     if (ref $handlers eq 'HASH') {
         if ($hkey = $$error->select_handler(keys %$handlers)) {
@@ -224,7 +221,7 @@ sub _recover {
             $self->debug("using default error handler") if $self->{ DEBUG };
         }
         else {
-            return undef;					## RETURN
+            return undef;                   ## RETURN
         }
     }
     else {
@@ -235,7 +232,7 @@ sub _recover {
     eval { $handler = $context->template($handler) };
     if ($@) {
         $$error = $@;
-        return undef;						## RETURN
+        return undef;                       ## RETURN
     };
     
     $context->stash->set('error', $$error);
@@ -244,7 +241,7 @@ sub _recover {
     };
     if ($@) {
         $$error = $@;
-        return undef;						## RETURN
+        return undef;                       ## RETURN
     }
 
     return $output;
@@ -266,11 +263,11 @@ sub _dump {
 
     my $error = $self->{ ERROR };
     $error = join('', 
-		  "{\n",
-		  (map { "    $_ => $error->{ $_ }\n" }
-		   keys %$error),
-		  "}\n")
-	if ref $error;
+          "{\n",
+          (map { "    $_ => $error->{ $_ }\n" }
+           keys %$error),
+          "}\n")
+    if ref $error;
     
     local $" = ', ';
     return <<EOF;
@@ -749,13 +746,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.88, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.91, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

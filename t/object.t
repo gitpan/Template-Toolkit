@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: object.t,v 2.4 2003/07/24 16:16:52 abw Exp $
+# $Id: object.t,v 2.5 2006/05/26 13:46:26 abw Exp $
 #
 #========================================================================
 

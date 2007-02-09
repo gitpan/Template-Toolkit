@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t,v 2.9 2003/04/29 12:49:31 abw Exp $
+# $Id: foreach.t,v 2.10 2006/05/30 15:53:48 abw Exp $
 # 
 #========================================================================
 
@@ -58,20 +58,20 @@ my $params   = {
     'months' => sub { return \@months },
     'format' => \&format,
     'people' => [ 
-	{ id => 'abw', code => 'abw', name => 'Andy Wardley' },
-	{ id => 'aaz', code => 'zaz', name => 'Azbaz Azbaz Zazbazzer' },
-	{ id => 'bcd', code => 'dec', name => 'Binary Coded Decimal' },
-	{ id => 'efg', code => 'zzz', name => 'Extra Fine Grass' },
+    	{ id => 'abw', code => 'abw', name => 'Andy Wardley' },
+    	{ id => 'aaz', code => 'zaz', name => 'Azbaz Azbaz Zazbazzer' },
+    	{ id => 'bcd', code => 'dec', name => 'Binary Coded Decimal' },
+    	{ id => 'efg', code => 'zzz', name => 'Extra Fine Grass' },
     ],
     'sections' => {
-	one   => 'Section One',
-	two   => 'Section Two',
-	three => 'Section Three',
-	four  => 'Section Four',
+        one   => 'Section One',
+        two   => 'Section Two',
+        three => 'Section Three',
+        four  => 'Section Four',
     },
     nested => [
-	[ qw( a b c ) ],
-	[ qw( x y z ) ],
+               [ qw( a b c ) ],
+               [ qw( x y z ) ],
     ],
 };
 

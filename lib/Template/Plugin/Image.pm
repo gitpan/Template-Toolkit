@@ -13,25 +13,20 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Image.pm,v 1.18 2006/01/30 20:05:48 abw Exp $
+#   $Id: Image.pm,v 1.21 2006/05/30 17:01:35 abw Exp $
 #
 #============================================================================
 
 package Template::Plugin::Image;
 
-require 5.004;
-
 use strict;
+use warnings;
+use base 'Template::Plugin';
 use Template::Exception;
-use Template::Plugin;
 use File::Spec;
-#use Image::Info;
-#use Image::Size;
 
-use base qw( Template::Plugin );
-use vars qw( $VERSION $AUTOLOAD );
-
-$VERSION = sprintf("%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 1.21;
+our $AUTOLOAD;
 
 BEGIN {
     if (eval { require Image::Info; }) {
@@ -448,13 +443,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-1.18, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+1.21, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

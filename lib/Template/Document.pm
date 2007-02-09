@@ -17,23 +17,23 @@
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
-# 
-#----------------------------------------------------------------------------
 #
-# $Id: Document.pm,v 2.76 2006/01/30 20:04:49 abw Exp $
+# REVISION
+#   $Id: Document.pm,v 2.79 2006/05/30 17:01:28 abw Exp $
 #
 #============================================================================
 
 package Template::Document;
 
-require 5.004;
-
 use strict;
-use vars qw( $VERSION $ERROR $COMPERR $DEBUG $AUTOLOAD $UNICODE );
-use base qw( Template::Base );
+use warnings;
+use base 'Template::Base';
 use Template::Constants;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 2.76 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 2.79;
+our $DEBUG   = 0 unless defined $DEBUG;
+our $ERROR   = '';
+our ($COMPERR, $AUTOLOAD, $UNICODE);
 
 BEGIN {
     # UNICODE is supported in versions of Perl from 5.008 onwards
@@ -487,13 +487,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.76, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.79, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

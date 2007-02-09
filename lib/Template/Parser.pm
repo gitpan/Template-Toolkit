@@ -9,7 +9,7 @@
 #   on Francois Desarmenien's Parse::Yapp module.  Kudos to him.
 # 
 # AUTHOR
-#   Andy Wardley <abw@cpan.org>
+#   Andy Wardley <abw@wardley.org>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
@@ -30,7 +30,7 @@
 #      specified in the Perl README file.
 # 
 # REVISION
-#   $Id: Parser.pm,v 2.86 2006/05/25 11:43:39 abw Exp $
+#   $Id: Parser.pm,v 2.90 2006/08/01 17:35:43 abw Exp $
 #
 #============================================================================
 
@@ -50,7 +50,7 @@ use constant ACCEPT   => 1;
 use constant ERROR    => 2;
 use constant ABORT    => 3;
 
-our $VERSION = sprintf("%d.%02d", q$Revision: 2.86 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = 2.89;
 our $DEBUG   = 0 unless defined $DEBUG;
 our $ERROR   = '';
 
@@ -244,6 +244,7 @@ sub parse {
     # store for blocks defined in the template (see define_block())
     my $defblock = $self->{ DEFBLOCK } = { };
     my $metadata = $self->{ METADATA } = [ ];
+    $self->{ DEFBLOCKS } = [ ];
 
     $self->{ _ERROR } = '';
 
@@ -1466,15 +1467,15 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.86, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.89, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
  
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

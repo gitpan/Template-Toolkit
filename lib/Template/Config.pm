@@ -6,7 +6,7 @@
 #   Template Toolkit configuration module.
 #
 # AUTHOR
-#   Andy Wardley   <abw@cpan.org>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
 #   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
@@ -15,7 +15,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Config.pm,v 2.70 2006/02/01 09:12:40 abw Exp $
+#   $Id: Config.pm,v 2.74 2006/05/30 17:01:28 abw Exp $
 #
 #========================================================================
  
@@ -23,13 +23,13 @@ package Template::Config;
 
 use strict;
 use warnings;
-use base qw( Template::Base );
+use base 'Template::Base';
 use vars qw( $VERSION $DEBUG $ERROR $INSTDIR
              $PARSER $PROVIDER $PLUGINS $FILTERS $ITERATOR 
              $LATEX_PATH $PDFLATEX_PATH $DVIPS_PATH
              $STASH $SERVICE $CONTEXT $CONSTANTS @PRELOAD );
 
-$VERSION   = sprintf("%d.%02d", q$Revision: 2.70 $ =~ /(\d+)\.(\d+)/);
+$VERSION   = 2.74;
 $DEBUG     = 0 unless defined $DEBUG;
 $ERROR     = '';
 $CONTEXT   = 'Template::Context';
@@ -48,11 +48,6 @@ $CONSTANTS = 'Template::Namespace::Constants';
 # the following is set at installation time by the Makefile.PL 
 $INSTDIR  = '';
 
-# LaTeX executable paths set at installation time by the Makefile.PL
-# Empty strings cause the latex(pdf|dvi|ps) filters to throw an error.
-$LATEX_PATH    = '';
-$PDFLATEX_PATH = '';
-$DVIPS_PATH    = '';
 
 #========================================================================
 #                       --- CLASS METHODS ---
@@ -281,18 +276,6 @@ sub instdir {
     return $inst;
 }
 
-#------------------------------------------------------------------------
-# latexpaths()
-#
-# Returns a reference to a three element array:
-#    [latex_path,  pdf2latex_path, dvips_path]
-# These values are determined by Makefile.PL at installation time
-# and are used by the latex(pdf|dvi|ps) filters.
-#------------------------------------------------------------------------
-
-sub latexpaths {
-    return [$LATEX_PATH, $PDFLATEX_PATH, $DVIPS_PATH];
-}
 
 #========================================================================
 # This should probably be moved somewhere else in the long term, but for
@@ -438,13 +421,13 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.70, distributed as part of the
-Template Toolkit version 2.15, released on 26 May 2006.
+2.74, distributed as part of the
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

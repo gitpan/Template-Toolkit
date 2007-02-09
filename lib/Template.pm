@@ -7,28 +7,26 @@
 #   Toolkit.
 #
 # AUTHOR
-#   Andy Wardley   <abw@andywardley.com>
+#   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2002 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
 #   Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Template.pm,v 2.84 2006/02/01 11:55:27 abw Exp $
+#   $Id: Template.pm,v 2.87 2006/05/30 17:01:26 abw Exp $
 #
 #========================================================================
- 
-package Template;
-use base qw( Template::Base );
 
-require 5.005;
+package Template;
 
 use strict;
-use vars qw( $VERSION $AUTOLOAD $ERROR $DEBUG $BINMODE );
-use Template::Base;
+use warnings;
+use base 'Template::Base';
+
 use Template::Config;
 use Template::Constants;
 use Template::Provider;  
@@ -36,12 +34,11 @@ use Template::Service;
 use File::Basename;
 use File::Path;
 
-## This is the main version number for the Template Toolkit.
-## It is extracted by ExtUtils::MakeMaker and inserted in various places.
-$VERSION     = '2.17';
-$ERROR       = '';
-$DEBUG       = 0;
-$BINMODE     = 0 unless defined $BINMODE;
+our $VERSION = '2.18';
+our $ERROR   = '';
+our $DEBUG   = 0;
+our $BINMODE = 0 unless defined $BINMODE;
+our $AUTOLOAD;
 
 # preload all modules if we're running under mod_perl
 Template::Config->preload() if $ENV{ MOD_PERL };
@@ -946,12 +943,12 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-Template Toolkit version 2.15, released on 26 May 2006.
+Template Toolkit version 2.18, released on 09 February 2007.
 
 =head1 COPYRIGHT
 
-  Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-  Copyright (C) 1998-2002 Canon Research Centre Europe Ltd.
+  Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
+
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

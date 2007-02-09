@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vars.t,v 2.7 2006/05/14 07:05:14 abw Exp $
+# $Id: vars.t,v 2.9 2007/02/09 16:50:58 abw Exp $
 #
 #========================================================================
 
@@ -85,6 +85,7 @@ my $params = {
     '_private' => 123,
     '_hidden'  => 456,
     expose     => sub { undef $Template::Stash::PRIVATE },
+    add        => sub { $_[0] + $_[1] },
 
     # don't define a 'z' - DEFAULT test relies on its non-existance
 };
@@ -588,3 +589,33 @@ e: 3
 [% "x" _ "y" == "xy"      # should be ("x"_"y")=="xy", not "x"_("y"=="xy") %]
 -- expect --
 1
+
+-- test --
+[% add(3, 5) %]
+-- expect --
+8
+
+-- test --
+[% add(3 + 4, 5 + 7) %]
+-- expect --
+19
+
+-- test --
+[% a = 10;
+   b = 20;
+   c = 30;
+   add(add(a,b+1),c*3);
+%]
+-- expect --
+121
+
+-- test --
+[% a = 10;
+   b = 20;
+   c = 30;
+   d = 5;
+   e = 7;
+   add(a+5, b < 10 ? c : d + e*5);
+-%]
+-- expect --
+55

@@ -12,27 +12,15 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: fileline.t,v 1.5 2006/01/30 15:28:55 abw Exp $
+# $Id: fileline.t,v 1.8 2006/10/22 10:23:15 abw Exp $
 # 
 #========================================================================
 
-BEGIN {
-	if ( $^O eq 'MSWin32' ) {
-		print "1..0 # Skip Temporarily skipping on Win32\n";
-		exit(0);
-	}
-	if ( $^O eq 'darwin' ) {
-		print "1..0 # Skip Temporarily skipping on darwin\n";
-		exit(0);
-	}
-}
-
 use strict;
-use lib qw( ./lib ../lib );
+use lib qw( ./lib ../lib ./blib/lib ../blib/lib ./blib/arch ../blib/arch );
 use Template::Test;
 use Template::Parser;
 use Template::Directive;
-
 $^W = 1;
 
 #$Template::Parser::DEBUG = 1;
@@ -49,7 +37,17 @@ my $vars = {
     warning => sub { return $warning },
     file => sub {
         $warning =~ /at (.*?) line/;
-        return $1;
+        my $file = $1;
+        # The error returned includes a reference to the eval string
+        # e.g. ' ...at (eval 1) line 1'.  On some platforms (notably
+        # FreeBSD and variants like OSX), the (eval $n) part contains
+        # a different number, presumably because it has previously 
+        # performed additional string evals.  It's not important to 
+        # the success or failure of the test, so we delete it.
+        # Thanks to Andreas Koenig for identifying the problem.
+        # http://rt.cpan.org/Public/Bug/Display.html?id=20807
+        $file =~ s/eval\s+\d+/eval/;
+        return $file;
     },
     line => sub {
         $warning =~ /line (\d*)/;
@@ -61,8 +59,10 @@ my $vars = {
     },
 };
 
-my $tt2err = Template->new({ INCLUDE_PATH => $dir });
-my $tt2not = Template->new({ INCLUDE_PATH => $dir, FILE_INFO => 0 });
+my $tt2err = Template->new({ INCLUDE_PATH => $dir })
+    || die Template->error();
+my $tt2not = Template->new({ INCLUDE_PATH => $dir, FILE_INFO => 0 })
+    || die Template->error();
 
 test_expect(\*DATA, [ err => $tt2err, not => $tt2not ], $vars);
 
@@ -103,7 +103,7 @@ warn: [% warn %]
 -- expect --
 Hello
 World
-file: (eval 10)
+file: (eval)
 line: 10
 warn: Argument "" isn't numeric in addition (+)
 
