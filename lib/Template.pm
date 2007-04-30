@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Template.pm,v 2.87 2006/05/30 17:01:26 abw Exp $
+#   $Id: Template.pm 1056 2007-04-27 11:51:47Z abw $
 #
 #========================================================================
 
@@ -34,7 +34,7 @@ use Template::Service;
 use File::Basename;
 use File::Path;
 
-our $VERSION = '2.18';
+our $VERSION = '2.19';
 our $ERROR   = '';
 our $DEBUG   = 0;
 our $BINMODE = 0 unless defined $BINMODE;
@@ -190,7 +190,7 @@ sub _output {
         elsif (open(FP, ">$where")) { 
             # binmode option can be 1 or a specific layer, e.g. :utf8
             my $bm = $options->{ binmode  };
-            if ($bm && +$bm == 1) { 
+            if ($bm && $bm eq 1) { 
                 binmode FP;
             }
             elsif ($bm){ 
@@ -943,7 +943,7 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-Template Toolkit version 2.18, released on 09 February 2007.
+Template Toolkit version 2.19, released on 27 April 2007.
 
 =head1 COPYRIGHT
 

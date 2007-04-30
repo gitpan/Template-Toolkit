@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: autoform.t,v 2.6 2003/08/04 09:52:38 abw Exp $
+# $Id: autoform.t 724 2003-08-04 09:52:38Z abw $
 #
 #========================================================================
 

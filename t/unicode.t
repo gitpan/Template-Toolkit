@@ -9,7 +9,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: unicode.t,v 1.1 2004/07/23 12:49:25 abw Exp $
+# $Id: unicode.t 812 2004-07-23 12:49:25Z abw $
 # 
 #========================================================================
 

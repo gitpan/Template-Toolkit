@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Stash.pm,v 2.105 2006/05/30 17:01:29 abw Exp $
+#   $Id: Stash.pm 1055 2007-04-27 11:50:40Z abw $
 #
 #============================================================================
 
@@ -383,7 +383,7 @@ sub undefined {
 sub _dotop {
     my ($self, $root, $item, $args, $lvalue) = @_;
     my $rootref = ref $root;
-    my $atroot  = ($root eq $self);
+    my $atroot  = (ref $root && "$root" eq $self);   # stringify $root to prevent overload madness
     my ($value, @result);
 
     $args ||= [ ];
@@ -795,7 +795,7 @@ L<http://wardley.org/|http://wardley.org/>
 =head1 VERSION
 
 2.9, distributed as part of the
-Template Toolkit version 2.18, released on 09 February 2007.
+Template Toolkit version 2.19, released on 27 April 2007.
 
 =head1 COPYRIGHT
 

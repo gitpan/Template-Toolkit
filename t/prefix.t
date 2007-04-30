@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: prefix.t,v 2.3 2002/03/12 17:01:20 abw Exp $
+# $Id: prefix.t 335 2002-03-12 17:01:20Z abw $
 #
 #========================================================================
 

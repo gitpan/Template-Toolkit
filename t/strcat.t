@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: strcat.t,v 2.1 2001/11/29 16:44:37 abw Exp $
+# $Id: strcat.t 265 2001-11-29 16:44:37Z abw $
 #
 #========================================================================
 

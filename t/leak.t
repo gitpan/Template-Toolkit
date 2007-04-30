@@ -15,7 +15,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: leak.t,v 2.5 2006/01/29 11:37:00 abw Exp $
+# $Id: leak.t 873 2006-01-29 11:37:00Z abw $
 #
 #========================================================================
 

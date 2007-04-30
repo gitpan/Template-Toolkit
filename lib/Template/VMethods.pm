@@ -15,7 +15,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: VMethods.pm,v 1.1 2006/05/30 16:58:36 abw Exp $
+#   $Id: VMethods.pm 1021 2006-05-30 16:58:36Z abw $
 #
 #============================================================================
 

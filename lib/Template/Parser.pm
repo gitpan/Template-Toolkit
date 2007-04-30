@@ -30,7 +30,7 @@
 #      specified in the Perl README file.
 # 
 # REVISION
-#   $Id: Parser.pm,v 2.90 2006/08/01 17:35:43 abw Exp $
+#   $Id: Parser.pm 1055 2007-04-27 11:50:40Z abw $
 #
 #============================================================================
 
@@ -1468,7 +1468,7 @@ L<http://wardley.org/|http://wardley.org/>
 =head1 VERSION
 
 2.89, distributed as part of the
-Template Toolkit version 2.18, released on 09 February 2007.
+Template Toolkit version 2.19, released on 27 April 2007.
 
  
 

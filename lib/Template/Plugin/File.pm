@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: File.pm,v 2.71 2006/05/30 17:01:34 abw Exp $
+#   $Id: File.pm 1055 2007-04-27 11:50:40Z abw $
 #
 #============================================================================
 
@@ -401,7 +401,7 @@ for VIEW support, and made a few other minor tweaks.
 =head1 VERSION
 
 2.71, distributed as part of the
-Template Toolkit version 2.18, released on 09 February 2007.
+Template Toolkit version 2.19, released on 27 April 2007.
 
 
 

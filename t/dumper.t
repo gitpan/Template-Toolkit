@@ -9,7 +9,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: dumper.t,v 2.2 2001/11/29 16:55:09 abw Exp $
+# $Id: dumper.t 266 2001-11-29 16:55:09Z abw $
 #
 #========================================================================
 

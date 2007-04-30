@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: ref.t,v 2.2 2000/11/01 12:01:45 abw Exp $
+# $Id: ref.t 66 2000-11-01 12:01:45Z abw $
 #
 #========================================================================
 

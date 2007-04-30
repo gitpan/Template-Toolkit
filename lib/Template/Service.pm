@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 # 
 # REVISION
-#   $Id: Service.pm,v 2.82 2006/05/30 17:01:29 abw Exp $
+#   $Id: Service.pm 1055 2007-04-27 11:50:40Z abw $
 #
 #============================================================================
 
@@ -746,8 +746,8 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.91, distributed as part of the
-Template Toolkit version 2.18, released on 09 February 2007.
+2.93, distributed as part of the
+Template Toolkit version 2.19, released on 27 April 2007.
 
 =head1 COPYRIGHT
 

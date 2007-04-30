@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: directive.t,v 2.3 2001/03/22 12:23:14 abw Exp $
+# $Id: directive.t 84 2001-03-22 12:23:15Z abw $
 #
 #========================================================================
 

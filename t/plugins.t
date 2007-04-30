@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: plugins.t,v 2.4 2006/01/30 10:58:19 abw Exp $
+# $Id: plugins.t 885 2006-01-30 10:58:19Z abw $
 #
 #========================================================================
 

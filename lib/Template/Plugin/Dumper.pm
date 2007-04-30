@@ -16,7 +16,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Dumper.pm,v 2.70 2006/05/30 17:01:34 abw Exp $
+#   $Id: Dumper.pm 1055 2007-04-27 11:50:40Z abw $
 # 
 #==============================================================================
 
@@ -157,7 +157,7 @@ Simon Matthews E<lt>sam@knowledgepool.comE<gt>
 =head1 VERSION
 
 2.7, distributed as part of the
-Template Toolkit version 2.18, released on 09 February 2007.
+Template Toolkit version 2.19, released on 27 April 2007.
 
 
 

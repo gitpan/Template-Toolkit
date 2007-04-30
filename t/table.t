@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: table.t,v 2.4 2006/05/25 11:23:38 abw Exp $
+# $Id: table.t 996 2006-05-25 11:23:38Z abw $
 #
 #========================================================================
 

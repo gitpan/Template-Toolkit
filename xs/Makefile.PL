@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.7 2002/04/15 13:38:47 abw Exp $
+# $Id: Makefile.PL 351 2002-04-15 13:38:47Z abw $
 
 use lib qw( ../lib ./lib );
 use ExtUtils::MakeMaker;

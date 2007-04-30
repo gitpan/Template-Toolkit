@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: replace.t,v 1.2 2006/02/02 13:13:56 abw Exp $
+# $Id: replace.t 982 2006-02-02 13:13:56Z abw $
 #
 #========================================================================
 

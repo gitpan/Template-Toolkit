@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: image.t,v 1.5 2006/01/30 16:06:57 abw Exp $
+# $Id: image.t 918 2006-01-30 16:06:57Z abw $
 #
 #========================================================================
 

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: provider.t,v 2.9 2006/05/26 13:46:27 abw Exp $
+# $Id: provider.t 1064 2007-04-27 13:20:21Z abw $
 #
 #========================================================================
 
@@ -145,6 +145,35 @@ sub denied {
 #	if $DEBUG;
     return ($error == Template::Constants::STATUS_ERROR);
 }
+
+#------------------------------------------------------------------------
+# Test if can fetch from a file handle
+#------------------------------------------------------------------------
+
+my $ttglob = Template->new || die "$Template::ERROR\n";
+ok( $ttglob, 'Created template for glob test' );
+
+# Make sure we have a multi-line template file so $/ is tested.
+my $glob_file = abs_path($dir) . '/baz';
+
+open GLOBFILE, $glob_file or die "Failed to open '$absfile': $!";
+my $outstr = '';
+
+$ttglob->process( \*GLOBFILE, { a => 'globtest' }, \$outstr ) || die $ttglob->error;
+
+close GLOBFILE;
+
+my $glob_expect = "This is the baz file, a: globtest\n";
+
+my $ok = $glob_expect eq $outstr;
+
+ok( $ok, $ok ? 'Fetch template from file handle' : <<EOF );
+template text did not match template from file handle
+MATCH FAILED
+expect: $glob_expect
+output: $outstr
+EOF
+
 
 #------------------------------------------------------------------------
 # now we'll fold those providers up into some Template objects that

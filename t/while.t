@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: while.t,v 2.2 2001/06/25 10:55:07 abw Exp $
+# $Id: while.t 138 2001-06-25 10:55:07Z abw $
 #
 #========================================================================
 

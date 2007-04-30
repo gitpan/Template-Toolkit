@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: string.t,v 2.6 2006/01/30 16:42:35 abw Exp $
+# $Id: string.t 923 2006-01-30 16:42:35Z abw $
 #
 #========================================================================
 

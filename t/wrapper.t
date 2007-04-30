@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: wrapper.t,v 2.5 2006/01/05 10:13:51 abw Exp $
+# $Id: wrapper.t 862 2006-01-05 10:13:51Z abw $
 #
 #========================================================================
 

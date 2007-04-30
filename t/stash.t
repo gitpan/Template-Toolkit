@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t,v 2.18 2006/05/30 08:21:58 abw Exp $
+# $Id: stash.t 1016 2006-05-30 08:21:58Z abw $
 #
 #========================================================================
 

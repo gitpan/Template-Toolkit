@@ -26,7 +26,7 @@
 *
 *---------------------------------------------------------------------
 *
-* $Id: Stash.xs,v 1.21 2006/05/14 08:40:42 abw Exp $
+* $Id: Stash.xs 1047 2007-03-14 18:05:44Z abw $
 *
 *=====================================================================*/
 
@@ -48,7 +48,15 @@ extern "C" {
 #if 0
 #define debug(format, ...) fprintf (stderr, format, ## __VA_ARGS__)
 #else
+#ifdef WIN32
+#define debug(format)
+#else
 #define debug(format, ...)
+#endif
+#endif
+
+#ifdef WIN32
+#define snprintf _snprintf
 #endif
 
 #define TT_STASH_PKG	"Template::Stash::XS"
@@ -91,7 +99,7 @@ static SV*      hash_dot_values(pTHX_ HV*, AV*);
 static SV*      scalar_dot_defined(pTHX_ SV*, AV*);
 static SV*      scalar_dot_length(pTHX_ SV*, AV*);
 
-static char rcsid[]  = "$Id: Stash.xs,v 1.21 2006/05/14 08:40:42 abw Exp $";
+static char rcsid[]  = "$Id: Stash.xs 1047 2007-03-14 18:05:44Z abw $";
 
 #define THROW_SIZE 64
 static char throw_fmt[] = "Can't locate object method \"%s\" via package \"%s\"";
@@ -194,7 +202,9 @@ static SV *dotop(pTHX_ SV *root, SV *key_sv, AV *args, int flags) {
     SV *result = &PL_sv_undef;
     I32 atroot;
 
+#ifndef WIN32
     debug("dotop(%s)\n", item);
+#endif
 
     /* ignore _private or .private members */
     if (!root || looks_private(aTHX_ item))
@@ -306,7 +316,7 @@ static SV *dotop(pTHX_ SV *root, SV *key_sv, AV *args, int flags) {
             SV **svp;
             HV *stash = SvSTASH((SV *) SvRV(root));
             GV *gv;
-            char *error_string;
+            /* char *error_string; */
             result = NULL;
             
             if ((gv = gv_fetchmethod_autoload(stash, item, 1))) {
@@ -465,7 +475,9 @@ static SV *assign(pTHX_ SV *root, SV *key_sv, AV *args, SV *value, int flags) {
     char *key = SvPV(key_sv, key_len);
     char *key2 = SvPV(key_sv, key_len);     /* TMP DEBUG HACK */
 
+#ifndef WIN32
     debug("assign(%s)\n", key2);
+#endif
 
     if (!root || !key_len || looks_private(aTHX_ key)) {
         /* ignore _private or .private members */
@@ -497,9 +509,9 @@ static SV *assign(pTHX_ SV *root, SV *key_sv, AV *args, SV *value, int flags) {
                 return fold_results(aTHX_ count);		
             }
         }
-        
+
         /* drop-through if not an object or method not found  */
-        switch SvTYPE(SvRV(root)) {
+        switch (SvTYPE(SvRV(root))) {        
             
         case SVt_PVHV:				    /* HASH */
             roothv = (HV *) SvRV(root);
@@ -518,14 +530,8 @@ static SV *assign(pTHX_ SV *root, SV *key_sv, AV *args, SV *value, int flags) {
             
             /* avoid 'modification of read-only value' error */
             newsv = newSVsv(value); 
-            if (hv_store(roothv, key, key_len, newsv, 0)) {
-                /* invoke any tied magical STORE method */
-                debug(" - stored hash item\n");
-                SvSETMAGIC(newsv);
-            }
-            else {
-                printf(" - did not store hash item (hv_store() returned NULL)\n");
-            }
+            hv_store(roothv, key, key_len, newsv, 0);
+            SvSETMAGIC(newsv);
 
             return value;
             break;
@@ -946,7 +952,7 @@ static int get_debug_flag (pTHX_ SV *sv) {
 
 
 static int looks_private(pTHX_ const char *name) {
-    SV *priv;
+    /* SV *priv; */
 
     /* For now we hard-code the regex to match _private or .hidden
      * variables, but we do check to see if $Template::Stash::PRIVATE
@@ -991,7 +997,7 @@ static SV *list_dot_join(pTHX_ AV *list, AV *args) {
     STRLEN jlen;
     char *joint;
 
-    if ((svp = av_fetch(args, 0, FALSE)) != NULL) {
+    if (args && (svp = av_fetch(args, 0, FALSE)) != NULL) {
         joint = SvPV(*svp, jlen);
     } else {
         joint = " ";

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t,v 2.23 2006/05/30 15:53:48 abw Exp $
+# $Id: filter.t 1063 2007-04-27 13:19:05Z abw $
 #
 #========================================================================
 
@@ -903,6 +903,11 @@ my%3Cfile%20%26%20your%3Efile.html
 [% "foo@bar" FILTER uri %]
 -- expect --
 foo%40bar
+
+-- test --
+[% "foo@bar" FILTER url %]
+-- expect --
+foo@bar
 
 -- test --
 [% "my<file & your>file.html" | uri | html %]

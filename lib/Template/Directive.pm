@@ -24,7 +24,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Directive.pm,v 2.20 2006/05/30 17:01:28 abw Exp $
+#   $Id: Directive.pm 1022 2006-05-30 17:01:43Z abw $
 #
 #============================================================================
 

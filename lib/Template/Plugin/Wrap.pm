@@ -15,7 +15,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Wrap.pm,v 2.69 2006/05/30 17:01:36 abw Exp $
+#   $Id: Wrap.pm 1055 2007-04-27 11:50:40Z abw $
 #
 #============================================================================
 
@@ -142,7 +142,7 @@ others.
 =head1 VERSION
 
 2.68, distributed as part of the
-Template Toolkit version 2.18, released on 09 February 2007.
+Template Toolkit version 2.19, released on 27 April 2007.
 
 =head1 COPYRIGHT
 

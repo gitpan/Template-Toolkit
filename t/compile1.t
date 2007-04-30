@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile1.t,v 2.3 2000/12/03 10:04:12 abw Exp $
+# $Id: compile1.t 75 2000-12-03 10:04:12Z abw $
 #
 #========================================================================
 

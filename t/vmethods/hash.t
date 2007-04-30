@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: hash.t,v 1.2 2006/05/30 15:53:52 abw Exp $
+# $Id: hash.t 1020 2006-05-30 15:53:52Z abw $
 #
 #========================================================================
 

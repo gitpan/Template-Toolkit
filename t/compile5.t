@@ -14,7 +14,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile5.t,v 2.5 2002/04/19 09:19:53 abw Exp $
+# $Id: compile5.t 1064 2007-04-27 13:20:21Z abw $
 #
 #========================================================================
 
@@ -51,6 +51,8 @@ ok( -f $blam );
 # this way we can tell that the template was loaded from the compiled
 # version and not the source.
 
+my @foo_times = (stat $foo)[8,9];
+
 open(FOO, $foo) || die "$foo: $!\n";
 local $/ = undef;
 my $content = <FOO>;
@@ -61,8 +63,14 @@ open(FOO, "> $foo") || die "$foo: $!\n";
 print FOO $content;
 close(FOO);
 
+# and set back
+utime( @foo_times, $foo );
+
 
 # same again for 'blam'
+
+my @blam_times = (stat $blam)[8,9];
+
 open(BLAM, $blam) || die "$blam: $!\n";
 local $/ = undef;
 $content = <BLAM>;
@@ -71,6 +79,9 @@ $content =~ s/blam/wam-bam/g;
 open(BLAM, "> $blam") || die "$blam: $!\n";
 print BLAM $content;
 close(BLAM);
+
+# and set back
+utime( @blam_times, $blam );
 
 test_expect(\*DATA, $ttcfg, { root => abs_path($dir) } );
 

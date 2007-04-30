@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: chomp.t,v 2.3 2006/05/25 08:22:42 abw Exp $
+# $Id: chomp.t 995 2006-05-25 08:22:42Z abw $
 # 
 #========================================================================
 

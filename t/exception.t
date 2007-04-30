@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: exception.t,v 2.2 2003/01/28 13:32:27 mark Exp $
+# $Id: exception.t 608 2003-01-28 13:32:27Z mark $
 #
 #========================================================================
 

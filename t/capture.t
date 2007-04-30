@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: capture.t,v 2.1 2000/09/08 08:10:52 abw Exp $
+# $Id: capture.t 42 2000-09-08 08:10:53Z abw $
 #
 #========================================================================
 

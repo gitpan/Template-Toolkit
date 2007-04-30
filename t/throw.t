@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: throw.t,v 2.1 2000/12/15 16:05:06 abw Exp $
+# $Id: throw.t 80 2000-12-15 16:05:06Z abw $
 #
 #========================================================================
 

@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: text.t,v 1.2 2006/05/30 15:53:52 abw Exp $
+# $Id: text.t 1020 2006-05-30 15:53:52Z abw $
 #
 #========================================================================
 

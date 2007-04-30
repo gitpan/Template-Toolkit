@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: html.t,v 2.11 2002/11/01 14:35:12 mark Exp $
+# $Id: html.t 568 2002-11-01 14:35:12Z mark $
 #
 #========================================================================
 

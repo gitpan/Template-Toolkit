@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: debug.t,v 2.10 2002/08/15 16:43:05 abw Exp $
+# $Id: debug.t 535 2002-08-15 16:43:05Z abw $
 #
 #========================================================================
 

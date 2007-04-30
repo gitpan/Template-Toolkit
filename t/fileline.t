@@ -6,22 +6,26 @@
 #
 # Written by Andy Wardley <abw@wardley.org>
 #
-# Copyright (C) 1996-2003 Andy Wardley.  All Rights Reserved.
-# Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
+# Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
 #
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: fileline.t,v 1.8 2006/10/22 10:23:15 abw Exp $
-# 
 #========================================================================
 
+#BEGIN {
+#    if ( $^O eq 'MSWin32' ) {
+#        print "1..0 # Skip Temporarily skipping on Win32\n";
+#        exit(0);
+#    }
+#}
+
 use strict;
+use warnings;
 use lib qw( ./lib ../lib ./blib/lib ../blib/lib ./blib/arch ../blib/arch );
 use Template::Test;
 use Template::Parser;
 use Template::Directive;
-$^W = 1;
 
 #$Template::Parser::DEBUG = 1;
 #$Template::Directive::PRETTY = 1;
@@ -47,6 +51,9 @@ my $vars = {
         # Thanks to Andreas Koenig for identifying the problem.
         # http://rt.cpan.org/Public/Bug/Display.html?id=20807
         $file =~ s/eval\s+\d+/eval/;
+
+        # handle backslashes on Win32 by converting them to forward slashes
+        $file =~ s!\\!/!g if $^O eq 'MSWin32';
         return $file;
     },
     line => sub {

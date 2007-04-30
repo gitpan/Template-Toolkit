@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: iterator.t,v 2.2 2000/11/14 15:54:58 abw Exp $
+# $Id: iterator.t 70 2000-11-14 15:54:58Z abw $
 #
 #========================================================================
 

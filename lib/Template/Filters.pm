@@ -10,14 +10,10 @@
 #   by Leslie Michael Orchard <deus_x@nijacode.com>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2006 Andy Wardley.  All Rights Reserved.
-#   Copyright (C) 1998-2000 Canon Research Centre Europe Ltd.
+#   Copyright (C) 1996-2007 Andy Wardley.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
-#
-# REVISION
-#   $Id: Filters.pm,v 2.86 2006/05/30 17:01:28 abw Exp $
 #
 #============================================================================
 
@@ -29,7 +25,7 @@ use locale;
 use base 'Template::Base';
 use Template::Constants;
 
-our $VERSION = 2.85;
+our $VERSION = 2.86;
 
 
 #------------------------------------------------------------------------
@@ -50,6 +46,7 @@ our $FILTERS = {
     'html_para_break' => \&html_para_break,
     'html_line_break' => \&html_line_break,
     'uri'             => \&uri_filter,
+    'url'             => \&url_filter,
     'upper'           => sub { uc $_[0] },
     'lower'           => sub { lc $_[0] },
     'ucfirst'         => sub { ucfirst $_[0] },
@@ -261,7 +258,7 @@ sub _dump {
 #
 # URI escape a string.  This code is borrowed from Gisle Aas' URI::Escape
 # module, copyright 1995-2004.  See RFC2396 for details.
-#------------------------------------------------------------------------
+#-----------------------------------------------------------------------
 
 # cache of escaped characters
 our $URI_ESCAPES;
@@ -278,6 +275,31 @@ sub uri_filter {
     }
     
     $text =~ s/([^A-Za-z0-9\-_.!~*'()])/$URI_ESCAPES->{$1}/eg;
+    $text;
+}
+
+#------------------------------------------------------------------------
+# url_filter()                                           [% FILTER uri %]
+#
+# NOTE: the difference: url vs uri. 
+# This implements the old-style, non-strict behaviour of the uri filter 
+# which allows any valid URL characters to pass through so that 
+# http://example.com/blah.html does not get the ':' and '/' characters 
+# munged. 
+#-----------------------------------------------------------------------
+
+sub url_filter {
+    my $text = shift;
+
+    $URI_ESCAPES ||= {
+        map { ( chr($_), sprintf("%%%02X", $_) ) } (0..255),
+    };
+
+    if ($] >= 5.008) {
+        utf8::encode($text);
+    }
+    
+    $text =~ s/([^;\/?:@&=+\$,A-Za-z0-9\-_.!~*'()])/$URI_ESCAPES->{$1}/eg;
     $text;
 }
 
@@ -490,7 +512,6 @@ sub truncate_filter_factory {
         return substr($text, 0, $len - length($char)) . $char;
     }
 }
-
 
 
 #------------------------------------------------------------------------
@@ -995,11 +1016,60 @@ output:
 
     my%20file.html
 
-Note that as of TT version 2.16, the uri filter now correctly encodes
-all reserved characters.  This includes C<&>, C<@>, C</>, C<;>, C<:>,
-C<=>, C<+>, C<?> and C<$> which were not escaped (incorrectly) by the
-uri filter in versions 2.15 and earlier.  See RFC 2396 for further
-details.
+The uri filter correctly encodes all reserved characters, including
+C<&>, C<@>, C</>, C<;>, C<:>, C<=>, C<+>, C<?> and C<$>.  This filter
+is typically used to encode parameters in a URL that could otherwise
+be interpreted as part of the URL.  Here's an example:
+
+    [% path  = 'http://tt2.org/example'
+       back  = '/other?foo=bar&baz=bam' 
+       title = 'Earth: "Mostly Harmless"'
+    %]
+    <a href="[% path %]?back=[% back | uri %]&title=[% title | uri %]">
+
+The output generated is rather long so we'll show it split across two
+lines:
+
+    <a href="http://tt2.org/example?back=%2Fother%3Ffoo%3Dbar%26
+    baz%3Dbam&title=Earth%3A%20%22Mostly%20Harmless%22">
+
+Without the uri filter the output would look like this (also split across
+two lines). 
+
+    <a href="http://tt2.org/example?back=/other?foo=bar
+    &baz=bam&title=Earth: "Mostly Harmless"">
+
+In this rather contrived example we've manage to generate both a broken URL
+(the repeated C<?> is not allowed) and a broken HTML element (the href
+attribute is terminated by the first C<"> after C<Earth: > leaving C<Mostly
+Harmless"> dangling on the end of the tag in precisely the way that harmless
+things shouldn't dangle). So don't do that. Always use the uri filter to
+encode your URL parameters.
+
+However, you should B<not> use the uri filter to encode an entire URL.
+
+   <a href="[% page_url | uri %]">   # WRONG!
+
+This will incorrectly encode any reserved characters like C<:> and C</>
+and that's almost certainly not what you want in this case.  Instead
+you should use the B<url> (note spelling) filter for this purpose.
+
+   <a href="[% page_url | url %]">   # CORRECT
+
+Please note that this behaviour was changed in version 2.16 of the 
+Template Toolkit.  Prior to that, the uri filter did not encode the
+reserved characters, making it technically incorrect according to the
+RFC 2396 specification.  So we fixed it in 2.16 and provided the url
+filter to implement the old behaviour of not encoding reserved 
+characters.
+
+=head2 url
+
+The url filter is a less aggressive version of the uri filter.  It encodes
+any characters outside of the permitted URI character set (as defined by RFC 2396)
+into C<%nn> hex escapes.  However, unlike the uri filter, the url filter does 
+B<not> encode the reserved characters C<&>, C<@>, C</>, C<;>, C<:>, C<=>, C<+>, 
+C<?> and C<$>.  
 
 =head2 indent(pad)
 
@@ -1228,8 +1298,8 @@ L<http://wardley.org/|http://wardley.org/>
 
 =head1 VERSION
 
-2.85, distributed as part of the
-Template Toolkit version 2.18, released on 09 February 2007.
+2.86, distributed as part of the
+Template Toolkit version 2.19, released on 27 April 2007.
 
 =head1 COPYRIGHT
 
