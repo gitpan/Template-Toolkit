@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: switch.t 36 2000-08-10 14:57:00Z abw $
+# $Id: switch.t 1135 2008-08-06 13:56:50Z abw $
 #
 #========================================================================
 
@@ -275,3 +275,22 @@ before
 matched
 after
 
+
+#-----------------------------------------------------------------------
+# regex metacharacter quoting
+# http://rt.cpan.org/Ticket/Display.html?id=24183
+#-----------------------------------------------------------------------
+
+-- test --
+[% foo = 'a(b)'
+   bar = 'a(b)';
+
+   SWITCH foo;
+     CASE bar;
+       'ok';
+     CASE;
+       'not ok';
+   END 
+%]
+-- expect --
+ok

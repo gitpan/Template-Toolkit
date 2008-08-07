@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: constants.t 719 2003-07-24 16:16:52Z abw $
+# $Id: constants.t 1107 2008-01-22 22:58:24Z sean $
 #
 #========================================================================
 
@@ -76,9 +76,9 @@ die "parser error: ", $parser->error(), "\n"
 
 my $text = $parsed->{ BLOCK };
 
-ok( $text =~ /'Andy 'Da Man' Wardley'/, 'author folded' );
-ok( $text =~ /"back is " . '#ffffff'/, 'col.back folded' );
-ok( $text =~ /stash->get\(\['col', 0, 'user', 0\]\)/, 'col.user unfolded' );
+ok( scalar $text =~ /'Andy \\'Da Man\\' Wardley'/, 'author folded' );
+ok( scalar $text =~ /"back is " . '#ffffff'/, 'col.back folded' );
+ok( scalar $text =~ /stash->get\(\['col', 0, 'user', 0\]\)/, 'col.user unfolded' );
 
 
 $parser = Template::Parser->new({
@@ -100,9 +100,9 @@ die "parser error: ", $parser->error(), "\n"
 
 $text = $parsed->{ BLOCK };
 
-ok( $text =~ /'Andy 'Da Man' Wardley'/, 'author folded' );
-ok( $text =~ /"back is " . '#ffffff'/, 'col.back folded' );
-ok( $text =~ /stash->get\(\['col', 0, 'user', 0\]\)/, 'col.user unfolded' );
+ok( scalar $text =~ /'Andy \\'Da Man\\' Wardley'/, 'author folded' );
+ok( scalar $text =~ /"back is " . '#ffffff'/, 'col.back folded' );
+ok( scalar $text =~ /stash->get\(\['col', 0, 'user', 0\]\)/, 'col.user unfolded' );
 
 #------------------------------------------------------------------------
 

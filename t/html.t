@@ -11,16 +11,16 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: html.t 568 2002-11-01 14:35:12Z mark $
+# $Id: html.t 1135 2008-08-06 13:56:50Z abw $
 #
 #========================================================================
 
 use strict;
+use warnings;
 use lib qw( ./lib ../lib );
 use Template;
 use Template::Test;
 use Template::Plugin::HTML;
-$^W = 1;
 
 my $DEBUG = grep(/-d/, @ARGV);
 $Template::Test::DEBUG =  $DEBUG;
@@ -36,7 +36,7 @@ use constant HAS_Apache_Util   => eval { require Apache::Util;
 
 
 my $html = -d 'templates' ? 'templates/html' : '../templates/html';
-die "cannot grok templates/html directory\n" unless $html;
+die "cannot grok templates/html directory\n" unless -d $html;
 
 my $h = Template::Plugin::HTML->new('foo');
 ok( $h );

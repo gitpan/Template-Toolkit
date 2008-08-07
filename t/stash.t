@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash.t 1016 2006-05-30 08:21:58Z abw $
+# $Id: stash.t 1143 2008-08-07 12:40:05Z abw $
 #
 #========================================================================
 
@@ -46,6 +46,70 @@ sub goodbye {
     return $self->no_such_method();
 }
 
+#------------------------------------------------------------------------
+# Another object for tracking down a bug with DBIx::Class where TT is 
+# causing the numification operator to be called.  Matt S Trout suggests
+# we've got a truth test somewhere that should be a defined but that 
+# doesn't appear to be the case...
+# http://rt.cpan.org/Ticket/Display.html?id=23763
+#------------------------------------------------------------------------
+
+package Numbersome;
+
+use overload 
+    '""' => 'stringify',
+    '0+' => 'numify', 
+    fallback => 1;
+
+sub new {
+    my ($class, $text) = @_;
+    bless \$text, $class;
+}
+
+sub numify {
+    my $self = shift;
+    return "FAIL: numified $$self";
+}
+
+sub stringify {
+    my $self = shift;
+    return "PASS: stringified $$self";
+}
+
+sub things {
+    return [qw( foo bar baz )];
+}
+
+package GetNumbersome;
+
+sub new {
+    my ($class, $text) = @_;
+    bless { }, $class;
+}
+
+sub num {
+    Numbersome->new("from GetNumbersome");
+}
+
+#-----------------------------------------------------------------------
+# another object without overloaded comparison.
+# http://rt.cpan.org/Ticket/Display.html?id=24044
+#-----------------------------------------------------------------------
+
+package CmpOverloadObject;
+
+use overload ('cmp' => 'compare_overload', '<=>', 'compare_overload');
+
+sub new { bless {}, shift };
+
+sub hello {
+    return "Hello";
+}
+
+sub compare_overload {
+    die "Mayhem!";
+}
+
 package main;
     
 
@@ -66,8 +130,12 @@ my $data = {
     obj => bless({
         name => 'an object',
     }, 'AnObject'),
+    bop => sub { return ( bless ({ name => 'an object' }, 'AnObject') ) }, 
     hashobj => bless({ planet => 'World' }, 'HashObject'),
     listobj => bless([10, 20, 30], 'ListObject'),
+    num     => Numbersome->new("Numbersome"),
+    getnum  => GetNumbersome->new,
+    cmp_ol  => CmpOverloadObject->new(),
     clean   => sub {
         my $error = shift;
         $error =~ s/(\s*\(.*?\))?\s+at.*$//;
@@ -88,6 +156,10 @@ match( $stash->get('baz(50).biz'), '<undef>' );   # args are ignored
 
 $stash->set( 'bar.buz' => 100 );
 match( $stash->get('bar.buz'), 100 );
+
+# test the dotop() method
+match( $stash->dotop({ foo => 10 }, 'foo'), 10 );
+
 
 my $ttlist = [
     'default' => Template->new(),
@@ -245,6 +317,11 @@ name
 an object
 
 -- test --
+[% bop.first.name %]
+-- expect --
+an object
+
+-- test --
 [% listobj.0 %] / [% listobj.first %]
 -- expect --
 10 / 10
@@ -264,6 +341,23 @@ an object
 -- expect --
 ==
 
+-- test --
+[% foo = { "one" = "bar" "" = "empty" } -%]
+foo is { [% FOREACH k IN foo.keys.sort %]"[% k %]" = "[% foo.$k %]" [% END %]}
+setting foo.one to baz
+[% fookey = "one" foo.$fookey = "baz" -%]
+foo is { [% FOREACH k IN foo.keys.sort %]"[% k %]" = "[% foo.$k %]" [% END %]}
+setting foo."" to quux
+[% fookey = "" foo.$fookey = "full" -%]
+foo is { [% FOREACH k IN foo.keys.sort %]"[% k %]" = "[% foo.$k %]" [% END %]}
+--expect --
+foo is { "" = "empty" "one" = "bar" }
+setting foo.one to baz
+foo is { "" = "empty" "one" = "baz" }
+setting foo."" to quux
+foo is { "" = "full" "one" = "baz" }
+
+
 # test Dave Howorth's patch (v2.15) which makes the stash more strict
 # about what it considers to be a missing method error
 
@@ -276,3 +370,35 @@ Hello World
 [% TRY; hashobj.goodbye; CATCH; "ERROR: "; clean(error); END %]
 -- expect --
 ERROR: undef error - Can't locate object method "no_such_method" via package "HashObject"
+
+
+#-----------------------------------------------------------------------
+# try and pin down the numification bug
+#-----------------------------------------------------------------------
+
+-- test --
+[% FOREACH item IN num.things -%]
+* [% item %]
+[% END -%]
+-- expect --
+* foo
+* bar
+* baz
+
+-- test --
+[% num %]
+-- expect --
+PASS: stringified Numbersome
+
+-- test --
+[% getnum.num %]
+-- expect --
+PASS: stringified from GetNumbersome
+
+
+# Exercise the object with the funky overloaded comparison
+
+-- test --
+[% cmp_ol.hello %]
+-- expect --
+Hello

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stash-xs.t 1017 2006-05-30 08:23:30Z abw $
+# $Id: stash-xs.t 1143 2008-08-07 12:40:05Z abw $
 #
 #========================================================================
 
@@ -59,6 +59,26 @@ sub now_is_the_time_to_test_a_very_long_method_to_see_what_happens {
     return $self->this_method_does_not_exist();
 }
 
+#-----------------------------------------------------------------------
+# another object without overloaded comparison.
+# http://rt.cpan.org/Ticket/Display.html?id=24044
+#-----------------------------------------------------------------------
+
+package CmpOverloadObject;
+
+use overload ('cmp' => 'compare_overload', '<=>', 'compare_overload');
+
+sub new { bless {}, shift };
+
+sub hello {
+    return "Hello";
+}
+
+sub compare_overload {
+    die "Mayhem!";
+}
+
+
 
 package main;
 
@@ -78,8 +98,10 @@ my $data = {
     obj => bless({
         name => 'an object',
     }, 'AnObject'),
+    bop => sub { return ( bless ({ name => 'an object' }, 'AnObject') ) }, 
     listobj => bless([10, 20, 30], 'ListObject'),
     hashobj => bless({ planet => 'World' }, 'HashObject'),
+    cmp_ol  => CmpOverloadObject->new(),
     clean   => sub {
         my $error = shift;
         $error =~ s/(\s*\(.*?\))?\s+at.*$//;
@@ -102,6 +124,9 @@ match( $stash->get('baz(50).biz'), '<undef>' );   # args are ignored
 
 $stash->set( 'bar.buz' => 100 );
 match( $stash->get('bar.buz'), 100 );
+
+# test the dotop() method
+match( $stash->dotop({ foo => 10 }, 'foo'), 10 );
 
 my $stash_dbg = Template::Stash::XS->new({ %$data, _DEBUG => 1 });
 
@@ -274,6 +299,11 @@ an object
 an object
 
 -- test --
+[% bop.first.name %]
+-- expect --
+an object
+
+-- test --
 [% obj.items.first %]
 -- expect --
 name
@@ -344,3 +374,26 @@ ERROR: undef error - Can't locate object method "no_such_method" via package "Ha
 -- expect --
 ERROR: undef error - Can't locate object method "this_method_does_not_exist" via package "HashObject"
 
+-- test --
+[% foo = { "one" = "bar" "" = "empty" } -%]
+foo is { [% FOREACH k IN foo.keys.sort %]"[% k %]" = "[% foo.$k %]" [% END %]}
+setting foo.one to baz
+[% fookey = "one" foo.$fookey = "baz" -%]
+foo is { [% FOREACH k IN foo.keys.sort %]"[% k %]" = "[% foo.$k %]" [% END %]}
+setting foo."" to quux
+[% fookey = "" foo.$fookey = "full" -%]
+foo is { [% FOREACH k IN foo.keys.sort %]"[% k %]" = "[% foo.$k %]" [% END %]}
+--expect --
+foo is { "" = "empty" "one" = "bar" }
+setting foo.one to baz
+foo is { "" = "empty" "one" = "baz" }
+setting foo."" to quux
+foo is { "" = "full" "one" = "baz" }
+
+
+# Exercise the object with the funky overloaded comparison
+
+-- test --
+[% cmp_ol.hello %]
+-- expect --
+Hello

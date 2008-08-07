@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile2.t 1064 2007-04-27 13:20:21Z abw $
+# $Id: compile2.t 1107 2008-01-22 22:58:24Z sean $
 #
 #========================================================================
 
@@ -40,7 +40,7 @@ ok( -f "$dir/complex.ttc" );
 my $out = '';
 my $tt = Template->new($ttcfg);
 ok( $tt->process('baz', { showname => 1 }, \$out) );
-ok( $out =~ /^name: baz/ );
+ok( scalar $out =~ /^name: baz/ );
 
 # we're going to hack on the foo.ttc file to change some key text.
 # this way we can tell that the template was loaded from the compiled

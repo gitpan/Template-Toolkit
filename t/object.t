@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: object.t 1002 2006-05-26 13:46:27Z abw $
+# $Id: object.t 1143 2008-08-07 12:40:05Z abw $
 #
 #========================================================================
 
@@ -130,12 +130,61 @@ sub stringify {
     return "stringified '$$self'";
 }
 
+#------------------------------------------------------------------------
+# Another object for tracking down a bug with DBIx::Class where TT is 
+# causing the numification operator to be called.  Matt S Trout suggests
+# we've got a truth test somewhere that should be a defined but that 
+# doesn't appear to be the case...
+# http://rt.cpan.org/Ticket/Display.html?id=23763
+#------------------------------------------------------------------------
+
+package Numbersome;
+
+use overload 
+    '""' => 'stringify',
+    '0+' => 'numify', 
+    fallback => 1;
+
+sub new {
+    my ($class, $text) = @_;
+    bless \$text, $class;
+}
+
+sub numify {
+    my $self = shift;
+    return "FAIL: numified $$self";
+}
+
+sub stringify {
+    my $self = shift;
+    return "PASS: stringified $$self";
+}
+
+sub things {
+    return [qw( foo bar baz )];
+}
+
+package GetNumbersome;
+
+sub new {
+    my ($class, $text) = @_;
+    bless { }, $class;
+}
+
+sub num {
+    Numbersome->new("from GetNumbersome");
+}
 
 #------------------------------------------------------------------------
 # main 
 #------------------------------------------------------------------------
 
 package main;
+
+sub new {
+    my ($class, $text) = @_;
+    bless \$text, $class;
+}
 
 my $objconf = { 
     'a' => 'alpha',
@@ -146,7 +195,9 @@ my $objconf = {
 my $replace = {
     thing  => TestObject->new($objconf),
     string => Stringy->new('Test String'),
-    t1 => T1->new(a => 10),
+    t1     => T1->new(a => 10),
+    num    => Numbersome->new("Numbersome"),
+    getnum => GetNumbersome->new,
     %{ callsign() },
 };
 
@@ -293,3 +344,28 @@ foo stringified 'Test String' bar
 -- expect --
 .undef error - barfed up
 .
+
+
+#-----------------------------------------------------------------------
+# try and pin down the numification bug
+#-----------------------------------------------------------------------
+
+-- test --
+[% FOREACH item IN num.things -%]
+* [% item %]
+[% END -%]
+-- expect --
+* foo
+* bar
+* baz
+
+-- test --
+[% num %]
+-- expect --
+PASS: stringified Numbersome
+
+-- test --
+[% getnum.num %]
+-- expect --
+PASS: stringified from GetNumbersome
+

@@ -27,15 +27,14 @@ if ($^O eq 'MSWin32') {  # any others also?
     $FLAVOUR = 'Win32';
     $PREFIX  = 'C:/Program Files/Template Toolkit 2';
     $IMAGES  = '/tt2/images';
-    $MAKE    = 'dmake';
 }
 else {
     $WIN32   = 0;
     $FLAVOUR = 'Unix';
     $PREFIX  = '/usr/local/tt2';
     $IMAGES  = '/tt2/images';
-    $MAKE    = 'make';
 }
+$MAKE=$Config{'make'}; 
 
 
 # read command line args putting TT_* into $ttconfig and
@@ -61,15 +60,8 @@ if (exists $ttconfig{ TT_HELP }) {
 The following options can be specified as command line 
 arguments to 'perl Makefile.PL'.  e.g.
 
-  perl Makefile.PL TT_PREFIX=/my/tt2/dir TT_ACCEPT=y
+  perl Makefile.PL TT_XS_DEFAULT=y TT_ACCEPT=y
 
-  TT_PREFIX      installation prefix     ($PREFIX)
-  TT_IMAGES      images URL              (/tt2/images)
-  TT_DOCS        build HTML docs         (y)
-  TT_SPLASH      use Splash! for docs    (y)
-  TT_THEME       Splash! theme           (default)
-  TT_EXAMPLES    build HTML examples     (y)
-  TT_EXTRAS      install optional extras (y)
   TT_XS_ENABLE   Enable XS Stash         (y)
   TT_XS_DEFAULT  Use XS Stash by default (y)
   TT_QUIET       no messages	         (n)
@@ -90,12 +82,12 @@ EOF
 # in this script, here defaulted to sensible values
 
 $TT_VERSION       = $Template::VERSION;
-$TT_PREFIX        = $PREFIX;
+$TT_PREFIX        = '';     # $PREFIX;
 $TT_IMAGES        = $IMAGES;
-$TT_BUILD_DOCS    = 'y';
-$TT_SPLASH_DOCS   = 'y';
-$TT_EXAMPLES      = 'y';
-$TT_EXTRAS        = 'y';
+$TT_BUILD_DOCS    = 'n';
+$TT_SPLASH_DOCS   = 'n';
+$TT_EXAMPLES      = 'n';
+$TT_EXTRAS        = 'n';
 $TT_SPLASH_THEME  = 'default';
 $TT_XS_ENABLE     = 'y';
 $TT_XS_DEFAULT    = 'y';
@@ -167,11 +159,11 @@ welcome_message();
 version_check();
 mandatory_modules();
 optional_stash_xs();
-optional_extras();
-splash_images();
-html_docs();
-html_docstyle();
-html_examples();
+#optional_extras();
+#splash_images();
+#html_docs();
+#html_docstyle();
+#html_examples();
 write_defaults();
 
 print "\n";
@@ -245,7 +237,7 @@ my %opts = (
         'SUFFIX'   => 'gz',
     },
     'test'         => {
-        TESTS      => 't/*.t t/vmethods/*.t',
+        'TESTS'    => join(' ', map { glob } qw( t/*.t t/vmethods/*.t )),
     },
     'clean'        => {
         'FILES'        => join(' ', qw( docs/ttree.cfg 
@@ -259,11 +251,6 @@ my %opts = (
     },
 );
 
-# On mac, make sure we have an unbroken File::HomeDir
-if ( $^O eq 'darwin' ) {
-       $opts{PREREQ_PM}->{'File::HomeDir'} = '0.64';
-}
-
 push @{ $opts{'DIR'} }, 'xs' if $TT_XS_ENABLE;
 
 # Handle dev versions in our check
@@ -275,6 +262,9 @@ if ($mmv >= 5.43) {
     $opts{ ABSTRACT } = 'comprehensive template processing system',
 }
 
+if ($ExtUtils::MakeMaker::VERSION ge '6.30_00') {
+    $opts{'LICENSE' } = 'perl';
+} 
 
 WriteMakefile( %opts );
 
@@ -284,20 +274,6 @@ Configuration complete.  You should now run '$MAKE', '$MAKE test' and
 then '$MAKE install'.   See the README file for further information.
 EOF
 
-message(<<EOF) if $TT_PREFIX;
-
-
-Installation Notes
-------------------
-
-Please note that the installation of the optional components and
-building of the HTML documentation is performed at the "make install"
-stage as the effective user at that time.  This implies that this user
-must have sufficient permission to install into the specified
-directory and that all created directories and files will be owned by
-them.
-
-EOF
 
 #========================================================================
 

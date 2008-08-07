@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: vars.t 1034 2007-02-09 16:50:58Z abw $
+# $Id: vars.t 1135 2008-08-06 13:56:50Z abw $
 #
 #========================================================================
 
@@ -22,7 +22,7 @@ use lib qw( ./lib ../lib );
 use Template::Test;
 use Template::Stash;
 use Template::Constants qw( :status );
-
+use Template::Directive;
 use Template::Parser;
 $Template::Test::DEBUG = 0;
 $Template::Parser::DEBUG = 0;
@@ -91,7 +91,7 @@ my $params = {
 };
 
 my $tt = [ default => Template->new({ INTERPOLATE => 1, ANYCASE => 1 }),
-       notcase => Template->new({ INTERPOLATE => 1, ANYCASE => 0 }) ];
+           notcase => Template->new({ INTERPOLATE => 1, ANYCASE => 0 }) ];
 
 test_expect(\*DATA, $tt, $params);
 
@@ -619,3 +619,4 @@ e: 3
 -%]
 -- expect --
 55
+

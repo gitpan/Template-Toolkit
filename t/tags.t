@@ -13,12 +13,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: tags.t 78 2000-12-15 16:01:11Z abw $
+# $Id: tags.t 1135 2008-08-06 13:56:50Z abw $
 # 
 #========================================================================
 
 use strict;
-use lib qw( ../lib );
+use lib qw( ./lib ../lib ./blib/lib ./blib/arch );
 use Template::Test;
 $^W = 1;
 
@@ -30,6 +30,8 @@ my $params = {
     'c'  => 'charlie',
     'd'  => 'delta',
     'e'  => 'echo',
+    tags  => 'my tags',
+    flags => 'my flags',
 };
 
 my $tt = [
@@ -212,3 +214,20 @@ a: 10
 a is [* a *]
 -- expect --
 a is 10
+
+-- test --
+[% tags; flags %]
+[* a = 10 -*]
+a is [* a *]
+-- expect --
+my tagsmy flags
+[* a = 10 -*]
+a is [* a *]
+
+-- test --
+flags: [% flags | html %]
+tags: [% tags | html %]
+-- expect --
+flags: my flags
+tags: my tags
+
