@@ -65,7 +65,7 @@
 #
 #----------------------------------------------------------------------------
 #
-# $Id: Context.pm 1055 2007-04-27 11:50:40Z abw $
+# $Id: Context.pm 1159 2008-08-08 13:12:47Z abw $
 #
 #============================================================================
 
@@ -676,18 +676,6 @@ sub _dump {
 1;
 
 __END__
-
-
-#------------------------------------------------------------------------
-# IMPORTANT NOTE
-#   This documentation is generated automatically from source
-#   templates.  Any changes you make here may be lost.
-# 
-#   The 'docsrc' documentation source bundle is available for download
-#   from http://www.template-toolkit.org/docs.html and contains all
-#   the source templates, XML files, scripts, etc., from which the
-#   documentation for the Template Toolkit is built.
-#------------------------------------------------------------------------
 
 =head1 NAME
 
