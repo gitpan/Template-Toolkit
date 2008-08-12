@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: math.t 600 2002-11-07 15:04:43Z darren $
+# $Id: math.t 1163 2008-08-12 08:34:32Z abw $
 #
 #========================================================================
 
@@ -34,17 +34,17 @@ __DATA__
 1
 
 -- test --
-[% USE Math; Math.atan2(42, 42) %]
+[% USE Math; Math.atan2(42, 42).substr(0,19) %]
 -- expect --
 0.785398163397448
 
 -- test --
-[% USE Math; Math.cos(2) %]
+[% USE Math; Math.cos(2).substr(0,18) %]
 -- expect --
 -0.416146836547142
 
 -- test --
-[% USE Math; Math.exp(6) %]
+[% USE Math; Math.exp(6).substr(0,16) %]
 -- expect --
 403.428793492735
 
@@ -59,9 +59,9 @@ __DATA__
 9
 
 -- test --
-[% USE Math; Math.log(42) %]
+[% USE Math; Math.log(42).substr(0,15) %]
 -- expect --
-3.73766961828337
+3.7376696182833
 
 -- test --
 [% USE Math; Math.oct(72) %]
@@ -69,7 +69,7 @@ __DATA__
 58
 
 -- test --
-[% USE Math; Math.sin(0.304) %]
+[% USE Math; Math.sin(0.304).substr(0,17) %]
 -- expect --
 0.299339178269093
 

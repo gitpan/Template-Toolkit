@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Template-Toolkit
-version:             2.19_02
+version:             2.19_03
 abstract:            comprehensive template processing system
 license:             perl
 author:              
