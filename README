@@ -3,7 +3,7 @@
 
                               Version 2.20
 
-                             7th August 2008
+                            13th August 2008
 
         Copyright (C) 1996-2008 Andy Wardley.  All Rights Reserved
 
@@ -11,41 +11,17 @@
              modify it under the same terms as Perl itself.
 
 
-QUICK START (see INSTALL for further details)
------------
+INSTALLATION
+------------
 
-The latest version of the Template Toolkit can be retrieved from:
+If you have the CPAN module installed then you can install the Template
+Toolkit from the command line like so:
 
-    http://www.cpan.org/modules/by-module/Template/
+    $ cpan Template
 
-Fetch and install AppConfig 1.56 if you don't already have it installed.
-Available from CPAN in:
-
-    http://www.cpan.org/authors/Andy_Wardley/
-
-To install the Template Toolkit:
-
-    tar zxf Template-Toolkit-2.20.tar.gz
-    cd Template-Toolkit-2.20
-    perl Makefile.PL
-    make
-    make test
-    make install    
-
-The Makefile.PL will prompt for additional configuration options,
-including the installation of optional template libraries, HTML
-documentation and examples.  You can safely answer 'n' to all of these
-questions for a quick and basic installation.  
-
-If you're running ActivePerl on a Win32 platform then you can use the
-Perl Package Manager (PPM) to install the Template Toolkit.  Chris
-Winters maintains a repository of pre-compiled PPM packages which contains
-the Template Toolkit, AppConfig and others.  For further information, see:
-
-    http://openinteract.sourceforge.net/
-
-
-For further details on installation, see the separate INSTALL file.
+Please see the separate INSTALL file for further information on installing
+the Template Toolkit, including what to do if you don't have the CPAN 
+module installed, and/or installation on MS Windows.
 
 
 DESCRIPTION
@@ -195,9 +171,9 @@ planned enhancements and possible new features for future versions.
 
 The 'INSTALL' file covers the configuration and installation process.
 
-The rest of the documentation is distributed in Pod and HTML formats.
-The Pod pages are installed when you 'make install' and can be viewed
-using 'perldoc', e.g.
+The rest of the documentation is distributed in Pod format. The Pod pages 
+are installed when you 'make install' and can be viewed using 'perldoc', 
+e.g.
 
     perldoc Template
 
@@ -208,11 +184,9 @@ converted to manpages suring the 'make install'.  Thus, you can also:
 
 (the man pages shouldn't have any problems relating to older versions)
 
-The HTML documentation and the means to rebuild it can be found in the
-'docs' sub-directory of the installation root.  If you opted to
-have it built at installation time, then there should be an 'html'
-directory within it containing the generated HTML built from the
-source templates.
+The documentation is also available in HTML format at the TT web site:
+
+    http://tt2.org/docs/
 
 The documentation is now split into several sections.  The 'Template'
 page is now much shorter, containing information relating to the
@@ -300,7 +274,7 @@ To subscribe to the mailing list, send an email to:
 with the message 'subscribe' in the body.  You can also use the web 
 interface to subscribe or browse the archives:
 
-    http://www.template-toolkit.org/mailman/listinfo/templates
+    http://mail.template-toolkit.org/mailman/listinfo/templates
 
 A low-volume, moderated mailing list exists for announcements about new
 releases of the Template Toolkit and related products.  To subscribe, send
@@ -311,7 +285,7 @@ an email to:
 with the message 'subscribe' in the body.  A web interface also exists
 for subscription and browsing the archives:
 
-    http://www.template-toolkit.org/mailman/listinfo/templates-announce
+    http://mail.template-toolkit.org/mailman/listinfo/templates-announce
 
 For information about commercial support and consultancy for the Template 
 Toolkit, please contact the author.

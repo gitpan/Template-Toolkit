@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: math.t 1163 2008-08-12 08:34:32Z abw $
+# $Id: math.t 1165 2008-08-13 17:15:53Z abw $
 #
 #========================================================================
 
@@ -34,7 +34,7 @@ __DATA__
 1
 
 -- test --
-[% USE Math; Math.atan2(42, 42).substr(0,19) %]
+[% USE Math; Math.atan2(42, 42).substr(0,17) %]
 -- expect --
 0.785398163397448
 
