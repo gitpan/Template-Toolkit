@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t 1063 2007-04-27 13:19:05Z abw $
+# $Id: filter.t 1188 2009-04-07 09:28:51Z abw $
 #
 #========================================================================
 
@@ -288,6 +288,13 @@ The &lt;cat&gt; sat on the &lt;mat&gt;
 [% END %]
 -- expect --
 &quot;It isn't what I expected&quot;, he replied.
+
+-- test --
+[% FILTER xml %]
+"It isn't what I expected", he replied.
+[% END %]
+-- expect --
+&quot;It isn&apos;t what I expected&quot;, he replied.
 
 -- test --
 [% FILTER format %]

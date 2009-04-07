@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: parser.t 1024 2006-08-01 17:35:45Z abw $
+# $Id: parser.t 1172 2008-09-22 08:02:27Z abw $
 # 
 #========================================================================
 
@@ -75,8 +75,9 @@ my $tt = [
 ];
 
 my $replace = &callsign;
-$replace->{ alist } = [ 'foo', 0, 'bar', 0 ];
+$replace->{ alist  } = [ 'foo', 0, 'bar', 0 ];
 $replace->{ wintxt } = "foo\r\n\r\nbar\r\n\r\nbaz";
+$replace->{ data   } = { first => 11, last => 42 };
 
 test_expect(\*DATA, $tt, $replace);
 
@@ -102,6 +103,12 @@ this is a
 this is a
 =
 end
+
+-- test --
+[% data.first; ' to '; data.last %]
+-- expect --
+11 to 42
+
 
 #------------------------------------------------------------------------
 # tt2

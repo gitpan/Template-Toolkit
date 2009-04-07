@@ -29,6 +29,13 @@ use Template::Config;
 use Template::Constants;
 use Template::Exception;
 
+# TODO: remove hard-coded references to Template::Exception and look also
+# for Badger::Exception
+use constant {
+    EXCEPTION        => 'Template::Exception',
+    BADGER_EXCEPTION => 'Badger::Exception',
+};
+
 our $VERSION = 2.98;
 our $DEBUG   = 0 unless defined $DEBUG;
 our $DEBUG_FORMAT = "\n## \$file line \$line : [% \$text %] ##\n";
@@ -135,7 +142,7 @@ sub template {
             if ($error) {
                 if ($error == Template::Constants::STATUS_ERROR) {
                     # $template contains exception object
-                    if (UNIVERSAL::isa($template, 'Template::Exception')
+                    if (UNIVERSAL::isa($template, EXCEPTION)
                         && $template->type() eq Template::Constants::ERROR_FILE) {
                         $self->throw($template);
                     }
@@ -421,38 +428,38 @@ sub insert {
 
 
     FILE: foreach $file (@$files) {
-    my $name = $file;
+        my $name = $file;
 
-    if ($^O eq 'MSWin32') {
-        # let C:/foo through
-        $prefix = $1 if $name =~ s/^(\w{2,})://o;
-    }
-    else {
-        $prefix = $1 if $name =~ s/^(\w+)://;
-    }
-
-    if (defined $prefix) {
-        $providers = $self->{ PREFIX_MAP }->{ $prefix } 
-        || return $self->throw(Template::Constants::ERROR_FILE,
-                   "no providers for file prefix '$prefix'");
-    }
-    else {
-        $providers = $self->{ PREFIX_MAP }->{ default }
-        || $self->{ LOAD_TEMPLATES };
-    }
-
-    foreach my $provider (@$providers) {
-        ($text, $error) = $provider->load($name, $prefix);
-        next FILE unless $error;
-        if ($error == Template::Constants::STATUS_ERROR) {
-        $self->throw($text) if ref $text;
-        $self->throw(Template::Constants::ERROR_FILE, $text);
+        if ($^O eq 'MSWin32') {
+            # let C:/foo through
+            $prefix = $1 if $name =~ s/^(\w{2,})://o;
         }
-    }
-    $self->throw(Template::Constants::ERROR_FILE, "$file: not found");
+        else {
+            $prefix = $1 if $name =~ s/^(\w+)://;
+        }
+
+        if (defined $prefix) {
+            $providers = $self->{ PREFIX_MAP }->{ $prefix } 
+                || return $self->throw(Template::Constants::ERROR_FILE,
+                    "no providers for file prefix '$prefix'");
+        }
+        else {
+            $providers = $self->{ PREFIX_MAP }->{ default }
+                || $self->{ LOAD_TEMPLATES };
+        }
+
+        foreach my $provider (@$providers) {
+            ($text, $error) = $provider->load($name, $prefix);
+            next FILE unless $error;
+            if ($error == Template::Constants::STATUS_ERROR) {
+                $self->throw($text) if ref $text;
+                $self->throw(Template::Constants::ERROR_FILE, $text);
+            }
+        }
+        $self->throw(Template::Constants::ERROR_FILE, "$file: not found");
     }
     continue {
-    $output .= $text;
+        $output .= $text;
     }
     return $output;
 }
@@ -490,15 +497,20 @@ sub throw {
     local $" = ', ';
 
     # die! die! die!
-    if (UNIVERSAL::isa($error, 'Template::Exception')) {
-    die $error;
+    if (UNIVERSAL::isa($error, EXCEPTION)) {
+        die $error;
+    }
+    elsif (UNIVERSAL::isa($error, BADGER_EXCEPTION)) {
+        # convert a Badger::Exception to a Template::Exception so that
+        # things continue to work during the transition to Badger
+        die EXCEPTION->new($error->type, $error->info);
     }
     elsif (defined $info) {
-    die (Template::Exception->new($error, $info, $output));
+        die (EXCEPTION->new($error, $info, $output));
     }
     else {
-    $error ||= '';
-    die (Template::Exception->new('undef', $error, $output));
+        $error ||= '';
+        die (EXCEPTION->new('undef', $error, $output));
     }
 
     # not reached
@@ -528,11 +540,11 @@ sub catch {
     my ($self, $error, $output) = @_;
 
     if (UNIVERSAL::isa($error, 'Template::Exception')) {
-    $error->text($output) if $output;
-    return $error;
+        $error->text($output) if $output;
+        return $error;
     }
     else {
-    return Template::Exception->new('undef', $error, $output);
+        return Template::Exception->new('undef', $error, $output);
     }
 }
 
@@ -803,6 +815,7 @@ sub _init {
         $predefs->{ _DEBUG } = ( ($config->{ DEBUG } || 0)
                                  & &Template::Constants::DEBUG_UNDEF ) ? 1 : 0
                                  unless defined $predefs->{ _DEBUG };
+        $predefs->{ _STRICT } = $config->{ STRICT };
         
         Template::Config->stash($predefs)
             || return $self->error($Template::Config::ERROR);

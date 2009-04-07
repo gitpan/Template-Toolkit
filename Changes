@@ -11,6 +11,44 @@
 #========================================================================
 
 #------------------------------------------------------------------------
+# Version 2.20_1 (2.21 candidate) - 7th April 2009
+#------------------------------------------------------------------------
+
+* Deleted all the old HTML documentation (now available separately from
+  http://tt2.org/download/index.html#html_docs), examples, libraries and
+  other cruft that was way out of date and badly unloved.
+
+* Tweaked Template::Parser to work better with the ANYCASE option.  It
+  now knows that anything following a dotop cannot be a keyword so that
+  you can write data.last without the 'last' bit being interpreted as the 
+  LAST keyword.  Thanks to Sean McAfee for the post that inspired it.
+  http://lists.tt2.org/pipermail/templates/2008-September/010462.html
+
+* Fixed a broken test for Apache::Util in the html_entity filter.  Added
+  the use_html_entities() and use_apache_util() class methods to 
+  Template::Filters to allow end-user selection of one or the other.
+  http://rt.cpan.org/Public/Bug/Display.html?id=40870
+  http://template-toolkit.org/svnweb/Template2/revision/?rev=1177
+
+* Tweaked Template::Context to recognise Badger::Exception objects and
+  convert them to Template::Exception objects.  This is a temporary
+  measure to keep things working during the transition to Badger-based
+  modules.
+
+* Added the STRICT option which will cause the stash to throw an 
+  exception on encountering an undefined value.  Thanks to Ben Tilly 
+  for the prod.
+
+* Applied a patch to Template::Iterator from Jonathon Padfield to make
+  get_all() do the right thing if get_first() hasn't been called.
+
+* Applied a patch to Template::Stash::Context from Ben Tilly to make
+  it easier to subclass.
+
+* Applied a patch from Robin Berjon to add the xml filter.
+
+
+#------------------------------------------------------------------------
 # Version 2.20 - 13th August 2008
 #------------------------------------------------------------------------
 

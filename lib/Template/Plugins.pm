@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Plugins.pm 1106 2008-01-21 19:05:30Z abw $
+#   $Id: Plugins.pm 1179 2008-12-09 19:29:21Z abw $
 #
 #============================================================================
 
@@ -399,7 +399,7 @@ loaded.
         PLUGIN_BASE => [   'MyOrg::Template::Plugin',
                            'YourOrg::Template::Plugin'  ],
     });
-    
+
 =head2 LOAD_PERL
 
 The L<LOAD_PERL|Template::Manual::Config#LOAD_PERL> option can be set to allow
