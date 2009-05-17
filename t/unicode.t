@@ -9,7 +9,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: unicode.t 812 2004-07-23 12:49:25Z abw $
+# $Id: unicode.t 1206 2009-05-17 09:50:13Z abw $
 # 
 #========================================================================
 
@@ -40,7 +40,7 @@ use Test::More tests => 20;
 my $moose = "m\x{f8}\x{f8}se\x{2026}";
 
 # right, create some templates in various encodings by hand
-# (it's the only way to be 100% sure they containt the right text)
+# (it's the only way to be 100% sure they contain the right text)
 my %encoded_text = (
  'UTF-8'    => "\x{ef}\x{bb}\x{bf}m\x{c3}\x{b8}\x{c3}\x{b8}se\x{e2}\x{80}\x{a6}",
  'UTF-16BE' => "\x{fe}\x{ff}\x{0}m\x{0}\x{f8}\x{0}\x{f8}\x{0}s\x{0}e &",
