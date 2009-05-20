@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Template-Toolkit
-version:            2.20_2
+version:            2.20_3
 abstract:           comprehensive template processing system
 author:
     - Andy Wardley <abw@wardley.org>

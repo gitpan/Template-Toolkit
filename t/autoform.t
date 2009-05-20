@@ -12,16 +12,16 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: autoform.t 724 2003-08-04 09:52:38Z abw $
+# $Id: autoform.t 1211 2009-05-20 13:13:57Z abw $
 #
 #========================================================================
 
 use strict;
+use warnings;
 use lib qw( ../lib );
 use Template qw( :status );
 use Template::Test;
 use POSIX qw( localeconv );
-$^W = 1;
 
 $Template::Test::DEBUG = 0;
 $Template::Test::PRESERVE = 1;
