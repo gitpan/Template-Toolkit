@@ -24,6 +24,7 @@ use warnings;
 use locale;
 use base 'Template::Base';
 use Template::Constants;
+use Scalar::Util 'blessed';
 
 our $VERSION   = 2.86;
 our $AVAILABLE = { };
@@ -114,7 +115,7 @@ sub fetch {
     # non-refs are assumed to be regular name lookups
 
     if (ref $name) {
-        if (UNIVERSAL::isa($name, $PLUGIN_FILTER)) {
+        if (blessed($name) && $name->isa($PLUGIN_FILTER)) {
             $factory = $name->factory()
                 || return $self->error($name->error());
         }
@@ -272,7 +273,7 @@ sub uri_filter {
         map { ( chr($_), sprintf("%%%02X", $_) ) } (0..255),
     };
 
-    if ($] >= 5.008) {
+    if ($] >= 5.008 && utf8::is_utf8($text)) {
         utf8::encode($text);
     }
     
@@ -297,7 +298,7 @@ sub url_filter {
         map { ( chr($_), sprintf("%%%02X", $_) ) } (0..255),
     };
 
-    if ($] >= 5.008) {
+    if ($] >= 5.008 && utf8::is_utf8($text)) {
         utf8::encode($text);
     }
     

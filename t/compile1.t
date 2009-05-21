@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile1.t 75 2000-12-03 10:04:12Z abw $
+# $Id: compile1.t 1218 2009-05-21 11:02:49Z abw $
 #
 #========================================================================
 
@@ -35,7 +35,7 @@ my $ttcfg = {
 };
 
 # delete any existing files
-foreach my $f ( "$dir/foo.ttc", "$dir/complex.ttc" ) {
+foreach my $f ( "$dir/foo.ttc", "$dir/complex.ttc", "$dir/divisionbyzero.ttc" ) {
     ok( unlink($f) ) if -f $f;
 }
 
@@ -76,4 +76,8 @@ This is the footer, author: abw, version: 3.14
 This is the baz file, a: 
 
 
-
+-- test --
+[%- # first pass, writes the compiled code to cache -%]
+[% INCLUDE divisionbyzero -%]
+-- expect --
+undef error - Illegal division by zero at t/test/src/divisionbyzero line 1.

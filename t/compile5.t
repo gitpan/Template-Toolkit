@@ -14,7 +14,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile5.t 1064 2007-04-27 13:20:21Z abw $
+# $Id: compile5.t 1218 2009-05-21 11:02:49Z abw $
 #
 #========================================================================
 
@@ -34,6 +34,9 @@ my $ttcfg = {
     COMPILE_DIR  => "$cdir/",    # note trailing slash - should be handled OK
     COMPILE_EXT  => '.ttc',
     ABSOLUTE     => 1,
+    CONSTANTS    => {
+      dir => $dir,
+    },
 };
 
 # check compiled template files exist
@@ -108,3 +111,9 @@ This is the footer, author: billg, version: 6.66
 [% INCLUDE "$root/src/blam" %]
 -- expect --
 This is the wam-bam file
+-- test --
+[%- # second pass, reads the compiled code from cache -%]
+[% INCLUDE divisionbyzero -%]
+-- expect --
+-- process --
+undef error - Illegal division by zero at [% constants.dir %]/src/divisionbyzero line 1, <DATA> chunk 1.

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: iterator.t 1187 2009-04-07 09:15:22Z abw $
+# $Id: iterator.t 1217 2009-05-21 07:37:15Z abw $
 #
 #========================================================================
 
@@ -163,3 +163,20 @@ End of list
 foo<-[bar]->baz
 bar<-[baz]->qux
 baz<-[qux]
+
+-- test --
+-- name test even/odd/parity --
+[% FOREACH item IN [1..10] -%]
+* [% loop.count %] [% loop.odd %] [% loop.even %] [% loop.parity +%]
+[% END -%]
+-- expect --
+* 1 1 0 odd
+* 2 0 1 even
+* 3 1 0 odd
+* 4 0 1 even
+* 5 1 0 odd
+* 6 0 1 even
+* 7 1 0 odd
+* 8 0 1 even
+* 9 1 0 odd
+* 10 0 1 even

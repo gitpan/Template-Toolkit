@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile2.t 1107 2008-01-22 22:58:24Z sean $
+# $Id: compile2.t 1218 2009-05-21 11:02:49Z abw $
 #
 #========================================================================
 
@@ -90,3 +90,8 @@ This is the footer, author: billg, version: 6.66
 - 3 - 2 - 1 
 
 
+-- test --
+[%- # second pass, reads the compiled code from cache -%]
+[% INCLUDE divisionbyzero -%]
+-- expect --
+undef error - Illegal division by zero at t/test/src/divisionbyzero line 1, <DATA> chunk 1.
