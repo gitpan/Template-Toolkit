@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Template-Toolkit
-version:            2.20_4
+version:            2.21
 abstract:           comprehensive template processing system
 author:
     - Andy Wardley <abw@wardley.org>
@@ -9,9 +9,10 @@ distribution_type:  module
 configure_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    AppConfig:   1.56
-    File::Spec:  0.8
-    File::Temp:  0.12
+    AppConfig:     1.56
+    File::Spec:    0.8
+    File::Temp:    0.12
+    Scalar::Util:  0
 no_index:
     directory:
         - t
