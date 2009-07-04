@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t 1188 2009-04-07 09:28:51Z abw $
+# $Id: filter.t 1242 2009-07-04 13:22:26Z abw $
 #
 #========================================================================
 
@@ -479,11 +479,13 @@ The cat sat on the mat
 Mary ...
 
 -- test --
+[% 'Hello World' | truncate(2) +%]
 [% 'Hello World' | truncate(8) +%]
 [% 'Hello World' | truncate(10) +%]
-[% 'Hello World' | truncate(20) +%]
 [% 'Hello World' | truncate(11) +%]
+[% 'Hello World' | truncate(20) +%]
 -- expect --
+..
 Hello...
 Hello W...
 Hello World

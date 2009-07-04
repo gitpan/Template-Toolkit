@@ -11,11 +11,37 @@
 #========================================================================
 
 #-----------------------------------------------------------------------
-# Version 2.21_01 - Not yet released
+# Version 2.21_02 - 4th July 2009
+#------------------------------------------------------------------------
+
+* Added UTF8 support to the XS Stash.
+  https://rt.cpan.org/Ticket/Display.html?id=45842
+
+* Fixed the truncate filter to handle lengths shorter than the '...' 
+  string being appended on the end.
+  https://rt.cpan.org/Ticket/Display.html?id=45617
+
+* Fixed a bug in the parser/grammar to make NEXT/LAST work correctly
+  inside nested loops.
+  https://rt.cpan.org/Ticket/Display.html?id=40887
+
+* Fixed a bug in Template::Plugin::Filter that was causing the weakened
+  $self reference in a dynamic filter closure to be garbage collected
+  too soon.
+  https://rt.cpan.org/Ticket/Display.html?id=46691
+
+* Applied patch to allow list.sort to sort on multiple fields.
+  https://rt.cpan.org/Ticket/Display.html?id=40637
+
+
+#-----------------------------------------------------------------------
+# Version 2.21_01 - 4th July 2009
 #------------------------------------------------------------------------
 
 * Removed Template::Plugin::Autoformat and t/autoform.t.  They're now
   available as a separate distribution.
+
+* Fixed some Win32 test failures and XS Stash compilation problems.
 
 
 #-----------------------------------------------------------------------

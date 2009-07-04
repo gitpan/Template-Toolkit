@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: proc.t 559 2002-09-12 11:44:53Z mark $
+# $Id: proc.t 1244 2009-07-04 16:30:33Z abw $
 #
 #========================================================================
 
@@ -41,3 +41,4 @@ This is procfoobar
 This is procfoofoo
 This is procbarbar
 This is procbarbaz
+
