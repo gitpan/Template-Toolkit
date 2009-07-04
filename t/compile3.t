@@ -13,15 +13,16 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile3.t 1010 2006-05-29 14:31:52Z abw $
+# $Id: compile3.t 1236 2009-07-04 07:45:10Z abw $
 #
 #========================================================================
 
 use strict;
+use warnings;
 use lib qw( ./lib ../lib );
 use Template::Test;
 use File::Copy;
-$^W = 1;
+use File::Spec;
 
 #ntests(13);
 
@@ -30,7 +31,8 @@ $Template::Test::EXTRA = 1;
 #$Template::Parser::DEBUG = 1;
 
 # script may be being run in distribution root or 't' directory
-my $dir   = -d 't' ? 't/test/src' : 'test/src';
+my @dir   = -d 't' ? qw(t test src) : qw(test src);
+my $dir   = File::Spec->catfile(@dir);
 my $ttcfg = {
     POST_CHOMP   => 1,
     INCLUDE_PATH => $dir,
