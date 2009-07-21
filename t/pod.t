@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: pod.t 1182 2009-01-09 10:45:14Z abw $
+# $Id: pod.t 1250 2009-07-21 11:21:56Z abw $
 #
 #========================================================================
 
