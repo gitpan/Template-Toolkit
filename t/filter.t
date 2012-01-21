@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: filter.t 1242 2009-07-04 13:22:26Z abw $
+# $Id$
 #
 #========================================================================
 

@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: macro.t 496 2002-07-29 17:23:47Z abw $
+# $Id$
 #
 #========================================================================
 

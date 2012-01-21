@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: factory.t 147 2001-08-04 09:49:56Z abw $
+# $Id$
 #
 #========================================================================
 

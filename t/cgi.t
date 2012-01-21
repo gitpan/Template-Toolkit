@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: cgi.t 574 2002-11-01 16:25:59Z abw $
+# $Id$
 # 
 #========================================================================
 

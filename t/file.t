@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: file.t 518 2002-08-12 11:07:18Z abw $
+# $Id$
 #
 #========================================================================
 

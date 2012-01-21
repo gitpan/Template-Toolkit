@@ -20,12 +20,13 @@ use Template::Constants qw( :status );
 use Template;
 use Test::More;
 
+my $author = grep(/--abw/, @ARGV);
+
 # belt and braces
-unless (grep(/--abw/, @ARGV)) {
+unless ($author) {
     plan( skip_all => 'Internal test for abw, add the --abw flag to run' );
 }
-
-unless ( $ENV{AUTOMATED_TESTING} or $ENV{RELEASE_TESTING} ) {
+unless ( $author or $ENV{AUTOMATED_TESTING} or $ENV{RELEASE_TESTING} ) {
     plan( skip_all => "Author tests not required for installation" );
 }
 

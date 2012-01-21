@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: foreach.t 1243 2009-07-04 15:32:19Z abw $
+# $Id$
 # 
 #========================================================================
 

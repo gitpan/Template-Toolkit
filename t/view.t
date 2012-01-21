@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: view.t 1197 2009-04-07 14:15:40Z abw $
+# $Id$
 #
 #========================================================================
 

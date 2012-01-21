@@ -12,12 +12,12 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: stop.t 36 2000-08-10 14:57:00Z abw $
+# $Id$
 #
 #========================================================================
 
 use strict;
-use lib  qw( ./lib ../lib );
+use lib qw( ./lib ../lib ../blib/lib ../blib/arch ./blib/lib ./blib/arch );
 use vars qw( $DEBUG );
 use Template::Test;
 use Template::Parser;

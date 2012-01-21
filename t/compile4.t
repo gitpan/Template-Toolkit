@@ -15,7 +15,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: compile4.t 1236 2009-07-04 07:45:10Z abw $
+# $Id$
 #
 #========================================================================
 

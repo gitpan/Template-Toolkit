@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: blocks.t 489 2002-07-19 14:45:34Z abw $
+# $Id$
 #
 #========================================================================
 

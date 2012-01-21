@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: binop.t 844 2004-12-24 14:51:04Z abw $
+# $Id$
 #
 #========================================================================
 

@@ -13,7 +13,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: tags.t 1135 2008-08-06 13:56:50Z abw $
+# $Id$
 # 
 #========================================================================
 

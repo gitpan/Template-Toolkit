@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Plugins.pm 1179 2008-12-09 19:29:21Z abw $
+#   $Id$
 #
 #============================================================================
 

@@ -14,7 +14,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: template.t 448 2002-07-08 16:24:26Z darren $
+# $Id$
 #
 #========================================================================
 

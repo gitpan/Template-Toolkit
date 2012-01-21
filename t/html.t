@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: html.t 1181 2009-01-09 10:43:52Z abw $
+# $Id$
 #
 #========================================================================
 

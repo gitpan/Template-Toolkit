@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: provider.t 1064 2007-04-27 13:20:21Z abw $
+# $Id$
 #
 #========================================================================
 

@@ -11,7 +11,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: math.t 1165 2008-08-13 17:15:53Z abw $
+# $Id$
 #
 #========================================================================
 

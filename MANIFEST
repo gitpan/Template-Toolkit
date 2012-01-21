@@ -237,3 +237,4 @@ xs/MANIFEST
 xs/ppport.h
 xs/README
 xs/Stash.xs
+META.json                                Module JSON meta-data (added by MakeMaker)

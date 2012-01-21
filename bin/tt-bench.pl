@@ -6,7 +6,7 @@
 # on Linux and many other operating systems. It works great on FreeBSD
 # though.
 #
-# $Id: tt-bench.pl 207 2001-08-29 13:15:21Z abw $
+# $Id$
 #
 
 # paths to Template version we want to test

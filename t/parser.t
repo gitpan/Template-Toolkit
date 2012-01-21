@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: parser.t 1172 2008-09-22 08:02:27Z abw $
+# $Id$
 # 
 #========================================================================
 

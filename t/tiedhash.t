@@ -12,7 +12,7 @@
 # This is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# $Id: tiedhash.t 875 2006-01-29 11:37:37Z abw $
+# $Id$
 #
 #========================================================================
 

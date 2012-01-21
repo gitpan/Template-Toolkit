@@ -17,7 +17,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: Grammar.pm 1243 2009-07-04 15:32:19Z abw $
+#   $Id$
 #
 # IMPORTANT NOTE
 #   This module is constructed from the parser/Grammar.pm.skel file by
