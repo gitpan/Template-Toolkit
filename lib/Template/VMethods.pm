@@ -220,7 +220,7 @@ sub text_replace {
             my ($chunk, $start, $end) = @_;
             $chunk =~ s{ \\(\\|\$) | \$ (\d+) }{
                 $1 ? $1
-                    : ($2 > $#$start || $2 == 0) ? ''
+                    : ($2 > $#$start || $2 == 0 || !defined $start->[$2]) ? ''
                     : substr($text, $start->[$2], $end->[$2] - $start->[$2]);
             }exg;
             $chunk;
@@ -254,21 +254,40 @@ sub text_split {
     my ($str, $split, $limit) = @_;
     $str = '' unless defined $str;
 
-    # we have to be very careful about spelling out each possible
-    # combination of arguments because split() is very sensitive
-    # to them, for example C<split(' ', ...)> behaves differently
-    # to C<$space=' '; split($space, ...)>
+    # For versions of Perl prior to 5.18 we have to be very careful about
+    # spelling out each possible combination of arguments because split()
+    # is very sensitive to them, for example C<split(' ', ...)> behaves
+    # differently to C<$space=' '; split($space, ...)>.  Test 33 of 
+    # vmethods/text.t depends on this behaviour.
 
-    if (defined $limit) {
-        return [ defined $split
-                 ? split($split, $str, $limit)
-                 : split(' ', $str, $limit) ];
+    if ($] < 5.018) {
+        if (defined $limit) {
+            return [ defined $split
+                     ? split($split, $str, $limit)
+                     : split(' ', $str, $limit) ];
+        }
+        else {
+            return [ defined $split
+                     ? split($split, $str)
+                     : split(' ', $str) ];
+        }
     }
-    else {
-        return [ defined $split
-                 ? split($split, $str)
-                 : split(' ', $str) ];
+
+    # split's behavior changed in Perl 5.18.0 making this:
+    # C<$space=' '; split($space, ...)>
+    # behave the same as this:
+    # C<split(' ', ...)>
+    # qr// behaves the same, so use that for user-defined split.
+
+    my $split_re;
+    if (defined $split) {
+        eval {
+            $split_re = qr/$split/;
+        };
     }
+    $split_re = ' ' unless defined $split_re;
+    $limit ||= 0;
+    return [split($split_re, $str, $limit)];
 }
 
 sub text_chunk {

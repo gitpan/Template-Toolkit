@@ -3,7 +3,7 @@
 # Template::Parser
 #
 # DESCRIPTION
-#   This module implements a LALR(1) parser and assocated support 
+#   This module implements a LALR(1) parser and associated support 
 #   methods to parse template documents into the appropriate "compiled"
 #   format.  Much of the parser DFA code (see _parse() method) is based 
 #   on Francois Desarmenien's Parse::Yapp module.  Kudos to him.
@@ -344,7 +344,7 @@ sub split_text {
         $pre = '' unless defined $pre;
         $dir = '' unless defined $dir;
         
-        $prelines  = ($pre =~ tr/\n//);  # newlines in preceeding text
+        $prelines  = ($pre =~ tr/\n//);  # newlines in preceding text
         $dirlines  = ($dir =~ tr/\n//);  # newlines in directive tag
         $postlines = 0;                  # newlines chomped after tag
         
@@ -354,7 +354,14 @@ sub split_text {
                 $dir = ($dir =~ /($CHOMP_FLAGS)$/o) ? $1 : '';
             }
             else {
-                s/^($CHOMP_FLAGS)?\s*//so;
+
+                if(s/^($CHOMP_FLAGS)?(\s*)//so && $2) {
+                  my $chomped = $2;
+                  my $linecount = ($chomped =~ tr/\n//); # newlines in chomped whitespace
+                  $linecount ||= 0;
+                  $prelines += $linecount;
+                  $dirlines -= $linecount;
+                }
                 # PRE_CHOMP: process whitespace before tag
                 $chomp = $1 ? $1 : $prechomp;
                 $chomp =~ tr/-=~+/1230/;
@@ -608,7 +615,7 @@ sub tokenise_directive {
         }
         elsif (defined($token = $6)) {
             # Fold potential keywords to UPPER CASE if the ANYCASE option is
-            # set, unless (we've got some preceeding tokens and) the previous
+            # set, unless (we've got some preceding tokens and) the previous
             # token is a DOT op.  This prevents the 'last' in 'data.last'
             # from being interpreted as the LAST keyword.
             $uctoken = 
@@ -1024,7 +1031,7 @@ of metadata values defined in C<META> tags.
 =head1 CONFIGURATION OPTIONS
 
 The C<Template::Parser> module accepts the following configuration 
-options.  Please see L<Template::Manual::Config> for futher details
+options.  Please see L<Template::Manual::Config> for further details
 on each option.
 
 =head2 START_TAG, END_TAG
