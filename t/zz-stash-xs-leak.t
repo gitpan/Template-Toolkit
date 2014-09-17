@@ -20,14 +20,13 @@ use Template::Constants qw( :status );
 use Template;
 use Test::More;
 
-my $author = grep(/--abw/, @ARGV);
-
 # belt and braces
-unless ($author) {
-    plan( skip_all => 'Internal test for abw, add the --abw flag to run' );
+unless (grep(/--dev/, @ARGV)) {
+    plan( skip_all => 'Internal test for developer, add the --dev flag to run' );
 }
-unless ( $author or $ENV{AUTOMATED_TESTING} or $ENV{RELEASE_TESTING} ) {
-    plan( skip_all => "Author tests not required for installation" );
+
+unless ( $ENV{AUTOMATED_TESTING} or $ENV{RELEASE_TESTING} ) {
+    plan( skip_all => "Developer tests not required for installation" );
 }
 
 require Template::Stash::XS;
@@ -52,4 +51,3 @@ while ($a--) {
     print "pausing...\n";
     sleep 1;
 }
-

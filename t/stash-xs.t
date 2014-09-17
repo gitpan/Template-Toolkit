@@ -117,7 +117,6 @@ my $data = {
 my $stash = Template::Stash::XS->new($data);
 
 match( $stash->get('foo'), 10 );
-#match( $stash->get(['foo']), 10 );   # fails
 match( $stash->get([ 'bar', 0, 'baz', 0 ]), 20 );
 match( $stash->get('bar.baz'), 20 );
 match( $stash->get('bar(10).baz'), 20 );

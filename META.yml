@@ -7,7 +7,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 0
 dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.68, CPAN::Meta::Converter version 2.112621'
+generated_by: 'ExtUtils::MakeMaker version 6.88, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -22,6 +22,7 @@ requires:
   File::Spec: 0.8
   File::Temp: 0.12
   Scalar::Util: 0
+  Test::LeakTrace: 0
 resources:
   repository: https://github.com/abw/Template2
-version: 2.25
+version: 2.26
